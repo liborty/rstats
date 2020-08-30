@@ -39,6 +39,5 @@ incremental = true
 rpath = false
 
 [lib]
-name = "stats"
 [dependencies]
 anyhow = "^1"

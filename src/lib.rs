@@ -1,7 +1,7 @@
 mod tests;
 use anyhow::{Result,Context,ensure};
 
-/// Computed quartiles and median or time weighted versions of one column
+/// Median and quartiles
 #[derive(Default)]
 pub struct Med {
     pub lquartile: f64,
@@ -13,7 +13,7 @@ impl std::fmt::Display for Med {
         write!(f, "(LQ: {}, M: {}, UQ: {})", self.lquartile, self.median, self.uquartile)
     }
 }
-/// Geometric mean and standard deviations ratios
+/// Mean and standard deviation (or std ratio for geometric mean)
 #[derive(Default)]
 pub struct MStats {
     pub mean: f64,
@@ -25,11 +25,12 @@ impl std::fmt::Display for MStats {
    }
 }
 
+/// Private helper function for formatting error messages
 fn cmsg(file:&'static str, line:u32, msg:&'static str)-> String {
    format!("{}:{} stats {}",file,line,msg)
 }
 
-/// The sum of linear weights is given by this simple formula
+/// Private sum of linear weights 
 fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
 
 /// Arithmetic mean of an i64 slice
@@ -39,6 +40,7 @@ pub fn amean(dvec: &[i64]) -> Result<f64> {
    Ok( dvec.iter().sum::<i64>() as f64 / (n as f64) )
 }
 
+/// Arithmetic mean and standard deviation of an i64 slice
 pub fn ameanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
    ensure!(n > 0,"{}:{} ameanstd - supplied sample is empty!",file!(),line!());
@@ -49,8 +51,9 @@ pub fn ameanstd(dvec: &[i64]) -> Result<MStats> {
       std : (sx2 as f64/(n as f64) - mean.powi(2)).sqrt() } )
 }
 
-/// Liearly weighted arithmetic mean of an i64 slice
-/// Linearly descending weights from the number of items down to one
+/// Liearly weighted arithmetic mean of an i64 slice.
+/// Linearly descending weights from n down to one.
+/// Time dependent data should be in the stack order - the last being the oldest.
 pub fn awmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} awmean - supplied sample is empty!",file!(),line!());
@@ -58,6 +61,9 @@ pub fn awmean(dvec: &[i64]) -> Result<f64> {
 	Ok( dvec.iter().map(|&x| { iw -= 1; iw*x }).sum::<i64>() as f64 / wsum(n))
 }
 
+/// Liearly weighted arithmetic mean and standard deviation of an i64 slice.
+/// Linearly descending weights from n down to one.
+/// Time dependent data should be in the stack order - the last being the oldest.
 pub fn awmeanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} awmeanstd - supplied sample is empty!",file!(),line!());
@@ -73,7 +79,7 @@ pub fn awmeanstd(dvec: &[i64]) -> Result<MStats> {
       std : (sx2 as f64/wsum(n) - mean.powi(2)).sqrt() } )  
 }
 
-/// Harmonic mean of an i64 slice
+/// Harmonic mean of an i64 slice.
 pub fn hmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} hmean - supplied sample is empty!",file!(),line!());
@@ -85,8 +91,9 @@ pub fn hmean(dvec: &[i64]) -> Result<f64> {
    Ok ( n as f64 / sum )
 }
 
-/// Linearly weighted harmonic mean of an f64 slice
-/// Linearly descending weights from the number of items down to one
+/// Linearly weighted harmonic mean of an f64 slice.
+/// Linearly descending weights from n down to one.
+/// Time dependent data should be in the stack order - the last being the oldest.
 pub fn hwmean(dvec: &[i64]) -> Result<f64> {
    let mut n = dvec.len();
    ensure!(n>0,"{}:{} hwmean - supplied sample is empty!",file!(),line!());
@@ -104,9 +111,7 @@ pub fn hwmean(dvec: &[i64]) -> Result<f64> {
 /// The geometric mean is just an exponential of an arithmetic mean
 /// of log data (natural logarithms of the data items).
 /// The geometric mean is less sensitive to outliers near maximal value.
-/// However, we must normalise the data to avoid taking ln of zero,
-/// as minus infinity does not play nice on computers.
-
+/// However, zero valued data is not allowed.
 pub fn gmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} gmean - supplied sample is empty!",file!(),line!());
@@ -119,6 +124,9 @@ pub fn gmean(dvec: &[i64]) -> Result<f64> {
    Ok( (sum/(n as f64)).exp() )
 }
 
+/// Geometric mean and std ratio of an i64 slice.
+/// Zero valued data is not allowed.
+/// Std of ln data becomes a ratio after conversion back.
 pub fn gmeanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} gmeanstd - supplied sample is empty!",file!(),line!());
@@ -138,11 +146,13 @@ pub fn gmeanstd(dvec: &[i64]) -> Result<MStats> {
     )
 }
 
-/// Time linearly weighted geometric mean of an i64 slice
-/// Linearly descending weights from the number of items down to one
+/// Time linearly weighted geometric mean of an i64 slice.
+/// Linearly descending weights from n down to one.
+/// Time dependent data should be in the stack order - the last being the oldest.
 /// The geometric mean is just an exponential of an arithmetic mean
-/// of log data (natural logarithms of the data items)
-/// The geometric mean is less sensitive to outliers near maximal value
+/// of log data (natural logarithms of the data items).
+/// The geometric mean is less sensitive to outliers near maximal value.
+/// Zero data is not allowed - would at best only produce zero result.
 pub fn gwmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} gwmean - supplied sample is empty!",file!(),line!());
@@ -157,6 +167,7 @@ pub fn gwmean(dvec: &[i64]) -> Result<f64> {
    Ok( (sum/wsum(n)).exp() )
 }	
 
+/// Linearly weighted version of gmeanstd. 
 pub fn gwmeanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} gwmeanstd - supplied sample is empty!",file!(),line!());
@@ -178,9 +189,8 @@ pub fn gwmeanstd(dvec: &[i64]) -> Result<MStats> {
     )
 }	
 
-/// Fast median (avoids sorting)
-/// Works on  data discretised into ints [u32] with minimum and maximum [low, high].
-/// high-low must be a moderate range, not exceeding u16size (= 65535)
+/// Fast median (avoids sorting).
+/// The data must be within a moderate range not exceeding u16size (65535).
 pub fn median(data: &[i64]) -> Result<Med> {
    let max = *data.iter().max().with_context(||cmsg(file!(),line!(),"median failed to find maximum"))?;
    let min = *data.iter().min().with_context(||cmsg(file!(),line!(),"median failed to find minimum"))?;
@@ -231,69 +241,8 @@ pub fn median(data: &[i64]) -> Result<Med> {
    }
    Ok(result)
 }
-/*
-/// Fast weighted median (avoids sorting)
-/// First discretise data into ints [u32] with minimum and maximum [low, high].
-/// high - low must be a moderate range, not exceeding u16size (= 65535).
-pub fn wmedian(max: usize, min: usize, data: &[u32]) -> Result<Med> {
-    let range = max - min + 1usize; // range too big to use as subscripts
-    if range > u16::max_value() as usize {
-        bail!("{}:{} wmedian range {} of values exceeds u16",file!(),line!(),range);
-    }
-    let mut acc = vec![0u16; range]; // create subscripts vector
-    let rowlength = data.len();
-    for i in 0..rowlength {
-        // construct weighted frequency distribution
-        acc[data[i] as usize - min] += (rowlength - i) as u16;
-    }
-    let mut result: Med = Default::default();
-    let mut cumm = 0usize;
-    let mut i2;
-    // median will be at half of the sum of linear weights 1 to rowlength
-    let sumw = rowlength * (rowlength + 1);
-    // linearly (time) weighted observations, older get lower weights
-    // weights start at the number of observations for the most recent and
-    // end with 1 for the oldest. Most suitable for time series data.
-    for i in 0..range {
-        // find the lower quartile
-        cumm += (acc[i]) as usize; // accummulate frequencies
-        if 8 * cumm >= sumw {
-            result.lquartile = 10usize * (i + min);
-            break;
-        }
-    }
-    cumm = 0usize;
-    for i in (0..range).rev() {
-        // find the upper quartile
-        cumm += (acc[i]) as usize; // accummulate frequencies
-        if 8 * cumm >= sumw {
-            result.uquartile = 10usize * (i + min);
-            break;
-        }
-    }
-    cumm = 0usize;
-    for i in 0..range {
-        // find the midpoint of the frequency distribution
-        cumm += (acc[i]) as usize; // accummulate frequencies
-        if 4 * cumm == sumw {
-            // even, the other half must have the same value
-            i2 = i + 1;
-            while acc[i2] == 0 {
-                i2 += 1;
-            }
-            // first next non-zero acc[i2] must represent the other half
-            result.median = 5usize * (i + i2 + 2 * min);
-            break;
-        }
-        if 4 * cumm > sumw {
-            result.median = 10usize * (i + min);
-            break;
-        }
-    }
-    Ok(result) // to get here would be an error
-}
-*/
-/// Correlation coefficient of a sample of two integer variables
+
+/// Correlation coefficient of a sample of two integer variables.
 pub fn correlation(v1:&[i64],v2:&[i64]) -> Result<f64> {
    let n = v1.len();
    ensure!(n>0,cmsg(file!(),line!(),"correlation - first sample is empty"));
@@ -307,7 +256,7 @@ pub fn correlation(v1:&[i64],v2:&[i64]) -> Result<f64> {
    Ok( (sxyf-sxf/nf*syf)/(((sx2f-sxf/nf*sxf)*(sy2f-syf/nf*syf)).sqrt()) )
 }
 
-/// Correlation coefficient of pairs of successive values of time series integer variable
+/// (Auto)correlation coefficient of pairs of successive values of (time series) integer variable.
 pub fn autocorr(v1:&[i64]) -> Result<f64> {
    let n = v1.len();
    ensure!(n>=2,cmsg(file!(),line!(),"autocorr - sample is too small"));

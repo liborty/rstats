@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["stats"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"struct\" href=\"stats/struct.Med.html\" title=\"struct stats::Med\">Med</a>","synthetic":false,"types":["stats::Med"]},{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"struct\" href=\"stats/struct.MStats.html\" title=\"struct stats::MStats\">MStats</a>","synthetic":false,"types":["stats::MStats"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
