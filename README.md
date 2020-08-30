@@ -1,4 +1,4 @@
-# Rustats - Rust Stats
+# Rstats - Rust Stats
 ![GitHub active](https://img.shields.io/badge/GitHub-Active-brightgreen) ![GitHub last commit](https://img.shields.io/github/last-commit/liborty/rustats)
 
 ### Synopsis
