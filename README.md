@@ -1,6 +1,5 @@
 # Rstats - Rust Stats
-![GitHub active](https://img.shields.io/badge/GitHub-Active-brightgreen) ![GitHub last commit](https://img.shields.io/github/last-commit/liborty/rstats) ![Coveralls github](https://img.shields.io/coveralls/github/liborty/rstats)
-
+![GitHub active](https://img.shields.io/badge/GitHub-Active-brightgreen) ![GitHub last commit](https://img.shields.io/github/last-commit/liborty/rstats)
 ### Synopsis
 
 This is a lean minimalistic crate (library) that only depends on `anyhow` (for its error handling).
