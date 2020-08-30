@@ -1,0 +1,40 @@
+[package]
+name = "rustats"
+version = "0.1.0"
+authors = ["Libor Spacek"]
+edition = "2018"
+description = "Simple Statistics"
+
+
+[profile.test]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+lto = true
+incremental = true
+rpath = false
+
+[profile.release]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+lto = true
+panic = 'unwind'
+incremental = true
+rpath = false
+
+[profile.bench]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+lto = true
+incremental = true
+rpath = false
+
+[lib]
+name = "stats"
+[dependencies]
+anyhow = "^1"
