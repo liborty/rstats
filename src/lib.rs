@@ -51,8 +51,8 @@ pub fn ameanstd(dvec: &[i64]) -> Result<MStats> {
       std : (sx2 as f64/(n as f64) - mean.powi(2)).sqrt() } )
 }
 
-/// Liearly weighted arithmetic mean of an i64 slice.
-/// Linearly descending weights from n down to one.
+/// Linearly weighted arithmetic mean of an i64 slice.      
+/// Linearly descending weights from n down to one.    
 /// Time dependent data should be in the stack order - the last being the oldest.
 pub fn awmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
@@ -61,8 +61,8 @@ pub fn awmean(dvec: &[i64]) -> Result<f64> {
 	Ok( dvec.iter().map(|&x| { iw -= 1; iw*x }).sum::<i64>() as f64 / wsum(n))
 }
 
-/// Liearly weighted arithmetic mean and standard deviation of an i64 slice.
-/// Linearly descending weights from n down to one.
+/// Liearly weighted arithmetic mean and standard deviation of an i64 slice.  
+/// Linearly descending weights from n down to one.  
 /// Time dependent data should be in the stack order - the last being the oldest.
 pub fn awmeanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
@@ -91,8 +91,8 @@ pub fn hmean(dvec: &[i64]) -> Result<f64> {
    Ok ( n as f64 / sum )
 }
 
-/// Linearly weighted harmonic mean of an f64 slice.
-/// Linearly descending weights from n down to one.
+/// Linearly weighted harmonic mean of an i64 slice.    
+/// Linearly descending weights from n down to one.    
 /// Time dependent data should be in the stack order - the last being the oldest.
 pub fn hwmean(dvec: &[i64]) -> Result<f64> {
    let mut n = dvec.len();
@@ -107,11 +107,11 @@ pub fn hwmean(dvec: &[i64]) -> Result<f64> {
    Ok( wsum(dvec.len()) / sum )
 }
 
-/// Geometric mean of an i64 slice.
+/// Geometric mean of an i64 slice.  
 /// The geometric mean is just an exponential of an arithmetic mean
-/// of log data (natural logarithms of the data items).
-/// The geometric mean is less sensitive to outliers near maximal value.
-/// However, zero valued data is not allowed.
+/// of log data (natural logarithms of the data items).  
+/// The geometric mean is less sensitive to outliers near maximal value.  
+/// Zero valued data is not allowed.
 pub fn gmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} gmean - supplied sample is empty!",file!(),line!());
@@ -124,8 +124,8 @@ pub fn gmean(dvec: &[i64]) -> Result<f64> {
    Ok( (sum/(n as f64)).exp() )
 }
 
-/// Geometric mean and std ratio of an i64 slice.
-/// Zero valued data is not allowed.
+/// Geometric mean and std ratio of an i64 slice.  
+/// Zero valued data is not allowed.  
 /// Std of ln data becomes a ratio after conversion back.
 pub fn gmeanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
@@ -146,12 +146,12 @@ pub fn gmeanstd(dvec: &[i64]) -> Result<MStats> {
     )
 }
 
-/// Time linearly weighted geometric mean of an i64 slice.
-/// Linearly descending weights from n down to one.
-/// Time dependent data should be in the stack order - the last being the oldest.
+/// Time linearly weighted geometric mean of an i64 slice.  
+/// Linearly descending weights from n down to one.  
+/// Time dependent data should be in the stack order - the last being the oldest.  
 /// The geometric mean is just an exponential of an arithmetic mean
-/// of log data (natural logarithms of the data items).
-/// The geometric mean is less sensitive to outliers near maximal value.
+/// of log data (natural logarithms of the data items).  
+/// The geometric mean is less sensitive to outliers near maximal value.  
 /// Zero data is not allowed - would at best only produce zero result.
 pub fn gwmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
@@ -189,8 +189,8 @@ pub fn gwmeanstd(dvec: &[i64]) -> Result<MStats> {
     )
 }	
 
-/// Fast median (avoids sorting).
-/// The data must be within a moderate range not exceeding u16size (65535).
+/// Fast median (avoids sorting).  
+/// The data values must be within a moderate range not exceeding u16size (65535).
 pub fn median(data: &[i64]) -> Result<Med> {
    let max = *data.iter().max().with_context(||cmsg(file!(),line!(),"median failed to find maximum"))?;
    let min = *data.iter().min().with_context(||cmsg(file!(),line!(),"median failed to find minimum"))?;
