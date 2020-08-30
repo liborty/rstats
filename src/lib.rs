@@ -34,6 +34,12 @@ fn cmsg(file:&'static str, line:u32, msg:&'static str)-> String {
 fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
 
 /// Arithmetic mean of an i64 slice
+/// # Example
+/// ```
+/// use rstats::amean;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// assert_eq!(amean(&VEC1).unwrap(),7.5_f64);
+/// ```
 pub fn amean(dvec: &[i64]) -> Result<f64> { 
    let n = dvec.len();
    ensure!(n > 0, "{}:{} amean - supplied sample is empty!",file!(),line!() );
@@ -41,6 +47,14 @@ pub fn amean(dvec: &[i64]) -> Result<f64> {
 }
 
 /// Arithmetic mean and standard deviation of an i64 slice
+/// # Example
+/// ```
+/// use rstats::ameanstd;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// let res = ameanstd(&VEC1).unwrap();
+/// assert_eq!(res.mean,7.5_f64);
+/// assert_eq!(res.std,4.031128874149275_f64);
+/// ```
 pub fn ameanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
    ensure!(n > 0,"{}:{} ameanstd - supplied sample is empty!",file!(),line!());
@@ -243,6 +257,13 @@ pub fn median(data: &[i64]) -> Result<Med> {
 }
 
 /// Correlation coefficient of a sample of two integer variables.
+/// # Example
+/// ```
+/// use rstats::correlation;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// const VEC2:[i64;14] = [14,13,12,11,10,9,8,7,6,5,4,3,2,1];
+/// assert_eq!(correlation(&VEC1,&VEC2).unwrap(),-1_f64);
+/// ```
 pub fn correlation(v1:&[i64],v2:&[i64]) -> Result<f64> {
    let n = v1.len();
    ensure!(n>0,cmsg(file!(),line!(),"correlation - first sample is empty"));
@@ -257,6 +278,12 @@ pub fn correlation(v1:&[i64],v2:&[i64]) -> Result<f64> {
 }
 
 /// (Auto)correlation coefficient of pairs of successive values of (time series) integer variable.
+/// # Example
+/// ```
+/// use rstats::autocorr;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// assert_eq!(autocorr(&VEC1).unwrap(),0.9984603532054123_f64);
+/// ```
 pub fn autocorr(v1:&[i64]) -> Result<f64> {
    let n = v1.len();
    ensure!(n>=2,cmsg(file!(),line!(),"autocorr - sample is too small"));
