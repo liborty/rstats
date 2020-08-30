@@ -5,8 +5,8 @@
 use anyhow::{Result};
 use crate::{correlation,autocorr,median,awmean,hmean,hwmean,ameanstd,awmeanstd,gmeanstd,gwmeanstd};
 // constant testing vectors used by tests
-const VEC1:[i64;13] = [1,2,3,4,5,6,7,8,9,10,11,12,13];
-const VEC2:[i64;13] = [13,12,11,10,9,8,7,6,5,4,3,2,1];
+const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+const VEC2:[i64;14] = [14,13,12,11,10,9,8,7,6,5,4,3,2,1];
 
 /*
 #[test]
