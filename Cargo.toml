@@ -4,7 +4,11 @@ version = "0.1.0"
 authors = ["Libor Spacek"]
 edition = "2018"
 description = "Simple Statistics"
-
+homepage = "https://github.com/liborty/rustats"
+repository = "https://github.com/liborty/rustats"
+license-file = "LICENSE"
+keywords = ["statistics","means","median","correlation","time-dependent"]
+categories = ["science","mathematics"]
 
 [profile.test]
 opt-level = 3
