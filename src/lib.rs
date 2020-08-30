@@ -65,9 +65,15 @@ pub fn ameanstd(dvec: &[i64]) -> Result<MStats> {
       std : (sx2 as f64/(n as f64) - mean.powi(2)).sqrt() } )
 }
 
-/// Linearly weighted arithmetic mean of an i64 slice.      
+/// Linearly weighted arithmetic mean of an i64 slice.     
 /// Linearly descending weights from n down to one.    
 /// Time dependent data should be in the stack order - the last being the oldest.
+/// # Example
+/// ```
+/// use rstats::awmean;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// assert_eq!(awmean(&VEC1).unwrap(),5.333333333333333_f64);
+/// ```
 pub fn awmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} awmean - supplied sample is empty!",file!(),line!());
@@ -75,9 +81,16 @@ pub fn awmean(dvec: &[i64]) -> Result<f64> {
 	Ok( dvec.iter().map(|&x| { iw -= 1; iw*x }).sum::<i64>() as f64 / wsum(n))
 }
 
-/// Liearly weighted arithmetic mean and standard deviation of an i64 slice.  
-/// Linearly descending weights from n down to one.  
+/// Liearly weighted arithmetic mean and standard deviation of an i64 slice.    
+/// Linearly descending weights from n down to one.    
 /// Time dependent data should be in the stack order - the last being the oldest.
+/// ```
+/// use rstats::awmeanstd;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// let res = awmeanstd(&VEC1).unwrap();
+/// assert_eq!(res.mean,5.333333333333333_f64);
+/// assert_eq!(res.std,3.39934634239519_f64);
+/// ```
 pub fn awmeanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} awmeanstd - supplied sample is empty!",file!(),line!());
@@ -94,6 +107,12 @@ pub fn awmeanstd(dvec: &[i64]) -> Result<MStats> {
 }
 
 /// Harmonic mean of an i64 slice.
+/// # Example
+/// ```
+/// use rstats::hmean;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// assert_eq!(hmean(&VEC1).unwrap(),4.305622526633627_f64);
+/// ```
 pub fn hmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} hmean - supplied sample is empty!",file!(),line!());
