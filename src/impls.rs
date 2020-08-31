@@ -51,6 +51,33 @@ impl RStats for Vec<i64> {
 	Ok( self.iter().map(|&x| { w -= 1.; w*x as f64 }).sum::<f64>() / wsum(n))
    }
 
+   /// Liearly weighted arithmetic mean and standard deviation of an i64 slice.    
+   /// Linearly descending weights from n down to one.    
+   /// Time dependent data should be in the stack order - the last being the oldest.
+   /// # Example
+   /// ```
+   /// use rstats::RStats;
+   /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+   /// let res = v1.awmeanstd().unwrap();
+   /// assert_eq!(res.mean,5.333333333333333_f64);
+   /// assert_eq!(res.std,3.39934634239519_f64);
+   /// ```
+   fn awmeanstd(&self) -> Result<MStats> {
+      let n = self.len();
+      ensure!(n>0,"{}:{} awmeanstd - supplied sample is empty!",file!(),line!());
+      let mut sx2 = 0f64;
+      let mut w = n as f64; // descending linear weights
+      let mean = self.iter().map( |&x| {
+         let lx = x as f64;
+         let wx = w*lx;
+         sx2 += wx*lx;
+         w -= 1.; 
+         wx } ).sum::<f64>() as f64 / wsum(n);
+   Ok( MStats { 
+      mean : mean, 
+      std : (sx2/wsum(n) - mean.powi(2)).sqrt() } )  
+   }
+
 }
 
 impl RStats for Vec<f64> { 
@@ -100,5 +127,31 @@ impl RStats for Vec<f64> {
       ensure!(n>0,"{}:{} awmean - supplied sample is empty!",file!(),line!());
 	   let mut iw = (n+1) as f64; // descending linear weights
 	   Ok( self.iter().map(|&x| { iw -= 1.; iw*x }).sum::<f64>()/wsum(n))
+   }
+
+   /// Liearly weighted arithmetic mean and standard deviation of an i64 slice.    
+   /// Linearly descending weights from n down to one.    
+   /// Time dependent data should be in the stack order - the last being the oldest.
+   /// # Example
+   /// ```
+   /// use rstats::RStats;
+   /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   /// let res = v1.awmeanstd().unwrap();
+   /// assert_eq!(res.mean,5.333333333333333_f64);
+   /// assert_eq!(res.std,3.39934634239519_f64);
+   /// ```
+   fn awmeanstd(&self) -> Result<MStats> {
+      let n = self.len();
+      ensure!(n>0,"{}:{} awmeanstd - supplied sample is empty!",file!(),line!());
+      let mut sx2 = 0f64;
+      let mut w = n as f64; // descending linear weights
+      let mean = self.iter().map( |&x| {
+         let wx = w*x;
+         sx2 += wx*x;
+         w -= 1.; 
+         wx } ).sum::<f64>() / wsum(n);
+   Ok( MStats { 
+      mean : mean, 
+      std : (sx2/wsum(n) - mean.powi(2)).sqrt() } )  
    }
 }

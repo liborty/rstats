@@ -1,5 +1,5 @@
-mod tests;
-mod impls;
+pub mod tests;
+pub mod impls;
 
 use anyhow::{Result,Context,ensure};
 /// Median and quartiles
@@ -31,6 +31,7 @@ pub trait RStats {
    fn amean(&self) -> Result<f64>;
    fn ameanstd(&self) -> Result<MStats>;
    fn awmean(&self) -> Result<f64>;
+   fn awmeanstd(&self) -> Result<MStats>;
 }
 
 /// Private helper function for formatting error messages
