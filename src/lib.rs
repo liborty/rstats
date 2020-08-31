@@ -49,7 +49,7 @@ impl RStats for Vec<i64> {
    /// # Example
    /// ```
    /// use rstats::RStats;
-   /// let v1 = [1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+   /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
    /// let res = v1.ameanstd().unwrap();
    /// assert_eq!(res.mean,7.5_f64);
    /// assert_eq!(res.std,4.031128874149275_f64);
@@ -85,7 +85,7 @@ impl RStats for Vec<f64> {
    /// # Example
    /// ```
    /// use rstats::RStats;
-   /// let v1 = [1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// let res = v1.ameanstd().unwrap();
    /// assert_eq!(res.mean,7.5_f64);
    /// assert_eq!(res.std,4.031128874149275_f64);
