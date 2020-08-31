@@ -32,6 +32,8 @@ pub trait RStats {
    fn ameanstd(&self) -> Result<MStats>;
    fn awmean(&self) -> Result<f64>;
    fn awmeanstd(&self) -> Result<MStats>;
+   fn hmean(&self) -> Result<f64>;
+   fn hwmean(&self) -> Result<f64>;
 }
 
 /// Private helper function for formatting error messages
