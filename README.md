@@ -3,14 +3,18 @@
 [![Crates.io](https://img.shields.io/crates/v/rstats)](https://docs.rs/rstats)
 ### Synopsis
 
-This is a lean minimalistic crate (library) that only depends on `anyhow` (for its error handling).
+Rstats is a lean minimalistic library that only depends on `anyhow` (for its error handling).
 
-The functions supplied compute all three different means (arithmetic, geometric and harmonic) of i64 and f64 vectors (slices).
+The functions supplied compute means (arithmetic, geometric and harmonic) of i64 and f64 vectors. 
 
-Also included are their linearly weighted versions useful for time dependent data analysis.
+They are implemented as trait methods. For example, `v.amean()` computes the arithmetic mean of vector `v` of type either `Vec<i64>` or `Vec<f64>` (or their slices).
 
-Correlation and autocorrelation.
+Also included are:
 
-Median and quartiles.
+* linearly weighted means useful for time dependent data analysis,
+
+* correlation and autocorrelation,
+
+* median and quartiles.
 
 More facilities will be added in future versions.
