@@ -10,34 +10,6 @@ license-file = "LICENSE"
 keywords = ["statistics","means","median","correlation","time-dependent"]
 categories = ["science","mathematics"]
 
-[profile.test]
-opt-level = 3
-debug = false
-debug-assertions = false
-overflow-checks = false
-lto = true
-incremental = true
-rpath = false
-
-[profile.release]
-opt-level = 3
-debug = false
-debug-assertions = false
-overflow-checks = false
-lto = true
-panic = 'unwind'
-incremental = true
-rpath = false
-
-[profile.bench]
-opt-level = 3
-debug = false
-debug-assertions = false
-overflow-checks = false
-lto = true
-incremental = true
-rpath = false
-
 [lib]
 [dependencies]
 anyhow = "^1"

@@ -127,6 +127,12 @@ pub fn hmean(dvec: &[i64]) -> Result<f64> {
 /// Linearly weighted harmonic mean of an i64 slice.    
 /// Linearly descending weights from n down to one.    
 /// Time dependent data should be in the stack order - the last being the oldest.
+/// # Example
+/// ```
+/// use rstats::hwmean;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// assert_eq!(hwmean(&VEC1).unwrap(),3.019546395306663_f64);
+/// ```
 pub fn hwmean(dvec: &[i64]) -> Result<f64> {
    let mut n = dvec.len();
    ensure!(n>0,"{}:{} hwmean - supplied sample is empty!",file!(),line!());
@@ -145,6 +151,12 @@ pub fn hwmean(dvec: &[i64]) -> Result<f64> {
 /// of log data (natural logarithms of the data items).  
 /// The geometric mean is less sensitive to outliers near maximal value.  
 /// Zero valued data is not allowed.
+/// # Example
+/// ```
+/// use rstats::gmean;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// assert_eq!(gmean(&VEC1).unwrap(),6.045855171418503_f64);
+/// ```
 pub fn gmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} gmean - supplied sample is empty!",file!(),line!());
@@ -160,6 +172,12 @@ pub fn gmean(dvec: &[i64]) -> Result<f64> {
 /// Geometric mean and std ratio of an i64 slice.  
 /// Zero valued data is not allowed.  
 /// Std of ln data becomes a ratio after conversion back.
+/// # Example
+/// ```
+/// use rstats::gwmean;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// assert_eq!(gwmean(&VEC1).unwrap(),4.144953510241978_f64);
+/// ```
 pub fn gmeanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} gmeanstd - supplied sample is empty!",file!(),line!());
@@ -186,6 +204,12 @@ pub fn gmeanstd(dvec: &[i64]) -> Result<MStats> {
 /// of log data (natural logarithms of the data items).  
 /// The geometric mean is less sensitive to outliers near maximal value.  
 /// Zero data is not allowed - would at best only produce zero result.
+/// # Example
+/// ```
+/// use rstats::gwmean;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// assert_eq!(gwmean(&VEC1).unwrap(),4.144953510241978_f64);
+/// ```
 pub fn gwmean(dvec: &[i64]) -> Result<f64> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} gwmean - supplied sample is empty!",file!(),line!());
@@ -200,7 +224,15 @@ pub fn gwmean(dvec: &[i64]) -> Result<f64> {
    Ok( (sum/wsum(n)).exp() )
 }	
 
-/// Linearly weighted version of gmeanstd. 
+/// Linearly weighted version of gmeanstd.
+/// # Example
+/// ```
+/// use rstats::gwmeanstd;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// let res = gwmeanstd(&VEC1).unwrap();
+/// assert_eq!(res.mean,4.144953510241978_f64);
+/// assert_eq!(res.std,2.1572089236412597_f64);
+/// ```
 pub fn gwmeanstd(dvec: &[i64]) -> Result<MStats> {
    let n = dvec.len();
    ensure!(n>0,"{}:{} gwmeanstd - supplied sample is empty!",file!(),line!());
@@ -224,6 +256,15 @@ pub fn gwmeanstd(dvec: &[i64]) -> Result<MStats> {
 
 /// Fast median (avoids sorting).  
 /// The data values must be within a moderate range not exceeding u16size (65535).
+/// # Example
+/// ```
+/// use rstats::median;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// let res = median(&VEC1).unwrap();
+/// assert_eq!(res.median,7.5_f64);
+/// assert_eq!(res.lquartile,4_f64);
+/// assert_eq!(res.uquartile,11_f64);
+/// ```
 pub fn median(data: &[i64]) -> Result<Med> {
    let max = *data.iter().max().with_context(||cmsg(file!(),line!(),"median failed to find maximum"))?;
    let min = *data.iter().min().with_context(||cmsg(file!(),line!(),"median failed to find minimum"))?;
