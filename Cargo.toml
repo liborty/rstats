@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Libor Spacek"]
 edition = "2018"
 description = "Simple Statistics"
@@ -9,6 +9,12 @@ repository = "https://github.com/liborty/rustats"
 license-file = "LICENSE"
 keywords = ["statistics","means","median","correlation","time-dependent"]
 categories = ["science","mathematics"]
+include = [
+    "src/*.rs",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE"
+]
 
 [lib]
 [dependencies]
