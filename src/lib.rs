@@ -58,7 +58,7 @@ impl RStats for Vec<i64> {
    let n = self.len();
    ensure!(n > 0,"{}:{} ameanstd - supplied sample is empty!",file!(),line!());
    let mut sx2 = 0_f64;
-   let mean = self.iter().map(|&x|{ sx2+=x*x; x}).sum::<f64>() / (n as f64);
+   let mean = self.iter().map(|&x|{ let lx = x as f64;sx2+=lx*lx; lx}).sum::<f64>() / (n as f64);
    Ok( MStats { 
       mean : mean, 
       std : (sx2 /(n as f64) - mean.powi(2)).sqrt() } )
