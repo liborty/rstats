@@ -25,6 +25,40 @@ impl std::fmt::Display for MStats {
    }
 }
 
+pub trait RStats { 
+	fn amean(&self) -> Result<f64>;
+}
+
+impl RStats for Vec<i64> { 
+   /// Arithmetic mean of an i64 slice
+   /// # Example
+   /// ```
+   /// use crate::rstats::RStats;
+   /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+   /// assert_eq!(v1.amean().unwrap(),7.5_f64);
+   /// ```
+   fn amean(&self) -> Result<f64> { 
+      let n = self.len();
+      ensure!(n > 0, "{}:{} amean - supplied sample is empty!",file!(),line!() );
+      Ok( self.iter().map(|&x| x as f64).sum::<f64>() / (n as f64) )
+   }   
+}
+
+impl RStats for Vec<f64> { 
+   /// Arithmetic mean of an f64 slice
+   /// # Example
+   /// ```
+   /// use crate::rstats::RStats;
+   /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   /// assert_eq!(v1.amean().unwrap(),7.5_f64);
+   /// ```
+   fn amean(&self) -> Result<f64> { 
+      let n = self.len();
+      ensure!(n > 0, "{}:{} amean - supplied sample is empty!",file!(),line!() );
+      Ok( self.iter().sum::<f64>() / (n as f64) )
+   }   
+}
+
 /// Private helper function for formatting error messages
 fn cmsg(file:&'static str, line:u32, msg:&'static str)-> String {
    format!("{}:{} stats {}",file,line,msg)
@@ -43,7 +77,7 @@ fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
 pub fn amean(dvec: &[i64]) -> Result<f64> { 
    let n = dvec.len();
    ensure!(n > 0, "{}:{} amean - supplied sample is empty!",file!(),line!() );
-   Ok( dvec.iter().sum::<i64>() as f64 / (n as f64) )
+   Ok( dvec.iter().map(|&x| x as f64).sum::<f64>() / (n as f64) )
 }
 
 /// Arithmetic mean and standard deviation of an i64 slice

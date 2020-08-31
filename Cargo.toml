@@ -6,7 +6,7 @@ edition = "2018"
 description = "Simple Statistics"
 homepage = "https://github.com/liborty/rustats"
 repository = "https://github.com/liborty/rustats"
-license-file = "LICENSE"
+license = "Apache-2.0"
 keywords = ["statistics","means","median","correlation","time-dependent"]
 categories = ["science","mathematics"]
 include = [
@@ -15,7 +15,8 @@ include = [
     "README.md",
     "LICENSE"
 ]
-
+[badges]
+maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
 anyhow = "^1"
