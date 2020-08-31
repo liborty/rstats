@@ -84,6 +84,7 @@ pub fn awmean(dvec: &[i64]) -> Result<f64> {
 /// Liearly weighted arithmetic mean and standard deviation of an i64 slice.    
 /// Linearly descending weights from n down to one.    
 /// Time dependent data should be in the stack order - the last being the oldest.
+/// # Example
 /// ```
 /// use rstats::awmeanstd;
 /// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
@@ -169,34 +170,6 @@ pub fn gmean(dvec: &[i64]) -> Result<f64> {
    Ok( (sum/(n as f64)).exp() )
 }
 
-/// Geometric mean and std ratio of an i64 slice.  
-/// Zero valued data is not allowed.  
-/// Std of ln data becomes a ratio after conversion back.
-/// # Example
-/// ```
-/// use rstats::gwmean;
-/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
-/// assert_eq!(gwmean(&VEC1).unwrap(),4.144953510241978_f64);
-/// ```
-pub fn gmeanstd(dvec: &[i64]) -> Result<MStats> {
-   let n = dvec.len();
-   ensure!(n>0,"{}:{} gmeanstd - supplied sample is empty!",file!(),line!());
-   let mut sum = 0f64;
-   let mut sx2 = 0f64;
-   for &x in dvec { 
-      ensure!(x!=0i64,
-         "{}:{} gmeanstd does not accept zero valued data!",file!(),line!());   
-      let lx = (x as f64).ln();
-      sum += lx;
-      sx2 += lx*lx    
-   }
-   sum /= n as f64;
-   Ok( MStats { 
-      mean: sum.exp(), 
-      std: (sx2/(n as f64) - sum.powi(2)).sqrt().exp() }
-    )
-}
-
 /// Time linearly weighted geometric mean of an i64 slice.  
 /// Linearly descending weights from n down to one.  
 /// Time dependent data should be in the stack order - the last being the oldest.  
@@ -223,6 +196,35 @@ pub fn gwmean(dvec: &[i64]) -> Result<f64> {
    }
    Ok( (sum/wsum(n)).exp() )
 }	
+/// Geometric mean and std ratio of an i64 slice.  
+/// Zero valued data is not allowed.  
+/// Std of ln data becomes a ratio after conversion back.
+/// # Example
+/// ```
+/// use rstats::gmeanstd;
+/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+/// let res = gmeanstd(&VEC1).unwrap();
+/// assert_eq!(res.mean,6.045855171418503_f64);
+/// assert_eq!(res.std,2.1084348239406303_f64);
+/// ```
+pub fn gmeanstd(dvec: &[i64]) -> Result<MStats> {
+   let n = dvec.len();
+   ensure!(n>0,"{}:{} gmeanstd - supplied sample is empty!",file!(),line!());
+   let mut sum = 0f64;
+   let mut sx2 = 0f64;
+   for &x in dvec { 
+      ensure!(x!=0i64,
+         "{}:{} gmeanstd does not accept zero valued data!",file!(),line!());   
+      let lx = (x as f64).ln();
+      sum += lx;
+      sx2 += lx*lx    
+   }
+   sum /= n as f64;
+   Ok( MStats { 
+      mean: sum.exp(), 
+      std: (sx2/(n as f64) - sum.powi(2)).sqrt().exp() }
+    )
+}
 
 /// Linearly weighted version of gmeanstd.
 /// # Example
