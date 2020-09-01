@@ -2,7 +2,7 @@ pub mod tests;
 pub mod i64impls;
 pub mod f64impls;
 
-use anyhow::{Result,Context,ensure};
+use anyhow::{Result,ensure};
 /// Median and quartiles
 #[derive(Default)]
 pub struct Med {
@@ -38,8 +38,8 @@ pub trait RStats {
    fn gmean(&self) -> Result<f64>;
    fn gwmean(&self) -> Result<f64>;
    fn gmeanstd(&self) -> Result<MStats>;
-//  fn gwmeanstd(&self) -> Result<MStats>;
-// fn median(&self) -> Result<Med>;
+   fn gwmeanstd(&self) -> Result<MStats>;
+   fn median(&self) -> Result<Med>;
 //   fn correlation(&self, &other) -> Result<f64>;
 //  fn autocorr(&self) -> Result<f64>;
 
@@ -53,100 +53,6 @@ fn emsg(file:&'static str, line:u32, msg:&'static str)-> String {
 /// Private sum of linear weights 
 fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
 
-
-
-
-/// Linearly weighted version of gmeanstd.
-/// # Example
-/// ```
-/// use rstats::gwmeanstd;
-/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
-/// let res = gwmeanstd(&VEC1).unwrap();
-/// assert_eq!(res.mean,4.144953510241978_f64);
-/// assert_eq!(res.std,2.1572089236412597_f64);
-/// ```
-pub fn gwmeanstd(dvec: &[i64]) -> Result<MStats> {
-   let n = dvec.len();
-   ensure!(n>0,"{}:{} gwmeanstd - supplied sample is empty!",file!(),line!());
-   let mut iw = n as i64; // descending weights
-   let mut sum = 0f64;
-   let mut sx2 = 0f64;
-   for &x in dvec { 
-      ensure!(x!=0i64,
-         "{}:{} gwmeanstd does not accept zero valued data!",file!(),line!());  
-      let lx = (x as f64).ln();
-      sum += (iw as f64)*lx;
-      sx2 += (iw as f64)*lx*lx;
-      iw -= 1;
-   }
-   sum /= wsum(n);
-   Ok( MStats { 
-      mean : sum.exp(),
-      std : (sx2 as f64/wsum(n) - sum.powi(2)).sqrt().exp() }
-    )
-}	
-
-/// Fast median (avoids sorting).  
-/// The data values must be within a moderate range not exceeding u16size (65535).
-/// # Example
-/// ```
-/// use rstats::median;
-/// const VEC1:[i64;14] = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
-/// let res = median(&VEC1).unwrap();
-/// assert_eq!(res.median,7.5_f64);
-/// assert_eq!(res.lquartile,4_f64);
-/// assert_eq!(res.uquartile,11_f64);
-/// ```
-pub fn median(data: &[i64]) -> Result<Med> {
-   let max = *data.iter().max().with_context(||emsg(file!(),line!(),"median failed to find maximum"))?;
-   let min = *data.iter().min().with_context(||emsg(file!(),line!(),"median failed to find minimum"))?;
-   let range =  (max-min+1) as usize;
-   ensure!(range <= u16::max_value() as usize, // range too big to use as subscripts
-      "{}:{} median range {} of values exceeds u16",file!(),line!(),range);
-	let mut acc = vec![0_u16; range]; // min max values inclusive
-   for &item in data { acc[(item-min) as usize] += 1_u16 } // frequency distribution
-   let mut result: Med = Default::default();
-   let rowlength = data.len();
-   let mut cumm = 0_usize;
-   let mut i2;
-
-   for i in 0..range {
-      // find the lower quartile
-      cumm += (acc[i]) as usize; // accummulate frequencies
-      if 4 * cumm >= rowlength {
-         result.lquartile = (i as i64 + min) as f64; // restore min value
-         break;
-      }
-   }
-   cumm = 0usize;
-   for i in (0..range).rev() {
-      // find the upper quartile
-      cumm += (acc[i]) as usize; // accummulate frequencies
-      if 4 * cumm >= rowlength {
-         result.uquartile = (i as i64 + min) as f64;
-         break;
-      }
-   }
-   cumm = 0usize;
-   for i in 0..range {
-   // find the midpoint of the frequency distribution
-      cumm += (acc[i]) as usize; // accummulate frequencies
-      if 2 * cumm == rowlength {
-         // even, the other half must have the same value
-         i2 = i + 1;
-         while acc[i2] == 0 { i2 += 1 }
-         // first next non-zero acc[i2] must represent the other half
-         result.median = ((i + i2) as i64 + 2*min) as f64 / 2.;
-         break;
-      }
-      if 2 * cumm > rowlength {
-         result.median = (i as i64 + min) as f64;
-         break;
-      }
-      // first over the half, this must be the odd midpoint
-   }
-   Ok(result)
-}
 
 /// Correlation coefficient of a sample of two integer variables.
 /// # Example

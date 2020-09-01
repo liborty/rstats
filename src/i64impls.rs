@@ -1,5 +1,5 @@
-use anyhow::{Result,ensure};
-use crate::{MStats,RStats,wsum,emsg};
+use anyhow::{Result,Context,ensure};
+use crate::{MStats,RStats,Med,wsum,emsg};
 
 impl RStats for Vec<i64> {
    
@@ -152,7 +152,7 @@ impl RStats for Vec<i64> {
       let mut w = n as f64; // descending weights
       let mut sum = 0_f64;
       for &x in self {  
-         ensure!(x!=0i64,emsg(file!(),line!(),"gwmean does not accept zero valued data!"));
+         ensure!(x!=0_i64,emsg(file!(),line!(),"gwmean does not accept zero valued data!"));
          sum += w*(x as f64).ln();
          w -= 1_f64;
       }
@@ -175,12 +175,98 @@ impl RStats for Vec<i64> {
       ensure!(n>0,emsg(file!(),line!(),"gmeanstd - sample is empty!"));
       let mut sum = 0_f64; let mut sx2 = 0_f64;
       for &x in self { 
-         ensure!(x!=0i64,emsg(file!(),line!(),"gmeanstd does not accept zero valued data!"));
+         ensure!(x!=0_i64,emsg(file!(),line!(),"gmeanstd does not accept zero valued data!"));
       let lx = (x as f64).ln();
       sum += lx; sx2 += lx*lx    
       }
       sum /= n as f64;
       Ok( MStats { mean: sum.exp(), std: (sx2/(n as f64) - sum.powi(2)).sqrt().exp() } )
+   }
+
+   /// Linearly weighted version of gmeanstd.
+   /// # Example
+   /// ```
+   /// use rstats::RStats;
+   /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+   /// let res = v1.gwmeanstd().unwrap();
+   /// assert_eq!(res.mean,4.144953510241978_f64);
+   /// assert_eq!(res.std,2.1572089236412597_f64);
+   /// ```
+   fn gwmeanstd(&self) -> Result<MStats> {
+      let n = self.len();
+      ensure!(n>0,emsg(file!(),line!(),"gwmeanstd - sample is empty!"));
+      let mut w = n as f64; // descending weights
+      let mut sum = 0_f64; let mut sx2 = 0_f64;
+      for &x in self { 
+         ensure!(x!=0_i64,emsg(file!(),line!(),"gwmeanstd does not accept zero valued data!"));
+         let lnx = (x as f64).ln();
+         sum += w*lnx; sx2 += w*lnx*lnx;
+         w -= 1_f64;
+      }
+   sum /= wsum(n);
+   Ok( MStats { mean : sum.exp(), std : (sx2 as f64/wsum(n) - sum.powi(2)).sqrt().exp() } )
+   }
+
+   /// Fast median (avoids sorting).  
+   /// The data values must be within a moderate range not exceeding u16size (65535).
+   /// # Example
+   /// ```
+   /// use rstats::RStats;
+   /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+   /// let res = v1.median().unwrap();
+   /// assert_eq!(res.median,7.5_f64);
+   /// assert_eq!(res.lquartile,4_f64);
+   /// assert_eq!(res.uquartile,11_f64);
+   /// ```
+   fn median(&self) -> Result<Med> {
+      let n = self.len() as u32;
+      ensure!(n>0,emsg(file!(),line!(),"median - sample is empty!"));
+      ensure!(n<=u32::max_value(),
+         emsg(file!(),line!(),"median - sample is probably too large!"));
+      let max = *self.iter().max().with_context(||emsg(file!(),line!(),"median failed to find maximum"))?;
+      let min = *self.iter().min().with_context(||emsg(file!(),line!(),"median failed to find minimum"))?;
+      let range = (max-min+1) as usize;
+      ensure!(range <= u32::max_value() as usize, // range is probably too large to use as subscripts
+      "{}:{} rstats median range {} of values is too large",file!(),line!(),range);
+	   let mut acc = vec![0_u32; range]; // min max values inclusive
+      for &item in self { acc[(item-min) as usize] += 1_u32 } // computes frequency distribution
+      let mut result: Med = Default::default();
+      let mut cumm = 0_u32;
+      let mut i2;
+
+      for i in 0..range {  // find the lower quartile
+      cumm += acc[i]; // accummulate frequencies
+      if 4 * cumm >= n {
+         result.lquartile = (i as i64 + min) as f64; // restore min value
+         break;
+         }
+      }
+      cumm = 0u32;
+      for i in (0..range).rev() {  // find the upper quartile
+      cumm += acc[i]; // accummulate frequencies
+      if 4 * cumm >= n {
+         result.uquartile = (i as i64 + min) as f64;
+         break;
+         }
+      }
+      cumm = 0u32;
+      for i in 0..range {  // find the midpoint of the frequency distribution
+      cumm += acc[i]; // accummulate frequencies
+      if 2 * cumm == n {
+         // even, the other half must have the same value
+         i2 = i + 1;
+         while acc[i2] == 0 { i2 += 1 }
+         // first next non-zero acc[i2] must represent the other half
+         result.median = ((i + i2) as i64 + 2*min) as f64 / 2_f64;
+         break;
+         }
+      if 2 * cumm > n {
+         // first over the half items, this must be the odd midpoint
+         result.median = (i as i64 + min) as f64;
+         break;
+         }      
+      }
+      Ok(result)
    }
 
 }

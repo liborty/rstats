@@ -1,5 +1,5 @@
-use anyhow::{Result,ensure};
-use crate::{MStats,RStats,wsum,emsg};
+use anyhow::{Result,ensure,bail};
+use crate::{RStats,MStats,Med,wsum,emsg};
 
 impl RStats for Vec<f64> { 
 
@@ -179,4 +179,33 @@ impl RStats for Vec<f64> {
       sum /= n as f64;
       Ok( MStats { mean: sum.exp(), std: (sx2/(n as f64) - sum.powi(2)).sqrt().exp() } )
    }
+
+   /// Linearly weighted version of gmeanstd.
+   /// # Example
+   /// ```
+   /// use rstats::RStats;
+   /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   /// let res = v1.gwmeanstd().unwrap();
+   /// assert_eq!(res.mean,4.144953510241978_f64);
+   /// assert_eq!(res.std,2.1572089236412597_f64);
+   /// ```
+   fn gwmeanstd(&self) -> Result<MStats> {
+      let n = self.len();
+      ensure!(n>0,emsg(file!(),line!(),"gwmeanstd - sample is empty!"));
+      let mut w = n as f64; // descending weights
+      let mut sum = 0_f64; let mut sx2 = 0_f64;
+      for &x in self { 
+         ensure!(x.is_normal(),emsg(file!(),line!(),"gwmeanstd does not accept zero valued data!"));
+         let lnx = x.ln();
+         sum += w*lnx; sx2 += w*lnx*lnx;
+         w -= 1_f64;
+      }
+   sum /= wsum(n);
+   Ok( MStats { mean : sum.exp(), std : (sx2 as f64/wsum(n) - sum.powi(2)).sqrt().exp() } )
+   }
+
+   fn median(&self) -> Result<Med> {
+      bail!(emsg(file!(),line!(),"gwmeanstd - sample is empty!"));
+   }
+
 }
