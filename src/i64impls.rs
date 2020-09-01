@@ -269,5 +269,66 @@ impl RStats for Vec<i64> {
       Ok(result)
    }
 
+   /// Correlation coefficient of a sample of two integer variables.
+   /// # Example
+   /// ```
+   /// use rstats::RStats;
+   /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+   /// let v2 = vec![14_i64,13,12,11,10,9,8,7,6,5,4,3,2,1];
+   /// assert_eq!(v1.correlation(&v2).unwrap(),-1_f64);
+   /// ```
+   fn correlation(&self,v2:&[i64]) -> Result<f64> {
+      let n = self.len();
+      ensure!(n>0,emsg(file!(),line!(),"correlation - first sample is empty"));
+      ensure!(n==v2.len(),emsg(file!(),line!(),"correlation - samples are not of the same size"));
+      let (mut sy,mut sxy,mut sx2,mut sy2) = (0_f64,0_f64,0_f64,0_f64);
+      let sx:f64 = self.iter().enumerate().map(|(i,&vx)| {
+         let x = vx as f64; let y = v2[i] as f64; 
+         sy += y; sxy += x*y; sx2 += x*x; sy2 += y*y; x    
+      }).sum();
+      let nf = n as f64;
+      Ok( (sxy-sx/nf*sy)/(((sx2-sx/nf*sx)*(sy2-sy/nf*sy)).sqrt()) )
+   }
+
+   /// Correlation coefficient of samples of i64 and f64 variables.
+   /// # Example
+   /// ```
+   /// use rstats::RStats;
+   /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+   /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
+   /// assert_eq!(v1.fcorrelation(&v2).unwrap(),-1_f64);
+   /// ```
+   fn fcorrelation(&self,v2:&[f64]) -> Result<f64> {
+      let n = self.len();
+      ensure!(n>0,emsg(file!(),line!(),"correlation - first sample is empty"));
+      ensure!(n==v2.len(),emsg(file!(),line!(),"correlation - samples are not of the same size"));
+      let (mut sy,mut sxy,mut sx2,mut sy2) = (0_f64,0_f64,0_f64,0_f64);
+      let sx:f64 = self.iter().enumerate().map(|(i,&vx)| {
+         let x = vx as f64; let y = v2[i]; 
+         sy += y; sxy += x*y; sx2 += x*x; sy2 += y*y; x    
+      }).sum();
+      let nf = n as f64;
+      Ok( (sxy-sx/nf*sy)/(((sx2-sx/nf*sx)*(sy2-sy/nf*sy)).sqrt()) )
+   }
+
+   /// (Auto)correlation coefficient of pairs of successive values of (time series) integer variable.
+   /// # Example
+   /// ```
+   /// use rstats::RStats;
+   /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+   /// assert_eq!(v1.autocorr().unwrap(),0.9984603532054123_f64);
+   /// ```
+   fn autocorr(&self) -> Result<f64> {
+     let n = self.len();
+      ensure!(n>=2,emsg(file!(),line!(),"autocorr - sample is too small"));
+      let (mut sx,mut sy,mut sxy,mut sx2,mut sy2) = (0_f64,0_f64,0_f64,0_f64,0_f64);
+      for i in 0..n-1 {
+         let x = self[i] as f64; let y = self[i+1] as f64; 
+         sx += x; sy += y; sxy += x*y; sx2 += x*x; sy2 += y*y 
+      }    
+      let nf = n as f64;
+      Ok( (sxy-sx/nf*sy)/(((sx2-sx/nf*sx)*(sy2-sy/nf*sy)).sqrt()) )
+   }
+
 }
 
