@@ -1,5 +1,5 @@
-use anyhow::{Result,ensure,bail};
-use crate::{RStats,MStats,Med,wsum,emsg};
+use anyhow::{Result,ensure};
+use crate::{RStats,MStats,Med,wsum,emsg,sortfslice};
 
 impl RStats for Vec<f64> { 
 
@@ -204,9 +204,31 @@ impl RStats for Vec<f64> {
    Ok( MStats { mean : sum.exp(), std : (sx2 as f64/wsum(n) - sum.powi(2)).sqrt().exp() } )
    }
 
+   /// Median of an f64 slice
+   /// # Example
+   /// ```
+   /// use rstats::RStats;
+   /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   /// let res = v1.median().unwrap();
+   /// assert_eq!(res.median,7.5_f64);
+   /// assert_eq!(res.lquartile,4_f64);
+   /// assert_eq!(res.uquartile,11_f64);
+   /// ```
    fn median(&self) -> Result<Med> {
-      bail!(emsg(file!(),line!(),"gwmeanstd - sample is empty!"));
+      let n = self.len();
+      let mid = n/2;
+      let mut v = self.clone();
+      sortfslice(&mut v);
+      let mut result: Med = Default::default();
+      result.median = if mid*2 < n { v[mid] } else { (v[mid] + v[mid-1]) / 2.0 };
+      result.lquartile = v[n/4];
+      result.uquartile = v[3*n/4];
+      Ok(result)
    }
+
+//   fn median(&self) -> Result<Med> {
+//     bail!(emsg(file!(),line!(),"gwmeanstd - sample is empty!"));
+//  }
 
 
    /// Correlation coefficient of a sample of f64 and i64 variables.

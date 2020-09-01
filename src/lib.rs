@@ -2,7 +2,8 @@
 pub mod i64impls;
 pub mod f64impls;
 
-use anyhow::{Result};
+use std::cmp::Ordering::Equal;
+use anyhow::Result;
 /// Median and quartiles
 #[derive(Default)]
 pub struct Med {
@@ -54,3 +55,7 @@ fn emsg(file:&'static str, line:u32, msg:&'static str)-> String {
 /// Private sum of linear weights 
 fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
 
+/// sorts in place mutable slice of f32's
+fn sortfslice(sl: &mut [f64]) {
+   sl.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+}
