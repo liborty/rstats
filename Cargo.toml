@@ -1,9 +1,9 @@
 [package]
 name = "rstats"
-version = "0.1.5"
+version = "0.2.0"
 authors = ["Libor Spacek"]
 edition = "2018"
-description = "Simple Statistics"
+description = "Simple Statistics: Means, Median, Correlations"
 homepage = "https://github.com/liborty/rustats"
 repository = "https://github.com/liborty/rustats"
 license = "Apache-2.0"

@@ -17,4 +17,7 @@ Also included are:
 
 * median and quartiles.
 
-More facilities will be added in future versions.
+### Releases 
+Version 0.2.0 marks breaking change from function calls: `amean(&v)` to method invocations: `v.amean()`
+
+More methods will be added in future versions.
