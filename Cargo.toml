@@ -7,8 +7,8 @@ description = "Simple Statistics: Means, Median, Correlations"
 homepage = "https://github.com/liborty/rustats"
 repository = "https://github.com/liborty/rustats"
 license = "Apache-2.0"
-keywords = ["statistics","vectors","geometric median","time-dependent"]
-categories = ["science","mathematics"]
+keywords = ["statistics","vectors","geometric-median","n-dimensional","time-dependent"]
+categories = ["science","mathematics","algorithms"]
 include = [
     "src/*.rs",
     "Cargo.toml",
