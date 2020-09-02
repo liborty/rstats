@@ -1,5 +1,5 @@
 use anyhow::{Result,ensure};
-use crate::{RStats,Vectors,MStats,Med,wsum,emsg};
+use crate::{RStats,MStats,Med,wsum,emsg,sortf};
 
 impl RStats for Vec<f64> { 
 
@@ -218,7 +218,7 @@ impl RStats for Vec<f64> {
       let n = self.len();
       let mid = n/2;
       let mut v = self.clone();
-      v.sortf();
+      sortf(&mut v);
      // sortfslice(&mut v);
       let mut result: Med = Default::default();
       result.median = if mid*2 < n { v[mid] } else { (v[mid] + v[mid-1]) / 2.0 };

@@ -4,7 +4,7 @@ pub mod f64impls;
 pub mod vimpls;
 pub mod tests;
 
-
+use std::cmp::Ordering::Equal;
 use anyhow::Result;
 /// Median and quartiles
 #[derive(Default)]
@@ -43,7 +43,7 @@ impl std::fmt::Display for NDPoints<'_> {
 
 pub trait GMedian {
 
-   fn medoid(&self) -> &[f64];
+   fn medoid(&self) -> usize;
 
 }
 
@@ -68,7 +68,6 @@ pub trait RStats {
 
 pub trait Vectors {
 
-   fn sortf(&mut self);
    fn dotp(&self, other:&[f64]) -> f64;
    fn vsub(&self, other:&[f64]) -> Vec<f64>;
    fn vmag(&self) -> f64;
@@ -84,3 +83,9 @@ fn emsg(file:&'static str, line:u32, msg:&'static str)-> String {
 
 /// Private sum of linear weights 
 fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
+
+/// Sorts a mutable Vec<f64> in place.  
+/// It is the responsibility of the user to ensure that there are no NaNs etc.
+fn sortf(v: &mut [f64]) { 
+   v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
+   }

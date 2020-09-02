@@ -3,8 +3,9 @@
 #[cfg(test)]
 
 use anyhow::{Result};
-use crate::{RStats,Vectors,NDPoints};
+use crate::{RStats,Vectors,GMedian,NDPoints};
 
+/*
 #[test]
 fn vectors() -> Result<()> { 
    let v = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
@@ -16,17 +17,19 @@ fn vectors() -> Result<()> {
    println!("\nThe distance between\n{:?}\n{:?} is\n\x1B[01;92m{:?}\x1B[0m",&v,&v2,v.vdist(&v2));
    Ok(())
 }
+*/
 
 #[test]
 fn nd() -> Result<()> { 
    let mut v = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   let length = v.len();
    let mut v2 = v.clone();
    v2.reverse();
    let mut v3 = v.vsub(&v2);
    v.append(&mut v2);
    v.append(&mut v3);
-   let pts = NDPoints{ dims: 14, buff: &v };
-   println!("\n\x1B[01;92m{}\x1B[0m",pts);
+   let pts = NDPoints{ dims: length, buff: &v };
+   println!("Medoid index of {{{}}} is \x1B[01;92m{}\x1B[0m",pts,pts.medoid());
    Ok(())
 }
 

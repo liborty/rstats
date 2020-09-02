@@ -1,14 +1,35 @@
-use std::cmp::Ordering::Equal;
 use crate::{Vectors,GMedian,NDPoints};
 
 impl Vectors for Vec<f64> { 
    
-   /// Sorts a mutable Vec<f64> in place.  
-   /// It is the responsibility of the user to ensure that there are no NaNs etc.
-   fn sortf(&mut self) { 
-      self.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
+   /// Scalar multiplication of a vector, creates new vec
+   fn smult(&self, s:f64) -> Vec<f64> {
+      self.iter().map(|&x|s*x).collect()
    }
 
+   /// Scalar product of two f64 slices.   
+   /// Must be of the same length - no error checking for speed
+   fn dotp(&self, v: &[f64]) -> f64 {
+      self.iter().enumerate().map(|(i,&x)| x*v[i]).sum::<f64>()    
+   }
+
+   /// Vector subtraction, creates a new Vec result
+   fn vsub(&self, v: &[f64]) -> Vec<f64> {
+      self.iter().enumerate().map(|(i,&x)|x-v[i]).collect()
+   }
+
+   /// Euclidian distance between two n dimensional points (vectors)
+   fn vdist(&self, v: &[f64]) -> f64 {
+      self.iter().enumerate().map(|(i,&x)|(x-v[i]).powi(2)).sum::<f64>().sqrt()
+   }
+
+   /// Vector magnitude 
+   fn vmag(&self) -> f64 { self.iter().map(|&x|x.powi(2)).sum::<f64>().sqrt() }
+   
+}
+
+impl Vectors for &[f64] { 
+   
    /// Scalar multiplication of a vector, creates new vec
    fn smult(&self, s:f64) -> Vec<f64> {
       self.iter().map(|&x|s*x).collect()
@@ -36,8 +57,21 @@ impl Vectors for Vec<f64> {
 }
 
 impl GMedian for NDPoints<'_> {
-
-   fn medoid(&self) -> &[f64] {
-      self.buff
+   /// Medoid is a point in n-dimensional set of points with the least sum of distances to others.
+   fn medoid(&self) -> usize {
+      let n = self.buff.len()/self.dims;
+      let mut minindx = 0;
+      let mut mind = f64::MAX;
+      for i in 0..n {
+         let thisp = self.buff.get(i*self.dims .. (i+1)*self.dims).unwrap();
+         let mut dsum = 0_f64;
+         for j in (i+1)..n {
+            let thatp = self.buff.get(j*self.dims .. (j+1)*self.dims).unwrap();
+            dsum += thisp.vdist(&thatp);
+            if dsum > mind { break } // quit testing points if min distance already exceeded
+            }
+         if dsum < mind { mind = dsum; minindx = i }
+      }
+      minindx
    }
 }
