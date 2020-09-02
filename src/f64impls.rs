@@ -1,5 +1,5 @@
 use anyhow::{Result,ensure};
-use crate::{RStats,MStats,Med,wsum,emsg,sortfslice};
+use crate::{RStats,Vectors,MStats,Med,wsum,emsg};
 
 impl RStats for Vec<f64> { 
 
@@ -218,7 +218,8 @@ impl RStats for Vec<f64> {
       let n = self.len();
       let mid = n/2;
       let mut v = self.clone();
-      sortfslice(&mut v);
+      v.sortf();
+     // sortfslice(&mut v);
       let mut result: Med = Default::default();
       result.median = if mid*2 < n { v[mid] } else { (v[mid] + v[mid-1]) / 2.0 };
       result.lquartile = v[n/4];
@@ -237,9 +238,9 @@ impl RStats for Vec<f64> {
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// let v2 = vec![14_i64,13,12,11,10,9,8,7,6,5,4,3,2,1];
-   /// assert_eq!(v1.correlation(&v2).unwrap(),-1_f64);
+   /// assert_eq!(v1.icorrelation(&v2).unwrap(),-1_f64);
    /// ```
-   fn correlation(&self,v2:&[i64]) -> Result<f64> {
+   fn icorrelation(&self,v2:&[i64]) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"correlation - first sample is empty"));
       ensure!(n==v2.len(),emsg(file!(),line!(),"correlation - samples are not of the same size"));
@@ -258,9 +259,9 @@ impl RStats for Vec<f64> {
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
-   /// assert_eq!(v1.fcorrelation(&v2).unwrap(),-1_f64);
+   /// assert_eq!(v1.correlation(&v2).unwrap(),-1_f64);
    /// ```
-   fn fcorrelation(&self,v2:&[f64]) -> Result<f64> {
+   fn correlation(&self,v2:&[f64]) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"correlation - first sample is empty"));
       ensure!(n==v2.len(),emsg(file!(),line!(),"correlation - samples are not of the same size"));
@@ -292,4 +293,5 @@ impl RStats for Vec<f64> {
        Ok( (sxy-sx/nf*sy)/(((sx2-sx/nf*sx)*(sy2-sy/nf*sy)).sqrt()) )
     }
 
+   
 }

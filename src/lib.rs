@@ -1,8 +1,10 @@
 // pub mod tests;
 pub mod i64impls;
 pub mod f64impls;
+pub mod vimpls;
+pub mod tests;
 
-use std::cmp::Ordering::Equal;
+
 use anyhow::Result;
 /// Median and quartiles
 #[derive(Default)]
@@ -41,10 +43,18 @@ pub trait RStats {
    fn gmeanstd(&self) -> Result<MStats>;
    fn gwmeanstd(&self) -> Result<MStats>;
    fn median(&self) -> Result<Med>;
-   fn correlation(&self, other:&[i64]) -> Result<f64>;
-   fn fcorrelation(&self, other:&[f64]) -> Result<f64>;
+   fn icorrelation(&self, other:&[i64]) -> Result<f64>;
+   fn correlation(&self, other:&[f64]) -> Result<f64>;
    fn autocorr(&self) -> Result<f64>;
+  
+}
 
+pub trait Vectors {
+
+   fn sortf(&mut self);
+   fn dotp(&self, other:&[f64]) -> f64;
+   fn vsub(&self, other:&[f64]) -> Vec<f64>;
+   fn vmag(&self) -> f64;
 }
 
 /// Private helper function for formatting error messages
@@ -54,8 +64,3 @@ fn emsg(file:&'static str, line:u32, msg:&'static str)-> String {
 
 /// Private sum of linear weights 
 fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
-
-/// sorts in place mutable slice of f32's
-fn sortfslice(sl: &mut [f64]) {
-   sl.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
-}
