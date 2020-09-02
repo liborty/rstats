@@ -3,7 +3,7 @@
 #[cfg(test)]
 
 use anyhow::{Result};
-use crate::{RStats,Vectors};
+use crate::{RStats,Vectors,NDPoints};
 
 #[test]
 fn vectors() -> Result<()> { 
@@ -14,6 +14,19 @@ fn vectors() -> Result<()> {
    println!("\nThe scalar product of\n{:?}\n{:?} is \x1B[01;92m{}\x1B[0m",&v,&v,v.dotp(&v));
    println!("\nThe difference of\n{:?}\n{:?} is\n\x1B[01;92m{:?}\x1B[0m",&v,&v,v.vsub(&v));
    println!("\nThe distance between\n{:?}\n{:?} is\n\x1B[01;92m{:?}\x1B[0m",&v,&v2,v.vdist(&v2));
+   Ok(())
+}
+
+#[test]
+fn nd() -> Result<()> { 
+   let mut v = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   let mut v2 = v.clone();
+   v2.reverse();
+   let mut v3 = v.vsub(&v2);
+   v.append(&mut v2);
+   v.append(&mut v3);
+   let pts = NDPoints{ dims: 14, buff: &v };
+   println!("\n\x1B[01;92m{}\x1B[0m",pts);
    Ok(())
 }
 

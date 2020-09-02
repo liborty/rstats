@@ -29,6 +29,23 @@ impl std::fmt::Display for MStats {
       write!(f, "Mean:\t{}\nStd:\t{}", self.mean, self.std)
    }
 }
+// Set of multidimensional points (vectors) as one flat Vec
+#[derive(Default)]
+pub struct  NDPoints<'a> {
+   pub dims: usize,
+   pub buff: &'a [f64]
+}
+impl std::fmt::Display for NDPoints<'_> {
+   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+      write!(f, "Points: {} Dimensions: {}", self.buff.len()/self.dims, self.dims)
+   }
+}
+
+pub trait GMedian {
+
+   fn medoid(&self) -> &[f64];
+
+}
 
 pub trait RStats { 
 
@@ -56,6 +73,8 @@ pub trait Vectors {
    fn vsub(&self, other:&[f64]) -> Vec<f64>;
    fn vmag(&self) -> f64;
    fn vdist(&self, other:&[f64]) -> f64;
+   fn smult(&self, s:f64) -> Vec<f64>;
+
 }
 
 /// Private helper function for formatting error messages

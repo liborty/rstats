@@ -1,12 +1,18 @@
 use std::cmp::Ordering::Equal;
-use crate::{Vectors};
+use crate::{Vectors,GMedian,NDPoints};
 
 impl Vectors for Vec<f64> { 
    
    /// Sorts a mutable Vec<f64> in place.  
    /// It is the responsibility of the user to ensure that there are no NaNs etc.
-   fn sortf(&mut self) 
-   { self.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal)) }
+   fn sortf(&mut self) { 
+      self.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
+   }
+
+   /// Scalar multiplication of a vector, creates new vec
+   fn smult(&self, s:f64) -> Vec<f64> {
+      self.iter().map(|&x|s*x).collect()
+   }
 
    /// Scalar product of two f64 slices.   
    /// Must be of the same length - no error checking for speed
@@ -26,5 +32,12 @@ impl Vectors for Vec<f64> {
 
    /// Vector magnitude 
    fn vmag(&self) -> f64 { self.iter().map(|&x|x.powi(2)).sum::<f64>().sqrt() }
+   
+}
 
+impl GMedian for NDPoints<'_> {
+
+   fn medoid(&self) -> &[f64] {
+      self.buff
+   }
 }
