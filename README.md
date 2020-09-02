@@ -27,7 +27,13 @@ Included are:
 
 has simple vector operations implemented for f64 vectors (and their slices).
 
+## Trait GMedian
+
+facilitates computing the Medoid and the Geometric Median of a set of n-dimensional points.
+
 ## Releases
+
+* **Version 0.2.3** added Medoid.
 
 * **Version 0.2.2** added simple vector calculations via trait `Vectors`. Renamed `correlation` -> `icorrelation` and `fcorrelation` -> `correlation`. As normal expectation here is for the arguments to be f64 vectors rather than i64s.
 
