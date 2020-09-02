@@ -25,7 +25,7 @@ Included are:
 
 ## Trait Vectors
 
-has simple vector operations implemented for f64 vectors ( and their slices).
+has simple vector operations implemented for f64 vectors (and their slices).
 
 ## Releases
 
