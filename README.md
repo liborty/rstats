@@ -36,4 +36,4 @@ has simple vector operations implemented for f64 vectors (and their slices).
 * **Version 0.2.0** introduced a breaking change from function calls: `amean(&v)` to trait method invocations: `v.amean()`.
 
 ## Future Work
-More methods will be added in future versions; in particular the geometric median of n-dimensional data, using an improved Weiszfeld's algorithm.
+More methods will be added in future versions; in particular the geometric median of n-dimensional data, using an improved Weiszfeld's algorithm with guaranteed convergence.
