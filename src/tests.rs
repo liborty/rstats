@@ -26,8 +26,10 @@ fn nd() -> Result<()> {
    let mut v2 = v.clone();
    v2.reverse();
    let mut v3 = v.vsub(&v2);
+   let mut v4 = v3.smult(10.0);
    v.append(&mut v2);
    v.append(&mut v3);
+   v.append(&mut v4);
    let pts = NDPoints{ dims: length, buff: &v };
    println!("Medoid index of {{{}}} is \x1B[01;92m{}\x1B[0m",pts,pts.medoid());
    Ok(())
