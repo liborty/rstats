@@ -29,7 +29,9 @@ impl std::fmt::Display for MStats {
       write!(f, "Mean:\t{}\nStd:\t{}", self.mean, self.std)
    }
 }
-// Set of multidimensional points (vectors) as one flat Vec
+/// Set of n dimensional points (vectors) as one flat `&[f64]` (buff field);  
+/// n is therefore the length of each vector and is stored as dims field.
+/// The number of points held by instance s is `s.buff.len()/s.dims`
 #[derive(Default)]
 pub struct  NDPoints<'a> {
    pub dims: usize,
@@ -86,6 +88,6 @@ fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
 
 /// Sorts a mutable Vec<f64> in place.  
 /// It is the responsibility of the user to ensure that there are no NaNs etc.
-fn sortf(v: &mut [f64]) { 
+pub fn sortf(v: &mut [f64]) { 
    v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
-   }
+}

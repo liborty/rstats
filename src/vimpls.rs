@@ -58,6 +58,7 @@ impl Vectors for &[f64] {
 
 impl GMedian for NDPoints<'_> {
    /// Medoid is a point in n-dimensional set of points with the least sum of distances to others.
+   /// This method returns an index to the start of medoid within an NDPoints set of n-dimensional points.
    fn medoid(&self) -> usize {
       let n = self.buff.len()/self.dims;
       let mut minindx = 0;
@@ -65,7 +66,10 @@ impl GMedian for NDPoints<'_> {
       for i in 0..n {
          let thisp = self.buff.get(i*self.dims .. (i+1)*self.dims).unwrap();
          let mut dsum = 0_f64;
-         for j in (i+1)..n {
+         // This computes each distance twice but it is probably faster than looking them up somewhere,
+         // unless the dimensionality is very large  
+         for j in 0..n {
+            if i==j { continue };
             let thatp = self.buff.get(j*self.dims .. (j+1)*self.dims).unwrap();
             dsum += thisp.vdist(&thatp);
             if dsum > mind { break } // quit testing points if min distance already exceeded
