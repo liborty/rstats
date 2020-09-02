@@ -55,6 +55,7 @@ pub trait Vectors {
    fn dotp(&self, other:&[f64]) -> f64;
    fn vsub(&self, other:&[f64]) -> Vec<f64>;
    fn vmag(&self) -> f64;
+   fn vdist(&self, other:&[f64]) -> f64;
 }
 
 /// Private helper function for formatting error messages

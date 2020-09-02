@@ -7,7 +7,7 @@ description = "Simple Statistics: Means, Median, Correlations"
 homepage = "https://github.com/liborty/rustats"
 repository = "https://github.com/liborty/rustats"
 license = "Apache-2.0"
-keywords = ["statistics","means","median","correlation","time-dependent"]
+keywords = ["statistics","vectors","geometric median","time-dependent"]
 categories = ["science","mathematics"]
 include = [
     "src/*.rs",
