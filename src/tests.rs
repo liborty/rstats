@@ -31,7 +31,8 @@ fn nd() -> Result<()> {
    v.append(&mut v3);
    v.append(&mut v4);
    let pts = NDPoints{ dims: length, buff: &v };
-   println!("Medoid index of {{{}}} is \x1B[01;92m{}\x1B[0m",pts,pts.medoid());
+   println!("Medoid of {{{}}} (index, distance) \x1B[01;92m{:?}\x1B[0m",
+      pts,pts.medoid().unwrap());
    Ok(())
 }
 

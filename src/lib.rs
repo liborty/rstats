@@ -6,6 +6,7 @@ pub mod tests;
 
 use std::cmp::Ordering::Equal;
 use anyhow::Result;
+
 /// Median and quartiles
 #[derive(Default)]
 pub struct Med {
@@ -18,6 +19,7 @@ impl std::fmt::Display for Med {
         write!(f, "(LQ: {}, M: {}, UQ: {})", self.lquartile, self.median, self.uquartile)
     }
 }
+
 /// Mean and standard deviation (or std ratio for geometric mean)
 #[derive(Default)]
 pub struct MStats {
@@ -42,13 +44,7 @@ impl std::fmt::Display for NDPoints<'_> {
       write!(f, "Points: {} Dimensions: {}", self.buff.len()/self.dims, self.dims)
    }
 }
-
-pub trait GMedian {
-
-   fn medoid(&self) -> usize;
-
-}
-
+/// For implementing basic statistical methods
 pub trait RStats { 
 
    fn amean(&self) -> Result<f64>;
@@ -68,13 +64,24 @@ pub trait RStats {
   
 }
 
+/// For implementing basic vector algebra methods
 pub trait Vectors {
 
    fn dotp(&self, other:&[f64]) -> f64;
    fn vsub(&self, other:&[f64]) -> Vec<f64>;
+   fn vadd(&self, other:&[f64]) -> Vec<f64>;
    fn vmag(&self) -> f64;
    fn vdist(&self, other:&[f64]) -> f64;
    fn smult(&self, s:f64) -> Vec<f64>;
+   fn vunit(&self) -> Vec<f64>;
+
+}
+
+/// For implementing methods operating on a set `NDPoints` of n dimensional points
+pub trait GMedian {
+
+   fn medoid(&self) -> Result<(usize,f64)>;
+   fn distances(&self,other:&[f64]) -> f64;
 
 }
 
