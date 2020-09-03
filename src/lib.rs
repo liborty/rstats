@@ -93,8 +93,32 @@ fn emsg(file:&'static str, line:u32, msg:&'static str)-> String {
 /// Private sum of linear weights 
 fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
 
-/// Sorts a mutable Vec<f64> in place.  
+/// Sorts a mutable `Vec<f64>` in place.  
 /// It is the responsibility of the user to ensure that there are no NaNs etc.
 pub fn sortf(v: &mut [f64]) { 
    v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
 }
+
+/// Generates a random vector 
+/// Uses closure `rand` to generate random numbers to avoid dependencies
+/// Random numbers are in the open interval 0..1 with uniform distribution
+fn genvec(size: usize , s1: usize, s2: usize) -> Vec<f64> {
+   let mut m_z = s1 as u32;
+   let mut m_w = s2 as u32;
+   // returns f64 in the open interval 0..1 with uniform random distribution
+   let mut rand = || {
+      m_z = 36969 * (m_z & 65535) + (m_z >> 16);
+      m_w = 18000 * (m_w & 65535) + (m_w >> 16);
+      ((((m_z << 16) + m_w) as f32 + 1.0)*2.328306435454494e-10) as f64
+   };
+   let mut v = Vec::with_capacity(size); 
+   for _i in 0..size { v.push(rand()) }; // fills the lot with random numbers
+   return v
+}
+/*
+/// Wrapper to create and instance of NDPoints for testing
+fn genpoints(d: usize, n: usize) -> NDPoints<'static> {
+   NDPoints{ dims: d, buff: &genvec(d,d*n,d+n) } 
+}
+*/
+
