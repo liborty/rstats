@@ -77,7 +77,8 @@ impl Vectors for &[f64] {
       sum
    }
 
-   /// Weiszfeld's formula for one iteration step finding gmedian
+   /// Weiszfeld's formula for one iteration step in finding gmedian.  
+   /// Has problems with choosing the starting point - may fail to converge
    fn betterpoint(&self, d:usize, v:&[f64]) -> Vec<f64> {
       let n = self.len()/d;
       let mut sum = 0_f64;
@@ -91,14 +92,14 @@ impl Vectors for &[f64] {
       vsum.as_slice().smult(1.0/sum)
    }
 
-   /// Innovative first step to guarantee convergence
+   /// My innovative first steps that guarantee good convergence
    fn firstpoint(&self, d:usize, indx:usize) -> Vec<f64> {
       let n = self.len()/d;
       let mut sum = 0_f64;
       let mut vsum = vec![0_f64;d];
       let v = self.get(indx*d .. (indx+1)*d).unwrap();
       for i in 0..n {
-         if i == indx { continue };
+         if i == indx { continue }; // exclude the starting point in the set 
          let thatp = self.get(i*d .. (i+1)*d).unwrap();
          let recip = 1.0/v.vdist(&thatp);
          sum += recip;
@@ -108,7 +109,10 @@ impl Vectors for &[f64] {
    }
  
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.
-   fn gmedian(&self, d:usize) -> Result<(f64,Vec<f64>)> {
+   /// This improved algorithm has guaranteed good convergence, as it will not approach any points
+   /// in the set (which caused problems to Weiszfeld).
+   /// eps controls the desired accuracy (low threshold on the improvements in the sum of distances)
+   fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
       // start from medoid
@@ -116,14 +120,14 @@ impl Vectors for &[f64] {
          .with_context(||emsg(file!(),line!(),"gmedian medoid call failed"))?;
       // println!("gmedian initial medoid distance: {}",dist);
       let mut newdist: f64;
-      // first iteration step from medoid, excluding the medoid
+      // innovative first iteration step from the medoid, excluding the medoid
       let mut point = self.firstpoint(d,indx);
       newdist = self.distsum(d,&point);
       let mut distdif = dist-newdist;
       ensure!(distdif>0.,emsg(file!(),line!(),"gmedian failed to improve"));
       // println!("gmedian first improvement: {}",distdif);  
       dist = newdist;
-      while distdif > 0.001 { // improve the termination condition
+      while distdif > eps { // improve the termination condition
          point = self.betterpoint(d,&point); 
          newdist = self.distsum(d,&point);
          distdif = dist - newdist;

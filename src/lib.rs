@@ -45,8 +45,8 @@ pub trait RStats {
    fn gmeanstd(&self) -> Result<MStats>;
    fn gwmeanstd(&self) -> Result<MStats>;
    fn median(&self) -> Result<Med>;
-   fn icorrelation(&self, other:&[i64]) -> Result<f64>;
-   fn correlation(&self, other:&[f64]) -> Result<f64>;
+   fn icorrelation(&self, v:&[i64]) -> Result<f64>;
+   fn correlation(&self, v:&[f64]) -> Result<f64>;
    fn autocorr(&self) -> Result<f64>;
   
 }
@@ -54,18 +54,18 @@ pub trait RStats {
 /// Implementing basic vector algebra.
 pub trait Vectors {
 
-   fn dotp(&self, other:&[f64]) -> f64;
-   fn vsub(&self, other:&[f64]) -> Vec<f64>;
-   fn vadd(&self, other:&[f64]) -> Vec<f64>;
+   fn dotp(&self, v:&[f64]) -> f64;
+   fn vsub(&self, v:&[f64]) -> Vec<f64>;
+   fn vadd(&self, v:&[f64]) -> Vec<f64>;
    fn vmag(&self) -> f64;
-   fn vdist(&self, other:&[f64]) -> f64;
+   fn vdist(&self, v:&[f64]) -> f64;
    fn smult(&self, s:f64) -> Vec<f64>;
    fn vunit(&self) -> Vec<f64>;
-   fn medoid(&self, other:usize) -> Result<(usize,f64)>;
-   fn distsum(&self, other: usize, other: &[f64] ) -> f64;
-   fn betterpoint(&self, other: usize, other: &[f64] ) -> Vec<f64>;
+   fn medoid(&self, d:usize) -> Result<(usize,f64)>;
+   fn distsum(&self, d: usize, v: &[f64] ) -> f64;
+   fn betterpoint(&self, d: usize, v: &[f64] ) -> Vec<f64>;
    fn firstpoint(&self, d:usize, indx:usize) -> Vec<f64>;
-   fn gmedian(&self, other: usize) -> Result<(f64,Vec<f64>)>;   
+   fn gmedian(&self, d: usize, eps: f64) -> Result<(f64,Vec<f64>)>;   
 
 }
 

@@ -43,7 +43,7 @@ fn gm() -> Result<()> {
    let pts = genvec(20,20);
    let (_,dist) = pts.as_slice().medoid(20).unwrap();
    println!("Sum of Medoid distances:\x1B[01;92m{}\x1B[0m",dist);
-   let (ds,gm) = pts.as_slice().gmedian(20).unwrap();
+   let (ds,gm) = pts.as_slice().gmedian(20, 0.00001).unwrap();
    println!("Sum of G.M. distances:  \x1B[01;92m{}\x1B[0m\nGeometric Median:\n\x1B[01;92m{:?}\x1B[0m",ds,gm);
    Ok(())
 }

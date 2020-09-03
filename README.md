@@ -30,7 +30,7 @@ You may get errors when invoking them on Vectors but that is easily remedied by 
 
 ## Releases
 
-* **Version 0.2.6** removed duplicate implementations of Vector for `Vec<f64>`. Convert Vec arguments with .as_slice() to &[f64].
+* **Version 0.3.0** completed the innovative Geometric Median. Removed duplicated implementations of Vector for `Vec<f64>`. Convert Vec arguments with .as_slice() to &[f64].
 
 * **Version 0.2.5** breaking change: removed the struct NDPoints and  its trait GMedian for more simplicity and generality. N-dimensional vector algebra is now included in Vectors.
 
