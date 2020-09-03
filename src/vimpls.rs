@@ -35,13 +35,13 @@ impl Vectors for Vec<f64> {
    /// Unit vector
    fn vunit(&self) -> Vec<f64> { self.smult(1_f64/self.vmag()) }
 
-   /// Medoid is a point in n-dimensional set of points with the least sum of distances to others.
-   /// This method returns an index to the start of medoid within a flat vector of d-dimensional points.
+   /// Medoid is a point in n-dimensional set of points with the least sum of distances to all others.
+   /// This method returns an index to the start of medoid within a flat vector of d-dimensional points.  
+   /// `d` is the number of dimensions = length of the slices. 
    /// Set of points (slices) is held as one flat `buff:&[f64]`.  
-   /// `d` is the number of dimensions = length of the slices.    
-   /// This is faster than vec of vecs but users have to handle the indices.
+   /// This is faster than vec of vecs but users have to handle the indices.  
    /// Note: `medoid` computes each distance twice but it is probably faster than memoizing and looking them up,  
-   /// unless the d imensionality is somewhat large  
+   /// unless the dimensionality is somewhat large  
    fn medoid(&self, d:usize) -> Result<(usize,f64)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"medoid - d must divide vector length"));
@@ -64,7 +64,8 @@ impl Vectors for Vec<f64> {
    Ok((minindx,mindist))
    }
 
-   /// The sum of distances of an arbitrary point to all points in NDPoints
+   /// The sum of distances of all points contained in &self to given point v,  
+   /// within d dimensional space
    fn distances(&self, d:usize, v:&[f64]) -> f64 {
       let n = self.len()/v.len();
       let mut sumdist = 0_f64;
@@ -111,14 +112,14 @@ impl Vectors for &[f64] {
 
    /// Unit vector
    fn vunit(&self) -> Vec<f64> { self.smult(1_f64/self.vmag()) }
-   
-   /// Medoid is a point in n-dimensional set of points with the least sum of distances to others.
-   /// This method returns an index to the start of medoid within a flat vector of d-dimensional points.
+
+   /// Medoid is a point in n-dimensional set of points with the least sum of distances to all others.
+   /// This method returns an index to the start of medoid within a flat vector of d-dimensional points.  
+   /// `d` is the number of dimensions = length of the slices. 
    /// Set of points (slices) is held as one flat `buff:&[f64]`.  
-   /// `d` is the number of dimensions = length of the slices.    
-   /// This is faster than vec of vecs but users have to handle the indices.
+   /// This is faster than vec of vecs but users have to handle the indices.  
    /// Note: `medoid` computes each distance twice but it is probably faster than memoizing and looking them up,  
-   /// unless the d imensionality is somewhat large  
+   /// unless the dimensionality is somewhat large 
    fn medoid(&self, d:usize) -> Result<(usize,f64)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"medoid - d must divide vector length"));
@@ -141,7 +142,8 @@ impl Vectors for &[f64] {
    Ok((minindx,mindist))
    }
 
-   /// The sum of distances of an arbitrary point to all points in NDPoints
+   /// The sum of distances of all points contained in &self to given point v,  
+   /// within d dimensional space
    fn distances(&self, d:usize, v:&[f64]) -> f64 {
       let n = self.len()/v.len();
       let mut sumdist = 0_f64;

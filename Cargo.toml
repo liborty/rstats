@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["Libor Spacek"]
 edition = "2018"
 description = "Simple Statistics: Means, Median, Correlations"
