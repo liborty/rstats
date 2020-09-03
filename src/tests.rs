@@ -25,16 +25,16 @@ fn nd() -> Result<()> {
    let d = v.len();
    let mut v2 = v.clone();
    v2.reverse();
-   let mut v3 = v.vsub(&v2);
-   let mut v4 = v3.smult(10.0);
+   let mut v3 = v.as_slice().vsub(&v2);
+   let mut v4 = v3.as_slice().smult(10.0);
    v.append(&mut v2);
    v.append(&mut v3);
    v.append(&mut v4);
-   let pts = genvec(140, 13, 17);
-   println!("Medoid of\n{:?} is\n\x1B[01;92m{:?}\x1B[0m",pts,pts.medoid(d).unwrap());
+   let pts = genvec(14, 20);
+   println!("Medoid of pts is\n\x1B[01;92m{:?}\x1B[0m",pts.as_slice().medoid(d).unwrap());
    let v5 = vec![1_f64,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.];
    println!("Distance of {:?} to pts is\n\x1B[01;92m{:?}\x1B[0m",
-      v5,pts.distances(d,&v5));   
+      v5,pts.as_slice().distances(d,&v5));   
    Ok(())
 }
 

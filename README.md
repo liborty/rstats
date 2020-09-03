@@ -25,9 +25,12 @@ Included are:
 
 ## Trait Vectors
 
-has basic vector algebra implemented for f64 vectors (and their slices).
+has basic vector algebra implemented for &[f64] slices.
+You may get errors when invoking them on Vectors but that is easily remedied by using, e.g.: `myvector.as_slice()`.
 
 ## Releases
+
+* **Version 0.2.6** removed duplicate implementations of Vector for `Vec<f64>`. Convert Vec arguments with as_slice(). 
 
 * **Version 0.2.5** breaking change: removed the struct NDPoints and  its trait GMedian for more simplicity and generality. N-dimensional vector algebra is now included in Vectors.
 

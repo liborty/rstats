@@ -62,7 +62,10 @@ pub trait Vectors {
    fn smult(&self, s:f64) -> Vec<f64>;
    fn vunit(&self) -> Vec<f64>;
    fn medoid(&self, other:usize) -> Result<(usize,f64)>;
-   fn distances(&self, other: usize, other: &[f64] ) -> f64;   
+   fn distances(&self, other: usize, other: &[f64] ) -> f64;
+   fn recipexsum(&self, other:usize, other:usize) -> f64;
+   fn recipsum(&self, d:usize, other:&[f64]) -> f64;
+   fn gmedian(&self, other: usize) -> Result<(usize,f64)>;   
 
 }
 
@@ -80,14 +83,14 @@ pub fn sortf(v: &mut [f64]) {
    v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
 }
 
-/// Generates a random f64 vector of `size` suitable for testing.  
-/// Uses closure `rand` to generate random numbers to avoid dependencies.  
+/// Generates a random f64 vector of size d x n suitable for testing.  
+/// Uses local closure `rand` to generate random numbers (avoids dependencies).  
 /// Random numbers are in the open interval 0..1 with uniform distribution.  
-/// Requires two seeds.
-pub fn genvec(size: usize , s1: usize, s2: usize) -> Vec<f64> {
-   let mut m_z = s1 as u32;
-   let mut m_w = s2 as u32;
-   // returns f64 in the open interval 0..1 with uniform random distribution
+pub fn genvec(d:usize, n:usize) -> Vec<f64> {
+   let size = d*n;
+   // change the seeds as desired
+   let mut m_z = size as u32;
+   let mut m_w = (d+n) as u32;
    let mut rand = || {
       m_z = 36969 * (m_z & 65535) + (m_z >> 16);
       m_w = 18000 * (m_w & 65535) + (m_w >> 16);
