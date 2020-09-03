@@ -31,9 +31,9 @@ impl std::fmt::Display for MStats {
       write!(f, "Mean:\t{}\nStd:\t{}", self.mean, self.std)
    }
 }
-/// Set of n dimensional points (vectors) as one flat `&[f64]` (buff field);  
-/// n is therefore the length of each vector and is stored as dims field.
-/// The number of points held by instance s is `s.buff.len()/s.dims`
+/// Set of n dimensional points (slices) held as one flat `buff:&[f64]`   
+/// `dims:` field stores the number of dimensions.  
+/// This is faster than vec of vecs but users have to handle the indices.
 #[derive(Default)]
 pub struct  NDPoints<'a> {
    pub dims: usize,
@@ -44,7 +44,7 @@ impl std::fmt::Display for NDPoints<'_> {
       write!(f, "Points: {} Dimensions: {}", self.buff.len()/self.dims, self.dims)
    }
 }
-/// For implementing basic statistical methods
+/// Implementing basic statistical measures.
 pub trait RStats { 
 
    fn amean(&self) -> Result<f64>;
@@ -64,7 +64,7 @@ pub trait RStats {
   
 }
 
-/// For implementing basic vector algebra methods
+/// Implementing basic vector algebra.
 pub trait Vectors {
 
    fn dotp(&self, other:&[f64]) -> f64;
@@ -77,7 +77,7 @@ pub trait Vectors {
 
 }
 
-/// For implementing methods operating on a set `NDPoints` of n dimensional points
+/// Implementing methods operating on `NDPoints` (sets of n-dimensional points).
 pub trait GMedian {
 
    fn medoid(&self) -> Result<(usize,f64)>;

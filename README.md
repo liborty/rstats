@@ -8,7 +8,7 @@ Trait Vectors is unchecked to achieve speed, so some caution is advisable.
 
 ## Trait RStats 
 
-has statistical methods implemented for i64 and f64 vectors ( and their slices).
+has statistical methods implemented for i64 and f64 vectors (and their slices).
 For example, `v.amean()` computes the arithmetic mean of vector `v` of either `Vec<i64>` or `Vec<f64>` type (or their slices).
 
 Included are:
@@ -32,6 +32,8 @@ has simple vector operations implemented for f64 vectors (and their slices).
 facilitates computing the Medoid and the Geometric Median of a set of n-dimensional points.
 
 ## Releases
+
+* **Version 0.2.4** completed basic vector algebra.
 
 * **Version 0.2.3** added Medoid.
 

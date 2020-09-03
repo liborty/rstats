@@ -100,10 +100,10 @@ impl GMedian for NDPoints<'_> {
    Ok((minindx,mindist))
    }
 
-   /// Distances is the sum of distances of an arbitrary point to all points in NDPoints
+   /// The sum of distances of an arbitrary point to all points in NDPoints
    fn distances(&self,v: &[f64]) -> f64 {
       let n = self.buff.len()/self.dims;
-      let mut sumdist = f64::MAX;
+      let mut sumdist = 0_f64;
       for i in 0..n {
          let thisp = self.buff.get(i*self.dims .. (i+1)*self.dims).unwrap();
          sumdist += v.vdist(thisp)              

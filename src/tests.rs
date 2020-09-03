@@ -33,6 +33,10 @@ fn nd() -> Result<()> {
    let pts = NDPoints{ dims: length, buff: &v };
    println!("Medoid of {{{}}} (index, distance) \x1B[01;92m{:?}\x1B[0m",
       pts,pts.medoid().unwrap());
+   let v5 = vec![1_f64,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.];
+   println!("Distance of {:?} to\n{{{}}} is \x1B[01;92m{}\x1B[0m",
+      v5,pts,pts.distances(&v5));
+   
    Ok(())
 }
 
