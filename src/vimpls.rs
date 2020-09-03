@@ -65,65 +65,74 @@ impl Vectors for &[f64] {
    Ok((minindx,mindist))
    }
 
-   /// The sum of distances of all points contained in &self to given point v,  
-   /// within d dimensional space
-   fn distances(&self, d:usize, v:&[f64]) -> f64 {
+   /// The sum of distances of all points contained in &self to given point v.    
+   /// v which minimises this objective function is the Geometric Median. 
+   fn distsum(&self, d:usize, v:&[f64]) -> f64 {
       let n = self.len()/v.len();
-      let mut sumdist = 0_f64;
+      let mut sum = 0_f64;
       for i in 0..n {
          let thisp = self.get(i*d .. (i+1)*d).unwrap();
-         sumdist += v.vdist(thisp)              
+         sum += v.vdist(thisp)              
       }
-      sumdist
+      sum
    }
 
-   fn recipsum(&self, d:usize, v:&[f64]) -> f64 {
+   /// Weiszfeld's formula for one iteration step finding gmedian
+   fn betterpoint(&self, d:usize, v:&[f64]) -> Vec<f64> {
       let n = self.len()/d;
       let mut sum = 0_f64;
+      let mut vsum = vec![0_f64;d];
       for i in 0..n {
          let thatp = self.get(i*d .. (i+1)*d).unwrap();
-         sum += 1.0/v.vdist(&thatp);
+         let recip = 1.0/v.vdist(&thatp);
+         sum += recip;
+         vsum = vsum.as_slice().vadd(&thatp.smult(recip));
       }
-      sum
+      vsum.as_slice().smult(1.0/sum)
    }
 
-   fn recipexsum(&self, d:usize, indx:usize) -> f64 {
+   /// Innovative first step to guarantee convergence
+   fn firstpoint(&self, d:usize, indx:usize) -> Vec<f64> {
       let n = self.len()/d;
       let mut sum = 0_f64;
-      let thisp = self.get(indx*d .. (indx+1)*d).unwrap();
+      let mut vsum = vec![0_f64;d];
+      let v = self.get(indx*d .. (indx+1)*d).unwrap();
       for i in 0..n {
          if i == indx { continue };
-         let    thatp = self.get(i*d .. (i+1)*d).unwrap();
-         sum += 1.0/thisp.vdist(&thatp);
+         let thatp = self.get(i*d .. (i+1)*d).unwrap();
+         let recip = 1.0/v.vdist(&thatp);
+         sum += recip;
+         vsum = vsum.as_slice().vadd(&thatp.smult(recip));
       }
-      sum
+      vsum.as_slice().smult(1.0/sum)
    }
-
+ 
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.
-   fn gmedian(&self, d:usize) -> Result<(usize,f64)> {
+   fn gmedian(&self, d:usize) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
-      let (indx, dist) = self.medoid(d)
+      // start from medoid
+      let (indx, mut dist) = self.medoid(d)
          .with_context(||emsg(file!(),line!(),"gmedian medoid call failed"))?;
-           let point = self.get(indx*d .. (indx+1)*d)
-         .with_context(||emsg(file!(),line!(),"gmedian failed to get slice"))?;
-      let mut minindx = 0;
-      let mut mindist = f64::MAX;
-      for i in 0..n {
-         let thisp = self.get(i*d .. (i+1)*d)
-            .with_context(||emsg(file!(),line!(),"medoid failed to get this slice"))?;
-         let mut dsum = 0_f64;
-         for j in 0..n {
-            if i==j { continue };
-            let thatp = self.get(j*d .. (j+1)*d)
-               .with_context(||emsg(file!(),line!(),"medoid failed to get that slice"))?;
-            dsum += thisp.vdist(&thatp);
-            if dsum >= mindist { break } // quit adding points if minimum distance is already exceeded
-            }
-         // println!("Distance: {}\n",dsum);
-         if dsum < mindist { mindist = dsum; minindx = i };       
+      // println!("gmedian initial medoid distance: {}",dist);
+      let mut newdist: f64;
+      // first iteration step from medoid, excluding the medoid
+      let mut point = self.firstpoint(d,indx);
+      newdist = self.distsum(d,&point);
+      let mut distdif = dist-newdist;
+      ensure!(distdif>0.,emsg(file!(),line!(),"gmedian failed to improve"));
+      // println!("gmedian first improvement: {}",distdif);  
+      dist = newdist;
+      while distdif > 0.001 { // improve the termination condition
+         point = self.betterpoint(d,&point); 
+         newdist = self.distsum(d,&point);
+         distdif = dist - newdist;
+         ensure!(distdif>0.,emsg(file!(),line!(),"gmedian failed to improve"));
+         // println!("gmedian improvement: {}",distdif); 
+         dist = newdist;          
       }
-   Ok((minindx,mindist))
+      // println!("gmedian final distance: {}",dist); 
+      Ok((dist,point))
    }
 
 

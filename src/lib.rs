@@ -62,10 +62,10 @@ pub trait Vectors {
    fn smult(&self, s:f64) -> Vec<f64>;
    fn vunit(&self) -> Vec<f64>;
    fn medoid(&self, other:usize) -> Result<(usize,f64)>;
-   fn distances(&self, other: usize, other: &[f64] ) -> f64;
-   fn recipexsum(&self, other:usize, other:usize) -> f64;
-   fn recipsum(&self, d:usize, other:&[f64]) -> f64;
-   fn gmedian(&self, other: usize) -> Result<(usize,f64)>;   
+   fn distsum(&self, other: usize, other: &[f64] ) -> f64;
+   fn betterpoint(&self, other: usize, other: &[f64] ) -> Vec<f64>;
+   fn firstpoint(&self, d:usize, indx:usize) -> Vec<f64>;
+   fn gmedian(&self, other: usize) -> Result<(f64,Vec<f64>)>;   
 
 }
 
