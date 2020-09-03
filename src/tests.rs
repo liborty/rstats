@@ -3,7 +3,7 @@
 #[cfg(test)]
 
 use anyhow::{Result};
-use crate::{RStats,Vectors,GMedian,NDPoints};
+use crate::{RStats,Vectors,genvec};
 
 /*
 #[test]
@@ -22,7 +22,7 @@ fn vectors() -> Result<()> {
 #[test]
 fn nd() -> Result<()> { 
    let mut v = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   let length = v.len();
+   let d = v.len();
    let mut v2 = v.clone();
    v2.reverse();
    let mut v3 = v.vsub(&v2);
@@ -30,13 +30,11 @@ fn nd() -> Result<()> {
    v.append(&mut v2);
    v.append(&mut v3);
    v.append(&mut v4);
-   let pts = NDPoints{ dims: length, buff: &v };
-   println!("Medoid of {{{}}} (index, distance) \x1B[01;92m{:?}\x1B[0m",
-      pts,pts.medoid().unwrap());
+   let pts = genvec(140, 13, 17);
+   println!("Medoid of\n{:?} is\n\x1B[01;92m{:?}\x1B[0m",pts,pts.medoid(d).unwrap());
    let v5 = vec![1_f64,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.];
-   println!("Distance of {:?} to\n{{{}}} is \x1B[01;92m{}\x1B[0m",
-      v5,pts,pts.distances(&v5));
-   
+   println!("Distance of {:?} to pts is\n\x1B[01;92m{:?}\x1B[0m",
+      v5,pts.distances(d,&v5));   
    Ok(())
 }
 

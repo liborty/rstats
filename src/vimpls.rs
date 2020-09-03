@@ -1,5 +1,5 @@
-use anyhow::{Result,Context};
-use crate::{Vectors,GMedian,NDPoints,emsg};
+use anyhow::{Result,Context,ensure};
+use crate::{Vectors,emsg};
 
 impl Vectors for Vec<f64> { 
    
@@ -34,6 +34,46 @@ impl Vectors for Vec<f64> {
 
    /// Unit vector
    fn vunit(&self) -> Vec<f64> { self.smult(1_f64/self.vmag()) }
+
+   /// Medoid is a point in n-dimensional set of points with the least sum of distances to others.
+   /// This method returns an index to the start of medoid within a flat vector of d-dimensional points.
+   /// Set of points (slices) is held as one flat `buff:&[f64]`.  
+   /// `d` is the number of dimensions = length of the slices.    
+   /// This is faster than vec of vecs but users have to handle the indices.
+   /// Note: `medoid` computes each distance twice but it is probably faster than memoizing and looking them up,  
+   /// unless the d imensionality is somewhat large  
+   fn medoid(&self, d:usize) -> Result<(usize,f64)> {
+      let n = self.len()/d;
+      ensure!(n*d == self.len(),emsg(file!(),line!(),"medoid - d must divide vector length"));
+      let mut minindx = 0;
+      let mut mindist = f64::MAX;
+      for i in 0..n {
+         let thisp = self.get(i*d .. (i+1)*d)
+            .with_context(||emsg(file!(),line!(),"medoid failed to get this slice"))?;
+         let mut dsum = 0_f64;
+         for j in 0..n {
+            if i==j { continue };
+            let thatp = self.get(j*d .. (j+1)*d)
+               .with_context(||emsg(file!(),line!(),"medoid failed to get that slice"))?;
+            dsum += thisp.vdist(&thatp);
+            if dsum >= mindist { break } // quit adding points if minimum distance is already exceeded
+            }
+         // println!("Distance: {}\n",dsum);
+         if dsum < mindist { mindist = dsum; minindx = i };       
+      }
+   Ok((minindx,mindist))
+   }
+
+   /// The sum of distances of an arbitrary point to all points in NDPoints
+   fn distances(&self, d:usize, v:&[f64]) -> f64 {
+      let n = self.len()/v.len();
+      let mut sumdist = 0_f64;
+      for i in 0..n {
+         let thisp = self.get(i*d .. (i+1)*d).unwrap();
+         sumdist += v.vdist(thisp)              
+      }
+      sumdist
+   }
       
 }
 
@@ -72,24 +112,25 @@ impl Vectors for &[f64] {
    /// Unit vector
    fn vunit(&self) -> Vec<f64> { self.smult(1_f64/self.vmag()) }
    
-}
-
-impl GMedian for NDPoints<'_> {
    /// Medoid is a point in n-dimensional set of points with the least sum of distances to others.
-   /// This method returns an index to the start of medoid within an NDPoints set of n-dimensional points.
-   /// This computes each distance twice but it is probably faster than memoizing and looking them up,
-   /// unless the dimensionality is somewhat large  
-   fn medoid(&self) -> Result<(usize,f64)> {
-      let n = self.buff.len()/self.dims;
+   /// This method returns an index to the start of medoid within a flat vector of d-dimensional points.
+   /// Set of points (slices) is held as one flat `buff:&[f64]`.  
+   /// `d` is the number of dimensions = length of the slices.    
+   /// This is faster than vec of vecs but users have to handle the indices.
+   /// Note: `medoid` computes each distance twice but it is probably faster than memoizing and looking them up,  
+   /// unless the d imensionality is somewhat large  
+   fn medoid(&self, d:usize) -> Result<(usize,f64)> {
+      let n = self.len()/d;
+      ensure!(n*d == self.len(),emsg(file!(),line!(),"medoid - d must divide vector length"));
       let mut minindx = 0;
       let mut mindist = f64::MAX;
       for i in 0..n {
-         let thisp = self.buff.get(i*self.dims .. (i+1)*self.dims)
+         let thisp = self.get(i*d .. (i+1)*d)
             .with_context(||emsg(file!(),line!(),"medoid failed to get this slice"))?;
          let mut dsum = 0_f64;
          for j in 0..n {
             if i==j { continue };
-            let thatp = self.buff.get(j*self.dims .. (j+1)*self.dims)
+            let thatp = self.get(j*d .. (j+1)*d)
                .with_context(||emsg(file!(),line!(),"medoid failed to get that slice"))?;
             dsum += thisp.vdist(&thatp);
             if dsum >= mindist { break } // quit adding points if minimum distance is already exceeded
@@ -101,11 +142,11 @@ impl GMedian for NDPoints<'_> {
    }
 
    /// The sum of distances of an arbitrary point to all points in NDPoints
-   fn distances(&self,v: &[f64]) -> f64 {
-      let n = self.buff.len()/self.dims;
+   fn distances(&self, d:usize, v:&[f64]) -> f64 {
+      let n = self.len()/v.len();
       let mut sumdist = 0_f64;
       for i in 0..n {
-         let thisp = self.buff.get(i*self.dims .. (i+1)*self.dims).unwrap();
+         let thisp = self.get(i*d .. (i+1)*d).unwrap();
          sumdist += v.vdist(thisp)              
       }
       sumdist

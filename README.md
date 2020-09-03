@@ -25,13 +25,11 @@ Included are:
 
 ## Trait Vectors
 
-has simple vector operations implemented for f64 vectors (and their slices).
-
-## Trait GMedian
-
-facilitates computing the Medoid and the Geometric Median of a set of n-dimensional points.
+has basic vector algebra implemented for f64 vectors (and their slices).
 
 ## Releases
+
+* **Version 0.2.5** breaking change: removed the struct NDPoints and  its trait GMedian for more simplicity and generality. N-dimensional vector algebra is now included in Vectors.
 
 * **Version 0.2.4** completed basic vector algebra.
 
