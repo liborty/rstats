@@ -58,7 +58,8 @@ pub trait MutVectors {
    fn mutvsub(&mut self, v:&[f64]);
    fn mutvadd(&mut self, v:&[f64]);
    fn mutvunit(&mut self);
-   
+   fn mutvmag(&mut self) -> f64;
+
    }
 
 /// Implementing basic vector algebra.
@@ -71,11 +72,11 @@ pub trait Vectors {
    fn vdist(&self, v:&[f64]) -> f64;
    fn smult(&self, s:f64) -> Vec<f64>;
    fn vunit(&self) -> Vec<f64>;
-   fn medoid(&self, d:usize) -> Result<(usize,f64)>;
-   fn distsum(&self, d: usize, v: &[f64] ) -> f64;
-   fn betterpoint(&self, d: usize, v: &[f64] ) -> Vec<f64>;
-   fn firstpoint(&self, d:usize, indx:usize) -> Vec<f64>;
-   fn gmedian(&self, d: usize, eps: f64) -> Result<(f64,Vec<f64>)>;   
+   fn medoid(&self, d:usize) -> Result<(f64,usize)>;
+   fn distsum(&self, d:usize, v:&[f64] ) -> f64;
+   fn betterpoint(&self, d:usize, v:&[f64] ) -> Vec<f64>;
+   fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>>;
+   fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;   
 
 }
 

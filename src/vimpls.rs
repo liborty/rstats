@@ -17,8 +17,11 @@ impl MutVectors for &mut[f64] {
    }
   /// Mutate to unit vector
    fn mutvunit(&mut self) { 
-      self.mutsmult(1_f64/self.iter().map(|&x|x.powi(2)).sum::<f64>().sqrt())
+      self.mutsmult(1_f64/self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt())
    }
+   /// Vector magnitude duplicated for mutable type 
+   fn mutvmag(&mut self) -> f64 { self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt() }
+
 }
 
 impl Vectors for &[f64] { 
@@ -63,7 +66,7 @@ impl Vectors for &[f64] {
    /// This is faster than vec of vecs but users have to handle the indices.  
    /// Note: `medoid` computes each distance twice but it is probably faster than memoizing and looking them up,  
    /// unless the dimensionality is somewhat large 
-   fn medoid(&self, d:usize) -> Result<(usize,f64)> {
+   fn medoid(&self, d:usize) -> Result<(f64,usize)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"medoid - d must divide vector length"));
       let mut minindx = 0;
@@ -82,7 +85,7 @@ impl Vectors for &[f64] {
          // println!("Distance: {}\n",dsum);
          if dsum < mindist { mindist = dsum; minindx = i };       
       }
-   Ok((minindx,mindist))
+   Ok((mindist,minindx))
    }
 
    /// The sum of distances of all points contained in &self to given point v.    
@@ -92,7 +95,7 @@ impl Vectors for &[f64] {
       let mut sum = 0_f64;
       for i in 0..n {
          let thisp = self.get(i*d .. (i+1)*d).unwrap();
-         sum += v.vdist(thisp)              
+         sum += v.vdist(&thisp)              
       }
       sum
    }
@@ -113,19 +116,20 @@ impl Vectors for &[f64] {
    }
 
    /// My innovative first steps that guarantees good convergence
-   fn firstpoint(&self, d:usize, indx:usize) -> Vec<f64> {
+   fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
       let n = self.len()/d;
-      let mut sum = 0_f64;
+      let mut rsum = 0_f64;
       let mut vsum = vec![0_f64;d];
-      let v = self.get(indx*d .. (indx+1)*d).unwrap();
       for i in 0..n {
-         if i == indx { continue }; // exclude the starting point in the set 
-         let thatp = self.get(i*d .. (i+1)*d).unwrap();
+         if i == indx { continue }; // exclude the starting medoid point  
+         let thatp = self.get(i*d .. (i+1)*d)
+            .with_context(||emsg(file!(),line!(),"firstpoint failed to extract point"))?;
          let recip = 1.0/v.vdist(&thatp);
-         sum += recip;
-         vsum = vsum.as_slice().vadd(&thatp.smult(recip));
+         rsum += recip;
+         vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
       }
-      vsum.as_slice().smult(1.0/sum)
+      vsum.as_mut_slice().mutsmult(1.0/rsum);
+      Ok(vsum)
    }
  
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.
@@ -136,28 +140,23 @@ impl Vectors for &[f64] {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
       // start from medoid
-      let (indx, mut dist) = self.medoid(d)
+      let (mut dist, indx) = self.medoid(d)
          .with_context(||emsg(file!(),line!(),"gmedian medoid call failed"))?;
-      // println!("gmedian initial medoid distance: {}",dist);
-      let mut newdist: f64;
-      // innovative first iteration step from the medoid, excluding the medoid
-      let mut point = self.firstpoint(d,indx);
-      newdist = self.distsum(d,&point);
-      let mut distdif = dist-newdist;
-      ensure!(distdif>0.,emsg(file!(),line!(),"gmedian failed to improve"));
-      // println!("gmedian first improvement: {}",distdif);  
-      dist = newdist;
-      while distdif > eps { // improve the termination condition
-         point = self.betterpoint(d,&point); 
-         newdist = self.distsum(d,&point);
-         distdif = dist - newdist;
-         ensure!(distdif>0.,emsg(file!(),line!(),"gmedian failed to improve"));
-         // println!("gmedian improvement: {}",distdif); 
-         dist = newdist;          
+      let oldpoint = self.get(indx*d .. (indx+1)*d)
+         .with_context(||emsg(file!(),line!(),"gmedian failed to extract medoid"))?;
+      // first iteration step from the medoid, excluding the medoid
+      let mut point = self.firstpoint(d,indx,&oldpoint)
+         .with_context(||emsg(file!(),line!(),"gmedian firstpoint call failed"))?;
+      let mut testeps = oldpoint.vsub(&point).as_slice().vmag()/dist;
+      let mut iterations = 1_usize;
+      while testeps > eps {
+         let newpoint = self.betterpoint(d,&point); // find new point 
+         testeps = newpoint.as_slice().vsub(&point).as_slice().vmag()/dist;
+         iterations += 1;
+         point = newpoint                
       }
-      // println!("gmedian final distance: {}",dist); 
+      println!("iterations: {}",iterations);
+      dist = self.distsum(d,&point);
       Ok((dist,point))
    }
-
-
 }
