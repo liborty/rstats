@@ -1,5 +1,25 @@
 use anyhow::{Result,Context,ensure};
-use crate::{Vectors,emsg};
+use crate::{MutVectors,Vectors,emsg};
+
+impl MutVectors for &mut[f64] {
+
+   /// Scalar multiplication of a vector, mutates self
+   fn mutsmult(&mut self, s:f64) {
+     self.iter_mut().for_each(|x|{ *x*=s });
+   }
+   /// Vector subtraction, mutates self
+   fn mutvsub(&mut self, v: &[f64]) {
+     self.iter_mut().enumerate().for_each(|(i,x)|*x-=v[i])
+   }
+  /// Vector addition, mutates self
+   fn mutvadd(&mut self, v: &[f64]) {
+     self.iter_mut().enumerate().for_each(|(i,x)|*x+=v[i])
+   }
+  /// Mutate to unit vector
+   fn mutvunit(&mut self) { 
+      self.mutsmult(1_f64/self.iter().map(|&x|x.powi(2)).sum::<f64>().sqrt())
+   }
+}
 
 impl Vectors for &[f64] { 
    
@@ -7,7 +27,7 @@ impl Vectors for &[f64] {
    fn smult(&self, s:f64) -> Vec<f64> {
       self.iter().map(|&x|s*x).collect()
    }
-
+  
    /// Scalar product of two f64 slices.   
    /// Must be of the same length - no error checking for speed
    fn dotp(&self, v: &[f64]) -> f64 {
@@ -18,12 +38,12 @@ impl Vectors for &[f64] {
    fn vsub(&self, v: &[f64]) -> Vec<f64> {
       self.iter().enumerate().map(|(i,&x)|x-v[i]).collect()
    }
-
+   
    /// Vector addition, creates a new Vec result
    fn vadd(&self, v: &[f64]) -> Vec<f64> {
       self.iter().enumerate().map(|(i,&x)|x+v[i]).collect()
    }
-
+ 
    /// Euclidian distance between two n dimensional points (vectors).  
    /// Slightly faster than vsub followed by vmag, as both are done in one loop
    fn vdist(&self, v: &[f64]) -> f64 {
@@ -33,9 +53,9 @@ impl Vectors for &[f64] {
    /// Vector magnitude 
    fn vmag(&self) -> f64 { self.iter().map(|&x|x.powi(2)).sum::<f64>().sqrt() }
 
-   /// Unit vector
+   /// Unit vector - creates a new one
    fn vunit(&self) -> Vec<f64> { self.smult(1_f64/self.vmag()) }
-
+ 
    /// Medoid is a point in n-dimensional set of points with the least sum of distances to all others.
    /// This method returns an index to the start of medoid within a flat vector of d-dimensional points.  
    /// `d` is the number of dimensions = length of the slices. 
@@ -92,7 +112,7 @@ impl Vectors for &[f64] {
       vsum.as_slice().smult(1.0/sum)
    }
 
-   /// My innovative first steps that guarantee good convergence
+   /// My innovative first steps that guarantees good convergence
    fn firstpoint(&self, d:usize, indx:usize) -> Vec<f64> {
       let n = self.len()/d;
       let mut sum = 0_f64;

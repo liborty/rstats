@@ -51,6 +51,16 @@ pub trait RStats {
   
 }
 
+/// Mutable primitive vector operations (for efficiency)
+pub trait MutVectors {
+
+   fn mutsmult(&mut self, s:f64);
+   fn mutvsub(&mut self, v:&[f64]);
+   fn mutvadd(&mut self, v:&[f64]);
+   fn mutvunit(&mut self);
+   
+   }
+
 /// Implementing basic vector algebra.
 pub trait Vectors {
 

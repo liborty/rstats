@@ -25,12 +25,18 @@ Included are:
 
 ## Trait Vectors
 
-has basic vector algebra implemented for &[f64] slices.
-You may get errors when invoking them on Vectors but that is easily remedied by using, e.g.: `myvector.as_slice()`.
+has basic vector algebra implemented for `&[f64]` slices.
+You may get errors when invoking them on `Vec<f64>` but that is easily remedied by using, e.g.: `myvector.as_slice()`.
+
+## Trait MutVectors
+
+Some of the above Vector methods are for efficiency reasons reimplemented here so that they mutate `self` in place instead of creating a new Vec.
 
 ## Releases
 
-* **Version 0.3.0** completed the innovative Geometric Median. Removed duplicated implementations of Vector for `Vec<f64>`.
+* **Version 0.3.1** Geometric Median speeded up. Added trait MutVectors.
+
+* **Version 0.3.0** completed the Geometric Median. Removed duplicated implementations of Vector for `Vec<f64>`.
 
 * **Version 0.2.5** breaking change: removed the struct NDPoints and  its trait GMedian for more simplicity and generality. N-dimensional vector algebra is now included in Vectors.
 
