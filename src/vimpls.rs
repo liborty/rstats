@@ -143,7 +143,7 @@ impl Vectors for &[f64] {
       Ok(vsum)
    }
 
-   /// My innovative first steps that guarantees good convergence
+   /// My innovative first step that guarantees good convergence.
    fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
       let n = self.len()/d;
       let mut rsum = 0_f64;
