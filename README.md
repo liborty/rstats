@@ -34,6 +34,8 @@ Some of the above Vector methods are for efficiency reasons reimplemented here s
 
 ## Releases
 
+* **Version 0.3.2** Added `arcentroid` = n-dimensional arithmetic mean. Added some more doc examples.
+
 * **Version 0.3.1** Geometric Median speeded up. Added trait MutVectors.
 
 * **Version 0.3.0** completed the Geometric Median. Removed duplicated implementations of Vector for `Vec<f64>`.

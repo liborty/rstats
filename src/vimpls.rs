@@ -58,14 +58,40 @@ impl Vectors for &[f64] {
 
    /// Unit vector - creates a new one
    fn vunit(&self) -> Vec<f64> { self.smult(1_f64/self.vmag()) }
- 
-   /// Medoid is a point in n-dimensional set of points with the least sum of distances to all others.
+
+   /// Centroid = multidimensional arithmetic mean
+   /// # Example
+   /// ```
+   /// use rstats::{Vectors,genvec};
+   /// let mut pts = genvec(15,15);
+   /// let centre = pts.as_slice().arcentroid(15);
+   /// let dist = pts.as_slice().distsum(15,&centre);
+   /// assert_eq!(dist,3.8752383402415376_f64);
+   /// ```
+   fn arcentroid(&self, d:usize) -> Vec<f64> {
+      let n = self.len()/d;
+      let mut centre = vec![0_f64;d];
+      for i in 0..n {
+         centre.as_mut_slice().mutvadd(self.get(i*d .. (i+1)*d).unwrap())
+      }
+      centre.as_mut_slice().mutsmult(1.0/n as f64);
+      centre
+   }
+
+    /// Medoid is a point in n-dimensional set of points with the least sum of distances to all others.  
    /// This method returns an index to the start of medoid within a flat vector of d-dimensional points.  
    /// `d` is the number of dimensions = length of the slices. 
    /// Set of points (slices) is held as one flat `buff:&[f64]`.  
    /// This is faster than vec of vecs but users have to handle the indices.  
    /// Note: `medoid` computes each distance twice but it is probably faster than memoizing and looking them up,  
-   /// unless the dimensionality is somewhat large 
+   /// unless the dimensionality is somewhat large. 
+   /// # Example
+   /// ```
+   /// use rstats::{Vectors,genvec};
+   /// let mut pts = genvec(15,15);
+   /// let (dist,indx) = pts.as_slice().medoid(15).unwrap();
+   /// assert_eq!(dist,4.525655380353103_f64);
+   /// ```
    fn medoid(&self, d:usize) -> Result<(f64,usize)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"medoid - d must divide vector length"));
@@ -101,7 +127,8 @@ impl Vectors for &[f64] {
    }
 
    /// Weiszfeld's formula for one iteration step in finding gmedian.  
-   /// Has problems with choosing the starting point - may fail to converge
+   /// It has known problems with choosing the starting point and may fail to converge.  
+   /// However, gmedian below solves those problems.
    fn betterpoint(&self, d:usize, v:&[f64]) -> Result<Vec<f64>> {
       let n = self.len()/d;
       let mut rsum = 0_f64;
@@ -135,7 +162,16 @@ impl Vectors for &[f64] {
  
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.
    /// This improved iterative algorithm has guaranteed good convergence, as it will not approach any points
-   /// in the set (which caused problems to Weiszfeld). Eps controls the desired relative accuracy.
+   /// in the set (which caused problems to Weiszfeld).  
+   /// Eps controls the desired relative accuracy
+   /// (iterative improvements as a fraction of the total distance achieved by the medoid).
+   /// # Example
+   /// ```
+   /// use rstats::{Vectors,genvec};
+   /// let mut pts = genvec(15,15);
+   /// let (ds,gm) = pts.as_slice().gmedian(15, 1e-5).unwrap();
+   /// assert_eq!(ds,3.8638718910583068_f64);
+   /// ```
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));

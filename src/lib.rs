@@ -72,6 +72,7 @@ pub trait Vectors {
    fn vdist(&self, v:&[f64]) -> f64;
    fn smult(&self, s:f64) -> Vec<f64>;
    fn vunit(&self) -> Vec<f64>;
+   fn arcentroid(&self, d:usize) -> Vec<f64>;
    fn medoid(&self, d:usize) -> Result<(f64,usize)>;
    fn distsum(&self, d:usize, v:&[f64] ) -> f64;
    fn betterpoint(&self, d:usize, v:&[f64] ) -> Result<Vec<f64>>;
