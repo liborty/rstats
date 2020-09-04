@@ -26,7 +26,7 @@ Included are:
 ## Trait Vectors
 
 has basic vector algebra implemented for `&[f64]` slices.
-You may get errors when invoking them on `Vec<f64>` but that is easily remedied by using, e.g.: `myvector.as_slice()`.
+Should you get errors when applying them to `Vec<f64>`, just convert it using `.as_slice()`.
 
 ## Trait MutVectors
 

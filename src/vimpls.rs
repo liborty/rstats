@@ -102,17 +102,18 @@ impl Vectors for &[f64] {
 
    /// Weiszfeld's formula for one iteration step in finding gmedian.  
    /// Has problems with choosing the starting point - may fail to converge
-   fn betterpoint(&self, d:usize, v:&[f64]) -> Vec<f64> {
+   fn betterpoint(&self, d:usize, v:&[f64]) -> Result<Vec<f64>> {
       let n = self.len()/d;
-      let mut sum = 0_f64;
+      let mut rsum = 0_f64;
       let mut vsum = vec![0_f64;d];
       for i in 0..n {
          let thatp = self.get(i*d .. (i+1)*d).unwrap();
          let recip = 1.0/v.vdist(&thatp);
-         sum += recip;
-         vsum = vsum.as_slice().vadd(&thatp.smult(recip));
+         rsum += recip;
+         vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
       }
-      vsum.as_slice().smult(1.0/sum)
+      vsum.as_mut_slice().mutsmult(1.0/rsum);
+      Ok(vsum)
    }
 
    /// My innovative first steps that guarantees good convergence
@@ -139,8 +140,7 @@ impl Vectors for &[f64] {
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
-      // start from medoid
-      let (mut dist, indx) = self.medoid(d)
+      let (mut dist, indx) = self.medoid(d) // start with the medoid
          .with_context(||emsg(file!(),line!(),"gmedian medoid call failed"))?;
       let oldpoint = self.get(indx*d .. (indx+1)*d)
          .with_context(||emsg(file!(),line!(),"gmedian failed to extract medoid"))?;
@@ -148,14 +148,15 @@ impl Vectors for &[f64] {
       let mut point = self.firstpoint(d,indx,&oldpoint)
          .with_context(||emsg(file!(),line!(),"gmedian firstpoint call failed"))?;
       let mut testeps = oldpoint.vsub(&point).as_slice().vmag()/dist;
-      let mut iterations = 1_usize;
+      // let mut iterations = 1_usize;
       while testeps > eps {
-         let newpoint = self.betterpoint(d,&point); // find new point 
+         let newpoint = self.betterpoint(d,&point)
+            .with_context(||emsg(file!(),line!(),"gmedian betterpoint call failed"))?; // find new point 
          testeps = newpoint.as_slice().vsub(&point).as_slice().vmag()/dist;
-         iterations += 1;
+      //   iterations += 1;
          point = newpoint                
       }
-      println!("iterations: {}",iterations);
+      // println!("iterations: {}",iterations);
       dist = self.distsum(d,&point);
       Ok((dist,point))
    }

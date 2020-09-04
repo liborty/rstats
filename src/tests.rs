@@ -3,7 +3,7 @@
 #[cfg(test)]
 
 use anyhow::{Result};
-use crate::{RStats,Vectors,genvec};
+use crate::{RStats,MutVectors,Vectors,genvec};
 
 /*
 #[test]
@@ -40,11 +40,13 @@ fn nd() -> Result<()> {
 */
 #[test]
 fn gm() -> Result<()> { 
-   let pts = genvec(20,20);
-   let (dist,indx) = pts.as_slice().medoid(20).unwrap();
+   let mut pts = genvec(15,15);
+   let (dist,indx) = pts.as_slice().medoid(15).unwrap();
    println!("Sum of Medoid distances:\x1B[01;92m{}\x1B[0m Index: {}",dist,indx);
-   let (ds,gm) = pts.as_slice().gmedian(20, 0.000001).unwrap();
+   let (ds,gm) = pts.as_slice().gmedian(15, 1e-5).unwrap();
    println!("Sum of G.M. distances:  \x1B[01;92m{}\x1B[0m\nGeometric Median:\n\x1B[01;92m{:?}\x1B[0m",ds,gm);
+   pts.as_mut_slice().mutvunit();
+  // println!("The originl data as unit vector {:?}",pts);
    Ok(())
 }
 
