@@ -134,9 +134,8 @@ impl Vectors for &[f64] {
    }
  
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.
-   /// This improved algorithm has guaranteed good convergence, as it will not approach any points
-   /// in the set (which caused problems to Weiszfeld).
-   /// eps controls the desired accuracy (low threshold on the improvements in the sum of distances)
+   /// This improved iterative algorithm has guaranteed good convergence, as it will not approach any points
+   /// in the set (which caused problems to Weiszfeld). Eps controls the desired relative accuracy.
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
