@@ -2,7 +2,6 @@
 pub mod i64impls;
 pub mod f64impls;
 pub mod vimpls;
-pub mod tests;
 
 use std::cmp::Ordering::Equal;
 use anyhow::Result;
@@ -20,7 +19,7 @@ impl std::fmt::Display for Med {
     }
 }
 
-/// Mean and standard deviation (or std ratio for geometric mean)
+/// Mean and standard deviation (or std ratio for geometric mean).
 #[derive(Default)]
 pub struct MStats {
     pub mean: f64,
@@ -51,7 +50,7 @@ pub trait RStats {
   
 }
 
-/// Mutable primitive vector operations (for efficiency)
+/// Mutable primitive vector operations (for efficiency).
 pub trait MutVectors {
 
    fn mutsmult(&mut self, s:f64);
@@ -62,7 +61,7 @@ pub trait MutVectors {
 
    }
 
-/// Implementing basic vector algebra.
+/// Implementing basic vector algebra and safe geometric median.
 pub trait Vectors {
 
    fn dotp(&self, v:&[f64]) -> f64;
@@ -75,10 +74,12 @@ pub trait Vectors {
    fn arcentroid(&self, d:usize) -> Vec<f64>;
    fn medoid(&self, d:usize) -> Result<(f64,usize)>;
    fn distsum(&self, d:usize, v:&[f64] ) -> f64;
-   fn betterpoint(&self, d:usize, v:&[f64] ) -> Result<Vec<f64>>;
+
+   fn nextpoint(&self, d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)>;
+   fn betterpoint(&self, d:usize, eps:f64, v:&[f64] ) -> Result<(bool,Vec<f64>)>;
    fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>>;
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;   
-
+   fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;
 }
 
 /// Private helper function for formatting error messages
@@ -95,14 +96,14 @@ pub fn sortf(v: &mut [f64]) {
    v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
 }
 
-/// Generates a random f64 vector of size d x n suitable for testing.  
+/// Generates a random f64 vector of size d x n suitable for testing. It needs two seeds.  
 /// Uses local closure `rand` to generate random numbers (avoids dependencies).  
 /// Random numbers are in the open interval 0..1 with uniform distribution.  
-pub fn genvec(d:usize, n:usize) -> Vec<f64> {
+pub fn genvec(d:usize, n:usize, s1:u32, s2:u32 ) -> Vec<f64> {
    let size = d*n;
    // change the seeds as desired
-   let mut m_z = size as u32;
-   let mut m_w = (d+n) as u32;
+   let mut m_z = s1 as u32;
+   let mut m_w = s2 as u32;
    let mut rand = || {
       m_z = 36969 * (m_z & 65535) + (m_z >> 16);
       m_w = 18000 * (m_w & 65535) + (m_w >> 16);

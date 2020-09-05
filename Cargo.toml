@@ -11,6 +11,8 @@ keywords = ["statistics","vectors","geometric-median","n-dimensional","time-depe
 categories = ["science","mathematics","algorithms"]
 include = [
     "src/*.rs",
+    "tests/*.rs",
+    "benches/*.rs",
     "Cargo.toml",
     "README.md",
     "LICENSE"
@@ -20,3 +22,10 @@ maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
 anyhow = "^1"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "mybenchmark"
+harness = false

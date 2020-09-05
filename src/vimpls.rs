@@ -107,7 +107,7 @@ impl Vectors for &[f64] {
                .with_context(||emsg(file!(),line!(),"medoid failed to get that slice"))?;
             dsum += thisp.vdist(&thatp);
             if dsum >= mindist { break } // quit adding points if minimum distance is already exceeded
-            }
+         }
          // println!("Distance: {}\n",dsum);
          if dsum < mindist { mindist = dsum; minindx = i };       
       }
@@ -128,23 +128,50 @@ impl Vectors for &[f64] {
 
    /// Weiszfeld's formula for one iteration step in finding gmedian.  
    /// It has known problems with choosing the starting point and may fail to converge.  
-   /// However, gmedian below solves those problems.
-   fn betterpoint(&self, d:usize, v:&[f64]) -> Result<Vec<f64>> {
+   /// However, nmedian below solves those problems.
+   fn betterpoint(&self, d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
       let n = self.len()/d;
       let mut rsum = 0_f64;
       let mut vsum = vec![0_f64;d];
       for i in 0..n {
          let thatp = self.get(i*d .. (i+1)*d).unwrap();
-         let recip = 1.0/v.vdist(&thatp);
+         let dist = v.vdist(&thatp);
+         ensure!(dist.is_normal(),emsg(file!(),line!(),"betterpoint encountered zero distance")); 
+         let recip = 1.0/dist;
          rsum += recip;
          vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
       }
       vsum.as_mut_slice().mutsmult(1.0/rsum);
-      Ok(vsum)
+      if vsum.as_slice().vsub(&v).as_slice().vmag() < eps  
+         { Ok((true,vsum)) } else { Ok((false,vsum)) }    
    }
 
-   /// My innovative first step that guarantees good convergence.
+   fn nextpoint(&self, d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
+      let n = self.len()/d;
+      let mut rsum = 0_f64;
+      let mut vsum = vec![0_f64;d];
+      for i in 0..n {
+         let thatp = self.get(i*d .. (i+1)*d).unwrap();       
+         let dist = v.vdist(&thatp);
+         if dist < eps { // jump to nearby existing point
+            vsum = self.firstpoint(d,i,&thatp)  // and search from there
+               .with_context(||emsg(file!(),line!(),"nextpoint firstpoint call failed"))?; 
+            if vsum.as_slice().vsub(&thatp).as_slice().vmag() < eps { 
+               return Ok((true,vsum)) // moved less then eps from it, termination reached
+               } else { return Ok((false,vsum))} // no termination, continue through the point  
+         }
+         let recip = 1.0/dist;
+         rsum += recip;
+         vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
+      }
+      vsum.as_mut_slice().mutsmult(1.0/rsum);
+      if vsum.as_slice().vsub(&v).as_slice().vmag() < eps  
+         { Ok((true,vsum)) } else { Ok((false,vsum)) }
+   }
+
+   /// My innovative step that guarantees convergence.
    fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
+      // println!("Firstpoint used");
       let n = self.len()/d;
       let mut rsum = 0_f64;
       let mut vsum = vec![0_f64;d];
@@ -159,40 +186,59 @@ impl Vectors for &[f64] {
       vsum.as_mut_slice().mutsmult(1.0/rsum);
       Ok(vsum)
    }
- 
+
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.
-   /// This improved iterative algorithm has guaranteed good convergence, as it will not approach any points
-   /// in the set (which caused problems to Weiszfeld).  
-   /// Eps controls the desired relative accuracy
-   /// (iterative improvements as a fraction of the total distance achieved by the medoid).
+   /// This is the original Weiszfeld's algorithm for comparison.  
+   /// It has problems with convergence and/or division by zero when the estimate
+   /// runs too close to one of the existing points in the set.
+   /// See test/tests.rs where test `gmedian` panics, whereas `nmedian` finds the correct result
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
    /// let mut pts = genvec(15,15);
    /// let (ds,gm) = pts.as_slice().gmedian(15, 1e-5).unwrap();
-   /// assert_eq!(ds,3.8638718910583068_f64);
+   /// assert_eq!(ds,3.863871889650829_f64);
    /// ```
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
-      let (mut dist, indx) = self.medoid(d) // start with the medoid
-         .with_context(||emsg(file!(),line!(),"gmedian medoid call failed"))?;
-      let oldpoint = self.get(indx*d .. (indx+1)*d)
-         .with_context(||emsg(file!(),line!(),"gmedian failed to extract medoid"))?;
-      // first iteration step from the medoid, excluding the medoid
-      let mut point = self.firstpoint(d,indx,&oldpoint)
-         .with_context(||emsg(file!(),line!(),"gmedian firstpoint call failed"))?;
-      let mut testeps = oldpoint.vsub(&point).as_slice().vmag()/dist;
-      // let mut iterations = 1_usize;
-      while testeps > eps {
-         let newpoint = self.betterpoint(d,&point)
-            .with_context(||emsg(file!(),line!(),"gmedian betterpoint call failed"))?; // find new point 
-         testeps = newpoint.as_slice().vsub(&point).as_slice().vmag()/dist;
+      let mut oldpoint = self.arcentroid(d); // start with the centroid
+      // let mut iterations = 0_usize;
+      loop {
       //   iterations += 1;
-         point = newpoint                
+         let (terminate,newpoint) = self.betterpoint(d,eps,&oldpoint)
+            .with_context(||emsg(file!(),line!(),"gmedian nextpoint call failed"))?; // find new point 
+         oldpoint = newpoint;
+         if terminate { break }                
       }
       // println!("iterations: {}",iterations);
-      dist = self.distsum(d,&point);
-      Ok((dist,point))
+      Ok((self.distsum(d,&oldpoint),oldpoint))
    }
+ 
+   /// Geometric Median is the point that minimises the sum of distances to a given set of points.  
+   /// This improved  algorithm has guaranteed convergence. It will dodge any points in the set 
+   /// which cause problems to Weiszfeld. It has similar running time on easy datasets 
+   /// but guaranteed convergence also for the difficult cases. Eps controls the desired accuracy.
+   /// # Example
+   /// ```
+   /// use rstats::{Vectors,genvec};
+   /// let mut pts = genvec(15,15);
+   /// let (ds,gm) = pts.as_slice().nmedian(15, 1e-5).unwrap();
+   /// assert_eq!(ds,3.863871889650829_f64);
+   /// ```
+   fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
+      let n = self.len()/d;
+      ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
+      let mut oldpoint = self.arcentroid(d); // start with the centroid
+      // let mut iterations = 0_usize;
+      loop {
+      //   iterations += 1;
+         let (terminate,newpoint) = self.nextpoint(d,eps,&oldpoint)
+            .with_context(||emsg(file!(),line!(),"gmedian nextpoint call failed"))?; // find new point 
+         oldpoint = newpoint;
+         if terminate { break }                
+      }
+      // println!("iterations: {}",iterations);
+      Ok((self.distsum(d,&oldpoint),oldpoint))
+   }   
 }
