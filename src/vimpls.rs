@@ -63,10 +63,10 @@ impl Vectors for &[f64] {
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
-   /// let mut pts = genvec(15,15);
+   /// let mut pts = genvec(15,15,255,30);
    /// let centre = pts.as_slice().arcentroid(15);
    /// let dist = pts.as_slice().distsum(15,&centre);
-   /// assert_eq!(dist,3.8752383402415376_f64);
+   /// assert_eq!(dist, 4.14556218326653_f64);
    /// ```
    fn arcentroid(&self, d:usize) -> Vec<f64> {
       let n = self.len()/d;
@@ -88,9 +88,9 @@ impl Vectors for &[f64] {
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
-   /// let mut pts = genvec(15,15);
+   /// let mut pts = genvec(15,15,255,30);
    /// let (dist,indx) = pts.as_slice().medoid(15).unwrap();
-   /// assert_eq!(dist,4.525655380353103_f64);
+   /// assert_eq!(dist,4.812334638782327_f64);
    /// ```
    fn medoid(&self, d:usize) -> Result<(f64,usize)> {
       let n = self.len()/d;
@@ -195,9 +195,9 @@ impl Vectors for &[f64] {
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
-   /// let mut pts = genvec(15,15);
+   /// let mut pts = genvec(15,15,255,30);
    /// let (ds,gm) = pts.as_slice().gmedian(15, 1e-5).unwrap();
-   /// assert_eq!(ds,3.863871889650829_f64);
+   /// assert_eq!(ds,4.126465898732421_f64);
    /// ```
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
@@ -222,9 +222,9 @@ impl Vectors for &[f64] {
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
-   /// let mut pts = genvec(15,15);
+   /// let mut pts = genvec(15,15,255,30);
    /// let (ds,gm) = pts.as_slice().nmedian(15, 1e-5).unwrap();
-   /// assert_eq!(ds,3.863871889650829_f64);
+   /// assert_eq!(ds,4.126465898732421_f64);
    /// ```
    fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;

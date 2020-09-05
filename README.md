@@ -30,7 +30,7 @@ Should you get errors when applying them to `Vec<f64>`, just convert it using `.
 
 ## Trait MutVectors
 
-Some of the above Vector methods are for efficiency reasons reimplemented here so that they mutate `self` in place instead of creating a new Vec.
+Some of the above Vector methods are for efficiency reasons reimplemented here so that they mutate `self` in place instead of creating a new Vec. Useful for iterative methods on vectors.
 
 ## Releases
 * **Version 0.3.3** Added `nmedian` as the definitive algorithm for finding n-dimensional medians; `gmedian` is now the defunct Weiszfeld's algorithm which will panic and/or infinitely loop on some data. Also added benchmarks and tidied up the tests.
