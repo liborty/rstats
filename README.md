@@ -33,6 +33,10 @@ Should you get errors when applying them to `Vec<f64>`, just convert it using `.
 Some of the above Vector methods are for efficiency reasons reimplemented here so that they mutate `self` in place instead of creating a new Vec. Useful for iterative methods on vectors.
 
 ## Releases
+* **Version 0.3.5** Further imrovement to `nmedian`, comparison benchmarks.
+
+* **Version 0.3.4** Updated doc examples.
+
 * **Version 0.3.3** Added `nmedian` as the definitive algorithm for finding n-dimensional medians; `gmedian` is now the defunct Weiszfeld's algorithm which will panic and/or infinitely loop on some data. Also added benchmarks and tidied up the tests.
 
 * **Version 0.3.2** Added `arcentroid` = n-dimensional arithmetic mean. Added some more doc examples.
@@ -40,3 +44,6 @@ Some of the above Vector methods are for efficiency reasons reimplemented here s
 * **Version 0.3.1** Geometric Median speeded up. Added trait MutVectors.
 
 * **Version 0.3.0** completed the Geometric Median. Removed duplicated implementations of Vector for `Vec<f64>`.
+
+## Future Work
+Exploring threaded data-parallel version of nmedian for large data sets.

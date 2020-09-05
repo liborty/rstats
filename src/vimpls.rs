@@ -126,7 +126,7 @@ impl Vectors for &[f64] {
       sum
    }
 
-   /// Weiszfeld's formula for one iteration step in finding gmedian.  
+   /// Weiszfeld's formula for one iteration step in finding geometric median.  
    /// It has known problems with choosing the starting point and may fail to converge.  
    /// However, nmedian below solves those problems.
    fn betterpoint(&self, d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
@@ -173,6 +173,7 @@ impl Vectors for &[f64] {
    fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
       // println!("Firstpoint used");
       let n = self.len()/d;
+      let nf = (n as f64 - 1.)/n as f64;
       let mut rsum = 0_f64;
       let mut vsum = vec![0_f64;d];
       for i in 0..n {
@@ -183,15 +184,15 @@ impl Vectors for &[f64] {
          rsum += recip;
          vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
       }
-      vsum.as_mut_slice().mutsmult(1.0/rsum);
+      vsum.as_mut_slice().mutsmult(nf/rsum);
       Ok(vsum)
    }
 
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.
-   /// This is the original Weiszfeld's algorithm for comparison.  
+   /// This is the original Weiszfeld's algorithm for comparison.
    /// It has problems with convergence and/or division by zero when the estimate
    /// runs too close to one of the existing points in the set.
-   /// See test/tests.rs where test `gmedian` panics, whereas `nmedian` finds the correct result
+   /// See test/tests.rs, where test `gmedian` panics, whereas `nmedian` finds the correct result.
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
@@ -202,6 +203,7 @@ impl Vectors for &[f64] {
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
+
       let mut oldpoint = self.arcentroid(d); // start with the centroid
       // let mut iterations = 0_usize;
       loop {
@@ -216,20 +218,23 @@ impl Vectors for &[f64] {
    }
  
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.  
-   /// This improved  algorithm has guaranteed convergence. It will dodge any points in the set 
-   /// which cause problems to Weiszfeld. It has similar running time on easy datasets 
-   /// but guaranteed convergence also for the difficult cases. Eps controls the desired accuracy.
+   /// This is an improved  algorithm. It dodges any points in the set 
+   /// which cause problems to Weiszfeld. It runs slightly faster on easy datasets and, most importantly,
+   /// has at least the same convergence even on the difficult cases. Eps controls the desired accuracy.
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
    /// let mut pts = genvec(15,15,255,30);
    /// let (ds,gm) = pts.as_slice().nmedian(15, 1e-5).unwrap();
-   /// assert_eq!(ds,4.126465898732421_f64);
+   /// assert_eq!(ds,4.126465898745778_f64);
    /// ```
    fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
-      let mut oldpoint = self.arcentroid(d); // start with the centroid
+      // let mut oldpoint = self.arcentroid(d); // start with the centroid
+      let slc = self.get(0 .. d)
+               .with_context(||emsg(file!(),line!(),"nmedian failed to get starting point"))?;
+      let mut oldpoint = slc.to_vec();
       // let mut iterations = 0_usize;
       loop {
       //   iterations += 1;
