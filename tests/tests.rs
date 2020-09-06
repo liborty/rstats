@@ -37,6 +37,7 @@ fn intstats() -> Result<()> {
 }
 
 #[test]
+#[ignore]
 fn mc() -> Result<()> { 
    let pts = genvec(20,50,1,2);
    let (dist,indx) = pts.as_slice().medoid(20).unwrap();
@@ -46,6 +47,7 @@ fn mc() -> Result<()> {
    Ok(())
 }
 #[test]
+#[ignore]
 #[should_panic]
 fn gmedian() {
    let pts:Vec<f64> = vec![0.,0.,0.,0., 1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,0.,1.,
@@ -55,6 +57,7 @@ fn gmedian() {
 }
 
 #[test]
+#[ignore]
 fn nmedian() -> Result<()> {
    let pts:Vec<f64> = vec![0.,0.,0.,0., 1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,0.,1.,
       -1.,0.,0.,0., 0.,-1.,0.,0., 0.,0.,-1.,0., 0.,0.,0.,-1.];
@@ -62,3 +65,22 @@ fn nmedian() -> Result<()> {
    println!("Sum of Nmedian distances:  \x1B[01;92m{}\x1B[0m",ds);
    Ok(())
 }
+
+#[test]
+fn pmedian() -> Result<()> {
+   let mut sumg = 0_e64;
+   let mut sumn = 0_e64;
+   for i in 1..6 {
+      let pts = genvec(2,7000,i,2*i);
+      let (dg,_) = pts.as_slice().gmedian(2, 1e-1).unwrap();
+      sumg += dg;
+      // println!("\nSum of gmedian distances:  \x1B[01;92m{}\x1B[0m",ds);
+      let (dn,_gm) = pts.as_slice().nmedian(2, 1e-1).unwrap();
+      sumn += dn;
+      // println!("\nSum of nmedian distances:  \x1B[01;92m{}\x1B[0m",ds);
+   }
+   println!("\nSums of distances (smaller is better) gmedian: {}, nmedian : {}",sumg,sumn);
+   Ok(())
+}
+
+

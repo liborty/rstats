@@ -134,9 +134,10 @@ impl Vectors for &[f64] {
       let mut rsum = 0_f64;
       let mut vsum = vec![0_f64;d];
       for i in 0..n {
-         let thatp = self.get(i*d .. (i+1)*d).unwrap();
+         let thatp = self.get(i*d .. (i+1)*d)
+            .with_context(||emsg(file!(),line!(),"betterpoint failed to extract other point"))?; 
          let dist = v.vdist(&thatp);
-         ensure!(dist.is_normal(),emsg(file!(),line!(),"betterpoint encountered zero distance")); 
+         ensure!(dist.is_normal(),emsg(file!(),line!(),"betterpoint collided with an existing point")); 
          let recip = 1.0/dist;
          rsum += recip;
          vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
@@ -148,17 +149,19 @@ impl Vectors for &[f64] {
 
    fn nextpoint(&self, d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
       let n = self.len()/d;
+      let reps = eps / 10.0;
       let mut rsum = 0_f64;
       let mut vsum = vec![0_f64;d];
       for i in 0..n {
-         let thatp = self.get(i*d .. (i+1)*d).unwrap();       
+         let thatp = self.get(i*d .. (i+1)*d)
+            .with_context(||emsg(file!(),line!(),"nextpoint failed to extract other point"))?;       
          let dist = v.vdist(&thatp);
-         if dist < eps { // jump to nearby existing point
+         if dist < reps { // jump to nearby existing point
             vsum = self.firstpoint(d,i,&thatp)  // and search from there
                .with_context(||emsg(file!(),line!(),"nextpoint firstpoint call failed"))?; 
-            if vsum.as_slice().vsub(&thatp).as_slice().vmag() < eps { 
+            if vsum.as_slice().vsub(&thatp).as_slice().vmag() < reps { 
                return Ok((true,vsum)) // moved less then eps from it, termination reached
-               } else { return Ok((false,vsum))} // no termination, continue through the point  
+            } else { return Ok((false,vsum))} // no termination, continue through the point  
          }
          let recip = 1.0/dist;
          rsum += recip;
@@ -171,7 +174,7 @@ impl Vectors for &[f64] {
 
    /// My innovative step that guarantees convergence.
    fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
-      // println!("Firstpoint used");
+      // println!("Firstpoint");
       let n = self.len()/d;
       let nf = (n as f64 - 1.)/n as f64;
       let mut rsum = 0_f64;
@@ -230,20 +233,36 @@ impl Vectors for &[f64] {
    /// ```
    fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
-      ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
-      // let mut oldpoint = self.arcentroid(d); // start with the centroid
-      let slc = self.get(0 .. d)
-               .with_context(||emsg(file!(),line!(),"nmedian failed to get starting point"))?;
-      let mut oldpoint = slc.to_vec();
+      ensure!(n*d == self.len(),emsg(file!(),line!(),"nmedian d must divide vector length"));
+      let mut oldpoint = self.arcentroid(d); // start with the centroid
+      // let slc = self.get(0 .. d)
+      //    .with_context(||emsg(file!(),line!(),"nmedian failed to get starting point"))?;
+      //  let mut oldpoint = slc.to_vec();
       // let mut iterations = 0_usize;
       loop {
       //   iterations += 1;
          let (terminate,newpoint) = self.nextpoint(d,eps,&oldpoint)
-            .with_context(||emsg(file!(),line!(),"gmedian nextpoint call failed"))?; // find new point 
+            .with_context(||emsg(file!(),line!(),"nmedian nextpoint call failed"))?; // find new point 
          oldpoint = newpoint;
          if terminate { break }                
       }
       // println!("iterations: {}",iterations);
       Ok((self.distsum(d,&oldpoint),oldpoint))
+   }   
+
+   fn pmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
+      let n = self.len()/d/2;
+      ensure!(2*n*d == self.len(),emsg(file!(),line!(),"pmedian d must divide vector length"));
+      // let mut oldpoint = self.arcentroid(d); // start with the centroid
+      let slc1 = self.get(0 .. n*d)
+         .with_context(||emsg(file!(),line!(),"nmedian failed to get starting point"))?;
+      let (_d1,p1) = slc1.nmedian(d,eps).unwrap();
+      println!("Distance of point 1: {}", self.distsum(d,&p1));
+      let slc2 = self.get(n*d .. self.len())
+         .with_context(||emsg(file!(),line!(),"nmedian failed to get starting point"))?;
+      let (_d2,p2) = slc2.nmedian(d,eps).unwrap();
+      println!("Distance of point 2: {}", self.distsum(d,&p2));
+      let oldpoint = p1.as_slice().vadd(&p2).as_slice().smult(0.5_f64);
+      Ok((self.distsum(d,&oldpoint),oldpoint.to_vec()))
    }   
 }

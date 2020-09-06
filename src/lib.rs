@@ -80,6 +80,8 @@ pub trait Vectors {
    fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>>;
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;   
    fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;
+   fn pmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;
+   
 }
 
 /// Private helper function for formatting error messages
