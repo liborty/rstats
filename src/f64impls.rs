@@ -1,14 +1,14 @@
 use anyhow::{Result,ensure};
 use crate::{RStats,MStats,Med,wsum,emsg,sortf};
 
-impl RStats for Vec<f64> { 
+impl RStats for &[f64] { 
 
    /// Arithmetic mean of an f64 slice
    /// # Example
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// assert_eq!(v1.amean().unwrap(),7.5_f64);
+   /// assert_eq!(v1.as_slice().amean().unwrap(),7.5_f64);
    /// ```
    fn amean(&self) -> Result<f64> { 
       let n = self.len();
@@ -21,7 +21,7 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// let res = v1.ameanstd().unwrap();
+   /// let res = v1.as_slice().ameanstd().unwrap();
    /// assert_eq!(res.mean,7.5_f64);
    /// assert_eq!(res.std,4.031128874149275_f64);
    /// ```
@@ -40,7 +40,7 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// assert_eq!(v1.awmean().unwrap(),5.333333333333333_f64);
+   /// assert_eq!(v1.as_slice().awmean().unwrap(),5.333333333333333_f64);
    /// ```
    fn awmean(&self) -> Result<f64> {
       let n = self.len();
@@ -56,7 +56,7 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// let res = v1.awmeanstd().unwrap();
+   /// let res = v1.as_slice().awmeanstd().unwrap();
    /// assert_eq!(res.mean,5.333333333333333_f64);
    /// assert_eq!(res.std,3.39934634239519_f64);
    /// ```
@@ -76,13 +76,13 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// assert_eq!(v1.hmean().unwrap(),4.305622526633627_f64);
+   /// assert_eq!(v1.as_slice().hmean().unwrap(),4.305622526633627_f64);
    /// ```
    fn hmean(&self) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"hmean - sample is empty!"));
       let mut sum = 0_f64;
-      for &x in self {
+      for &x in *self {
          ensure!(x.is_normal(),emsg(file!(),line!(),"hmean does not accept zero valued data!"));  
          sum += 1.0/x
       }
@@ -95,13 +95,13 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// assert_eq!(v1.hwmean().unwrap(),3.019546395306663_f64);
+   /// assert_eq!(v1.as_slice().hwmean().unwrap(),3.019546395306663_f64);
    /// ```
    fn hwmean(&self) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"hwmean - sample is empty!"));
       let mut sum = 0_f64; let mut w = n as f64;
-      for &x in self {
+      for &x in *self {
          ensure!(x.is_normal(),emsg(file!(),line!(),"hwmean does not accept zero valued data!")); 
          sum += w/x; w -= 1_f64; 
       }
@@ -117,13 +117,13 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// assert_eq!(v1.gmean().unwrap(),6.045855171418503_f64);
+   /// assert_eq!(v1.as_slice().gmean().unwrap(),6.045855171418503_f64);
    /// ```
    fn gmean(&self) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"gmean - sample is empty!"));
       let mut sum = 0_f64;
-      for &x in self {   
+      for &x in *self {   
          ensure!(x.is_normal(),emsg(file!(),line!(),"gmean does not accept zero valued data!"));
          sum += x.ln()
       }
@@ -141,14 +141,14 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// assert_eq!(v1.gwmean().unwrap(),4.144953510241978_f64);
+   /// assert_eq!(v1.as_slice().gwmean().unwrap(),4.144953510241978_f64);
    /// ```
    fn gwmean(&self) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"gwmean - sample is empty!"));
       let mut w = n as f64; // descending weights
       let mut sum = 0_f64;
-      for &x in self {  
+      for &x in *self {  
          ensure!(x.is_normal(),emsg(file!(),line!(),"gwmean does not accept zero valued data!"));
          sum += w*x.ln();
          w -= 1_f64;
@@ -163,7 +163,7 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// let res = v1.gmeanstd().unwrap();
+   /// let res = v1.as_slice().gmeanstd().unwrap();
    /// assert_eq!(res.mean,6.045855171418503_f64);
    /// assert_eq!(res.std,2.1084348239406303_f64);
    /// ```
@@ -171,7 +171,7 @@ impl RStats for Vec<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"gmeanstd - sample is empty!"));
       let mut sum = 0_f64; let mut sx2 = 0_f64;
-      for &x in self { 
+      for &x in *self { 
          ensure!(x.is_normal(),emsg(file!(),line!(),"gmeanstd does not accept zero valued data!"));
          let lx = x.ln();
          sum += lx; sx2 += lx*lx    
@@ -185,7 +185,7 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// let res = v1.gwmeanstd().unwrap();
+   /// let res = v1.as_slice().gwmeanstd().unwrap();
    /// assert_eq!(res.mean,4.144953510241978_f64);
    /// assert_eq!(res.std,2.1572089236412597_f64);
    /// ```
@@ -194,7 +194,7 @@ impl RStats for Vec<f64> {
       ensure!(n>0,emsg(file!(),line!(),"gwmeanstd - sample is empty!"));
       let mut w = n as f64; // descending weights
       let mut sum = 0_f64; let mut sx2 = 0_f64;
-      for &x in self { 
+      for &x in *self { 
          ensure!(x.is_normal(),emsg(file!(),line!(),"gwmeanstd does not accept zero valued data!"));
          let lnx = x.ln();
          sum += w*lnx; sx2 += w*lnx*lnx;
@@ -209,7 +209,7 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// let res = v1.median().unwrap();
+   /// let res = v1.as_slice().median().unwrap();
    /// assert_eq!(res.median,7.5_f64);
    /// assert_eq!(res.lquartile,4_f64);
    /// assert_eq!(res.uquartile,11_f64);
@@ -217,7 +217,7 @@ impl RStats for Vec<f64> {
    fn median(&self) -> Result<Med> {
       let n = self.len();
       let mid = n/2;
-      let mut v = self.clone();
+      let mut v = self.to_vec();
       sortf(&mut v);
      // sortfslice(&mut v);
       let mut result: Med = Default::default();
@@ -238,7 +238,7 @@ impl RStats for Vec<f64> {
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// let v2 = vec![14_i64,13,12,11,10,9,8,7,6,5,4,3,2,1];
-   /// assert_eq!(v1.icorrelation(&v2).unwrap(),-1_f64);
+   /// assert_eq!(v1.as_slice().icorrelation(&v2).unwrap(),-1_f64);
    /// ```
    fn icorrelation(&self,v2:&[i64]) -> Result<f64> {
       let n = self.len();
@@ -259,7 +259,7 @@ impl RStats for Vec<f64> {
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
-   /// assert_eq!(v1.correlation(&v2).unwrap(),-1_f64);
+   /// assert_eq!(v1.as_slice().correlation(&v2).unwrap(),-1_f64);
    /// ```
    fn correlation(&self,v2:&[f64]) -> Result<f64> {
       let n = self.len();
@@ -279,7 +279,7 @@ impl RStats for Vec<f64> {
    /// ```
    /// use rstats::RStats;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// assert_eq!(v1.autocorr().unwrap(),0.9984603532054123_f64);
+   /// assert_eq!(v1.as_slice().autocorr().unwrap(),0.9984603532054123_f64);
    /// ```
    fn autocorr(&self) -> Result<f64> {
       let n = self.len();

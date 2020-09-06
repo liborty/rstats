@@ -74,13 +74,8 @@ pub trait Vectors {
    fn arcentroid(&self, d:usize) -> Vec<f64>;
    fn medoid(&self, d:usize) -> Result<(f64,usize)>;
    fn distsum(&self, d:usize, v:&[f64] ) -> f64;
-
-   fn nextpoint(&self, d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)>;
-   fn betterpoint(&self, d:usize, eps:f64, v:&[f64] ) -> Result<(bool,Vec<f64>)>;
-   fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>>;
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;   
    fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;
-   fn pmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;
    
 }
 

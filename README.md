@@ -8,8 +8,8 @@ Trait Vectors is unchecked to achieve speed, so some caution is advisable.
 
 ## Trait RStats 
 
-has statistical methods implemented for i64 and f64 vectors (and their slices).
-For example, `v.amean()` computes the arithmetic mean of vector `v` of either `Vec<i64>` or `Vec<f64>` type (or their slices).
+has statistical methods implemented for `&[i64]` and `&[f64]` slices.
+For example, `s.amean()` computes the arithmetic mean of slice `s` of either type.
 
 Included are:
 
@@ -26,13 +26,15 @@ Included are:
 ## Trait Vectors
 
 has basic vector algebra implemented for `&[f64]` slices.
-Should you get errors when applying them to `Vec<f64>`, just convert it using `.as_slice()`.
+Should you get errors when applying them to `Vec<f64>`, just convert `self` using `.as_slice()`. See doc examples.
 
 ## Trait MutVectors
 
-Some of the above Vector methods are for efficiency reasons reimplemented here so that they mutate `self` in place instead of creating a new Vec. Useful for iterative methods on vectors.
+Some of the above Vector methods are for efficiency reasons reimplemented here so that they mutate `self` in place instead of creating a new Vec. Useful for iterative methods on vectors. Beware that some methods do not return anything, so they can not be chained.
 
 ## Releases
+* **Version 0.4.0** Cleanup. Changed the implementation types from Vecs to slices everywhere for consistency. You may need more .as_slice() conversions here and there. Made some subsidiary functions private.
+
 * **Version 0.3.5** Further imrovement to `nmedian`, comparison benchmarks.
 
 * **Version 0.3.4** Updated doc examples.
@@ -44,6 +46,3 @@ Some of the above Vector methods are for efficiency reasons reimplemented here s
 * **Version 0.3.1** Geometric Median speeded up. Added trait MutVectors.
 
 * **Version 0.3.0** completed the Geometric Median. Removed duplicated implementations of Vector for `Vec<f64>`.
-
-## Future Work
-Exploring threaded data-parallel version of nmedian for large data sets.
