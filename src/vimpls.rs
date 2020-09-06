@@ -126,9 +126,11 @@ impl Vectors for &[f64] {
       sum
    }
 
-   /// Weiszfeld's formula for one iteration step in finding geometric median.  
-   /// It has known problems with choosing the starting point and may fail to converge.  
-   /// However, nmedian below solves those problems.
+   /// Weiszfeld's formula for one iteration step in finding the geometric median (gm).
+   /// It has known problems with choosing the starting point and may fail to converge.
+   /// Especially in situations where the points are dense in the vicinity of the gm.
+   /// However, nmedian below solves those problems.  
+   /// betterpoint is called by gmedian.  
    fn betterpoint(&self, d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
       let n = self.len()/d;
       let mut rsum = 0_f64;
@@ -147,6 +149,8 @@ impl Vectors for &[f64] {
          { Ok((true,vsum)) } else { Ok((false,vsum)) }    
    }
 
+   /// nextpoint is called by nmedian; it checks for proximity of set points and
+   /// deals with the situation by calling firstpoint.
    fn nextpoint(&self, d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
       let n = self.len()/d;
       let reps = eps / 10.0;
@@ -160,8 +164,8 @@ impl Vectors for &[f64] {
             vsum = self.firstpoint(d,i,&thatp)  // and search from there
                .with_context(||emsg(file!(),line!(),"nextpoint firstpoint call failed"))?; 
             if vsum.as_slice().vsub(&thatp).as_slice().vmag() < reps { 
-               return Ok((true,vsum)) // moved less then eps from it, termination reached
-            } else { return Ok((false,vsum))} // no termination, continue through the point  
+               return Ok((true,vsum)) // moved less then eps/10 from it, termination reached
+            } else { return Ok((false,vsum))} // no termination, continue iterating through the point  
          }
          let recip = 1.0/dist;
          rsum += recip;
@@ -172,7 +176,7 @@ impl Vectors for &[f64] {
          { Ok((true,vsum)) } else { Ok((false,vsum)) }
    }
 
-   /// My innovative step that guarantees convergence.
+   /// innovative estimate from the set point that guarantees convergence.
    fn firstpoint(&self, d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
       // println!("Firstpoint");
       let n = self.len()/d;
@@ -192,8 +196,8 @@ impl Vectors for &[f64] {
    }
 
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.
-   /// This is the original Weiszfeld's algorithm for comparison.
-   /// It has problems with convergence and/or division by zero when the estimate
+   /// This is the original Weiszfeld's algorithm (for comparison). It is not recommended for production use.
+   /// It has problems with convergence and/or division by zero when the iterative estimate
    /// runs too close to one of the existing points in the set.
    /// See test/tests.rs, where test `gmedian` panics, whereas `nmedian` finds the correct result.
    /// # Example
@@ -222,8 +226,9 @@ impl Vectors for &[f64] {
  
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.  
    /// This is an improved  algorithm. It dodges any points in the set 
-   /// which cause problems to Weiszfeld. It runs slightly faster on easy datasets and, most importantly,
-   /// has at least the same convergence even on the difficult cases. Eps controls the desired accuracy.
+   /// which typically cause problems to Weiszfeld. It runs slightly faster on easy datasets and maintains its
+   /// convergence even on the difficult data (dense points near the geometric median).  
+   /// Eps controls the desired accuracy.
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
