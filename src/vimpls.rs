@@ -63,7 +63,7 @@ impl Vectors for &[f64] {
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
-   /// let mut pts = genvec(15,15,255,30);
+   /// let pts = genvec(15,15,255,30);
    /// let centre = pts.as_slice().arcentroid(15);
    /// let dist = pts.as_slice().distsum(15,&centre);
    /// assert_eq!(dist, 4.14556218326653_f64);
@@ -88,7 +88,7 @@ impl Vectors for &[f64] {
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
-   /// let mut pts = genvec(15,15,255,30);
+   /// let pts = genvec(15,15,255,30);
    /// let (dist,indx) = pts.as_slice().medoid(15).unwrap();
    /// assert_eq!(dist,4.812334638782327_f64);
    /// ```
@@ -135,7 +135,7 @@ impl Vectors for &[f64] {
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
-   /// let mut pts = genvec(15,15,255,30);
+   /// let pts = genvec(15,15,255,30);
    /// let (ds,gm) = pts.as_slice().gmedian(15, 1e-5).unwrap();
    /// assert_eq!(ds,4.126465898732421_f64);
    /// ```
@@ -164,7 +164,7 @@ impl Vectors for &[f64] {
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
-   /// let mut pts = genvec(15,15,255,30);
+   /// let pts = genvec(15,15,255,30);
    /// let (ds,gm) = pts.as_slice().nmedian(15, 1e-5).unwrap();
    /// assert_eq!(ds,4.126465898732421_f64);
    /// ```
@@ -205,72 +205,73 @@ impl Vectors for &[f64] {
 */
 }
 
-   /// nextpoint is called by nmedian; it checks for proximity of set points and
-   /// deals with the situation by calling firstpoint.
-   fn nextpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
-      let n = set.len()/d;
-      let reps = eps / 10.0;
-      let mut rsum = 0_f64;
-      let mut vsum = vec![0_f64;d];
-      for i in 0..n {
-         let thatp = set.get(i*d .. (i+1)*d)
-            .with_context(||emsg(file!(),line!(),"nextpoint failed to extract other point"))?;       
-         let dist = v.vdist(&thatp);
-         if dist < reps { // jump to nearby existing point
-            vsum = firstpoint(set,d,i,&thatp)  // and search from there
-               .with_context(||emsg(file!(),line!(),"nextpoint firstpoint call failed"))?; 
-            if vsum.as_slice().vsub(&thatp).as_slice().vmag() < reps { 
+/// nextpoint is called by nmedian; it checks for proximity of set points and
+/// deals with the situation by calling firstpoint.
+fn nextpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
+   let n = set.len()/d;
+   let reps = eps / 10.0;
+   let mut rsum = 0_f64;
+   let mut vsum = vec![0_f64;d];
+   for i in 0..n {
+      let thatp = set.get(i*d .. (i+1)*d)
+         .with_context(||emsg(file!(),line!(),"nextpoint failed to extract other point"))?;       
+      let dist = v.vdist(&thatp);
+      if dist < reps { // jump to nearby existing point
+         vsum = firstpoint(set,d,i,&thatp)  // and search from there
+            .with_context(||emsg(file!(),line!(),"nextpoint firstpoint call failed"))?; 
+         if vsum.as_slice().vsub(&thatp).as_slice().vmag() < reps { 
                return Ok((true,vsum)) // moved less then eps/10 from it, termination reached
-            } else { return Ok((false,vsum))} // no termination, continue iterating through the point  
-         }
-         let recip = 1.0/dist;
-         rsum += recip;
-         vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
+            }
+         else { return Ok((false,vsum))} // no termination, continue iterating through the point
       }
-      vsum.as_mut_slice().mutsmult(1.0/rsum);
-      if vsum.as_slice().vsub(&v).as_slice().vmag() < eps  
-         { Ok((true,vsum)) } else { Ok((false,vsum)) }
+      let recip = 1.0/dist;
+      rsum += recip;
+      vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
    }
+   vsum.as_mut_slice().mutsmult(1.0/rsum);
+   if vsum.as_slice().vsub(&v).as_slice().vmag() < eps  
+      { Ok((true,vsum)) } else { Ok((false,vsum)) }
+}
 
-   /// innovative estimate from the set point that guarantees convergence.
-   fn firstpoint(set:&[f64], d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
-      // println!("Firstpoint");
-      let n = set.len()/d;
-      let nf = (n as f64 - 1.)/n as f64;
-      let mut rsum = 0_f64;
-      let mut vsum = vec![0_f64;d];
-      for i in 0..n {
-         if i == indx { continue }; // exclude the starting medoid point  
-         let thatp = set.get(i*d .. (i+1)*d)
-            .with_context(||emsg(file!(),line!(),"firstpoint failed to extract point"))?;
-         let recip = 1.0/v.vdist(&thatp);
-         rsum += recip;
-         vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
-      }
-      vsum.as_mut_slice().mutsmult(nf/rsum);
-      Ok(vsum)
+/// innovative estimate from the set point that guarantees convergence.
+fn firstpoint(set:&[f64], d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
+   // println!("Firstpoint");
+   let n = set.len()/d;
+   let nf = (n as f64 - 1.)/n as f64;
+   let mut rsum = 0_f64;
+   let mut vsum = vec![0_f64;d];
+   for i in 0..n {
+       if i == indx { continue }; // exclude the starting medoid point  
+      let thatp = set.get(i*d .. (i+1)*d)
+          .with_context(||emsg(file!(),line!(),"firstpoint failed to extract point"))?;
+      let recip = 1.0/v.vdist(&thatp);
+      rsum += recip;
+      vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
    }
+   vsum.as_mut_slice().mutsmult(nf/rsum);
+   Ok(vsum)
+}
 
  
-   /// Weiszfeld's formula for one iteration step in finding the geometric median (gm).
-   /// It has known problems with choosing the starting point and may fail to converge.
-   /// Especially in situations where the points are dense in the vicinity of the gm.
-   /// However, nmedian below solves those problems.  
-   /// betterpoint is called by gmedian.  
-   fn betterpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
-      let n = set.len()/d;
-      let mut rsum = 0_f64;
-      let mut vsum = vec![0_f64;d];
-      for i in 0..n {
-         let thatp = set.get(i*d .. (i+1)*d)
-            .with_context(||emsg(file!(),line!(),"betterpoint failed to extract other point"))?; 
-         let dist = v.vdist(&thatp);
-         ensure!(dist.is_normal(),emsg(file!(),line!(),"betterpoint collided with an existing point")); 
-         let recip = 1.0/dist;
-         rsum += recip;
-         vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
-      }
-      vsum.as_mut_slice().mutsmult(1.0/rsum);
-      if vsum.as_slice().vsub(&v).as_slice().vmag() < eps  
-         { Ok((true,vsum)) } else { Ok((false,vsum)) }    
+/// Weiszfeld's formula for one iteration step in finding the geometric median (gm).
+/// It has known problems with choosing the starting point and may fail to converge.
+/// Especially in situations where the points are dense in the vicinity of the gm.
+/// However, nmedian below solves those problems.  
+/// betterpoint is called by gmedian.  
+fn betterpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
+   let n = set.len()/d;
+   let mut rsum = 0_f64;
+   let mut vsum = vec![0_f64;d];
+   for i in 0..n {
+      let thatp = set.get(i*d .. (i+1)*d)
+         .with_context(||emsg(file!(),line!(),"betterpoint failed to extract other point"))?; 
+      let dist = v.vdist(&thatp);
+      ensure!(dist.is_normal(),emsg(file!(),line!(),"betterpoint collided with an existing point")); 
+      let recip = 1.0/dist;
+      rsum += recip;
+      vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
    }
+   vsum.as_mut_slice().mutsmult(1.0/rsum);
+   if vsum.as_slice().vsub(&v).as_slice().vmag() < eps  
+      { Ok((true,vsum)) } else { Ok((false,vsum)) }    
+}
