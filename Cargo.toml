@@ -24,7 +24,7 @@ maintenance = { status = "actively-developed" }
 anyhow = "^1"
 
 [dev-dependencies]
-devtimer = "*"
+devtimer = "4"
 # criterion = "0.3"
 
 [[bench]]
