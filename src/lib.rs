@@ -1,4 +1,3 @@
-// pub mod tests;
 pub mod i64impls;
 pub mod f64impls;
 pub mod vimpls;
@@ -15,7 +14,8 @@ pub struct Med {
 }
 impl std::fmt::Display for Med {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "(LQ: {}, M: {}, UQ: {})", self.lquartile, self.median, self.uquartile)
+        write!(f,"Lower Quartile: {}, Median: {}, Upper Qartile: {}", 
+        green(self.lquartile), green(self.median), green(self.uquartile))
     }
 }
 
@@ -27,7 +27,7 @@ pub struct MStats {
 }
 impl std::fmt::Display for MStats {
    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-      write!(f, "Mean:\t{}\nStd:\t{}", self.mean, self.std)
+      write!(f,"mean±std: {}±{}",green(self.mean),green(self.std))
    }
 }
 /// Implementing basic statistical measures.
@@ -79,13 +79,18 @@ pub trait Vectors {
    
 }
 
-/// Private helper function for formatting error messages
+/// private helper function for formatting error messages
 fn emsg(file:&'static str, line:u32, msg:&'static str)-> String {
    format!("{}:{} rstats {}",file,line,msg)
 }
 
 /// Private sum of linear weights 
 fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
+
+
+/// green terminal text output to make test results stand out.
+pub fn green(n:f64) -> String { format!("\x1B[01;92m{}\x1B[0m",n) }
+
 
 /// Sorts a mutable `Vec<f64>` in place.  
 /// It is the responsibility of the user to ensure that there are no NaNs etc.

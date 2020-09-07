@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Libor Spacek"]
 edition = "2018"
 description = "Simple Statistics: Means, Median, Correlations"
@@ -24,7 +24,8 @@ maintenance = { status = "actively-developed" }
 anyhow = "^1"
 
 [dev-dependencies]
-criterion = "0.3"
+devtimer = "*"
+# criterion = "0.3"
 
 [[bench]]
 name = "mybenchmark"

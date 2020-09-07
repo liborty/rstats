@@ -21,7 +21,6 @@ impl MutVectors for &mut[f64] {
    }
    /// Vector magnitude duplicated for mutable type 
    fn mutvmag(&mut self) -> f64 { self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt() }
-
 }
 
 impl Vectors for &[f64] { 

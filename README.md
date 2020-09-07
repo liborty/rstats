@@ -33,6 +33,8 @@ Should you get errors when applying them to `Vec<f64>`, just convert `self` usin
 Some of the above Vector methods are for efficiency reasons reimplemented here so that they mutate `self` in place instead of creating a new Vec. Useful for iterative methods on vectors. Beware that some methods do not return anything, so they can not be chained.
 
 ## Releases
+* **Version 0.4.1** Tidier testing and benchmarks.
+
 * **Version 0.4.0** Cleanup. Changed the implementation types from Vecs to slices everywhere for consistency. You may need more .as_slice() conversions here and there. Made some subsidiary functions private.
 
 * **Version 0.3.5** Further imrovement to `nmedian`, comparison benchmarks.
