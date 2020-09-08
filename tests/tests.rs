@@ -75,6 +75,8 @@ fn difficult_data() -> Result<()> {
       -1.,0.,0.,0., 0.,-1.,0.,0., 0.,0.,-1.,0., 0.,0.,0.,-1.];
    let (ds,_gm) = pts.as_slice().nmedian(4, 1e-5).unwrap();
    println!("Sum of Nmedian distances:  \x1B[01;92m{}\x1B[0m",ds);
+   let (ds,_gm) = pts.as_slice().gmedian(4, 1e-5).unwrap();
+   println!("Sum of Gmedian distances:  \x1B[01;92m{}\x1B[0m",ds);
    Ok(())
 }
 

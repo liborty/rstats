@@ -141,7 +141,6 @@ impl Vectors for &[f64] {
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
-
       let mut oldpoint = self.arcentroid(d); // start with the centroid
       // let mut iterations = 0_usize;
       loop {
@@ -170,10 +169,11 @@ impl Vectors for &[f64] {
    fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"nmedian d must divide vector length"));
-      let mut oldpoint = self.arcentroid(d); // start with the centroid
-      // let slc = self.get(0 .. d)
-      //    .with_context(||emsg(file!(),line!(),"nmedian failed to get starting point"))?;
-      //  let mut oldpoint = slc.to_vec();
+      //  let mut oldpoint = self.arcentroid(d); // start with the centroid
+      let slc = self.get(0 .. d)
+          .with_context(||emsg(file!(),line!(),"nmedian failed to get starting point"))?;
+      let mut oldpoint = firstpoint(self,d,0,slc)
+         .with_context(||emsg(file!(),line!(),"nmedian firstpoint call failed"))?;
       // let mut iterations = 0_usize;
       loop {
       //   iterations += 1;
@@ -208,20 +208,18 @@ impl Vectors for &[f64] {
 /// deals with the situation by calling firstpoint.
 fn nextpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
    let n = set.len()/d;
-   let reps = eps / 10.0;
    let mut rsum = 0_f64;
    let mut vsum = vec![0_f64;d];
    for i in 0..n {
       let thatp = set.get(i*d .. (i+1)*d)
          .with_context(||emsg(file!(),line!(),"nextpoint failed to extract other point"))?;       
       let dist = v.vdist(&thatp);
-      if dist < reps { // jump to nearby existing point
-         vsum = firstpoint(set,d,i,&thatp)  // and search from there
+      if dist < eps { // jump to nearby existing point
+         vsum = firstpoint(set,d,i,thatp)  // and search from there
             .with_context(||emsg(file!(),line!(),"nextpoint firstpoint call failed"))?; 
-         if vsum.as_slice().vsub(&thatp).as_slice().vmag() < reps { 
-               return Ok((true,vsum)) // moved less then eps/10 from it, termination reached
-            }
-         else { return Ok((false,vsum))} // no termination, continue iterating through the point
+         if vsum.as_slice().vmag() < eps { 
+               return Ok((true,thatp.vadd(&vsum))) } // moved less then eps from v, termination reached
+         else { return Ok((false,thatp.vadd(&vsum)))} // continue iterating through the point
       }
       let recip = 1.0/dist;
       rsum += recip;
@@ -234,18 +232,22 @@ fn nextpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> 
 
 /// innovative estimate from the set point that guarantees convergence.
 fn firstpoint(set:&[f64], d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
-   // println!("Firstpoint");
+   println!("Firstpoint");
    let n = set.len()/d;
    let nf = (n as f64 - 1.)/n as f64;
    let mut rsum = 0_f64;
    let mut vsum = vec![0_f64;d];
    for i in 0..n {
-       if i == indx { continue }; // exclude the starting medoid point  
+      if i == indx { continue }; // exclude the starting medoid point  
       let thatp = set.get(i*d .. (i+1)*d)
           .with_context(||emsg(file!(),line!(),"firstpoint failed to extract point"))?;
-      let recip = 1.0/v.vdist(&thatp);
-      rsum += recip;
-      vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
+      let mut difv = thatp.vsub(v);
+      let dist = difv.as_slice().vmag();
+      if !dist.is_normal() { continue }; // another coinciding point - ignore it
+      let invmag = 1.0/dist;
+      rsum += invmag;
+      difv.as_mut_slice().mutsmult(invmag); // makes difv a unit vector
+      vsum.as_mut_slice().mutvadd(&difv); // add it it their sum
    }
    vsum.as_mut_slice().mutsmult(nf/rsum);
    Ok(vsum)
@@ -265,7 +267,7 @@ fn betterpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)
       let thatp = set.get(i*d .. (i+1)*d)
          .with_context(||emsg(file!(),line!(),"betterpoint failed to extract other point"))?; 
       let dist = v.vdist(&thatp);
-      ensure!(dist.is_normal(),emsg(file!(),line!(),"betterpoint collided with an existing point")); 
+      if !dist.is_normal() { continue };   
       let recip = 1.0/dist;
       rsum += recip;
       vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
