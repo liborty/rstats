@@ -125,6 +125,37 @@ impl Vectors for &[f64] {
       sum
    }
 
+   /// multidimensional `eccentricity` of a point within the set
+   /// based on geometric median without actually having to find the median
+   /// it is a measure of `not being a median`. The actual median will have eccentricity zero
+   /// and the medoid will have the least ecentricity
+   fn eccentr(&self, d:usize, indx:usize) -> f64 {
+      let n = self.len()/d;
+      let mut vsum = vec![0_f64;d];
+      let thisp = self.get(indx*d .. (indx+1)*d).unwrap();
+      //  .with_context(||emsg(file!(),line!(),"eccentricity failed to extract this point"))?;   
+      for i in 0..n {
+         if i == indx { continue }; // exclude this point  
+         let thatp = self.get(i*d .. (i+1)*d).unwrap();
+         //    .with_context(||emsg(file!(),line!(),"eccentricity failed to extract that point"))?;
+         let unitdv = thatp.vsub(thisp).as_slice().vunit();
+         vsum.as_mut_slice().mutvadd(&unitdv);   // add it to their sum
+      }
+      vsum.as_slice().vmag()/(n-1) as f64
+   }
+   /// ecentricity of a point not in the set
+   fn exteccentr(&self, d:usize, thisp:&[f64]) -> f64 {
+      let n = self.len()/d;
+      let mut vsum = vec![0_f64;d];
+      for i in 0..n {
+         let thatp = self.get(i*d .. (i+1)*d).unwrap();
+         //    .with_context(||emsg(file!(),line!(),"eccentricity failed to extract that point"))?;
+         let unitdv = thatp.vsub(thisp).as_slice().vunit();
+         vsum.as_mut_slice().mutvadd(&unitdv);   // add it to their sum
+      }
+      vsum.as_slice().vmag()/n as f64
+   }
+
    
   /// Geometric Median is the point that minimises the sum of distances to a given set of points.
    /// This is the original Weiszfeld's algorithm (for comparison). It is not recommended for production use.
@@ -156,8 +187,9 @@ impl Vectors for &[f64] {
  
    /// Geometric Median is the point that minimises the sum of distances to a given set of points.  
    /// This is an improved  algorithm. It dodges any points in the set 
-   /// which typically cause problems to Weiszfeld. It runs slightly faster on easy datasets and maintains its
-   /// convergence even on the difficult data (dense points near the geometric median).  
+   /// which typically cause problems to Weiszfeld. It does so in a more sophisticated way than gmedian. 
+   /// It maintains convergence even on the difficult data (dense points near the geometric median).  
+   /// Use nmedian in preference to gmedian on difficult data.  
    /// Eps controls the desired accuracy.
    /// # Example
    /// ```
@@ -218,7 +250,6 @@ fn nextpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> 
 fn firstpoint(set:&[f64], d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
    // println!("Firstpoint");
    let n = set.len()/d;
-   let nf = (n as f64 - 1.)/n as f64;
    let mut rsum = 0_f64;
    let mut vsum = vec![0_f64;d];
    for i in 0..n {
@@ -233,7 +264,7 @@ fn firstpoint(set:&[f64], d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
       difv.as_mut_slice().mutsmult(invmag); // make difv a unit vector
       vsum.as_mut_slice().mutvadd(&difv);   // add it to their sum
    }
-   vsum.as_mut_slice().mutsmult(nf/rsum); // and scale
+   vsum.as_mut_slice().mutsmult(1.0/rsum); // and scale
    Ok(vsum)
 }
 

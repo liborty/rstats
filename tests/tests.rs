@@ -50,33 +50,26 @@ fn intstats() -> Result<()> {
 }
 
 #[test]
-#[ignore]
 fn mc() -> Result<()> { 
-   let pts = genvec(20,50,1,2);
-   let (dist,indx) = pts.as_slice().medoid(20).unwrap();
-   println!("Sum of Medoid distances:\x1B[01;92m{}\x1B[0m Index: {}",dist,indx);
-   let centroid = pts.as_slice().arcentroid(20);
-   println!("Sum of Centroid distances:\x1B[01;92m{}\x1B[0m",pts.as_slice().distsum(20,&centroid));
+   let pts = genvec(5,20,3,13);
+   let (dist,indx) = pts.as_slice().medoid(5).unwrap();
+   println!("Sum of Medoid distances: {} Index: {}",green(dist),indx);
+   let centroid = pts.as_slice().arcentroid(5);
+   println!("Sum of Centroid distances: {}",green(pts.as_slice().distsum(5,&centroid)));
+   let (ds,gm) = pts.as_slice().gmedian(5, 1e-5).unwrap();
+   println!("Sum of Gmedian distances: {}",green(ds));
+   println!("Gmedian eccentricity (residual error): {}",
+      green(pts.as_slice().exteccentr(5,&gm)));
    Ok(())
 }
-#[test]
-#[ignore]
-#[should_panic]
-fn gmedian() {
-   let pts:Vec<f64> = vec![0.,0.,0.,0., 1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,0.,1.,
-      -1.,0.,0.,0., 0.,-1.,0.,0., 0.,0.,-1.,0., 0.,0.,0.,-1.];
-   let (ds,_gm) = pts.as_slice().gmedian(4, 1e-5).unwrap();
-   println!("Sum of Median distances:  \x1B[01;92m{}\x1B[0m",ds); 
-}
-
 #[test]
 fn difficult_data() -> Result<()> {
    let pts:Vec<f64> = vec![0.,0.,0.,0., 1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,0.,1.,
       -1.,0.,0.,0., 0.,-1.,0.,0., 0.,0.,-1.,0., 0.,0.,0.,-1.];
    let (ds,_gm) = pts.as_slice().nmedian(4, 1e-5).unwrap();
-   println!("Sum of Nmedian distances:  \x1B[01;92m{}\x1B[0m",ds);
-   let (ds,_gm) = pts.as_slice().gmedian(4, 1e-5).unwrap();
-   println!("Sum of Gmedian distances:  \x1B[01;92m{}\x1B[0m",ds);
+   println!("\nSum of Nmedian distances:  \x1B[01;92m{}\x1B[0m",ds);
+   let (ds,gm) = pts.as_slice().gmedian(4, 1e-5).unwrap();
+   println!("Sum of Gmedian distances: {}",green(ds));
    Ok(())
 }
 
@@ -85,6 +78,12 @@ fn medians() -> Result<()> {
    let mut sumg = 0_f64;
    let mut timer = DevTime::new_simple();
 
+   let pts = genvec(5,20,3,13);
+   println!();
+   for i in 0 .. 20 {
+      let ec = pts.as_slice().eccentr(5,i);
+      println!("Eccentricity:{} Index:{}",ec,i) }
+ 
    timer.start();
    for i in 1..6 {
       let pts = genvec(2,7000,i,2*i);

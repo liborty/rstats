@@ -61,23 +61,10 @@ fn main() {
    const ITERATIONS:usize = 100;
    const D:usize = 50; // dimensions
    const N:usize = 500; // number of points
-   const EPS:f64 = 1e-1;
+   const EPS:f64 = 1e-3;
    let mut sumg = 0_f64; // sum of error distances
 
    let mut cmplx = DevTime::new_complex();
-
-   cmplx.create_timer("nmedian").unwrap();
-    cmplx.start_timer("nmedian").unwrap();
-   for i in 0..ITERATIONS {
-     // random generator dimensions and seeds - same data as above
-     let pts = genvec(D,N,(i+1) as u32,N as u32); 
-     // test over varying data and inreasing accuracies
-     let (dg,_) = pts.as_slice().nmedian(D, EPS).unwrap();
-     sumg += dg;  
-   };
-   cmplx.stop_timer("nmedian").unwrap();
-   println!("Sum of nmedian error distances: {}", green(sumg));
-   sumg = 0_f64;
 
    cmplx.create_timer("gmedian").unwrap();
    cmplx.start_timer("gmedian").unwrap();
@@ -88,9 +75,22 @@ fn main() {
       let (dg,_) = pts.as_slice().gmedian(D,EPS).unwrap();
       sumg += dg;  
    };
-  cmplx.stop_timer("gmedian").unwrap();
-  println!("\nSum of gmedian error distances: {}", green(sumg));
+   cmplx.stop_timer("gmedian").unwrap();
+   println!("\nSum of gmedian error distances: {}", green(sumg));
+   sumg = 0_f64;
  
+   cmplx.create_timer("nmedian").unwrap();
+   cmplx.start_timer("nmedian").unwrap();
+   for i in 0..ITERATIONS {
+     // random generator dimensions and seeds - same data as above
+     let pts = genvec(D,N,(i+1) as u32,N as u32); 
+     // test over varying data and inreasing accuracies
+     let (dg,_) = pts.as_slice().nmedian(D, EPS).unwrap();
+     sumg += dg;  
+   };
+   cmplx.stop_timer("nmedian").unwrap();
+   println!("Sum of nmedian error distances: {}", green(sumg));
+  
 /*
   // We can output a benchmark in this way
   println!(" `gmedian` took: {}", cmplx.time_in_micros("gmedian").unwrap());
