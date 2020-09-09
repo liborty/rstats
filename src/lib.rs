@@ -77,8 +77,8 @@ pub trait Vectors {
    fn eccentr(&self, d:usize, indx:usize) -> f64;
    fn exteccentr(&self, d:usize, thisp:&[f64]) -> f64;
    fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;   
-   fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;
-   
+   fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;   
+
 }
 
 /// private helper function for formatting error messages

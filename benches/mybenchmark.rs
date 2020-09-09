@@ -78,19 +78,19 @@ fn main() {
    cmplx.stop_timer("gmedian").unwrap();
    println!("\nSum of gmedian error distances: {}", green(sumg));
    sumg = 0_f64;
- 
    cmplx.create_timer("nmedian").unwrap();
    cmplx.start_timer("nmedian").unwrap();
    for i in 0..ITERATIONS {
-     // random generator dimensions and seeds - same data as above
-     let pts = genvec(D,N,(i+1) as u32,N as u32); 
-     // test over varying data and inreasing accuracies
-     let (dg,_) = pts.as_slice().nmedian(D, EPS).unwrap();
-     sumg += dg;  
+      // random generator dimensions and seeds
+      let pts = genvec(D,N,(i+1) as u32,N as u32); 
+      // test over varying data and inreasing accuracies
+      let (dg,_) = pts.as_slice().nmedian(D,EPS).unwrap();
+      sumg += dg;  
    };
    cmplx.stop_timer("nmedian").unwrap();
-   println!("Sum of nmedian error distances: {}", green(sumg));
+   println!("\nSum of nmedian error distances: {}", green(sumg));
   
+   
 /*
   // We can output a benchmark in this way
   println!(" `gmedian` took: {}", cmplx.time_in_micros("gmedian").unwrap());

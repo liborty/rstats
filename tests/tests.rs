@@ -66,9 +66,7 @@ fn mc() -> Result<()> {
 fn difficult_data() -> Result<()> {
    let pts:Vec<f64> = vec![0.,0.,0.,0., 1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,0.,1.,
       -1.,0.,0.,0., 0.,-1.,0.,0., 0.,0.,-1.,0., 0.,0.,0.,-1.];
-   let (ds,_gm) = pts.as_slice().nmedian(4, 1e-5).unwrap();
-   println!("\nSum of Nmedian distances:  \x1B[01;92m{}\x1B[0m",ds);
-   let (ds,gm) = pts.as_slice().gmedian(4, 1e-5).unwrap();
+   let (ds,_gm) = pts.as_slice().gmedian(4, 1e-5).unwrap();
    println!("Sum of Gmedian distances: {}",green(ds));
    Ok(())
 }
@@ -87,22 +85,24 @@ fn medians() -> Result<()> {
    timer.start();
    for i in 1..6 {
       let pts = genvec(2,7000,i,2*i);
-      let (dg,_) = pts.as_slice().gmedian(2, 1e-2).unwrap();
+      let (dg,_) = pts.as_slice().gmedian(2, 1e-5).unwrap();
       sumg += dg;
    }
    timer.stop();
-   println!("\nSum of gmedian distances and time in ns: \x1B[01;92m{}\t{}\x1B[0m",
-      sumg,timer.time_in_nanos().unwrap());
+   
+   println!("\nSum of gmedian distances and time in ns: {}\t{}",
+      green(sumg),timer.time_in_nanos().unwrap());
    sumg = 0_f64;
-
+ 
    timer.start();
    for i in 1..6 {
       let pts = genvec(2,7000,i,2*i);
-      let (dg,_) = pts.as_slice().nmedian(2, 1e-2).unwrap();
+      let (dg,_) = pts.as_slice().nmedian(2, 1e-5).unwrap();
       sumg += dg;
-      }
+   }
    timer.stop();
-   println!("Sum of nmedian distances and time in ns: \x1B[01;92m{}\t{}\x1B[0m",
-      sumg,timer.time_in_nanos().unwrap());  
-   Ok(())
+   println!("\nSum of nmedian distances and time in ns: {}\t{}",
+         green(sumg),timer.time_in_nanos().unwrap());
+     
+   Ok(())  
 }
