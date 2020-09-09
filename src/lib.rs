@@ -75,9 +75,9 @@ pub trait Vectors {
    fn medoid(&self, d:usize) -> Result<(f64,usize)>;
    fn distsum(&self, d:usize, v:&[f64] ) -> f64;
    fn eccentr(&self, d:usize, indx:usize) -> f64;
-   fn exteccentr(&self, d:usize, thisp:&[f64]) -> f64;
-   fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;   
-   fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)>;   
+   fn veccentr(&self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)>;
+   fn nmedian(&self, d:usize, eps:f64) -> Result<Vec<f64>>;
+   fn ecc(&self, d:usize, v:&[f64]) -> f64;     
 
 }
 

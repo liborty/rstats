@@ -51,58 +51,44 @@ fn intstats() -> Result<()> {
 
 #[test]
 fn mc() -> Result<()> { 
-   let pts = genvec(5,20,3,13);
-   let (dist,indx) = pts.as_slice().medoid(5).unwrap();
+   let d = 5_usize;
+   let pt = genvec(d,20,3,13);
+   let pts = pt.as_slice();
+   let (dist,indx) = pts.medoid(d).unwrap();
    println!("Sum of Medoid distances: {} Index: {}",green(dist),indx);
-   let centroid = pts.as_slice().arcentroid(5);
-   println!("Sum of Centroid distances: {}",green(pts.as_slice().distsum(5,&centroid)));
-   let (ds,gm) = pts.as_slice().gmedian(5, 1e-5).unwrap();
-   println!("Sum of Gmedian distances: {}",green(ds));
-   println!("Gmedian eccentricity (residual error): {}",
-      green(pts.as_slice().exteccentr(5,&gm)));
+   let centroid = pts.arcentroid(d);
+   println!("Sum of Centroid distances: {}",green(pts.distsum(d,&centroid)));
+   let (ecc,_) = pts.veccentr(d,&centroid).unwrap();
+   println!("Centroid ecentricity: {}",green(ecc));
+   let gm = pts.nmedian(d, 1e-5).unwrap();
+   println!("Median eccentricity (residual error): {}",green(pts.ecc(d,&gm)));
    Ok(())
 }
 #[test]
 fn difficult_data() -> Result<()> {
    let pts:Vec<f64> = vec![0.,0.,0.,0., 1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,0.,1.,
       -1.,0.,0.,0., 0.,-1.,0.,0., 0.,0.,-1.,0., 0.,0.,0.,-1.];
-   let (ds,_gm) = pts.as_slice().gmedian(4, 1e-5).unwrap();
-   println!("Sum of Gmedian distances: {}",green(ds));
+   let gm = pts.as_slice().nmedian(4, 1e-5).unwrap();
+   println!("\nMedian residual error: {}",green(pts.as_slice().ecc(4,&gm)));
    Ok(())
 }
 
 #[test]
 fn medians() -> Result<()> {
    let mut sumg = 0_f64;
+   let mut sumtime = 0_u128;
    let mut timer = DevTime::new_simple();
 
-   let pts = genvec(5,20,3,13);
-   println!();
-   for i in 0 .. 20 {
-      let ec = pts.as_slice().eccentr(5,i);
-      println!("Eccentricity:{} Index:{}",ec,i) }
- 
-   timer.start();
    for i in 1..6 {
       let pts = genvec(2,7000,i,2*i);
-      let (dg,_) = pts.as_slice().gmedian(2, 1e-5).unwrap();
-      sumg += dg;
+      timer.start();
+      let gm = pts.as_slice().nmedian(2, 1e-5).unwrap();
+      timer.stop();
+      sumtime += timer.time_in_nanos().unwrap();
+      sumg += pts.as_slice().ecc(2,&gm);
    }
-   timer.stop();
-   
-   println!("\nSum of gmedian distances and time in ns: {}\t{}",
-      green(sumg),timer.time_in_nanos().unwrap());
-   sumg = 0_f64;
- 
-   timer.start();
-   for i in 1..6 {
-      let pts = genvec(2,7000,i,2*i);
-      let (dg,_) = pts.as_slice().nmedian(2, 1e-5).unwrap();
-      sumg += dg;
-   }
-   timer.stop();
-   println!("\nSum of nmedian distances and time in ns: {}\t{}",
-         green(sumg),timer.time_in_nanos().unwrap());
-     
+   // timer.stop();
+   println!("\nSum of median 7000 residual errors {} time in ns: {}",
+      green(sumg),sumtime);     
    Ok(())  
 }

@@ -33,7 +33,10 @@ Should you get errors when applying them to `Vec<f64>`, just convert `self` usin
 Some of the above Vector methods are for efficiency reasons reimplemented here so that they mutate `self` in place instead of creating a new Vec. Useful for iterative methods on vectors. Beware that some methods do not return anything, so they can not be chained.
 
 ## Releases
-* **Version 0.4.2** Made `gmedian` also safe (fixed Weiszfeld's algorithm). Added `eccentricity` measures.
+
+* **Version 0.4.3** Introduced computation of `nmedian` residual errors. Improved tests and benchmarks.
+
+* **Version 0.4.2** Added `eccentricity` measures.
 
 * **Version 0.4.1** Tidier testing and benchmarks.
 

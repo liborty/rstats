@@ -56,7 +56,9 @@ impl Vectors for &[f64] {
    fn vmag(&self) -> f64 { self.iter().map(|&x|x.powi(2)).sum::<f64>().sqrt() }
 
    /// Unit vector - creates a new one
-   fn vunit(&self) -> Vec<f64> { self.smult(1_f64/self.vmag()) }
+   fn vunit(&self) ->Vec<f64> { 
+      self.smult(1./self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt())
+   }
 
    /// Centroid = multidimensional arithmetic mean
    /// # Example
@@ -127,8 +129,8 @@ impl Vectors for &[f64] {
 
    /// multidimensional `eccentricity` of a point within the set
    /// based on geometric median without actually having to find the median
-   /// it is a measure of `not being a median`. The actual median will have eccentricity zero
-   /// and the medoid will have the least ecentricity
+   /// it is a measure of `not being a median`. The median has eccentricity zero
+   /// and the medoid has the lowest ecentricity among the existing set points.
    fn eccentr(&self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
@@ -144,163 +146,74 @@ impl Vectors for &[f64] {
       vsum.as_slice().vmag()/(n-1) as f64
    }
 
-   /// ecentricity of a point not in the set
-   fn exteccentr(&self, d:usize, thisp:&[f64]) -> f64 {
+   /// ecentricity of any point, returns normalised magnitude and vector
+   fn veccentr(&self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
+      let mut nf = n as f64;
       let mut vsum = vec![0_f64;d];
       for i in 0..n {
-         let thatp = self.get(i*d .. (i+1)*d).unwrap();
-         //    .with_context(||emsg(file!(),line!(),"eccentricity failed to extract that point"))?;
-         let unitdv = thatp.vsub(thisp).as_slice().vunit();
-         vsum.as_mut_slice().mutvadd(&unitdv);   // add it to their sum
+         let thatp = self.get(i*d .. (i+1)*d)
+            .with_context(||emsg(file!(),line!(),"veccentr failed to extract that point"))?;
+         let mut vdif = thatp.vsub(thisp);
+         let mag = vdif.as_slice().vmag();
+         if !mag.is_normal() { nf -= 1.0; continue }; // thisp is in the set
+         vdif.as_mut_slice().mutsmult(1./mag); // make vdif a unit vector
+         vsum.as_mut_slice().mutvadd(&vdif);   // add it to their sum
       }
-      vsum.as_slice().vmag()/n as f64
+      Ok((vsum.as_slice().vmag()/nf, vsum))
    }
 
-   /// Geometric Median is the point that minimises the sum of distances to a given set of points.
-   /// This is the original Weiszfeld's algorithm (for comparison). It is not recommended for production use.
-   /// It has problems with convergence and/or division by zero when the iterative estimate
-   /// runs too close to one of the existing points in the set.
-   /// See test/tests.rs, where test `gmedian` panics, whereas `nmedian` finds the correct result.
+   /// This little helper just calls `veccentr` and extracts the eccentricity (residual error for median).
+   fn ecc(&self, d:usize, v:&[f64]) -> f64 {
+      let (eccentricity,_) = self.veccentr(d,&v).unwrap();
+      eccentricity
+   }
+
+   /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
+   /// It provably only has iterative solutions over vectors. 
+   /// Weiszfeld's formula had known problems with choosing the starting point and sometimes failing to converge.
+   /// Especially in situations, where the points are dense in the close proximity to the gm.
+   /// However, these problems are fixed here in my improved algorithm.      
+   /// This is eventually going to be a multithreaded version.
+   /// Results of `betterpoint` over arbitrary (data parallel) subsets will be simply added up to generate a new
+   /// vector approximation.
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
-   /// let pts = genvec(15,15,255,30);
-   /// let (ds,gm) = pts.as_slice().gmedian(15, 1e-5).unwrap();
-   /// assert_eq!(ds,4.126465898732421_f64);
+   /// let pt = genvec(15,15,255,30);
+   /// let pts = pt.as_slice();
+   /// let gm = pts.nmedian(15, 1e-5).unwrap();
+   /// let error = pts.ecc(15,&gm);
+   /// assert_eq!(error,0.000004826966175302838_f64);
    /// ```
-   fn gmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
-      let n = self.len()/d;
-      ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
-      let mut oldpoint = self.arcentroid(d); // start with the centroid
-      // let mut iterations = 0_usize;
-      loop {
-      //   iterations += 1;
-         let (terminate,newpoint) = betterpoint(self,d,eps,&oldpoint)
-            .with_context(||emsg(file!(),line!(),"gmedian nextpoint call failed"))?; // find new point 
-         oldpoint = newpoint;
-         if terminate { break }                
-      }
-      // println!("iterations: {}",iterations);
-      Ok((self.distsum(d,&oldpoint),oldpoint))
-   }
-
-   /// Geometric Median is the point that minimises the sum of distances to a given set of points.
-   /// This is the original Weiszfeld's algorithm (for comparison). It is not recommended for production use.
-   /// It has problems with convergence and/or division by zero when the iterative estimate
-   /// runs too close to one of the existing points in the set.
-   /// See test/tests.rs, where test `gmedian` panics, whereas `nmedian` finds the correct result.
-   /// # Example
-   /// ```
-   /// use rstats::{Vectors,genvec};
-   /// let pts = genvec(15,15,255,30);
-   /// let (ds,gm) = pts.as_slice().gmedian(15, 1e-5).unwrap();
-   /// assert_eq!(ds,4.126465898732421_f64);
-   /// ```
-   fn nmedian(&self, d:usize, eps:f64) -> Result<(f64,Vec<f64>)> {
+   fn nmedian(&self, d:usize, eps:f64) -> Result<Vec<f64>> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
       let mut oldpoint = self.arcentroid(d); // start with the centroid
       loop {
-        let (rsum,mut changev) = vecc(self,d,&oldpoint)
-            .with_context(||emsg(file!(),line!(),"gmedian nextpoint call failed"))?; // find new point 
-         changev.as_mut_slice().mutsmult(1.0/rsum);
-         // println!("moving {}",changev.as_slice().vmag());
-         oldpoint = oldpoint.as_slice().vadd(&changev); 
-         if changev.as_slice().vmag() < eps { break };                       
+        let (rsum,mut newv) = betterpoint(self,d,&oldpoint)
+            .with_context(||emsg(file!(),line!(),"nmedian betterpoint call failed"))?; // find new point 
+         newv.as_mut_slice().mutsmult(1.0/rsum);
+         if newv.as_slice().vdist(&oldpoint) < eps { oldpoint = newv; break };
+         oldpoint = newv                       
       }
-      // println!("iterations: {}",iterations);
-      Ok((self.distsum(d,&oldpoint),oldpoint))
+      Ok(oldpoint)
    }
-}
-/// nextpoint is called by nmedian; it checks for proximity of set points and
-/// deals with the near coincidence by calling firstpoint.
-/*
-fn nextpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
-   let n = set.len()/d;
-   let mut rsum = 0_f64;
-   let mut vsum = vec![0_f64;d];
-   for i in 0..n {
-      let thatp = set.get(i*d .. (i+1)*d)
-         .with_context(||emsg(file!(),line!(),"nextpoint failed to extract other point"))?;       
-      let dist = v.vdist(&thatp);
-      if dist < eps/2.0 { // jump to nearby existing set point
-         vsum = firstpoint(set,d,i,thatp)  // and search from there
-            .with_context(||emsg(file!(),line!(),"nextpoint firstpoint call failed"))?; 
-         if vsum.as_slice().vmag() < eps { 
-               return Ok((true,thatp.vadd(&vsum))) } // moved less then eps from v, termination reached
-         else { return Ok((false,thatp.vadd(&vsum)))} // continue iterating through the point
-      }
-      let recip = 1.0/dist;
-      rsum += recip;
-      vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
-   }
-   vsum.as_mut_slice().mutsmult(1.0/rsum);
-   if vsum.as_slice().vsub(&v).as_slice().vmag() < eps  
-      { Ok((true,vsum)) } else { Ok((false,vsum)) }
 }
 
-/// Novel estimate from the coincident set point v. Guarantees convergence.  
-/// Returns an improvement vector from point v.
-fn firstpoint(set:&[f64], d:usize, indx:usize, v:&[f64]) -> Result<Vec<f64>> {
-   // println!("Firstpoint");
-   let n = set.len()/d;
-   let mut rsum = 0_f64;
-   let mut vsum = vec![0_f64;d];
-   for i in 0..n {
-      if i == indx { continue }; // exclude the starting medoid point  
-      let thatp = set.get(i*d .. (i+1)*d)
-          .with_context(||emsg(file!(),line!(),"firstpoint failed to extract point"))?;
-      let mut difv = thatp.vsub(v);
-      let dist = difv.as_slice().vmag();
-      if !dist.is_normal() { continue }; // another coinciding point - ignore it
-      let invmag = 1.0/dist;
-      rsum += invmag;
-      difv.as_mut_slice().mutsmult(invmag); // make difv a unit vector
-      vsum.as_mut_slice().mutvadd(&difv);   // add it to their sum
-   }
-   vsum.as_mut_slice().mutsmult(1.0/rsum); // and scale
-   Ok(vsum)
-}
-*/
- 
-/// Weiszfeld's formula for one iteration step in finding the geometric median (gm).
-/// It has known problems with choosing the starting point and may fail to converge.
-/// Especially in situations, where the points are dense in the close proximity to the gm.
-/// It is fixed here in the simplest way.    
-/// betterpoint is called by gmedian.  
-fn betterpoint(set:&[f64], d:usize, eps:f64, v:&[f64]) -> Result<(bool,Vec<f64>)> {
+/// betterpoint is called by nmedian.  
+fn betterpoint(set:&[f64], d:usize, v:&[f64]) -> Result<(f64,Vec<f64>)> {
    let n = set.len()/d;
    let mut rsum = 0_f64;
    let mut vsum = vec![0_f64;d];
    for i in 0..n {
       let thatp = set.get(i*d .. (i+1)*d)
-         .with_context(||emsg(file!(),line!(),"betterpoint failed to extract other point"))?; 
+         .with_context(||emsg(file!(),line!(),"betterpoint failed to extract that point"))?; 
       let dist = v.vdist(&thatp);
       if !dist.is_normal() { continue };  
       let recip = 1.0/dist;
       rsum += recip;
       vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
    }
-   vsum.as_mut_slice().mutsmult(1.0/rsum);
-   if vsum.as_slice().vsub(&v).as_slice().vmag() < eps  
-      { Ok((true,vsum)) } else { Ok((false,vsum)) }    
+   Ok((rsum,vsum))    
 }
-
-fn vecc(set:&[f64], d:usize, v:&[f64]) -> Result<(f64,Vec<f64>)> {
-   let n = set.len()/d;
-   let mut rsum = 0_f64;
-   let mut vsum = vec![0_f64;d];
-   for i in 0..n {
-      let thatp = set.get(i*d .. (i+1)*d)
-         .with_context(||emsg(file!(),line!(),"betterpoint failed to extract other point"))?;
-      let mut vdif = thatp.vsub(v);
-      let dist = vdif.as_slice().vmag();
-      if !dist.is_normal() { continue }; // point v is in the set
-      let recip = 1.0/dist;
-      vdif.as_mut_slice().mutsmult(recip);
-      rsum += recip;
-      vsum.as_mut_slice().mutvadd(&vdif); // add unit vetor
-   }
-   Ok((rsum,vsum)) // vsum.as_slice().vmag()/n is the `eccentricity`
-}  
