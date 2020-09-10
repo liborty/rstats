@@ -65,7 +65,7 @@ impl Vectors for &[f64] {
    /// ```
    /// use rstats::{Vectors,genvec};
    /// let pts = genvec(15,15,255,30);
-   /// let centre = pts.as_slice().arcentroid(15);
+   /// let centre = pts.as_slice().acentroid(15);
    /// let dist = pts.as_slice().distsum(15,&centre);
    /// assert_eq!(dist, 4.14556218326653_f64);
    /// ```
@@ -91,7 +91,7 @@ impl Vectors for &[f64] {
    /// ```
    /// use rstats::{Vectors,genvec};
    /// let pts = genvec(15,15,255,30);
-   /// let (dm,im,do,io) = pts.as_slice().medoid(15).unwrap();
+   /// let (dm,_,_,_) = pts.as_slice().medoid(15).unwrap();
    /// assert_eq!(dm,4.812334638782327_f64);
    /// ```
    fn medoid(&self, d:usize) -> Result<(f64,usize,f64,usize)> {
