@@ -1,5 +1,5 @@
 use anyhow::{Result,Context,ensure};
-use crate::{MutVectors,Vectors,emsg};
+use crate::{RStats,MutVectors,Vectors,Med,emsg};
 
 impl MutVectors for &mut[f64] {
 
@@ -173,6 +173,15 @@ impl Vectors for &[f64] {
    fn ecc(&self, d:usize, v:&[f64]) -> f64 {
       let (eccentricity,_) = self.veccentr(d,&v).unwrap();
       eccentricity
+   }
+
+   /// We now define MOE (median of ecentricities), a new measure of spread of multidimensional points 
+   /// (or multivariate sample)  
+   fn moe(&self, d:usize) -> Med {
+      let n = self.len()/d;
+      let mut eccs = vec![0_f64;n];
+      for i in 0..n { eccs[i] = self.eccentr(d, i) }
+      eccs.as_slice().median().unwrap()
    }
 
    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.

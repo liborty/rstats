@@ -105,6 +105,8 @@ pub trait Vectors {
    fn eccentr(&self, d:usize, indx:usize) -> f64;
    /// Eccentricity measure (0,1) and vector of any point, w.r.t. the set   
    fn veccentr(&self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)>;
+   /// Median of eccentricities (measure of spread of multivariate sample)
+   fn moe(&self, d:usize) -> Med;
    /// Eccentricity vecor of any point w.r.t. the set
    fn ecc(&self, d:usize, v:&[f64]) -> f64;     
    /// Geometric median of the set

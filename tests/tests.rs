@@ -66,7 +66,8 @@ fn multidimensional() -> Result<()> {
    println!("Outlier eccentricity:\t{}",green(pts.eccentr(d,outi)));
    println!("Medoid ecentricity:\t{}",green(pts.eccentr(d,medi)));
    println!("Centroid ecentricity:\t{}",green(pts.ecc(d,&centroid)));   
-   println!("Median eccentricity:\t{}",green(pts.ecc(d,&median)));
+   println!("Median eccentricity:\t{}\n",green(pts.ecc(d,&median)));
+   println!("MOE (Median of eccentricities)\n{}",pts.moe(d));  
    Ok(())
 }
 #[test]
