@@ -69,7 +69,7 @@ impl Vectors for &[f64] {
    /// let dist = pts.as_slice().distsum(15,&centre);
    /// assert_eq!(dist, 4.14556218326653_f64);
    /// ```
-   fn arcentroid(&self, d:usize) -> Vec<f64> {
+   fn acentroid(&self, d:usize) -> Vec<f64> {
       let n = self.len()/d;
       let mut centre = vec![0_f64;d];
       for i in 0..n {
@@ -79,25 +79,28 @@ impl Vectors for &[f64] {
       centre
    }
 
-    /// Medoid is a point in n-dimensional set of points with the least sum of distances to all others.  
-   /// This method returns an index to the start of medoid within a flat vector of d-dimensional points.  
+   /// Medoid is the point in n-dimensional set of points with the least sum of distances to all others. 
+   /// Outlier is the point with the greatest sum of distances. 
+   /// This function returns (medoid_distance, medoid_index, outlier_distance, outlier_index).
    /// `d` is the number of dimensions = length of the slices. 
-   /// Set of points (slices) is held as one flat `buff:&[f64]`.  
-   /// This is faster than vec of vecs but users have to handle the indices.  
+   /// Set of points (slices) is held as one flat `&[f64]`.  
+   /// This is faster than vec of vecs but we have to handle the indices.  
    /// Note: `medoid` computes each distance twice but it is probably faster than memoizing and looking them up,  
    /// unless the dimensionality is somewhat large. 
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
    /// let pts = genvec(15,15,255,30);
-   /// let (dist,indx) = pts.as_slice().medoid(15).unwrap();
-   /// assert_eq!(dist,4.812334638782327_f64);
+   /// let (dm,im,do,io) = pts.as_slice().medoid(15).unwrap();
+   /// assert_eq!(dm,4.812334638782327_f64);
    /// ```
-   fn medoid(&self, d:usize) -> Result<(f64,usize)> {
+   fn medoid(&self, d:usize) -> Result<(f64,usize,f64,usize)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"medoid - d must divide vector length"));
       let mut minindx = 0;
       let mut mindist = f64::MAX;
+      let mut maxindx = 0;
+      let mut maxdist = 0_f64;
       for i in 0..n {
          let thisp = self.get(i*d .. (i+1)*d)
             .with_context(||emsg(file!(),line!(),"medoid failed to get this slice"))?;
@@ -107,12 +110,12 @@ impl Vectors for &[f64] {
             let thatp = self.get(j*d .. (j+1)*d)
                .with_context(||emsg(file!(),line!(),"medoid failed to get that slice"))?;
             dsum += thisp.vdist(&thatp);
-            if dsum >= mindist { break } // quit adding points if minimum distance is already exceeded
+         //   if dsum >= mindist { break } // medoid only: quit adding points if minimum distance is already exceeded
          }
-         // println!("Distance: {}\n",dsum);
-         if dsum < mindist { mindist = dsum; minindx = i };       
+         if dsum < mindist { mindist = dsum; minindx = i }; 
+         if dsum > maxdist { maxdist = dsum; maxindx = i };               
       }
-   Ok((mindist,minindx))
+   Ok((mindist,minindx,maxdist,maxindx))
    }
 
    /// The sum of distances of all points contained in &self to given point v.    
@@ -192,12 +195,14 @@ impl Vectors for &[f64] {
    fn nmedian(&self, d:usize, eps:f64) -> Result<Vec<f64>> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
-      let mut oldpoint = self.arcentroid(d); // start with the centroid
+      let mut oldpoint = self.acentroid(d); // start with the centroid
       loop {
         let (rsum,mut newv) = betterpoint(self,d,&oldpoint)
             .with_context(||emsg(file!(),line!(),"nmedian betterpoint call failed"))?; // find new point 
          newv.as_mut_slice().mutsmult(1.0/rsum);
-         if newv.as_slice().vdist(&oldpoint) < eps { oldpoint = newv; break };
+         if newv.as_slice().vdist(&oldpoint) < eps { 
+            oldpoint = newv; break // use the last iteration anyway
+         };
          oldpoint = newv                       
       }
       Ok(oldpoint)

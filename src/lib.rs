@@ -96,9 +96,9 @@ pub trait Vectors {
    fn vunit(&self) -> Vec<f64>;
 
    /// Centroid = euclidian mean of a set of points
-   fn arcentroid(&self, d:usize) -> Vec<f64>;
+   fn acentroid(&self, d:usize) -> Vec<f64>;
    /// Medoid of a set of points (most central of the points)
-   fn medoid(&self, d:usize) -> Result<(f64,usize)>;
+   fn medoid(&self, d:usize) -> Result<(f64,usize,f64,usize)>;
    /// Sum of distances from all the points in a set to v
    fn distsum(&self, d:usize, v:&[f64] ) -> f64;
    /// Ecentricity measure (0,1) of an internal point given by indx, w.r.t. the set

@@ -50,18 +50,23 @@ fn intstats() -> Result<()> {
 }
 
 #[test]
-fn mc() -> Result<()> { 
+fn multidimensional() -> Result<()> { 
    let d = 5_usize;
-   let pt = genvec(d,20,3,13);
+   let pt = genvec(d,20,3,13); // random test data 5x20
    let pts = pt.as_slice();
-   let (dist,indx) = pts.medoid(d).unwrap();
-   println!("Sum of Medoid distances: {} Index: {}",green(dist),indx);
-   let centroid = pts.arcentroid(d);
-   println!("Sum of Centroid distances: {}",green(pts.distsum(d,&centroid)));
-   let (ecc,_) = pts.veccentr(d,&centroid).unwrap();
-   println!("Centroid ecentricity: {}",green(ecc));
-   let gm = pts.nmedian(d, 1e-5).unwrap();
-   println!("Median eccentricity (residual error): {}",green(pts.ecc(d,&gm)));
+   let (med,medi,outd,outi) = pts.medoid(d).unwrap();
+   let centroid = pts.acentroid(d);
+   let median = pts.nmedian(d, 1e-5).unwrap();
+
+   println!("\nSum of Outlier distances:\t{} Index: {}",green(outd),green(outi as f64));
+   println!("Sum of Medoid distances:\t{} Index: {}",green(med),green(medi as f64));
+   println!("Sum of Centroid distances:\t{}",green(pts.distsum(d,&centroid)));
+   println!("Sum of Median distances:\t{}\n",green(pts.distsum(d,&median)));
+
+   println!("Outlier eccentricity:\t{}",green(pts.eccentr(d,outi)));
+   println!("Medoid ecentricity:\t{}",green(pts.eccentr(d,medi)));
+   println!("Centroid ecentricity:\t{}",green(pts.ecc(d,&centroid)));   
+   println!("Median eccentricity:\t{}",green(pts.ecc(d,&median)));
    Ok(())
 }
 #[test]
@@ -75,11 +80,12 @@ fn difficult_data() -> Result<()> {
 
 #[test]
 fn medians() -> Result<()> {
+   const ITERATIONS:u32 = 10;
    let mut sumg = 0_f64;
    let mut sumtime = 0_u128;
    let mut timer = DevTime::new_simple();
 
-   for i in 1..6 {
+   for i in 1..ITERATIONS {
       let pts = genvec(2,7000,i,2*i);
       timer.start();
       let gm = pts.as_slice().nmedian(2, 1e-5).unwrap();
@@ -88,7 +94,7 @@ fn medians() -> Result<()> {
       sumg += pts.as_slice().ecc(2,&gm);
    }
    // timer.stop();
-   println!("\nSum of median 7000 residual errors {} time in ns: {}",
-      green(sumg),sumtime);     
+   println!("\nSum of {} medians residual errors {} time in ns: {}",
+      ITERATIONS,green(sumg),sumtime);     
    Ok(())  
 }
