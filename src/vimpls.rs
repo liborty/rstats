@@ -127,10 +127,10 @@ impl Vectors for &[f64] {
       sum
    }
 
-   /// multidimensional `eccentricity` of a point within the set
-   /// based on geometric median without actually having to find the median
-   /// it is a measure of `not being a median`. The median has eccentricity zero
-   /// and the medoid has the lowest ecentricity among the existing set points.
+   /// `Eccentricity` of an existing d-dimensional point within the set, specified by its indx.
+   /// It is a measure  between 0.0 and 1.0 of `not being a median`. It does not need the median. 
+   /// The perfect median would have eccentricity zero.
+   /// The medoid has the least ecentricity of the existing set points.
    fn eccentr(&self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
@@ -146,7 +146,9 @@ impl Vectors for &[f64] {
       vsum.as_slice().vmag()/(n-1) as f64
    }
 
-   /// ecentricity of any point, returns normalised magnitude and vector
+   /// Ecentricity measure and the eccentricity vector of any point.
+   /// It is a measure  between 0.0 and 1.0 of `not being a median` but does not need the median.  
+   /// The vector points towards the median. 
    fn veccentr(&self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       let mut nf = n as f64;
@@ -156,14 +158,15 @@ impl Vectors for &[f64] {
             .with_context(||emsg(file!(),line!(),"veccentr failed to extract that point"))?;
          let mut vdif = thatp.vsub(thisp);
          let mag = vdif.as_slice().vmag();
-         if !mag.is_normal() { nf -= 1.0; continue }; // thisp is in the set
-         vdif.as_mut_slice().mutsmult(1./mag); // make vdif a unit vector
+         if !mag.is_normal() { nf -= 1.0; continue }; // thisp belongs to the set
+         // make vdif into a unit vector with its already known magnitude
+         vdif.as_mut_slice().mutsmult(1./mag); 
          vsum.as_mut_slice().mutvadd(&vdif);   // add it to their sum
       }
       Ok((vsum.as_slice().vmag()/nf, vsum))
    }
 
-   /// This little helper just calls `veccentr` and extracts the eccentricity (residual error for median).
+   /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual error for median).
    fn ecc(&self, d:usize, v:&[f64]) -> f64 {
       let (eccentricity,_) = self.veccentr(d,&v).unwrap();
       eccentricity

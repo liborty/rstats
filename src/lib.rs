@@ -32,53 +32,84 @@ impl std::fmt::Display for MStats {
 }
 /// Implementing basic statistical measures.
 pub trait RStats { 
-
+   /// Arithmetic mean
    fn amean(&self) -> Result<f64>;
+   /// Arithmetic mean and standard deviation
    fn ameanstd(&self) -> Result<MStats>;
+   /// Weighted arithmetic mean
    fn awmean(&self) -> Result<f64>;
+   /// Weighted arithmetic men and standard deviation
    fn awmeanstd(&self) -> Result<MStats>;
+   /// Harmonic mean
    fn hmean(&self) -> Result<f64>;
+   /// Weighted harmonic mean
    fn hwmean(&self) -> Result<f64>;
+   /// Geometric mean
    fn gmean(&self) -> Result<f64>;
-   fn gwmean(&self) -> Result<f64>;
+   /// Geometric mean and stndard deviation ratio
    fn gmeanstd(&self) -> Result<MStats>;
+   /// Weighed geometric mean
+   fn gwmean(&self) -> Result<f64>;
+   /// Weighted geometric mean and standard deviation ratio
    fn gwmeanstd(&self) -> Result<MStats>;
+   /// Median and quartiles
    fn median(&self) -> Result<Med>;
+   /// Correlation of i64 variables
    fn icorrelation(&self, v:&[i64]) -> Result<f64>;
+   /// Correlation of f64 variables
    fn correlation(&self, v:&[f64]) -> Result<f64>;
+   /// Autocorrelation
    fn autocorr(&self) -> Result<f64>;
   
 }
 
 /// Mutable primitive vector operations (for efficiency).
 pub trait MutVectors {
-
+   /// mutable multiplication by a scalar
    fn mutsmult(&mut self, s:f64);
+   /// mutable vector subtraction
    fn mutvsub(&mut self, v:&[f64]);
+   /// mutable vector addition
    fn mutvadd(&mut self, v:&[f64]);
+   /// mutably makes into a unit vector
    fn mutvunit(&mut self);
+   /// magnitude of a mutable vector (vector unchanged)
    fn mutvmag(&mut self) -> f64;
 
    }
 
 /// Implementing basic vector algebra and safe geometric median.
 pub trait Vectors {
-
+   /// Scalar product of two vectors
    fn dotp(&self, v:&[f64]) -> f64;
+   /// Vector subtraction
    fn vsub(&self, v:&[f64]) -> Vec<f64>;
+   /// Vector addition
    fn vadd(&self, v:&[f64]) -> Vec<f64>;
+   /// Vector magnitude
    fn vmag(&self) -> f64;
+   /// Euclidian distance between two points
    fn vdist(&self, v:&[f64]) -> f64;
+   /// Scalar multiplication
    fn smult(&self, s:f64) -> Vec<f64>;
+   /// Unit vector
    fn vunit(&self) -> Vec<f64>;
-   fn arcentroid(&self, d:usize) -> Vec<f64>;
-   fn medoid(&self, d:usize) -> Result<(f64,usize)>;
-   fn distsum(&self, d:usize, v:&[f64] ) -> f64;
-   fn eccentr(&self, d:usize, indx:usize) -> f64;
-   fn veccentr(&self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)>;
-   fn nmedian(&self, d:usize, eps:f64) -> Result<Vec<f64>>;
-   fn ecc(&self, d:usize, v:&[f64]) -> f64;     
 
+   /// Centroid = euclidian mean of a set of points
+   fn arcentroid(&self, d:usize) -> Vec<f64>;
+   /// Medoid of a set of points (most central of the points)
+   fn medoid(&self, d:usize) -> Result<(f64,usize)>;
+   /// Sum of distances from all the points in a set to v
+   fn distsum(&self, d:usize, v:&[f64] ) -> f64;
+   /// Ecentricity measure (0,1) of an internal point given by indx, w.r.t. the set
+   fn eccentr(&self, d:usize, indx:usize) -> f64;
+   /// Eccentricity measure (0,1) and vector of any point, w.r.t. the set   
+   fn veccentr(&self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)>;
+   /// Eccentricity vecor of any point w.r.t. the set
+   fn ecc(&self, d:usize, v:&[f64]) -> f64;     
+   /// Geometric median of the set
+   fn nmedian(&self, d:usize, eps:f64) -> Result<Vec<f64>>;
+ 
 }
 
 /// private helper function for formatting error messages
