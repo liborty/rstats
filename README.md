@@ -34,7 +34,8 @@ Some of the above Vector methods are for efficiency reasons reimplemented here s
 
 ## Releases
 
-* **Version 0.4.4** Medoid now finds the outlier as well. Improved tests.
+* **Version 0.4.4** Medoid now finds the outlier as well. Improved tests. 
+Defined and added MOE = median of eccentricities (spread) of multivariate data.
 
 * **Version 0.4.3** Introduced computation of `nmedian` residual errors. Improved tests and benchmarks.
 
