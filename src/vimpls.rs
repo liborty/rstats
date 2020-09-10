@@ -133,7 +133,7 @@ impl Vectors for &[f64] {
    /// `Eccentricity` of an existing d-dimensional point within the set, specified by its indx.
    /// It is a measure  between 0.0 and 1.0 of `not being a median`. It does not need the median. 
    /// The perfect median would have eccentricity zero.
-   /// The medoid has the least ecentricity of the existing set points.
+   /// Medoid has the least ecentricity of the existing set of points and the Outlier the greatest.
    fn eccentr(&self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
@@ -149,9 +149,9 @@ impl Vectors for &[f64] {
       vsum.as_slice().vmag()/(n-1) as f64
    }
 
-   /// Ecentricity measure and the eccentricity vector of any point.
-   /// It is a measure  between 0.0 and 1.0 of `not being a median` but does not need the median.  
-   /// The vector points towards the median. 
+   /// Ecentricity measure and the eccentricity vector of any point (typically not one of the set).
+   /// It is a measure  between 0.0 and 1.0 of `not being a median` but does not need the median.
+   /// The eccentricity vector points towards the median and has maximum possible magnitude of n.
    fn veccentr(&self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       let mut nf = n as f64;
