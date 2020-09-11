@@ -19,8 +19,7 @@ fn fstats() -> Result<()> {
    println!("Geometric\t{}",s1.gmeanstd().unwrap());
    println!("Autocorrelation:{}",green(s1.autocorr().unwrap()));
    println!("{}",s1.median().unwrap());
-   let mut v2 = v1.clone();
-   v2.reverse();
+   let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.];
    let s2 = v2.as_slice();
    println!("\n{:?}",s2);
    println!("Correlation:{}",green(s1.correlation(s2).unwrap())); 

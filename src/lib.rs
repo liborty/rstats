@@ -91,7 +91,7 @@ pub trait Vectors {
    fn vunit(&self) -> Vec<f64>;
    /// Correlation
    fn correlation(&self, v:&[f64]) -> Result<f64>;
-   /// Kendall's tau (rank) correlation
+   /// Kendall's tau-b (rank) correlation
    fn kendalcorr(&self, v:&[f64]) -> Result<f64>;
    /// Autocorrelation
    fn autocorr(&self) -> Result<f64>;
