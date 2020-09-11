@@ -146,7 +146,7 @@ impl Vectors for &[f64] {
          let unitdv = thatp.vsub(thisp).as_slice().vunit();
          vsum.as_mut_slice().mutvadd(&unitdv);   // add it to their sum
       }
-      vsum.as_slice().vmag()/(n-1) as f64
+      vsum.as_slice().vmag()/n as f64
    }
 
    /// Ecentricity measure and the eccentricity vector of any point (typically not one of the set).
@@ -154,19 +154,18 @@ impl Vectors for &[f64] {
    /// The eccentricity vector points towards the median and has maximum possible magnitude of n.
    fn veccentr(&self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
-      let mut nf = n as f64;
       let mut vsum = vec![0_f64;d];
       for i in 0..n {
          let thatp = self.get(i*d .. (i+1)*d)
             .with_context(||emsg(file!(),line!(),"veccentr failed to extract that point"))?;
          let mut vdif = thatp.vsub(thisp);
          let mag = vdif.as_slice().vmag();
-         if !mag.is_normal() { nf -= 1.0; continue }; // thisp belongs to the set
+         if !mag.is_normal() { continue }; // thisp belongs to the set
          // make vdif into a unit vector with its already known magnitude
          vdif.as_mut_slice().mutsmult(1./mag); 
          vsum.as_mut_slice().mutvadd(&vdif);   // add it to their sum
       }
-      Ok((vsum.as_slice().vmag()/nf, vsum))
+      Ok((vsum.as_slice().vmag()/n as f64, vsum))
    }
 
    /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual error for median).
