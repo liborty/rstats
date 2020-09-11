@@ -31,6 +31,8 @@ impl std::fmt::Display for MStats {
    }
 }
 /// Implementing basic statistical measures.
+/// All these methods operate on only one vector (of data),
+/// so they take no arguments.
 pub trait RStats { 
    /// Arithmetic mean
    fn amean(&self) -> Result<f64>;
@@ -53,14 +55,7 @@ pub trait RStats {
    /// Weighted geometric mean and standard deviation ratio
    fn gwmeanstd(&self) -> Result<MStats>;
    /// Median and quartiles
-   fn median(&self) -> Result<Med>;
-   /// Correlation of i64 variables
-   fn icorrelation(&self, v:&[i64]) -> Result<f64>;
-   /// Correlation of f64 variables
-   fn correlation(&self, v:&[f64]) -> Result<f64>;
-   /// Autocorrelation
-   fn autocorr(&self) -> Result<f64>;
-  
+   fn median(&self) -> Result<Med>;  
 }
 
 /// Mutable primitive vector operations (for efficiency).
@@ -94,6 +89,12 @@ pub trait Vectors {
    fn smult(&self, s:f64) -> Vec<f64>;
    /// Unit vector
    fn vunit(&self) -> Vec<f64>;
+   /// Correlation
+   fn correlation(&self, v:&[f64]) -> Result<f64>;
+   /// Kendall's tau (rank) correlation
+   fn kendalcorr(&self, v:&[f64]) -> Result<f64>;
+   /// Autocorrelation
+   fn autocorr(&self) -> Result<f64>;
 
    /// Centroid = euclidian mean of a set of points
    fn acentroid(&self, d:usize) -> Vec<f64>;

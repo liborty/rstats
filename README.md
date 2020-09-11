@@ -1,40 +1,40 @@
 # Rstats - Rust Stats
-![GitHub last commit](https://img.shields.io/github/last-commit/liborty/rstats)
-[![Crates.io](https://img.shields.io/crates/v/rstats)](https://docs.rs/rstats)
+
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/liborty/rstats?color=darkgreen&label=github%20commits&logo=github)
 
 Rstats is a lean minimalistic library that only depends on `anyhow` (for its error handling).
 Trait RStats is carefully checked and will report all kinds of errors, such as empty input.
 Trait Vectors is unchecked to achieve speed, so some caution is advisable.
 
-## Trait RStats 
+Basic statistical measures and vector algebra are implemented for self-sufficiency. Beyond that, this package is particularly useful for analysis of multidimensional sets of points, with applications in Machine Learning.
 
-has statistical methods implemented for `&[i64]` and `&[f64]` slices.
+## Trait RStats
+
+Statistical measures implemented for `&[i64]` and `&[f64]` slices.
+All these methods operate on one vector of data and take no arguments.
 For example, `s.amean()` computes the arithmetic mean of slice `s` of either type.
 
 Included are:
 
-* means (arithmetic, geometric and harmonic), 
-
+* means (arithmetic, geometric and harmonic),
 * standard deviations,
-
-* linearly weighted means useful for time dependent data analysis,
-
-* correlation and autocorrelation,
-
+* linearly weighted means (useful for time dependent data analysis),
 * median and quartiles.
 
 ## Trait Vectors
 
-has basic vector algebra implemented for `&[f64]` slices.
-Should you get errors when applying them to `Vec<f64>`, just convert `self` using `.as_slice()`. See doc examples.
+Vector algebra implemented for `&[f64]` slices of any length (dimensions of space). First there are functions applying to just one and two vectors. Then there are functions expressing  the relationships of one vector to a whole set of vectors.
+Should you get errors when applying them to `Vec<f64>`, just convert the vectors to `&[f64]`  using `.as_slice()`. See doc examples.
 
 ## Trait MutVectors
 
-Some of the above Vector methods are for efficiency reasons reimplemented here so that they mutate `self` in place instead of creating a new Vec. Useful for iterative methods on vectors. Beware that some methods do not return anything, so they can not be chained.
+Some of the above basic Vector methods are for memory efficiency reasons reimplemented so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that some of these methods do not return anything, so they can not be chained.
 
 ## Releases
 
-* **Version 0.4.4** Medoid now finds the outlier as well. Improved tests. 
+* **Version 0.4.6** Made eccentricity measure continuous. Added Kendall's Tau (rank) correlation. Moved all correlations to Vectors trait. Improved readme and doc comments.
+
+* **Version 0.4.4** Medoid now finds the Outlier as well. Improved tests.
 Defined and added MOE = median of eccentricities (spread) of multivariate data.
 
 * **Version 0.4.3** Introduced computation of `nmedian` residual errors. Improved tests and benchmarks.
@@ -44,15 +44,3 @@ Defined and added MOE = median of eccentricities (spread) of multivariate data.
 * **Version 0.4.1** Tidier testing and benchmarks.
 
 * **Version 0.4.0** Cleanup. Changed the implementation types from Vecs to slices everywhere for consistency. You may need more .as_slice() conversions here and there. Made some subsidiary functions private.
-
-* **Version 0.3.5** Further imrovement to `nmedian`, comparison benchmarks.
-
-* **Version 0.3.4** Updated doc examples.
-
-* **Version 0.3.3** Added `nmedian` as the definitive algorithm for finding n-dimensional medians; `gmedian` is now the defunct Weiszfeld's algorithm which will panic and/or infinitely loop on some data. Also added benchmarks and tidied up the tests.
-
-* **Version 0.3.2** Added `arcentroid` = n-dimensional arithmetic mean. Added some more doc examples.
-
-* **Version 0.3.1** Geometric Median speeded up. Added trait MutVectors.
-
-* **Version 0.3.0** completed the Geometric Median. Removed duplicated implementations of Vector for `Vec<f64>`.

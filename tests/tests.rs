@@ -23,7 +23,8 @@ fn fstats() -> Result<()> {
    v2.reverse();
    let s2 = v2.as_slice();
    println!("\n{:?}",s2);
-   println!("Correlation:{}",green(s1.correlation(s2).unwrap()));   
+   println!("Correlation:{}",green(s1.correlation(s2).unwrap())); 
+   println!("Kendall's Correlation:{}",green(s1.kendalcorr(s2).unwrap()));      
    println!("Scalar product: {}",green(s1.dotp(s2)));
    println!("Euclidian distance: {}",green(s1.vdist(s2)));
    println!("Magnitude of difference: {}",green(s1.vsub(s2).as_slice().vmag()));   
@@ -42,10 +43,7 @@ fn intstats() -> Result<()> {
    println!("Harmonic mean:\t{}",green(s1.hmean().unwrap()));
    println!("Arithmetic\t{}",&s1.ameanstd().unwrap());
    println!("Geometric\t{}",s1.gmeanstd().unwrap());
-   println!("Autocorrelation:{}",green(s1.autocorr().unwrap()));
-   println!("{}",s1.median().unwrap());
-   let mut v2 = v1.clone(); v2.reverse();
-   println!("Correlation:{}",green(s1.icorrelation(v2.as_slice()).unwrap()));   
+   println!("{}",s1.median().unwrap());   
    Ok(())
 }
 

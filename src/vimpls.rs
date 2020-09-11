@@ -59,6 +59,77 @@ impl Vectors for &[f64] {
    fn vunit(&self) ->Vec<f64> { 
       self.smult(1./self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt())
    }
+    
+   /// Correlation coefficient of a sample of two f64 variables.
+   /// # Example
+   /// ```
+   /// use rstats::Vectors;
+   /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
+   /// assert_eq!(v1.as_slice().correlation(&v2).unwrap(),-1_f64);
+   /// ```
+   fn correlation(&self,v:&[f64]) -> Result<f64> {
+      let n = self.len();
+      ensure!(n>0,emsg(file!(),line!(),"correlation - first sample is empty"));
+      ensure!(n==v.len(),emsg(file!(),line!(),"correlation - samples are not of the same size"));
+      let (mut sy,mut sxy,mut sx2,mut sy2) = (0_f64,0_f64,0_f64,0_f64);
+      let sx:f64 = self.iter().enumerate().map(|(i,&x)| {
+         let y = v[i]; 
+         sy += y; sxy += x*y; sx2 += x*x; sy2 += y*y; x    
+      }).sum();
+   let nf = n as f64;
+   Ok( (sxy-sx/nf*sy)/(((sx2-sx/nf*sx)*(sy2-sy/nf*sy)).sqrt()) )
+   }
+
+   /// Kendall Tau-B correlation coefficient of a sample of two f64 variables.
+   /// Defined by: tau = (conc - disc) / sqrt((conc + disc + tiesx) * (conc + disc + tiesy))
+   /// This is the simplest (not very fast) implementation.
+   /// # Example
+   /// ```
+   /// use rstats::Vectors;
+   /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
+   /// assert_eq!(v1.as_slice().kendalcorr(&v2).unwrap(),-1_f64);
+   /// ```
+   fn kendalcorr(&self,v:&[f64]) -> Result<f64> {
+      let n = self.len();
+      ensure!(n>0,emsg(file!(),line!(),"correlation - first sample is empty"));
+      ensure!(n==v.len(),emsg(file!(),line!(),"correlation - samples are not of the same size"));
+      let (mut conc, mut disc, mut tiesx, mut tiesy) = (0_i64,0_i64,0_i64,0_i64);
+      for i in 1..n {
+         let x = self[i];
+         let y = v[i];
+         for j in 0..i {
+            let xd = x - self[j];
+            let yd = y - v[j];
+            if !xd.is_normal() {
+               if !yd.is_normal() { continue } else { tiesx += 1; continue }
+            };
+            if !yd.is_normal() { tiesy += 1; continue };
+            if (xd*yd).signum() > 0_f64 { conc += 1 } else { disc += 1 }               
+            }
+         }
+      Ok((conc-disc) as f64/(((conc+disc+tiesx)*(conc+disc+tiesy)) as f64).sqrt())
+   }
+
+   /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.
+   /// # Example
+   /// ```
+   /// use rstats::Vectors;
+   /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   /// assert_eq!(v1.as_slice().autocorr().unwrap(),0.9984603532054123_f64);
+   /// ```
+   fn autocorr(&self) -> Result<f64> {
+      let n = self.len();
+       ensure!(n>=2,emsg(file!(),line!(),"autocorr - sample is too small"));
+       let (mut sx,mut sy,mut sxy,mut sx2,mut sy2) = (0_f64,0_f64,0_f64,0_f64,0_f64);
+       for i in 0..n-1 {
+          let x = self[i]; let y = self[i+1]; 
+          sx += x; sy += y; sxy += x*y; sx2 += x*x; sy2 += y*y 
+       }    
+       let nf = n as f64;
+       Ok( (sxy-sx/nf*sy)/(((sx2-sx/nf*sx)*(sy2-sy/nf*sy)).sqrt()) )
+   }
 
    /// Centroid = multidimensional arithmetic mean
    /// # Example
