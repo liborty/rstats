@@ -79,14 +79,16 @@ impl Vectors for &[f64] {
       centre
    }
 
-   /// Medoid is the point in n-dimensional set of points with the least sum of distances to all others. 
+   /// Medoid is the point belonging to set of points `self`,
+   /// which has the least sum of distances to all other points. 
    /// Outlier is the point with the greatest sum of distances. 
-   /// This function returns (medoid_distance, medoid_index, outlier_distance, outlier_index).
-   /// `d` is the number of dimensions = length of the slices. 
-   /// Set of points (slices) is held as one flat `&[f64]`.  
+   /// This function returns a four-tuple:  
+   /// (medoid_distance, medoid_index, outlier_distance, outlier_index).
+   /// `d` is the number of dimensions = length of the point sub-slices. 
+   /// The entire set of points is held in one flat `&[f64]`.  
    /// This is faster than vec of vecs but we have to handle the indices.  
    /// Note: `medoid` computes each distance twice but it is probably faster than memoizing and looking them up,  
-   /// unless the dimensionality is somewhat large. 
+   /// unless the dimensionality is somewhat large; and it saves memory.
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
@@ -130,10 +132,10 @@ impl Vectors for &[f64] {
       sum
    }
 
-   /// `Eccentricity` of an existing d-dimensional point within the set, specified by its indx.
-   /// It is a measure  between 0.0 and 1.0 of `not being a median`. It does not need the median. 
-   /// The perfect median would have eccentricity zero.
-   /// Medoid has the least ecentricity of the existing set of points and the Outlier the greatest.
+   /// `Eccentricity` of a d-dimensional point belonging to the set self, specified by its indx.  
+   /// Eccentricity is a measure between 0.0 and 1.0 of  a point `not being a median` of the given set. It does not need the median. 
+   /// The perfect median has eccentricity zero.
+   /// Of all the set points, Medoid has the lowest ecentricity and Outlier the highest.
    fn eccentr(&self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
@@ -184,13 +186,13 @@ impl Vectors for &[f64] {
    }
 
    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
-   /// It provably only has iterative solutions over vectors. 
-   /// Weiszfeld's formula had known problems with choosing the starting point and sometimes failing to converge.
-   /// Especially in situations, where the points are dense in the close proximity to the gm.
-   /// However, these problems are fixed here in my improved algorithm.      
-   /// This is eventually going to be a multithreaded version.
-   /// Results of `betterpoint` over arbitrary (data parallel) subsets will be simply added up to generate a new
-   /// vector approximation.
+   /// It has (provably) only vector iterative solutions. 
+   /// Searching methods are slow and difficult in highly dimensional space. 
+   /// Weiszfeld's fixed point iteration formula had known problems with sometimes failing to converge.
+   /// Especially, when the points are dense in the close proximity of the gm, 
+   /// or it coincides with one of them.  
+   /// However, these problems are fixed in my improved algorithm here.      
+   /// There is eventually going to be a multithreaded version of `nmedian`.
    /// # Example
    /// ```
    /// use rstats::{Vectors,genvec};
@@ -207,7 +209,7 @@ impl Vectors for &[f64] {
       loop {
         let (rsum,mut newv) = betterpoint(self,d,&oldpoint)
             .with_context(||emsg(file!(),line!(),"nmedian betterpoint call failed"))?; // find new point 
-         newv.as_mut_slice().mutsmult(1.0/rsum);
+         newv.as_mut_slice().mutsmult(1.0/rsum); // adding unit vectors
          if newv.as_slice().vdist(&oldpoint) < eps { 
             oldpoint = newv; break // use the last iteration anyway
          };
@@ -217,7 +219,9 @@ impl Vectors for &[f64] {
    }
 }
 
-/// betterpoint is called by nmedian.  
+/// betterpoint is called by nmedian. 
+/// Scaling by rsum is left as the final step at higher level, 
+/// in order to facilitate data parallelism. 
 fn betterpoint(set:&[f64], d:usize, v:&[f64]) -> Result<(f64,Vec<f64>)> {
    let n = set.len()/d;
    let mut rsum = 0_f64;
