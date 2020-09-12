@@ -2,9 +2,27 @@
 #![allow(dead_code)]
 #[cfg(test)]
 
+use std::fmt;
 use anyhow::{Result};
 use rstats::{RStats,MutVectors,Vectors,genvec,green};
 use devtimer::DevTime;
+
+/// GreenVec struct facilitates printing (in green) of vectors of any type
+/// that has Display implemented.
+pub struct GreenVec<T: fmt::Display>(Vec<T>);
+impl<T: fmt::Display> fmt::Display for GreenVec<T> {
+   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      let mut stringy = String::from("[");
+      let n = self.0.len();
+      if n == 0 { return write!(f,"\x1B[01;92m[]\x1B[0m") };
+      stringy.push_str(&self.0[0].to_string()); // first item
+      for i in 1..n {
+         stringy.push_str(", ");
+         stringy.push_str(&self.0[i].to_string());
+      }       
+      write!(f, "\x1B[01;92m{}]\x1B[0m", stringy)
+   }
+}
 
 #[test]
 fn fstats() -> Result<()> { 
@@ -22,13 +40,15 @@ fn fstats() -> Result<()> {
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.];
    let s2 = v2.as_slice();
    println!("\n{:?}",s2);
-   println!("Correlation:{}",green(s1.correlation(s2).unwrap())); 
-   println!("Kendall's Correlation:{}",green(s1.kendalcorr(s2).unwrap()));      
+   println!("Ranking: {}",GreenVec(s2.ranks().unwrap()));
+   println!("Pearson's Correlation:\t{}",green(s1.correlation(s2).unwrap())); 
+   println!("Kendall's Correlation:\t{}",green(s1.kendalcorr(s2).unwrap()));  
+   println!("Spearman's Correlation:\t{}",green(s1.spearmancorr(s2).unwrap()));     
    println!("Scalar product: {}",green(s1.dotp(s2)));
    println!("Euclidian distance: {}",green(s1.vdist(s2)));
    println!("Magnitude of difference: {}",green(s1.vsub(s2).as_slice().vmag()));   
-   println!("Vector difference:\n\x1B[01;92m{:?}\x1B[0m",s1.vsub(s2)); 
-   println!("Vector addition:\n\x1B[01;92m{:?}\x1B[0m",s1.vadd(s2));   
+   println!("Vector difference:\n{}",GreenVec(s1.vsub(s2))); 
+   println!("Vector addition:\n{}",GreenVec(s1.vadd(s2)));   
    Ok(())
 }
 

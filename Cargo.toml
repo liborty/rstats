@@ -3,12 +3,12 @@ name = "rstats"
 version = "0.4.7"
 authors = ["Libor Spacek"]
 edition = "2018"
-description = "Statistics Measures, Vector Algebra, Geometric Median"
+description = "Statistical Measures, Vector Algebra, Geometric Median, Data Analysis & Machine Learning"
 homepage = "https://github.com/liborty/rustats"
 repository = "https://github.com/liborty/rustats"
 license = "Apache-2.0"
 keywords = ["statistics","vector-algebra","geometric-median","machine-learning","multidimensional"]
-categories = ["science","mathematics","algorithms","concurrency"]
+categories = ["science","mathematics","algorithms","visualization","concurrency"]
 include = [
     "src/*.rs",
     "tests/*.rs",

@@ -10,7 +10,7 @@ impl RStats for &[f64] {
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// assert_eq!(v1.as_slice().amean().unwrap(),7.5_f64);
    /// ```
-   fn amean(&self) -> Result<f64> { 
+   fn amean(self) -> Result<f64> { 
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"amean - sample is empty!"));
       Ok( self.iter().sum::<f64>() / (n as f64) )
@@ -25,7 +25,7 @@ impl RStats for &[f64] {
    /// assert_eq!(res.mean,7.5_f64);
    /// assert_eq!(res.std,4.031128874149275_f64);
    /// ```
-   fn ameanstd(&self) -> Result<MStats> {
+   fn ameanstd(self) -> Result<MStats> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"ameanstd - sample is empty!"));
       let mut sx2 = 0_f64;
@@ -42,7 +42,7 @@ impl RStats for &[f64] {
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// assert_eq!(v1.as_slice().awmean().unwrap(),5.333333333333333_f64);
    /// ```
-   fn awmean(&self) -> Result<f64> {
+   fn awmean(self) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"awmean - sample is empty!"));
       let mut iw = (n+1) as f64; // descending linear weights
@@ -60,7 +60,7 @@ impl RStats for &[f64] {
    /// assert_eq!(res.mean,5.333333333333333_f64);
    /// assert_eq!(res.std,3.39934634239519_f64);
    /// ```
-   fn awmeanstd(&self) -> Result<MStats> {
+   fn awmeanstd(self) -> Result<MStats> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"awmeanstd - sample is empty!"));
       let mut sx2 = 0_f64;
@@ -78,11 +78,11 @@ impl RStats for &[f64] {
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// assert_eq!(v1.as_slice().hmean().unwrap(),4.305622526633627_f64);
    /// ```
-   fn hmean(&self) -> Result<f64> {
+   fn hmean(self) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"hmean - sample is empty!"));
       let mut sum = 0_f64;
-      for &x in *self {
+      for &x in self {
          ensure!(x.is_normal(),emsg(file!(),line!(),"hmean does not accept zero valued data!"));  
          sum += 1.0/x
       }
@@ -97,11 +97,11 @@ impl RStats for &[f64] {
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// assert_eq!(v1.as_slice().hwmean().unwrap(),3.019546395306663_f64);
    /// ```
-   fn hwmean(&self) -> Result<f64> {
+   fn hwmean(self) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"hwmean - sample is empty!"));
       let mut sum = 0_f64; let mut w = n as f64;
-      for &x in *self {
+      for &x in self {
          ensure!(x.is_normal(),emsg(file!(),line!(),"hwmean does not accept zero valued data!")); 
          sum += w/x; w -= 1_f64; 
       }
@@ -119,11 +119,11 @@ impl RStats for &[f64] {
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// assert_eq!(v1.as_slice().gmean().unwrap(),6.045855171418503_f64);
    /// ```
-   fn gmean(&self) -> Result<f64> {
+   fn gmean(self) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"gmean - sample is empty!"));
       let mut sum = 0_f64;
-      for &x in *self {   
+      for &x in self {   
          ensure!(x.is_normal(),emsg(file!(),line!(),"gmean does not accept zero valued data!"));
          sum += x.ln()
       }
@@ -143,12 +143,12 @@ impl RStats for &[f64] {
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// assert_eq!(v1.as_slice().gwmean().unwrap(),4.144953510241978_f64);
    /// ```
-   fn gwmean(&self) -> Result<f64> {
+   fn gwmean(self) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"gwmean - sample is empty!"));
       let mut w = n as f64; // descending weights
       let mut sum = 0_f64;
-      for &x in *self {  
+      for &x in self {  
          ensure!(x.is_normal(),emsg(file!(),line!(),"gwmean does not accept zero valued data!"));
          sum += w*x.ln();
          w -= 1_f64;
@@ -167,11 +167,11 @@ impl RStats for &[f64] {
    /// assert_eq!(res.mean,6.045855171418503_f64);
    /// assert_eq!(res.std,2.1084348239406303_f64);
    /// ```
-   fn gmeanstd(&self) -> Result<MStats> {
+   fn gmeanstd(self) -> Result<MStats> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"gmeanstd - sample is empty!"));
       let mut sum = 0_f64; let mut sx2 = 0_f64;
-      for &x in *self { 
+      for &x in self { 
          ensure!(x.is_normal(),emsg(file!(),line!(),"gmeanstd does not accept zero valued data!"));
          let lx = x.ln();
          sum += lx; sx2 += lx*lx    
@@ -189,12 +189,12 @@ impl RStats for &[f64] {
    /// assert_eq!(res.mean,4.144953510241978_f64);
    /// assert_eq!(res.std,2.1572089236412597_f64);
    /// ```
-   fn gwmeanstd(&self) -> Result<MStats> {
+   fn gwmeanstd(self) -> Result<MStats> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"gwmeanstd - sample is empty!"));
       let mut w = n as f64; // descending weights
       let mut sum = 0_f64; let mut sx2 = 0_f64;
-      for &x in *self { 
+      for &x in self { 
          ensure!(x.is_normal(),emsg(file!(),line!(),"gwmeanstd does not accept zero valued data!"));
          let lnx = x.ln();
          sum += w*lnx; sx2 += w*lnx*lnx;
@@ -214,17 +214,34 @@ impl RStats for &[f64] {
    /// assert_eq!(res.lquartile,4_f64);
    /// assert_eq!(res.uquartile,11_f64);
    /// ```
-   fn median(&self) -> Result<Med> {
+   fn median(self) -> Result<Med> {
       let n = self.len();
       let mid = n/2;
       let mut v = self.to_vec();
       sortf(&mut v);
-     // sortfslice(&mut v);
       let mut result: Med = Default::default();
       result.median = if mid*2 < n { v[mid] } else { (v[mid] + v[mid-1]) / 2.0 };
       result.lquartile = v[n/4];
       result.uquartile = v[3*n/4];
       Ok(result)
+   }
+
+   /// Returns vector of ranks 1..n,
+   /// ranked from the biggest number in self (rank 1) to the smallest (rank n).
+   /// Equalities lead to fractional ranks, hence Vec<f64> output and the range of rank values is reduced.
+   fn ranks(self) -> Result<Vec<f64>> {
+      let n = self.len();
+      let mut rank = vec![1_f64;n];
+      // make all n*(n-1)/2 comparisons just once
+      for i in 1..n {
+         let x = self[i];
+         for j in 0..i {
+            if x > self[j] { rank[j]+=1_f64; continue };
+            if x < self[j] { rank[i]+=1_f64; continue };
+            rank[i]+=0.5; rank[j]+=0.5;
+         }
+      }
+      Ok(rank)
    }
 
 }

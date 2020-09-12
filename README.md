@@ -1,7 +1,5 @@
 # Rstats - Rust Stats
 
-![GitHub commit activity](https://img.shields.io/github/commit-activity/w/liborty/rstats?color=darkgreen&label=github%20commits&logo=github)
-
 Rstats is a lean minimalistic library that only depends on `anyhow` (for its error handling).
 Trait RStats is carefully checked and will report all kinds of errors, such as empty input.
 Trait Vectors is unchecked to achieve speed, so some caution is advisable.
@@ -31,6 +29,8 @@ Should you get errors when applying them to `Vec<f64>`, just convert the vectors
 Some of the above basic Vector methods are for memory efficiency reasons reimplemented so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that some of these methods do not return anything, so they can not be chained.
 
 ## Releases
+
+* **Version 0.4.7** Added Spearman's Rho Correlation. Removed some spurious indirections.
 
 * **Version 0.4.6** Made eccentricity measure continuous. Added Kendall's Tau (rank) correlation. Moved all correlations to Vectors trait. Improved readme and doc comments.
 

@@ -4,59 +4,59 @@ use crate::{RStats,MutVectors,Vectors,Med,emsg};
 impl MutVectors for &mut[f64] {
 
    /// Scalar multiplication of a vector, mutates self
-   fn mutsmult(&mut self, s:f64) {
+   fn mutsmult(self, s:f64) {
      self.iter_mut().for_each(|x|{ *x*=s });
    }
    /// Vector subtraction, mutates self
-   fn mutvsub(&mut self, v: &[f64]) {
+   fn mutvsub(self, v: &[f64]) {
      self.iter_mut().enumerate().for_each(|(i,x)|*x-=v[i])
    }
   /// Vector addition, mutates self
-   fn mutvadd(&mut self, v: &[f64]) {
+   fn mutvadd(self, v: &[f64]) {
      self.iter_mut().enumerate().for_each(|(i,x)|*x+=v[i])
    }
   /// Mutate to unit vector
-   fn mutvunit(&mut self) { 
+   fn mutvunit(self) { 
       self.mutsmult(1_f64/self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt())
    }
    /// Vector magnitude duplicated for mutable type 
-   fn mutvmag(&mut self) -> f64 { self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt() }
+   fn mutvmag(self) -> f64 { self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt() }
 }
 
 impl Vectors for &[f64] { 
    
    /// Scalar multiplication of a vector, creates new vec
-   fn smult(&self, s:f64) -> Vec<f64> {
+   fn smult(self, s:f64) -> Vec<f64> {
       self.iter().map(|&x|s*x).collect()
    }
   
    /// Scalar product of two f64 slices.   
    /// Must be of the same length - no error checking for speed
-   fn dotp(&self, v: &[f64]) -> f64 {
+   fn dotp(self, v: &[f64]) -> f64 {
       self.iter().enumerate().map(|(i,&x)| x*v[i]).sum::<f64>()    
    }
 
    /// Vector subtraction, creates a new Vec result
-   fn vsub(&self, v: &[f64]) -> Vec<f64> {
+   fn vsub(self, v: &[f64]) -> Vec<f64> {
       self.iter().enumerate().map(|(i,&x)|x-v[i]).collect()
    }
    
    /// Vector addition, creates a new Vec result
-   fn vadd(&self, v: &[f64]) -> Vec<f64> {
+   fn vadd(self, v: &[f64]) -> Vec<f64> {
       self.iter().enumerate().map(|(i,&x)|x+v[i]).collect()
    }
  
    /// Euclidian distance between two n dimensional points (vectors).  
    /// Slightly faster than vsub followed by vmag, as both are done in one loop
-   fn vdist(&self, v: &[f64]) -> f64 {
+   fn vdist(self, v: &[f64]) -> f64 {
       self.iter().enumerate().map(|(i,&x)|(x-v[i]).powi(2)).sum::<f64>().sqrt()
    }
 
    /// Vector magnitude 
-   fn vmag(&self) -> f64 { self.iter().map(|&x|x.powi(2)).sum::<f64>().sqrt() }
+   fn vmag(self) -> f64 { self.iter().map(|&x|x.powi(2)).sum::<f64>().sqrt() }
 
    /// Unit vector - creates a new one
-   fn vunit(&self) ->Vec<f64> { 
+   fn vunit(self) ->Vec<f64> { 
       self.smult(1./self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt())
    }
     
@@ -68,7 +68,7 @@ impl Vectors for &[f64] {
    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
    /// assert_eq!(v1.as_slice().correlation(&v2).unwrap(),-1_f64);
    /// ```
-   fn correlation(&self,v:&[f64]) -> Result<f64> {
+   fn correlation(self,v:&[f64]) -> Result<f64> {
       let n = self.len();
       ensure!(n>0,emsg(file!(),line!(),"correlation - first sample is empty"));
       ensure!(n==v.len(),emsg(file!(),line!(),"correlation - samples are not of the same size"));
@@ -83,7 +83,7 @@ impl Vectors for &[f64] {
 
    /// Kendall Tau-B correlation coefficient of a sample of two f64 variables.
    /// Defined by: tau = (conc - disc) / sqrt((conc + disc + tiesx) * (conc + disc + tiesy))
-   /// This is the simplest (not very fast) implementation.
+   /// This is the simplest implementation with no sorting.
    /// # Example
    /// ```
    /// use rstats::Vectors;
@@ -91,10 +91,10 @@ impl Vectors for &[f64] {
    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
    /// assert_eq!(v1.as_slice().kendalcorr(&v2).unwrap(),-1_f64);
    /// ```
-   fn kendalcorr(&self,v:&[f64]) -> Result<f64> {
+   fn kendalcorr(self,v:&[f64]) -> Result<f64> {
       let n = self.len();
-      ensure!(n>0,emsg(file!(),line!(),"correlation - first sample is empty"));
-      ensure!(n==v.len(),emsg(file!(),line!(),"correlation - samples are not of the same size"));
+      ensure!(n>0,emsg(file!(),line!(),"kendalcorr - first sample is empty"));
+      ensure!(n==v.len(),emsg(file!(),line!(),"kendalcorr - samples are not of the same size"));
       let (mut conc, mut disc, mut tiesx, mut tiesy) = (0_i64,0_i64,0_i64,0_i64);
       for i in 1..n {
          let x = self[i];
@@ -111,6 +111,33 @@ impl Vectors for &[f64] {
          }
       Ok((conc-disc) as f64/(((conc+disc+tiesx)*(conc+disc+tiesy)) as f64).sqrt())
    }
+   /// Spearman rho correlation coefficient of a sample of two f64 variables.
+   /// This is the simplest implementation with no sorting.
+   /// # Example
+   /// ```
+   /// use rstats::Vectors;
+   /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
+   /// assert_eq!(v1.as_slice().spearmancorr(&v2).unwrap(),-1_f64);
+   /// ```
+   fn spearmancorr(self,v:&[f64]) -> Result<f64> {
+      let n = self.len();
+      ensure!(n>0,emsg(file!(),line!(),"spearmancorr - first sample is empty"));
+      ensure!(n==v.len(),emsg(file!(),line!(),"spearmancorr - samples are not of the same size"));
+      let xvec = self.ranks().unwrap();
+      let yvec = v.ranks().unwrap(); 
+      let mx = xvec.as_slice().ameanstd().unwrap();
+      let my = yvec.as_slice().ameanstd().unwrap();
+      let mut covar = 0_f64;
+      for i in 0..n {
+         covar += (xvec[i]-mx.mean)*(yvec[i]-my.mean);
+      }
+      covar /= mx.std*my.std*(n as f64);
+      // remove small truncation errors
+      if covar > 1.0 { covar=1_f64 } else if covar < -1_f64 { covar=-1.0 }; 
+      Ok(covar)
+   }
+
 
    /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.
    /// # Example
@@ -119,7 +146,7 @@ impl Vectors for &[f64] {
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// assert_eq!(v1.as_slice().autocorr().unwrap(),0.9984603532054123_f64);
    /// ```
-   fn autocorr(&self) -> Result<f64> {
+   fn autocorr(self) -> Result<f64> {
       let n = self.len();
        ensure!(n>=2,emsg(file!(),line!(),"autocorr - sample is too small"));
        let (mut sx,mut sy,mut sxy,mut sx2,mut sy2) = (0_f64,0_f64,0_f64,0_f64,0_f64);
@@ -140,7 +167,7 @@ impl Vectors for &[f64] {
    /// let dist = pts.as_slice().distsum(15,&centre);
    /// assert_eq!(dist, 4.14556218326653_f64);
    /// ```
-   fn acentroid(&self, d:usize) -> Vec<f64> {
+   fn acentroid(self, d:usize) -> Vec<f64> {
       let n = self.len()/d;
       let mut centre = vec![0_f64;d];
       for i in 0..n {
@@ -167,7 +194,7 @@ impl Vectors for &[f64] {
    /// let (dm,_,_,_) = pts.as_slice().medoid(15).unwrap();
    /// assert_eq!(dm,4.812334638782327_f64);
    /// ```
-   fn medoid(&self, d:usize) -> Result<(f64,usize,f64,usize)> {
+   fn medoid(self, d:usize) -> Result<(f64,usize,f64,usize)> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"medoid - d must divide vector length"));
       let mut minindx = 0;
@@ -193,7 +220,7 @@ impl Vectors for &[f64] {
 
    /// The sum of distances of all points contained in &self to given point v.    
    /// v which minimises this objective function is the Geometric Median. 
-   fn distsum(&self, d:usize, v:&[f64]) -> f64 {
+   fn distsum(self, d:usize, v:&[f64]) -> f64 {
       let n = self.len()/v.len();
       let mut sum = 0_f64;
       for i in 0..n {
@@ -207,7 +234,7 @@ impl Vectors for &[f64] {
    /// Eccentricity is a measure between 0.0 and 1.0 of  a point `not being a median` of the given set. It does not need the median. 
    /// The perfect median has eccentricity zero.
    /// Of all the set points, Medoid has the lowest ecentricity and Outlier the highest.
-   fn eccentr(&self, d:usize, indx:usize) -> f64 {
+   fn eccentr(self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
       let thisp = self.get(indx*d .. (indx+1)*d).unwrap();
@@ -225,7 +252,7 @@ impl Vectors for &[f64] {
    /// Ecentricity measure and the eccentricity vector of any point (typically not one of the set).
    /// It is a measure  between 0.0 and 1.0 of `not being a median` but does not need the median.
    /// The eccentricity vector points towards the median and has maximum possible magnitude of n.
-   fn veccentr(&self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)> {
+   fn veccentr(self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
       for i in 0..n {
@@ -242,14 +269,14 @@ impl Vectors for &[f64] {
    }
 
    /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual error for median).
-   fn ecc(&self, d:usize, v:&[f64]) -> f64 {
+   fn ecc(self, d:usize, v:&[f64]) -> f64 {
       let (eccentricity,_) = self.veccentr(d,&v).unwrap();
       eccentricity
    }
 
    /// We now define MOE (median of ecentricities), a new measure of spread of multidimensional points 
    /// (or multivariate sample)  
-   fn moe(&self, d:usize) -> Med {
+   fn moe(self, d:usize) -> Med {
       let n = self.len()/d;
       let mut eccs = vec![0_f64;n];
       for i in 0..n { eccs[i] = self.eccentr(d, i) }
@@ -273,7 +300,7 @@ impl Vectors for &[f64] {
    /// let error = pts.ecc(15,&gm);
    /// assert_eq!(error,0.000004826966175302838_f64);
    /// ```
-   fn nmedian(&self, d:usize, eps:f64) -> Result<Vec<f64>> {
+   fn nmedian(self, d:usize, eps:f64) -> Result<Vec<f64>> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
       let mut oldpoint = self.acentroid(d); // start with the centroid
