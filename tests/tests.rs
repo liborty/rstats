@@ -2,51 +2,35 @@
 #![allow(dead_code)]
 #[cfg(test)]
 
-use std::fmt;
 use anyhow::{Result};
-use rstats::{RStats,MutVectors,Vectors,genvec,green};
+use rstats::{RStats,GreenIt,GreenVec,MutVectors,Vectors,genvec};
 use devtimer::DevTime;
 
-/// GreenVec struct facilitates printing (in green) of vectors of any type
-/// that has Display implemented.
-pub struct GreenVec<T: fmt::Display>(Vec<T>);
-impl<T: fmt::Display> fmt::Display for GreenVec<T> {
-   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-      let mut stringy = String::from("[");
-      let n = self.0.len();
-      if n == 0 { return write!(f,"\x1B[01;92m[]\x1B[0m") };
-      stringy.push_str(&self.0[0].to_string()); // first item
-      for i in 1..n {
-         stringy.push_str(", ");
-         stringy.push_str(&self.0[i].to_string());
-      }       
-      write!(f, "\x1B[01;92m{}]\x1B[0m", stringy)
-   }
-}
+
 
 #[test]
 fn fstats() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    let s1 = v1.as_slice();
    println!("\n{:?}",s1);
-   println!("Arithmetic mean:{}",green(s1.amean().unwrap()));
-   println!("Geometric mean:\t{}",green(s1.gmean().unwrap()));
-   println!("Harmonic mean:\t{}",green(s1.hmean().unwrap()));
-   println!("Magnitude:\t{}",green(s1.vmag()));
+   println!("Arithmetic mean:{}",GreenIt(s1.amean().unwrap()));
+   println!("Geometric mean:\t{}",GreenIt(s1.gmean().unwrap()));
+   println!("Harmonic mean:\t{}",GreenIt(s1.hmean().unwrap()));
+   println!("Magnitude:\t{}",GreenIt(s1.vmag()));
    println!("Arithmetic\t{}",s1.ameanstd().unwrap());
    println!("Geometric\t{}",s1.gmeanstd().unwrap());
-   println!("Autocorrelation:{}",green(s1.autocorr().unwrap()));
+   println!("Autocorrelation:{}",GreenIt(s1.autocorr().unwrap()));
    println!("{}",s1.median().unwrap());
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.];
    let s2 = v2.as_slice();
    println!("\n{:?}",s2);
    println!("Ranking: {}",GreenVec(s2.ranks().unwrap()));
-   println!("Pearson's Correlation:\t{}",green(s1.correlation(s2).unwrap())); 
-   println!("Kendall's Correlation:\t{}",green(s1.kendalcorr(s2).unwrap()));  
-   println!("Spearman's Correlation:\t{}",green(s1.spearmancorr(s2).unwrap()));     
-   println!("Scalar product: {}",green(s1.dotp(s2)));
-   println!("Euclidian distance: {}",green(s1.vdist(s2)));
-   println!("Magnitude of difference: {}",green(s1.vsub(s2).as_slice().vmag()));   
+   println!("Pearson's Correlation:\t{}",GreenIt(s1.correlation(s2).unwrap())); 
+   println!("Kendall's Correlation:\t{}",GreenIt(s1.kendalcorr(s2).unwrap()));  
+   println!("Spearman's Correlation:\t{}",GreenIt(s1.spearmancorr(s2).unwrap()));     
+   println!("Scalar product: {}",GreenIt(s1.dotp(s2)));
+   println!("Euclidian distance: {}",GreenIt(s1.vdist(s2)));
+   println!("Magnitude of difference: {}",GreenIt(s1.vsub(s2).as_slice().vmag()));   
    println!("Vector difference:\n{}",GreenVec(s1.vsub(s2))); 
    println!("Vector addition:\n{}",GreenVec(s1.vadd(s2)));   
    Ok(())
@@ -57,10 +41,10 @@ fn intstats() -> Result<()> {
    let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
    let s1 = v1.as_slice();
    println!("\n{:?}",&s1);
-   println!("Arithmetic mean:{}",green(s1.amean().unwrap()));
-   println!("Geometric mean:\t{}",green(s1.gmean().unwrap()));
-   println!("Harmonic mean:\t{}",green(s1.hmean().unwrap()));
-   println!("Arithmetic\t{}",&s1.ameanstd().unwrap());
+   println!("Arithmetic mean:{}",GreenIt(s1.amean().unwrap()));
+   println!("Geometric mean:\t{}",GreenIt(s1.gmean().unwrap()));
+   println!("Harmonic mean:\t{}",GreenIt(s1.hmean().unwrap()));
+   println!("Arithmetic\t{}",s1.ameanstd().unwrap());
    println!("Geometric\t{}",s1.gmeanstd().unwrap());
    println!("{}",s1.median().unwrap());   
    Ok(())
@@ -75,15 +59,15 @@ fn multidimensional() -> Result<()> {
    let centroid = pts.acentroid(d);
    let median = pts.nmedian(d, 1e-5).unwrap();
 
-   println!("\nSum of Outlier distances:\t{} Index: {}",green(outd),green(outi as f64));
-   println!("Sum of Medoid distances:\t{} Index: {}",green(med),green(medi as f64));
-   println!("Sum of Centroid distances:\t{}",green(pts.distsum(d,&centroid)));
-   println!("Sum of Median distances:\t{}\n",green(pts.distsum(d,&median)));
+   println!("\nSum of Outlier distances:\t{} Index: {}",GreenIt(outd),GreenIt(outi as f64));
+   println!("Sum of Medoid distances:\t{} Index: {}",GreenIt(med),GreenIt(medi as f64));
+   println!("Sum of Centroid distances:\t{}",GreenIt(pts.distsum(d,&centroid)));
+   println!("Sum of Median distances:\t{}\n",GreenIt(pts.distsum(d,&median)));
 
-   println!("Outlier eccentricity:\t{}",green(pts.eccentr(d,outi)));
-   println!("Medoid ecentricity:\t{}",green(pts.eccentr(d,medi)));
-   println!("Centroid ecentricity:\t{}",green(pts.ecc(d,&centroid)));   
-   println!("Median eccentricity:\t{}\n",green(pts.ecc(d,&median)));
+   println!("Outlier eccentricity:\t{}",GreenIt(pts.eccentr(d,outi)));
+   println!("Medoid ecentricity:\t{}",GreenIt(pts.eccentr(d,medi)));
+   println!("Centroid ecentricity:\t{}",GreenIt(pts.ecc(d,&centroid)));   
+   println!("Median eccentricity:\t{}\n",GreenIt(pts.ecc(d,&median)));
    println!("MOE (Median of eccentricities)\n{}",pts.moe(d));  
    Ok(())
 }
@@ -92,7 +76,7 @@ fn difficult_data() -> Result<()> {
    let pts:Vec<f64> = vec![0.,0.,0.,0., 1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,0.,1.,
       -1.,0.,0.,0., 0.,-1.,0.,0., 0.,0.,-1.,0., 0.,0.,0.,-1.];
    let gm = pts.as_slice().nmedian(4, 1e-5).unwrap();
-   println!("\nMedian residual error: {}",green(pts.as_slice().ecc(4,&gm)));
+   println!("\nMedian residual error: {}",GreenIt(pts.as_slice().ecc(4,&gm)));
    Ok(())
 }
 
@@ -113,6 +97,6 @@ fn medians() -> Result<()> {
    }
    // timer.stop();
    println!("\nSum of {} medians residual errors {} time in ns: {}",
-      ITERATIONS,green(sumg),sumtime);     
+      ITERATIONS,GreenIt(sumg),sumtime);     
    Ok(())  
 }

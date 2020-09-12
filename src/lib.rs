@@ -3,6 +3,7 @@ pub mod f64impls;
 pub mod vimpls;
 
 use std::cmp::Ordering::Equal;
+use std::fmt;
 
 use anyhow::Result;
 
@@ -15,8 +16,8 @@ pub struct Med {
 }
 impl std::fmt::Display for Med {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f,"Lower Quartile: {}, Median: {}, Upper Qartile: {}", 
-        green(self.lquartile), green(self.median), green(self.uquartile))
+        write!(f,"(Lower Quartile: {}, Median: {}, Upper Qartile: {})", 
+        GreenIt(self.lquartile), GreenIt(self.median), GreenIt(self.uquartile))
     }
 }
 
@@ -28,12 +29,37 @@ pub struct MStats {
 }
 impl std::fmt::Display for MStats {
    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-      write!(f,"mean±std: {}±{}",green(self.mean),green(self.std))
+      write!(f,"mean±std: {}±{}",GreenIt(self.mean),GreenIt(self.std))
    }
 }
 
-/// green terminal f64 output to make test results stand out.
-pub fn green(n:f64) -> String { format!("\x1B[01;92m{}\x1B[0m",n) }
+/// GreenIt struct facilitates printing (in green) any type
+/// that has Display implemented.
+pub struct GreenIt<T: fmt::Display>(pub T);
+impl<T: fmt::Display> fmt::Display for GreenIt<T> {
+   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      write!(f,"\x1B[01;92m{}\x1B[0m",self.0.to_string())  
+   }
+}
+
+/// GreenVec struct facilitates printing (in green) of vectors of any type
+/// that has Display implemented.
+pub struct GreenVec<T: fmt::Display>(pub Vec<T>);
+
+impl<T: fmt::Display> fmt::Display for GreenVec<T> {
+   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      let mut s = String::from("\x1B[01;92m[");
+      let n = self.0.len();
+      if n > 0 {
+         s.push_str(&self.0[0].to_string()); // first item
+         for i in 1..n {
+            s.push_str(", ");
+            s.push_str(&self.0[i].to_string());
+         }
+      }   
+      write!(f,"{}]\x1B[0m", s)
+   }
+}
 
 /// Implementing basic statistical measures.
 /// All these methods operate on only one vector (of data),
@@ -120,8 +146,7 @@ pub trait Vectors {
    /// Eccentricity vecor of any point w.r.t. the set
    fn ecc(self, d:usize, v:&[f64]) -> f64;     
    /// Geometric median of the set
-   fn nmedian(self, d:usize, eps:f64) -> Result<Vec<f64>>;
- 
+   fn nmedian(self, d:usize, eps:f64) -> Result<Vec<f64>>; 
 }
 
 /// private helper function for formatting error messages

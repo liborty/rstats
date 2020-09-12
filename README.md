@@ -30,6 +30,8 @@ Some of the above basic Vector methods are for memory efficiency reasons reimple
 
 ## Releases
 
+* **Version 0.4.8** Added generics to emphasise print vectors and items of various types.
+
 * **Version 0.4.7** Added Spearman's Rho Correlation. Removed some spurious indirections.
 
 * **Version 0.4.6** Made eccentricity measure continuous. Added Kendall's Tau (rank) correlation. Moved all correlations to Vectors trait. Improved readme and doc comments.
