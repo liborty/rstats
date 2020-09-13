@@ -30,6 +30,8 @@ Some of the above basic Vector methods are for memory efficiency reasons reimple
 
 ## Releases
 
+* **Version 0.4.9** Speeded up 
+
 * **Version 0.4.8** Added generics to emphasise print vectors and items of various types.
 
 * **Version 0.4.7** Added Spearman's Rho Correlation. Removed some spurious indirections.

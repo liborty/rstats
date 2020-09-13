@@ -1,5 +1,5 @@
 use anyhow::{Result,Context,ensure};
-use crate::{RStats,MutVectors,Vectors,Med,emsg};
+use crate::{RStats,MutVectors,Vectors,Med,minmax,emsg};
 
 impl MutVectors for &mut[f64] {
 
@@ -177,6 +177,25 @@ impl Vectors for &[f64] {
       centre
    }
 
+   /// For each point, gives its sum of distances to all other points
+   fn distances(self, d:usize) -> Result<Vec <f64>> {  
+     let n = self.len()/d;
+     ensure!(n*d == self.len(),emsg(file!(),line!(),"distances - d must divide vector length"));
+     let mut dists = vec![0_f64;n]; // distances accumulator for all points
+      // examine all unique pairings (lower triangular part of symmetric flat matrix)
+      for i in 1..n {
+         let thisp = self.get(i*d .. (i+1)*d)
+            .with_context(||emsg(file!(),line!(),"distances failed to get this slice"))?;
+         for j in 0..i {
+            let thatp = self.get(j*d .. (j+1)*d)
+               .with_context(||emsg(file!(),line!(),"distances failed to get that slice"))?;
+            let d = thisp.vdist(&thatp); // calculate each distance relation just once
+            dists[i] += d; dists[j] += d;   // but add it to both points   
+         }
+      }
+      Ok(dists)           
+   }   
+
    /// Medoid is the point belonging to set of points `self`,
    /// which has the least sum of distances to all other points. 
    /// Outlier is the point with the greatest sum of distances. 
@@ -194,32 +213,12 @@ impl Vectors for &[f64] {
    /// let (dm,_,_,_) = pts.as_slice().medoid(15).unwrap();
    /// assert_eq!(dm,4.812334638782327_f64);
    /// ```
-   fn medoid(self, d:usize) -> Result<(f64,usize,f64,usize)> {
-      let n = self.len()/d;
-      ensure!(n*d == self.len(),emsg(file!(),line!(),"medoid - d must divide vector length"));
-      let mut minindx = 0;
-      let mut mindist = f64::MAX;
-      let mut maxindx = 0;
-      let mut maxdist = 0_f64;
-      for i in 0..n {
-         let thisp = self.get(i*d .. (i+1)*d)
-            .with_context(||emsg(file!(),line!(),"medoid failed to get this slice"))?;
-         let mut dsum = 0_f64;
-         for j in 0..n {
-            if i==j { continue };
-            let thatp = self.get(j*d .. (j+1)*d)
-               .with_context(||emsg(file!(),line!(),"medoid failed to get that slice"))?;
-            dsum += thisp.vdist(&thatp);
-         //   if dsum >= mindist { break } // medoid only: quit adding points if minimum distance is already exceeded
-         }
-         if dsum < mindist { mindist = dsum; minindx = i }; 
-         if dsum > maxdist { maxdist = dsum; maxindx = i };               
-      }
-   Ok((mindist,minindx,maxdist,maxindx))
+   fn medoid(self, d:usize) -> (f64,usize,f64,usize) {
+      minmax(&self.distances(d).unwrap())
    }
 
-   /// The sum of distances of all points contained in &self to given point v.    
-   /// v which minimises this objective function is the Geometric Median. 
+   /// The sum of distances of all points in &self to given point v.    
+   /// Geometric Median is defined as v which minimises this function. 
    fn distsum(self, d:usize, v:&[f64]) -> f64 {
       let n = self.len()/v.len();
       let mut sum = 0_f64;

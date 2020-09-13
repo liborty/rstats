@@ -55,7 +55,7 @@ fn multidimensional() -> Result<()> {
    let d = 5_usize;
    let pt = genvec(d,20,3,13); // random test data 5x20
    let pts = pt.as_slice();
-   let (med,medi,outd,outi) = pts.medoid(d).unwrap();
+   let (med,medi,outd,outi) = pts.medoid(d);
    let centroid = pts.acentroid(d);
    let median = pts.nmedian(d, 1e-5).unwrap();
 
@@ -95,8 +95,7 @@ fn medians() -> Result<()> {
       sumtime += timer.time_in_nanos().unwrap();
       sumg += pts.as_slice().ecc(2,&gm);
    }
-   // timer.stop();
-   println!("\nSum of {} medians residual errors {} time in ns: {}",
-      ITERATIONS,GreenIt(sumg),sumtime);     
+   println!("\nSum of {} medians residual errors {} in {} ns",
+      GreenIt(ITERATIONS),GreenIt(sumg),GreenIt(sumtime));     
    Ok(())  
 }

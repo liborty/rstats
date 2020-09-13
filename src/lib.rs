@@ -45,7 +45,6 @@ impl<T: fmt::Display> fmt::Display for GreenIt<T> {
 /// GreenVec struct facilitates printing (in green) of vectors of any type
 /// that has Display implemented.
 pub struct GreenVec<T: fmt::Display>(pub Vec<T>);
-
 impl<T: fmt::Display> fmt::Display for GreenVec<T> {
    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
       let mut s = String::from("\x1B[01;92m[");
@@ -133,8 +132,10 @@ pub trait Vectors {
 
    /// Centroid = euclidian mean of a set of points
    fn acentroid(self, d:usize) -> Vec<f64>;
+   /// Sums of distances from each point to all other points
+   fn distances(self, d:usize) -> Result<Vec <f64>>;
    /// Medoid of a set of points (most central of the points)
-   fn medoid(self, d:usize) -> Result<(f64,usize,f64,usize)>;
+   fn medoid(self, d:usize) -> (f64,usize,f64,usize);
    /// Sum of distances from all the points in a set to v
    fn distsum(self, d:usize, v:&[f64] ) -> f64;
    /// Ecentricity measure (0,1) of an internal point given by indx, w.r.t. the set
@@ -162,6 +163,21 @@ fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
 pub fn sortf(v: &mut [f64]) { 
     v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
 }
+
+/// Finds minimum, minimum's index, maximum, maximum's index of &[f64]
+pub fn minmax(v: &[f64]) -> (f64,usize,f64,usize) {
+   let mut min = v[0]; // initialise to the first value
+   let mut mini = 0;
+   let mut max = v[0]; // initialised as min, allowing 'else' below
+   let mut maxi = 0;
+   for i in 1..v.len() {
+      let x = v[i];
+      if x < min { min = x; mini = i }
+      else if x > max { max = x; maxi = i } 
+   }
+   (min,mini,max,maxi)
+}
+
 
 /// Generates a random f64 vector of size d x n suitable for testing. It needs two seeds.  
 /// Uses local closure `rand` to generate random numbers (avoids dependencies).  
