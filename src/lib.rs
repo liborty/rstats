@@ -16,7 +16,7 @@ pub struct Med {
 }
 impl std::fmt::Display for Med {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f,"(Lower Quartile: {}, Median: {}, Upper Qartile: {})", 
+        write!(f,"(Lower Q: {}, Median: {}, Upper Q: {})", 
         GreenIt(self.lquartile), GreenIt(self.median), GreenIt(self.uquartile))
     }
 }
@@ -134,6 +134,8 @@ pub trait Vectors {
    fn acentroid(self, d:usize) -> Vec<f64>;
    /// Sums of distances from each point to all other points
    fn distances(self, d:usize) -> Result<Vec <f64>>;
+   /// Eccentricity vectors from each point
+   fn eccentricities(self, d:usize) -> Result<Vec<Vec<f64>>>;
    /// Medoid of a set of points (most central of the points)
    fn medoid(self, d:usize) -> (f64,usize,f64,usize);
    /// Sum of distances from all the points in a set to v

@@ -66,7 +66,7 @@ impl Vectors for &[f64] {
    /// use rstats::Vectors;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
-   /// assert_eq!(v1.as_slice().correlation(&v2).unwrap(),-1_f64);
+   /// assert_eq!(v1.correlation(&v2).unwrap(),-1_f64);
    /// ```
    fn correlation(self,v:&[f64]) -> Result<f64> {
       let n = self.len();
@@ -89,7 +89,7 @@ impl Vectors for &[f64] {
    /// use rstats::Vectors;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
-   /// assert_eq!(v1.as_slice().kendalcorr(&v2).unwrap(),-1_f64);
+   /// assert_eq!(v1.kendalcorr(&v2).unwrap(),-1_f64);
    /// ```
    fn kendalcorr(self,v:&[f64]) -> Result<f64> {
       let n = self.len();
@@ -118,7 +118,7 @@ impl Vectors for &[f64] {
    /// use rstats::Vectors;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
-   /// assert_eq!(v1.as_slice().spearmancorr(&v2).unwrap(),-1_f64);
+   /// assert_eq!(v1.spearmancorr(&v2).unwrap(),-1_f64);
    /// ```
    fn spearmancorr(self,v:&[f64]) -> Result<f64> {
       let n = self.len();
@@ -126,8 +126,8 @@ impl Vectors for &[f64] {
       ensure!(n==v.len(),emsg(file!(),line!(),"spearmancorr - samples are not of the same size"));
       let xvec = self.ranks().unwrap();
       let yvec = v.ranks().unwrap(); 
-      let mx = xvec.as_slice().ameanstd().unwrap();
-      let my = yvec.as_slice().ameanstd().unwrap();
+      let mx = xvec.ameanstd().unwrap();
+      let my = yvec.ameanstd().unwrap();
       let mut covar = 0_f64;
       for i in 0..n {
          covar += (xvec[i]-mx.mean)*(yvec[i]-my.mean);
@@ -144,7 +144,7 @@ impl Vectors for &[f64] {
    /// ```
    /// use rstats::Vectors;
    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-   /// assert_eq!(v1.as_slice().autocorr().unwrap(),0.9984603532054123_f64);
+   /// assert_eq!(v1.autocorr().unwrap(),0.9984603532054123_f64);
    /// ```
    fn autocorr(self) -> Result<f64> {
       let n = self.len();
@@ -163,8 +163,8 @@ impl Vectors for &[f64] {
    /// ```
    /// use rstats::{Vectors,genvec};
    /// let pts = genvec(15,15,255,30);
-   /// let centre = pts.as_slice().acentroid(15);
-   /// let dist = pts.as_slice().distsum(15,&centre);
+   /// let centre = pts.acentroid(15);
+   /// let dist = pts.distsum(15,&centre);
    /// assert_eq!(dist, 4.14556218326653_f64);
    /// ```
    fn acentroid(self, d:usize) -> Vec<f64> {
@@ -196,6 +196,26 @@ impl Vectors for &[f64] {
       Ok(dists)           
    }   
 
+ /// Eccentricity vector for each point
+ fn eccentricities(self, d:usize) -> Result<Vec<Vec<f64>>> {  
+   let n = self.len()/d;
+   ensure!(n*d == self.len(),emsg(file!(),line!(),"distances - d must divide vector length"));
+   // allocate vectors for the results
+   let mut eccs = vec![vec![0_f64;d];n];
+   // ecentricities vectors accumulator for all points
+   // examine all unique pairings (lower triangular part of symmetric flat matrix)
+   for i in 1..n {
+      let thisp = self.get(i*d .. (i+1)*d).unwrap();
+      for j in 0..i {
+         let thatp = self.get(j*d .. (j+1)*d).unwrap();
+         let e = thatp.vsub(&thisp).vunit(); // calculate each vector just once
+         eccs[i].as_mut_slice().mutvadd(&e); 
+         eccs[j].as_mut_slice().mutvsub(&e);  // mind the orientation!   
+      }
+   }
+   Ok(eccs)           
+ }   
+
    /// Medoid is the point belonging to set of points `self`,
    /// which has the least sum of distances to all other points. 
    /// Outlier is the point with the greatest sum of distances. 
@@ -210,7 +230,7 @@ impl Vectors for &[f64] {
    /// ```
    /// use rstats::{Vectors,genvec};
    /// let pts = genvec(15,15,255,30);
-   /// let (dm,_,_,_) = pts.as_slice().medoid(15).unwrap();
+   /// let (dm,_,_,_) = pts.medoid(15);
    /// assert_eq!(dm,4.812334638782327_f64);
    /// ```
    fn medoid(self, d:usize) -> (f64,usize,f64,usize) {
@@ -237,15 +257,13 @@ impl Vectors for &[f64] {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
       let thisp = self.get(indx*d .. (indx+1)*d).unwrap();
-      //  .with_context(||emsg(file!(),line!(),"eccentricity failed to extract this point"))?;   
       for i in 0..n {
          if i == indx { continue }; // exclude this point  
          let thatp = self.get(i*d .. (i+1)*d).unwrap();
-         //    .with_context(||emsg(file!(),line!(),"eccentricity failed to extract that point"))?;
-         let unitdv = thatp.vsub(thisp).as_slice().vunit();
+         let unitdv = thatp.vsub(thisp).vunit();
          vsum.as_mut_slice().mutvadd(&unitdv);   // add it to their sum
       }
-      vsum.as_slice().vmag()/n as f64
+      vsum.vmag()/n as f64
    }
 
    /// Ecentricity measure and the eccentricity vector of any point (typically not one of the set).
@@ -258,13 +276,13 @@ impl Vectors for &[f64] {
          let thatp = self.get(i*d .. (i+1)*d)
             .with_context(||emsg(file!(),line!(),"veccentr failed to extract that point"))?;
          let mut vdif = thatp.vsub(thisp);
-         let mag = vdif.as_slice().vmag();
+         let mag = vdif.vmag();
          if !mag.is_normal() { continue }; // thisp belongs to the set
          // make vdif into a unit vector with its already known magnitude
          vdif.as_mut_slice().mutsmult(1./mag); 
          vsum.as_mut_slice().mutvadd(&vdif);   // add it to their sum
       }
-      Ok((vsum.as_slice().vmag()/n as f64, vsum))
+      Ok((vsum.vmag()/n as f64, vsum))
    }
 
    /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual error for median).
@@ -276,10 +294,13 @@ impl Vectors for &[f64] {
    /// We now define MOE (median of ecentricities), a new measure of spread of multidimensional points 
    /// (or multivariate sample)  
    fn moe(self, d:usize) -> Med {
-      let n = self.len()/d;
-      let mut eccs = vec![0_f64;n];
-      for i in 0..n { eccs[i] = self.eccentr(d, i) }
-      eccs.as_slice().median().unwrap()
+      let mut scalars = Vec::new();
+      let ev = self.eccentricities(d).unwrap();
+      let n = ev.len();
+      let nf = n as f64;
+      for i in 0..n { scalars.push(ev[i].vmag()/nf) }
+      // println!("All eccentricities:\n{:?}",scalars);
+      scalars.median().unwrap()
    }
 
    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
@@ -294,9 +315,8 @@ impl Vectors for &[f64] {
    /// ```
    /// use rstats::{Vectors,genvec};
    /// let pt = genvec(15,15,255,30);
-   /// let pts = pt.as_slice();
-   /// let gm = pts.nmedian(15, 1e-5).unwrap();
-   /// let error = pts.ecc(15,&gm);
+   /// let gm = pt.nmedian(15, 1e-5).unwrap();
+   /// let error = pt.ecc(15,&gm);
    /// assert_eq!(error,0.000004826966175302838_f64);
    /// ```
    fn nmedian(self, d:usize, eps:f64) -> Result<Vec<f64>> {
@@ -307,7 +327,7 @@ impl Vectors for &[f64] {
         let (rsum,mut newv) = betterpoint(self,d,&oldpoint)
             .with_context(||emsg(file!(),line!(),"nmedian betterpoint call failed"))?; // find new point 
          newv.as_mut_slice().mutsmult(1.0/rsum); // adding unit vectors
-         if newv.as_slice().vdist(&oldpoint) < eps { 
+         if newv.vdist(&oldpoint) < eps { 
             oldpoint = newv; break // use the last iteration anyway
          };
          oldpoint = newv                       

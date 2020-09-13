@@ -21,8 +21,7 @@ Included are:
 
 ## Trait Vectors
 
-Vector algebra implemented for `&[f64]` slices of any length (dimensions of space). First there are functions applying to just one and two vectors. Then there are functions expressing  the relationships of one vector to a whole set of vectors.
-Should you get errors when applying them to `Vec<f64>`, just convert the vectors to `&[f64]`  using `.as_slice()`. See doc examples.
+Vector algebra implemented for `&[f64]` slices of any length (dimensions of space). First there are functions applying to just one and two vectors. Then there are functions expressing  the relationships of one vector to a whole set of vectors. See doc examples.
 
 ## Trait MutVectors
 
@@ -30,7 +29,7 @@ Some of the above basic Vector methods are for memory efficiency reasons reimple
 
 ## Releases
 
-* **Version 0.4.9** Speeded up 
+* **Version 0.4.9** Streamlining, introduced `distances` and `eccentricities`, with speedups up to 50%.
 
 * **Version 0.4.8** Added generics to emphasise print vectors and items of various types.
 
