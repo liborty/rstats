@@ -100,28 +100,34 @@ pub trait Vectors {
    fn spearmancorr(self,v:&[f64]) -> Result<f64>;
    /// Autocorrelation
    fn autocorr(self) -> Result<f64>;
-   /// Minimum, minimum's index, maximum, maximum's index
-   /// Here self is usually some data, rather than a vector
+   /// Minimum, minimum's index, maximum, maximum's index.
    fn minmax(self) -> (f64,usize,f64,usize);
 
    /// Centroid = euclidian mean of a set of points
    fn acentroid(self, d:usize) -> Vec<f64>;
+
    /// Sums of distances from each point to all other points
    fn distances(self, d:usize) -> Result<Vec <f64>>;
+   /// Sum of distances from one point given by indx
+   fn distsuminset(self, d:usize, indx:usize) -> f64;
+   /// Sum of distances from arbitrary point (v) to all the points in self   
+   fn distsum(self, d:usize, v:&[f64] ) -> f64;
+   /// Medoid and Outlier (by distance) of a set of points
+   fn medoid(self, d:usize) -> (f64,usize,f64,usize);
+
    /// Eccentricity vectors from each point
    fn eccentricities(self, d:usize) -> Result<Vec<Vec<f64>>>;
-   /// Medoid of a set of points (most central of the points)
-   fn medoid(self, d:usize) -> (f64,usize,f64,usize);
-   /// Sum of distances from all the points in a set to v
-   fn distsum(self, d:usize, v:&[f64] ) -> f64;
-   /// Ecentricity measure (0,1) of an internal point given by indx, w.r.t. the set
+   /// Ecentricity measure (0,1) of an internal point given by indx
    fn eccentr(self, d:usize, indx:usize) -> f64;
-   /// Eccentricity measure (0,1) and vector of any point, w.r.t. the set   
+   /// Eccentricity measure and vector of any point     
    fn veccentr(self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)>;
+   /// Eccentricity measure only, of any point 
+   fn ecc(self, d:usize, v:&[f64]) -> f64;
    /// Median of eccentricities (measure of spread of multivariate sample)
    fn moe(self, d:usize) -> Med;
-   /// Eccentricity vecor of any point w.r.t. the set
-   fn ecc(self, d:usize, v:&[f64]) -> f64;     
+   /// Medoid and Outlier defined by eccentricities
+   fn emedoid(self, d:usize) -> (f64,usize,f64,usize);
+     
    /// Geometric median of the set
    fn nmedian(self, d:usize, eps:f64) -> Result<Vec<f64>>; 
 }

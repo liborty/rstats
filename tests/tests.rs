@@ -51,16 +51,18 @@ fn multidimensional() -> Result<()> {
    let d = 5_usize;
    let pt = genvec(d,20,3,13); // random test data 5x20
    let (med,medi,outd,outi) = pt.medoid(d);
-   let (mede,medei,oute,outei) = scalarecc(pt.eccentricities(d).unwrap()).minmax();
+   let (mede,medei,oute,outei) = pt.emedoid(d);
    let centroid = pt.acentroid(d);
    let median = pt.nmedian(d, 1e-5).unwrap();
 
    println!("\nSum of Outlier distances:\t{} Index: {}",GreenIt(outd),GreenIt(outi));
+   println!("Distances from E-Outlier:\t{}",GreenIt(pt.distsuminset(d, outei)));
    println!("Sum of Medoid distances:\t{} Index: {}",GreenIt(med),GreenIt(medi));
    println!("Sum of Centroid distances:\t{}",GreenIt(pt.distsum(d,&centroid)));
    println!("Sum of Median distances:\t{}\n",GreenIt(pt.distsum(d,&median)));
 
-   println!("Outlier eccentricity:\t{} Index: {}",GreenIt(oute),GreenIt(outei));
+   println!("E-Outlier eccentricity:\t{} Index: {}",GreenIt(oute),GreenIt(outei));
+   println!("Outlier eccentricity:\t{}",GreenIt(pt.eccentr(d, outi)));
    println!("Medoid ecentricity:\t{} Index: {}",GreenIt(mede),GreenIt(medei));
    println!("Centroid ecentricity:\t{}",GreenIt(pt.ecc(d,&centroid)));   
    println!("Median eccentricity:\t{}\n",GreenIt(pt.ecc(d,&median)));

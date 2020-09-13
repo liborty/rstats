@@ -141,7 +141,6 @@ impl Vectors for &[f64] {
       Ok(covar)
    }
 
-
    /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.
    /// # Example
    /// ```
@@ -181,6 +180,7 @@ impl Vectors for &[f64] {
    }
 
     /// Finds minimum, minimum's index, maximum, maximum's index of &[f64]
+    /// Here self is usually some data, rather than a vector
    fn minmax(self) -> (f64,usize,f64,usize) {
       let mut min = self[0]; // initialise to the first value
       let mut mini = 0;
@@ -195,6 +195,7 @@ impl Vectors for &[f64] {
    }
 
    /// For each point, gives its sum of distances to all other points
+   /// This is the efficient workhorse of distances based analysis
    fn distances(self, d:usize) -> Result<Vec <f64>> {  
      let n = self.len()/d;
      ensure!(n*d == self.len(),emsg(file!(),line!(),"distances - d must divide vector length"));
@@ -211,50 +212,23 @@ impl Vectors for &[f64] {
          }
       }
       Ok(dists)           
-   }   
-
- /// Eccentricity vector for each point
- fn eccentricities(self, d:usize) -> Result<Vec<Vec<f64>>> {  
-   let n = self.len()/d;
-   ensure!(n*d == self.len(),emsg(file!(),line!(),"distances - d must divide vector length"));
-   // allocate vectors for the results
-   let mut eccs = vec![vec![0_f64;d];n];
-   // ecentricities vectors accumulator for all points
-   // examine all unique pairings (lower triangular part of symmetric flat matrix)
-   for i in 1..n {
-      let thisp = self.get(i*d .. (i+1)*d).unwrap();
-      for j in 0..i {
-         let thatp = self.get(j*d .. (j+1)*d).unwrap();
-         let e = thatp.vsub(&thisp).vunit(); // calculate each vector just once
-         eccs[i].as_mut_slice().mutvadd(&e); 
-         eccs[j].as_mut_slice().mutvsub(&e);  // mind the orientation!   
+   }  
+   
+   /// The sum of distances from within-set point given by indx to all points in self.    
+   /// Geometric Median is defined as v which minimises this function. 
+   fn distsuminset(self, d:usize, indx:usize) -> f64 {
+      let n = self.len()/d;
+      let mut sum = 0_f64;
+      let thisp = self.get(  indx*d .. (indx+1)*d).unwrap();
+      for i in 0..n {
+         if i == indx { continue };
+         let thatp = self.get(i*d .. (i+1)*d).unwrap();
+         sum += thatp.vdist(&thisp)              
       }
-   }
-   Ok(eccs)           
- }   
-
-   /// Medoid is the point belonging to set of points `self`,
-   /// which has the least sum of distances to all other points. 
-   /// Outlier is the point with the greatest sum of distances. 
-   /// This function returns a four-tuple:  
-   /// (medoid_distance, medoid_index, outlier_distance, outlier_index).
-   /// `d` is the number of dimensions = length of the point sub-slices. 
-   /// The entire set of points is held in one flat `&[f64]`.  
-   /// This is faster than vec of vecs but we have to handle the indices.  
-   /// Note: `medoid` computes each distance twice but it is probably faster than memoizing and looking them up,  
-   /// unless the dimensionality is somewhat large; and it saves memory.
-   /// # Example
-   /// ```
-   /// use rstats::{Vectors,vimpls::genvec};
-   /// let pts = genvec(15,15,255,30);
-   /// let (dm,_,_,_) = pts.medoid(15);
-   /// assert_eq!(dm,4.812334638782327_f64);
-   /// ```
-   fn medoid(self, d:usize) -> (f64,usize,f64,usize) {
-      self.distances(d).unwrap().minmax()
+      sum
    }
 
-   /// The sum of distances of all points in &self to given point v.    
+   /// The sum of distances from any point v to all points in self.    
    /// Geometric Median is defined as v which minimises this function. 
    fn distsum(self, d:usize, v:&[f64]) -> f64 {
       let n = self.len()/v.len();
@@ -266,10 +240,49 @@ impl Vectors for &[f64] {
       sum
    }
 
-   /// `Eccentricity` of a d-dimensional point belonging to the set self, specified by its indx.  
-   /// Eccentricity is a measure between 0.0 and 1.0 of  a point `not being a median` of the given set. It does not need the median. 
-   /// The perfect median has eccentricity zero.
-   /// Of all the set points, Medoid has the lowest ecentricity and Outlier the highest.
+   /// Medoid is the point belonging to set of points `self`,
+   /// which has the least sum of distances to all other points. 
+   /// Outlier is the point with the greatest sum of distances. 
+   /// This function returns a four-tuple:  
+   /// (medoid_distance, medoid_index, outlier_distance, outlier_index).
+   /// `d` is the number of dimensions = length of the point sub-slices. 
+   /// The entire set of points is held in one flat `&[f64]`.  
+   /// This is faster than vec of vecs but we have to handle the indices.  
+   /// # Example
+   /// ```
+   /// use rstats::{Vectors,vimpls::genvec};
+   /// let pts = genvec(15,15,255,30);
+   /// let (dm,_,_,_) = pts.medoid(15);
+   /// assert_eq!(dm,4.812334638782327_f64);
+   /// ```
+   fn medoid(self, d:usize) -> (f64,usize,f64,usize) {
+      self.distances(d).unwrap().minmax()
+   }
+
+   /// Eccentricity vector for each point
+   /// This is the efficient workhorse of eccentrities analysis 
+   fn eccentricities(self, d:usize) -> Result<Vec<Vec<f64>>> {  
+      let n = self.len()/d;
+      ensure!(n*d == self.len(),emsg(file!(),line!(),"distances - d must divide vector length"));
+      // allocate vectors for the results
+      let mut eccs = vec![vec![0_f64;d];n];
+      // ecentricities vectors accumulator for all points
+      // examine all unique pairings (lower triangular part of symmetric flat matrix)
+      for i in 1..n {
+         let thisp = self.get(i*d .. (i+1)*d).unwrap();
+         for j in 0..i {
+            let thatp = self.get(j*d .. (j+1)*d).unwrap();
+            let e = thatp.vsub(&thisp).vunit(); // calculate each vector just once
+            eccs[i].as_mut_slice().mutvadd(&e); 
+            eccs[j].as_mut_slice().mutvsub(&e);  // mind the vector's orientation!   
+         }
+      }
+   Ok(eccs)           
+   }   
+
+   /// Eccentricity of a d-dimensional point belonging to the set self, specified by its indx.  
+   /// Eccentricity is a scalar measure between 0.0 and 1.0 of a point `not being a median` of the given set. 
+   /// It does not need the median. The perfect median has eccentricity zero.
    fn eccentr(self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
@@ -283,9 +296,10 @@ impl Vectors for &[f64] {
       vsum.vmag()/n as f64
    }
 
-   /// Ecentricity measure and the eccentricity vector of any point (typically not one of the set).
-   /// It is a measure  between 0.0 and 1.0 of `not being a median` but does not need the median.
-   /// The eccentricity vector points towards the median and has maximum possible magnitude of n.
+   /// Ecentricity measure and the eccentricity vector of any point (typically one not belonging to the set).
+   /// It is a measure  between 0.0 and 1.0 of `not being a median` but it does not need the median.
+   /// The eccentricity vector points towards the median and has the maximum possible magnitude of n, by
+   /// which the scalar measure is normalised.
    fn veccentr(self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
@@ -304,14 +318,18 @@ impl Vectors for &[f64] {
 
    /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual error for median).
    fn ecc(self, d:usize, v:&[f64]) -> f64 {
-      let (eccentricity,_) = self.veccentr(d,&v).unwrap();
+      let (eccentricity,_) = self.veccentr(d,v).unwrap();
       eccentricity
    }
 
    /// We now define MOE (median of ecentricities), a new measure of spread of multidimensional points 
    /// (or multivariate sample)  
    fn moe(self, d:usize) -> Med {
-      scalarecc(self.eccentricities(d).unwrap()).median().unwrap()
+      scalarecc(self.eccentricities(d).unwrap()) .median().unwrap()
+   }
+
+   fn emedoid(self, d:usize) -> (f64,usize,f64,usize) {
+      scalarecc(self.eccentricities(d).unwrap()).minmax()
    }
 
    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
@@ -348,7 +366,7 @@ impl Vectors for &[f64] {
 }
 
 /// betterpoint is called by nmedian. 
-/// Scaling by rsum is left as the final step at higher level, 
+/// Scaling by rsum is left as the final step at calling level, 
 /// in order to facilitate data parallelism. 
 fn betterpoint(set:&[f64], d:usize, v:&[f64]) -> Result<(f64,Vec<f64>)> {
    let n = set.len()/d;
