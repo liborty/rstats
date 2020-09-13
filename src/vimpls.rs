@@ -194,8 +194,8 @@ impl Vectors for &[f64] {
    (min,mini,max,maxi)
    }
 
-   /// For each point, gives its sum of distances to all other points
-   /// This is the efficient workhorse of distances based analysis
+   /// For each point, gives its sum of distances to all other points.
+   /// This is the efficient workhorse of distances based analysis.
    fn distances(self, d:usize) -> Result<Vec <f64>> {  
      let n = self.len()/d;
      ensure!(n*d == self.len(),emsg(file!(),line!(),"distances - d must divide vector length"));
@@ -215,7 +215,6 @@ impl Vectors for &[f64] {
    }  
    
    /// The sum of distances from within-set point given by indx to all points in self.    
-   /// Geometric Median is defined as v which minimises this function. 
    fn distsuminset(self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut sum = 0_f64;
@@ -259,8 +258,8 @@ impl Vectors for &[f64] {
       self.distances(d).unwrap().minmax()
    }
 
-   /// Eccentricity vector for each point
-   /// This is the efficient workhorse of eccentrities analysis 
+   /// Eccentricity vector for each point.
+   /// This is the efficient workhorse of eccentrities analysis. 
    fn eccentricities(self, d:usize) -> Result<Vec<Vec<f64>>> {  
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"distances - d must divide vector length"));
@@ -296,7 +295,7 @@ impl Vectors for &[f64] {
       vsum.vmag()/n as f64
    }
 
-   /// Ecentricity measure and the eccentricity vector of any point (typically one not belonging to the set).
+   /// Eccentricity measure and the eccentricity vector of any point (typically one not belonging to the set).
    /// It is a measure  between 0.0 and 1.0 of `not being a median` but it does not need the median.
    /// The eccentricity vector points towards the median and has the maximum possible magnitude of n, by
    /// which the scalar measure is normalised.
@@ -323,7 +322,7 @@ impl Vectors for &[f64] {
    }
 
    /// We now define MOE (median of ecentricities), a new measure of spread of multidimensional points 
-   /// (or multivariate sample)  
+   /// (or multivariate sample).  
    fn moe(self, d:usize) -> Med {
       scalarecc(self.eccentricities(d).unwrap()) .median().unwrap()
    }
@@ -334,12 +333,12 @@ impl Vectors for &[f64] {
 
    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
    /// It has (provably) only vector iterative solutions. 
-   /// Searching methods are slow and difficult in highly dimensional space. 
+   /// Search methods are slow and difficult in highly dimensional space. 
    /// Weiszfeld's fixed point iteration formula had known problems with sometimes failing to converge.
    /// Especially, when the points are dense in the close proximity of the gm, 
    /// or it coincides with one of them.  
    /// However, these problems are fixed in my improved algorithm here.      
-   /// There is eventually going to be a multithreaded version of `nmedian`.
+   /// There will eventually be a multithreaded version of `nmedian`.
    /// # Example
    /// ```
    /// use rstats::{Vectors,vimpls::genvec};
