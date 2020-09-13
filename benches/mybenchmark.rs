@@ -1,4 +1,5 @@
-use rstats::{GreenIt,Vectors,genvec};
+use rstats::{Vectors};
+use rstats::vimpls::{GreenIt,genvec};
 
 /*
 use criterion::{black_box, criterion_group, criterion_main, Criterion}; //, BenchmarkId}

@@ -1,5 +1,6 @@
 use anyhow::{Result,Context,ensure};
-use crate::{MStats,RStats,Med,wsum,emsg};
+use crate::{MStats,RStats,Med};
+use crate::f64impls::{wsum,emsg};
 
 impl RStats for &[i64] {
    

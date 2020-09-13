@@ -1,14 +1,16 @@
 # Rstats - Rust Stats
 
-Rstats is a lean minimalistic library that only depends on `anyhow` (for its error handling).
-Trait RStats is carefully checked and will report all kinds of errors, such as empty input.
-Trait Vectors is unchecked to achieve speed, so some caution is advisable.
+Rstats is particularly useful for analysis of multidimensional sets of points, with applications to Machine Learning.
 
-Basic statistical measures and vector algebra are implemented for self-sufficiency. Beyond that, this package is particularly useful for analysis of multidimensional sets of points, with applications in Machine Learning.
+This is a lean minimalistic library that only depends on `anyhow` (for its error handling).
+Trait RStats is carefully checked and will report all kinds of errors, such as empty input.
+Trait Vectors is sometimes unchecked for speed, so some caution is advisable.
+
+Basic statistical measures and vector algebra are implemented here for self-containment of more sophisticated algorithms.
 
 ## Trait RStats
 
-Statistical measures implemented for `&[i64]` and `&[f64]` slices.
+Statistical measures implemented for `&[i64]` and `&[f64]`.
 All these methods operate on one vector of data and take no arguments.
 For example, `s.amean()` computes the arithmetic mean of slice `s` of either type.
 
@@ -28,6 +30,8 @@ Vector algebra implemented for `&[f64]` slices of any length (dimensions of spac
 Some of the above basic Vector methods are for memory efficiency reasons reimplemented so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that some of these methods do not return anything, so they can not be chained.
 
 ## Releases
+
+* **Version 0.4.10**  Moved unimportant helper functions out of the main module.
 
 * **Version 0.4.9** Streamlining, introduced `distances` and `eccentricities`, with speedups up to 50%.
 

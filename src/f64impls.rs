@@ -1,5 +1,6 @@
 use anyhow::{Result,ensure};
-use crate::{RStats,MStats,Med,wsum,emsg,sortf};
+use crate::{RStats,MStats,Med};
+use crate::vimpls::sortf;
 
 impl RStats for &[f64] { 
 
@@ -245,3 +246,12 @@ impl RStats for &[f64] {
    }
 
 }
+
+/// Sum of linear weights 
+pub fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
+
+/// helper function for formatting error messages
+pub fn emsg(file:&'static str, line:u32, msg:&'static str)-> String {
+   format!("{}:{} rstats {}",file,line,msg)
+}
+

@@ -1,5 +1,8 @@
 use anyhow::{Result,Context,ensure};
-use crate::{RStats,MutVectors,Vectors,Med,minmax,emsg};
+use crate::{RStats,MutVectors,Vectors,Med};
+use crate::f64impls::{emsg};
+use std::cmp::Ordering::Equal;
+use std::fmt;
 
 impl MutVectors for &mut[f64] {
 
@@ -158,10 +161,10 @@ impl Vectors for &[f64] {
        Ok( (sxy-sx/nf*sy)/(((sx2-sx/nf*sx)*(sy2-sy/nf*sy)).sqrt()) )
    }
 
-   /// Centroid = multidimensional arithmetic mean
+   /// Centroid = simple multidimensional arithmetic mean
    /// # Example
    /// ```
-   /// use rstats::{Vectors,genvec};
+   /// use rstats::{Vectors,vimpls::genvec};
    /// let pts = genvec(15,15,255,30);
    /// let centre = pts.acentroid(15);
    /// let dist = pts.distsum(15,&centre);
@@ -175,6 +178,20 @@ impl Vectors for &[f64] {
       }
       centre.as_mut_slice().mutsmult(1.0/n as f64);
       centre
+   }
+
+    /// Finds minimum, minimum's index, maximum, maximum's index of &[f64]
+   fn minmax(self) -> (f64,usize,f64,usize) {
+      let mut min = self[0]; // initialise to the first value
+      let mut mini = 0;
+      let mut max = self[0]; // initialised as min, allowing 'else' below
+      let mut maxi = 0;
+      for i in 1..self.len() {
+         let x = self[i];
+         if x < min { min = x; mini = i }
+         else if x > max { max = x; maxi = i } 
+      }
+   (min,mini,max,maxi)
    }
 
    /// For each point, gives its sum of distances to all other points
@@ -228,13 +245,13 @@ impl Vectors for &[f64] {
    /// unless the dimensionality is somewhat large; and it saves memory.
    /// # Example
    /// ```
-   /// use rstats::{Vectors,genvec};
+   /// use rstats::{Vectors,vimpls::genvec};
    /// let pts = genvec(15,15,255,30);
    /// let (dm,_,_,_) = pts.medoid(15);
    /// assert_eq!(dm,4.812334638782327_f64);
    /// ```
    fn medoid(self, d:usize) -> (f64,usize,f64,usize) {
-      minmax(&self.distances(d).unwrap())
+      self.distances(d).unwrap().minmax()
    }
 
    /// The sum of distances of all points in &self to given point v.    
@@ -294,13 +311,7 @@ impl Vectors for &[f64] {
    /// We now define MOE (median of ecentricities), a new measure of spread of multidimensional points 
    /// (or multivariate sample)  
    fn moe(self, d:usize) -> Med {
-      let mut scalars = Vec::new();
-      let ev = self.eccentricities(d).unwrap();
-      let n = ev.len();
-      let nf = n as f64;
-      for i in 0..n { scalars.push(ev[i].vmag()/nf) }
-      // println!("All eccentricities:\n{:?}",scalars);
-      scalars.median().unwrap()
+      scalarecc(self.eccentricities(d).unwrap()).median().unwrap()
    }
 
    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
@@ -313,7 +324,7 @@ impl Vectors for &[f64] {
    /// There is eventually going to be a multithreaded version of `nmedian`.
    /// # Example
    /// ```
-   /// use rstats::{Vectors,genvec};
+   /// use rstats::{Vectors,vimpls::genvec};
    /// let pt = genvec(15,15,255,30);
    /// let gm = pt.nmedian(15, 1e-5).unwrap();
    /// let error = pt.ecc(15,&gm);
@@ -333,7 +344,7 @@ impl Vectors for &[f64] {
          oldpoint = newv                       
       }
       Ok(oldpoint)
-   }
+   }  
 }
 
 /// betterpoint is called by nmedian. 
@@ -354,3 +365,67 @@ fn betterpoint(set:&[f64], d:usize, v:&[f64]) -> Result<(f64,Vec<f64>)> {
    }
    Ok((rsum,vsum))    
 }
+
+/// Converts the set of vectors produced by `eccentricities`
+/// to their magnitudes normalised by n.
+/// the output can be typically passed to `median` 
+/// or `minmax` to find the Outlier and the Medoid
+pub fn scalarecc(ev:Vec<Vec<f64>>) -> Vec<f64> {
+   let mut scalars = Vec::new();
+   let n = ev.len();
+   let nf = n as f64;
+   for i in 0..n { scalars.push(ev[i].vmag()/nf) };
+   scalars
+}
+
+/// Sorts a mutable `Vec<f64>` in place.  
+/// It is the responsibility of the user to ensure that there are no NaNs etc.
+pub fn sortf(v: &mut [f64]) { 
+   v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
+}
+
+/// Generates a random f64 vector of size d x n suitable for testing. It needs two seeds.  
+/// Uses local closure `rand` to generate random numbers (avoids dependencies).  
+/// Random numbers are in the open interval 0..1 with uniform distribution.  
+pub fn genvec(d:usize, n:usize, s1:u32, s2:u32 ) -> Vec<f64> {
+   let size = d*n;
+   // change the seeds as desired
+   let mut m_z = s1 as u32;
+   let mut m_w = s2 as u32;
+   let mut rand = || {
+      m_z = 36969 * (m_z & 65535) + (m_z >> 16);
+      m_w = 18000 * (m_w & 65535) + (m_w >> 16);
+      (((m_z << 16) & m_w) as f64 + 1.0)*2.328306435454494e-10
+   };
+   let mut v = Vec::with_capacity(size); 
+   for _i in 0..size { v.push(rand()) }; // fills the lot with random numbers
+   return v
+}
+
+/// GreenIt struct facilitates printing (in green) any type
+/// that has Display implemented.
+pub struct GreenIt<T: fmt::Display>(pub T);
+impl<T: fmt::Display> fmt::Display for GreenIt<T> {
+   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      write!(f,"\x1B[01;92m{}\x1B[0m",self.0.to_string())  
+   }
+}
+
+/// GreenVec struct facilitates printing (in green) of vectors of any type
+/// that has Display implemented.
+pub struct GreenVec<T: fmt::Display>(pub Vec<T>);
+impl<T: fmt::Display> fmt::Display for GreenVec<T> {
+   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      let mut s = String::from("\x1B[01;92m[");
+      let n = self.0.len();
+      if n > 0 {
+         s.push_str(&self.0[0].to_string()); // first item
+         for i in 1..n {
+            s.push_str(", ");
+            s.push_str(&self.0[i].to_string());
+         }
+      }   
+      write!(f,"{}]\x1B[0m", s)
+   }
+}
+
