@@ -31,6 +31,8 @@ Some of the above basic Vector methods are for memory efficiency reasons reimple
 
 ## Releases
 
+* **Version 0.4.12** Some more utilities
+
 * **Version 0.4.10**  Moved unimportant helper functions out of the main module.
 
 * **Version 0.4.9** Streamlining, introduced `distances` and `eccentricities`, with speedups up to 50%.

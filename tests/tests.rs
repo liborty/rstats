@@ -54,8 +54,9 @@ fn multidimensional() -> Result<()> {
    let (mede,medei,oute,outei) = pt.emedoid(d);
    let centroid = pt.acentroid(d);
    let median = pt.nmedian(d, 1e-5).unwrap();
-   let outlier = pt.get(outi*d .. (outi+1)*d).unwrap(); 
-   let eoutlier = pt.get(outei*d .. (outei+1)*d).unwrap(); 
+   let sl = pt.as_slice();
+   let outlier = sl.point(d,outi); 
+   let eoutlier = sl.point(d,outei); 
  
    println!("\nSum of Outlier distances:\t{} Index: {}",GreenIt(outd),GreenIt(outi));
    println!("Outlier distance to Median:\t{}",GreenIt(outlier.vdist(&median)));
@@ -64,12 +65,12 @@ fn multidimensional() -> Result<()> {
    println!("Sum of Centroid distances:\t{}",GreenIt(pt.distsum(d,&centroid)));
    println!("Sum of Median distances:\t{}\n",GreenIt(pt.distsum(d,&median)));
 
-   println!("E-Outlier eccentricity:\t{} Index: {}",GreenIt(oute),GreenIt(outei));
+   println!("E-Outlier eccentricity:\t\t{} Index: {}",GreenIt(oute),GreenIt(outei));
    println!("E-Outlier distance to Median:\t{}",GreenIt(eoutlier.vdist(&median)));
-   println!("E-Outlier distances:\t{}",GreenIt(pt.distsuminset(d, outei)));   
-   println!("Medoid ecentricity:\t{} Index: {}",GreenIt(mede),GreenIt(medei));
-   println!("Centroid ecentricity:\t{}",GreenIt(pt.ecc(d,&centroid)));   
-   println!("Median eccentricity:\t{}\n",GreenIt(pt.ecc(d,&median)));
+   println!("E-Outlier distances:\t\t{}",GreenIt(pt.distsuminset(d, outei)));   
+   println!("Medoid ecentricity:\t\t{} Index: {}",GreenIt(mede),GreenIt(medei));
+   println!("Centroid ecentricity:\t\t{}",GreenIt(pt.ecc(d,&centroid)));   
+   println!("Median eccentricity:\t\t{}\n",GreenIt(pt.ecc(d,&median)));
    println!("Median of eccentricities (MOE)\n{}",pt.moe(d));  
    Ok(())
 }

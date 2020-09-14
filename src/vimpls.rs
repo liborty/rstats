@@ -25,6 +25,11 @@ impl MutVectors for &mut[f64] {
 }
 
 impl Vectors for &[f64] { 
+
+   /// Retrieves from flat slice 'self' the (address of) sub-slice at index i,
+   /// where the length of each sub-slice is d.
+   /// Utility method for multidimensional flat vectors
+   fn point(&self,d:usize,i:usize) -> &[f64] { self.get(i*d .. (i+1)*d).unwrap() }
    
    /// Scalar multiplication of a vector, creates new vec
    fn smult(self, s:f64) -> Vec<f64> {
@@ -269,8 +274,7 @@ impl Vectors for &[f64] {
          let thisp = self.get(i*d .. (i+1)*d).unwrap();
          for j in 0..i {
             let thatp = self.get(j*d .. (j+1)*d).unwrap();
-            //   let e = thatp.vsub(&thisp).vunit(); // calculate each vector just once
-            let e = thatp.vsub(&thisp).vunit();         
+            let e = thatp.vsub(&thisp).vunit(); // calculate each vector just once
             eccs[i].as_mut_slice().mutvadd(&e); 
             eccs[j].as_mut_slice().mutvsub(&e);  // mind the vector's orientation!   
          }

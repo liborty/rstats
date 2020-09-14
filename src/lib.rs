@@ -75,6 +75,10 @@ pub trait MutVectors {
 
 /// Implementing basic vector algebra and safe geometric median.
 pub trait Vectors {
+
+   /// Utility method to retrieve a sub-slice from multidimensional flat slice.
+   fn point(&self,d:usize,i:usize) -> &[f64];
+
    /// Scalar product of two vectors
    fn dotp(self, v:&[f64]) -> f64;
    /// Vector subtraction
