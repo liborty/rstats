@@ -27,7 +27,7 @@ Vector algebra implemented for `&[f64]` slices of any length (dimensions of spac
 
 ## Trait MutVectors
 
-Some of the above basic Vector methods are for memory efficiency reasons reimplemented so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that some of these methods do not return anything, so they can not be chained.
+Some of the above basic Vector methods are for memory efficiency reasons reimplemented so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that they do not return anything, so they can not be chained.
 
 ## Releases
 

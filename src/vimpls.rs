@@ -22,15 +22,13 @@ impl MutVectors for &mut[f64] {
    fn mutvunit(self) { 
       self.mutsmult(1_f64/self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt())
    }
-   /// Vector magnitude duplicated for mutable type 
-   fn mutvmag(self) -> f64 { self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt() }
 }
 
 impl Vectors for &[f64] { 
    
    /// Scalar multiplication of a vector, creates new vec
    fn smult(self, s:f64) -> Vec<f64> {
-      self.iter().map(|&x|s*x).collect()
+      self.iter().map(|&x|s * x).collect()
    }
   
    /// Scalar product of two f64 slices.   
@@ -61,6 +59,11 @@ impl Vectors for &[f64] {
    /// Unit vector - creates a new one
    fn vunit(self) ->Vec<f64> { 
       self.smult(1./self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt())
+   }
+
+   /// Specially normalised vector, so that its magnitude is sqrt of its former value
+   fn vnorm(self) ->Vec<f64> { 
+      self.smult(1./self.iter().map(|x|x.powi(2)).sum::<f64>().powf(0.25))
    }
     
    /// Correlation coefficient of a sample of two f64 variables.
@@ -271,7 +274,8 @@ impl Vectors for &[f64] {
          let thisp = self.get(i*d .. (i+1)*d).unwrap();
          for j in 0..i {
             let thatp = self.get(j*d .. (j+1)*d).unwrap();
-            let e = thatp.vsub(&thisp).vunit(); // calculate each vector just once
+            //   let e = thatp.vsub(&thisp).vunit(); // calculate each vector just once
+            let e = thatp.vsub(&thisp).vnorm();         
             eccs[i].as_mut_slice().mutvadd(&e); 
             eccs[j].as_mut_slice().mutvsub(&e);  // mind the vector's orientation!   
          }
@@ -279,26 +283,27 @@ impl Vectors for &[f64] {
    Ok(eccs)           
    }   
 
-   /// Eccentricity of a d-dimensional point belonging to the set self, specified by its indx.  
-   /// Eccentricity is a scalar measure between 0.0 and 1.0 of a point `not being a median` of the given set. 
-   /// It does not need the median. The perfect median has eccentricity zero.
+   /// Scalar positive measure of `not being a median` for a point belonging to the set.
+   /// The point is specified by its index indx.
+   /// The median is not needed for this, however the perfect median would return zero.
    fn eccentr(self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
       let thisp = self.get(indx*d .. (indx+1)*d).unwrap();
       for i in 0..n {
          if i == indx { continue }; // exclude this point  
-         let thatp = self.get(i*d .. (i+1)*d).unwrap();
-         let unitdv = thatp.vsub(thisp).vunit();
+         let thatp = self.get(i*d .. (i+1)*d).unwrap();       
+         let unitdv = thatp.vsub(thisp).vnorm();
          vsum.as_mut_slice().mutvadd(&unitdv);   // add it to their sum
       }
       vsum.vmag()/n as f64
    }
 
-   /// Eccentricity measure and the eccentricity vector of any point (typically one not belonging to the set).
-   /// It is a measure  between 0.0 and 1.0 of `not being a median` but it does not need the median.
-   /// The eccentricity vector points towards the median and has the maximum possible magnitude of n, by
-   /// which the scalar measure is normalised.
+   /// Measure and eccentricity vector of any point (typically one not belonging to the set).
+   /// The first (scalar) part of the result is a positive measure of `not being a median`.
+   /// The second part is the eccentricity vector, which points towards the median.
+   /// The vector is of particular value and interest.
+   /// This function has no prior knowledge of the actual median.
    fn veccentr(self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
@@ -308,8 +313,8 @@ impl Vectors for &[f64] {
          let mut vdif = thatp.vsub(thisp);
          let mag = vdif.vmag();
          if !mag.is_normal() { continue }; // thisp belongs to the set
-         // make vdif into a unit vector with its already known magnitude
-         vdif.as_mut_slice().mutsmult(1./mag); 
+         // use already known magnitude to compute vnorm
+         vdif.as_mut_slice().mutsmult(1./(mag).sqrt()); 
          vsum.as_mut_slice().mutvadd(&vdif);   // add it to their sum
       }
       Ok((vsum.vmag()/n as f64, vsum))
@@ -321,14 +326,16 @@ impl Vectors for &[f64] {
       eccentricity
    }
 
-   /// We now define MOE (median of ecentricities), a new measure of spread of multidimensional points 
+   /// Median of eccentricities measures.
+   /// This is a new robust measure of spread of multidimensional points 
    /// (or multivariate sample).  
    fn moe(self, d:usize) -> Med {
       scalarecc(self.eccentricities(d).unwrap()) .median().unwrap()
    }
 
+   /// Medoid and Outlier as defined by the eccentricities
    fn emedoid(self, d:usize) -> (f64,usize,f64,usize) {
-      scalarecc(self.eccentricities(d).unwrap()).minmax()
+      scalarecc(self.eccentricities(d).unwrap()) .minmax()
    }
 
    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
@@ -337,7 +344,7 @@ impl Vectors for &[f64] {
    /// Weiszfeld's fixed point iteration formula had known problems with sometimes failing to converge.
    /// Especially, when the points are dense in the close proximity of the gm, 
    /// or it coincides with one of them.  
-   /// However, these problems are fixed in my improved algorithm here.      
+   /// However, these problems are fixed in my new algorithm here.      
    /// There will eventually be a multithreaded version of `nmedian`.
    /// # Example
    /// ```
@@ -354,7 +361,7 @@ impl Vectors for &[f64] {
       loop {
         let (rsum,mut newv) = betterpoint(self,d,&oldpoint)
             .with_context(||emsg(file!(),line!(),"nmedian betterpoint call failed"))?; // find new point 
-         newv.as_mut_slice().mutsmult(1.0/rsum); // adding unit vectors
+         newv.as_mut_slice().mutsmult(1.0/rsum); // adding vectors
          if newv.vdist(&oldpoint) < eps { 
             oldpoint = newv; break // use the last iteration anyway
          };
@@ -376,7 +383,7 @@ fn betterpoint(set:&[f64], d:usize, v:&[f64]) -> Result<(f64,Vec<f64>)> {
          .with_context(||emsg(file!(),line!(),"betterpoint failed to extract that point"))?; 
       let dist = v.vdist(&thatp);
       if !dist.is_normal() { continue };  
-      let recip = 1.0/dist;
+      let recip = 1.0/(dist.sqrt());
       rsum += recip;
       vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
    }

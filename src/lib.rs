@@ -70,10 +70,7 @@ pub trait MutVectors {
    /// mutable vector addition
    fn mutvadd(self, v:&[f64]);
    /// mutably makes into a unit vector
-   fn mutvunit(self);
-   /// magnitude of a mutable vector (vector unchanged)
-   fn mutvmag(self) -> f64;
-
+   fn mutvunit(self);  
 }
 
 /// Implementing basic vector algebra and safe geometric median.
@@ -92,6 +89,9 @@ pub trait Vectors {
    fn smult(self, s:f64) -> Vec<f64>;
    /// Unit vector
    fn vunit(self) -> Vec<f64>;
+   // Special norm
+   fn vnorm(self) -> Vec<f64>;
+
    /// Correlation
    fn correlation(self, v:&[f64]) -> Result<f64>;
    /// Kendall's tau-b (rank order) correlation
@@ -117,15 +117,15 @@ pub trait Vectors {
 
    /// Eccentricity vectors from each point
    fn eccentricities(self, d:usize) -> Result<Vec<Vec<f64>>>;
-   /// Ecentricity measure (0,1) of an internal point given by indx
+   /// Ecentricity scalar measure of an internal point given by indx
    fn eccentr(self, d:usize, indx:usize) -> f64;
-   /// Eccentricity measure and vector of any point     
+   /// Eccentricity scalar measure and vector of any point     
    fn veccentr(self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)>;
-   /// Eccentricity measure only, of any point 
+   /// Eccentricity scalar measure only, of any point 
    fn ecc(self, d:usize, v:&[f64]) -> f64;
-   /// Median of eccentricities (measure of spread of multivariate sample)
+   /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
    fn moe(self, d:usize) -> Med;
-   /// Medoid and Outlier defined by eccentricities
+   /// Medoid and Outlier as defined by eccentricities.
    fn emedoid(self, d:usize) -> (f64,usize,f64,usize);
      
    /// Geometric median of the set
