@@ -89,9 +89,7 @@ pub trait Vectors {
    fn smult(self, s:f64) -> Vec<f64>;
    /// Unit vector
    fn vunit(self) -> Vec<f64>;
-   // Special norm
-   fn vnorm(self) -> Vec<f64>;
-
+  
    /// Correlation
    fn correlation(self, v:&[f64]) -> Result<f64>;
    /// Kendall's tau-b (rank order) correlation

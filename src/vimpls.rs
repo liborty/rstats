@@ -60,11 +60,6 @@ impl Vectors for &[f64] {
    fn vunit(self) ->Vec<f64> { 
       self.smult(1./self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt())
    }
-
-   /// Specially normalised vector, so that its magnitude is sqrt of its former value
-   fn vnorm(self) ->Vec<f64> { 
-      self.smult(1./self.iter().map(|x|x.powi(2)).sum::<f64>().powf(0.25))
-   }
     
    /// Correlation coefficient of a sample of two f64 variables.
    /// # Example
@@ -275,7 +270,7 @@ impl Vectors for &[f64] {
          for j in 0..i {
             let thatp = self.get(j*d .. (j+1)*d).unwrap();
             //   let e = thatp.vsub(&thisp).vunit(); // calculate each vector just once
-            let e = thatp.vsub(&thisp).vnorm();         
+            let e = thatp.vsub(&thisp).vunit();         
             eccs[i].as_mut_slice().mutvadd(&e); 
             eccs[j].as_mut_slice().mutvsub(&e);  // mind the vector's orientation!   
          }
@@ -293,13 +288,13 @@ impl Vectors for &[f64] {
       for i in 0..n {
          if i == indx { continue }; // exclude this point  
          let thatp = self.get(i*d .. (i+1)*d).unwrap();       
-         let unitdv = thatp.vsub(thisp).vnorm();
+         let unitdv = thatp.vsub(thisp).vunit();
          vsum.as_mut_slice().mutvadd(&unitdv);   // add it to their sum
       }
       vsum.vmag()/n as f64
    }
 
-   /// Measure and eccentricity vector of any point (typically one not belonging to the set).
+   /// Returns (Measure, Eccentricity-Vector) of any point (typically one not belonging to the set).
    /// The first (scalar) part of the result is a positive measure of `not being a median`.
    /// The second part is the eccentricity vector, which points towards the median.
    /// The vector is of particular value and interest.
@@ -313,8 +308,8 @@ impl Vectors for &[f64] {
          let mut vdif = thatp.vsub(thisp);
          let mag = vdif.vmag();
          if !mag.is_normal() { continue }; // thisp belongs to the set
-         // use already known magnitude to compute vnorm
-         vdif.as_mut_slice().mutsmult(1./(mag).sqrt()); 
+         // use already known magnitude to compute vmag
+         vdif.as_mut_slice().mutsmult(1./mag); 
          vsum.as_mut_slice().mutvadd(&vdif);   // add it to their sum
       }
       Ok((vsum.vmag()/n as f64, vsum))
@@ -383,7 +378,7 @@ fn betterpoint(set:&[f64], d:usize, v:&[f64]) -> Result<(f64,Vec<f64>)> {
          .with_context(||emsg(file!(),line!(),"betterpoint failed to extract that point"))?; 
       let dist = v.vdist(&thatp);
       if !dist.is_normal() { continue };  
-      let recip = 1.0/(dist.sqrt());
+      let recip = 1.0/dist;
       rsum += recip;
       vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
    }
