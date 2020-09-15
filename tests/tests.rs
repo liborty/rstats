@@ -49,7 +49,7 @@ fn intstats() -> Result<()> {
 #[test]
 fn multidimensional() -> Result<()> { 
    let d = 6_usize;
-   let pt = genvec(d,24,7,13); // random test data 5x20
+   let pt = genvec(d,24,7,13); // random test data 
    let (med,medi,outd,outi) = pt.medoid(d);
    let (mede,medei,oute,outei) = pt.emedoid(d);
    let centroid = pt.acentroid(d);
@@ -60,7 +60,7 @@ fn multidimensional() -> Result<()> {
  
    println!("\nSum of Outlier distances:\t{} Index: {}",GreenIt(outd),GreenIt(outi));
    println!("Outlier distance to Median:\t{}",GreenIt(outlier.vdist(&median)));
-   println!("Outlier eccentricity:\t\t{}",GreenIt(pt.eccentr(d, outi)));
+   println!("Outlier eccentricity:\t\t{}",GreenIt(pt.eccentrinset(d, outi)));
    println!("Sum of Medoid distances:\t{} Index: {}",GreenIt(med),GreenIt(medi));
    println!("Sum of Centroid distances:\t{}",GreenIt(pt.distsum(d,&centroid)));
    println!("Sum of Median distances:\t{}\n",GreenIt(pt.distsum(d,&median)));
@@ -80,6 +80,14 @@ fn difficult_data() -> Result<()> {
       -1.,0.,0.,0., 0.,-1.,0.,0., 0.,0.,-1.,0., 0.,0.,0.,-1.];
    let gm = pts.nmedian(4, 1e-5).unwrap();
    println!("\nMedian residual error: {}",GreenIt(pts.ecc(4,&gm)));
+   Ok(())
+}
+#[test]
+fn trend() -> Result<()> {
+   let d = 7_usize;
+   let pt1 = genvec(d,28,13,19); // random test data 
+   let pt2 = genvec(d,38,23,31);
+   println!("\nTrend vector:\n{}",GreenVec(pt1.trend(d,1_e-5,&pt2)));
    Ok(())
 }
 

@@ -1,12 +1,12 @@
 # Rstats - Rust Stats
 
-Rstats is particularly useful for analysis of multidimensional sets of points, with applications to Machine Learning.
+Rstats is particularly useful for analysis of multidimensional sets of points, with applications to Machine Learning and Data Analysis. Some original concepts are introduced and implemented. They are not likely to be found anywhere else.
 
 This is a lean minimalistic library that only depends on `anyhow` (for its error handling).
 Trait RStats is carefully checked and will report all kinds of errors, such as empty input.
 Trait Vectors is sometimes unchecked for speed, so some caution is advisable.
 
-Basic statistical measures and vector algebra are implemented here for self-containment of more sophisticated algorithms.
+Basic statistical measures and vector algebra are implemented first. They provide self-contained tools for the more interesting algorithms but can also be used in their own right.
 
 ## Trait RStats
 
@@ -23,15 +23,20 @@ Included are:
 
 ## Trait Vectors
 
-Vector algebra implemented for `&[f64]` slices of any length (dimensions of space). First there are functions applying to just one and two vectors. Then there are functions expressing  the relationships of one vector to a whole set of vectors. See doc examples.
+* Vector algebra implemented for one or two `&[f64]` slices of any length (or space dimensionality).
+* Pearson's, Spearman's and Kendall's correlations.
+* Relationships of one vector to a set of vectors (geometric median, eccentricity).
+* Relationships between sets of multidimensional vectors.
 
 ## Trait MutVectors
 
-Some of the above basic Vector methods are for memory efficiency reasons reimplemented so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that they do not return anything, so they can not be chained.
+Some of the above more basic Vector methods are for memory efficiency reasons reimplemented so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that they do not return anything, so they can not be chained.
 
 ## Releases
 
-* **Version 0.4.12** Some more utilities
+* **Version 0.4.13** Added `trend` between two sets of points. More comments, tests and examples.
+
+* **Version 0.4.12** Some more utilities.
 
 * **Version 0.4.10**  Moved unimportant helper functions out of the main module.
 

@@ -289,7 +289,7 @@ impl Vectors for &[f64] {
    /// The median does not have to be known. The perfect median would return zero.
    /// This is suitable for a single point. When eccentricities of all the points 
    /// are needed, use more efficient `eccentricities`. 
-   fn eccentr(self, d:usize, indx:usize) -> f64 {
+   fn eccentrinset(self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
       let thisp = self.get(indx*d .. (indx+1)*d).unwrap();
@@ -326,12 +326,15 @@ impl Vectors for &[f64] {
    }
 
    /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual error for median).
+   /// Thus this method is the equivalent of `eccentr` 
+   /// but suited for any explicitly given point, typically not belonging to the set.  
+   /// When the eccentricity vector is needed, use `veccentr`
   fn ecc(self, d:usize, v:&[f64]) -> f64 {
       let (eccentricity,_) = self.veccentr(d,v).unwrap();
       eccentricity
    }
 
-   /// Median of eccentricities measures.
+   /// Median of eccentricities measures (MOE).
    /// This is a new robust measure of spread of multidimensional points 
    /// (or multivariate sample).  
    fn moe(self, d:usize) -> Med {
@@ -388,6 +391,15 @@ impl Vectors for &[f64] {
       }
       Ok(oldpoint)
    }  
+
+   /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.
+   /// This is a robust relationship between two unordered multidimensional sets.
+   /// The two sets have to be in the same space but can have different numbers of points.
+   fn trend(self, d:usize, eps:f64, v:&[f64]) -> Vec<f64> {
+      let m1 = self.nmedian(d,eps).unwrap();
+      let m2 = v.nmedian(d,eps).unwrap();
+      m2.vsub(&m1)
+   }
 }
 
 /// betterpoint is called by nmedian. 

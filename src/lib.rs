@@ -120,7 +120,7 @@ pub trait Vectors {
    /// Eccentricity vectors from each point
    fn eccentricities(self, d:usize) -> Result<Vec<Vec<f64>>>;
    /// Ecentricity scalar measure of an internal point given by indx
-   fn eccentr(self, d:usize, indx:usize) -> f64;
+   fn eccentrinset(self, d:usize, indx:usize) -> f64;
    /// Eccentricity scalar measure and vector of any point     
    fn veccentr(self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)>;
    /// Eccentricity scalar measure only, of any point 
@@ -132,4 +132,7 @@ pub trait Vectors {
      
    /// Geometric median of the set
    fn nmedian(self, d:usize, eps:f64) -> Result<Vec<f64>>; 
+   /// Trend between two sets
+   fn trend(self, d:usize, eps:f64, v:&[f64]) -> Vec<f64>;
+   
 }
