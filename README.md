@@ -1,5 +1,7 @@
 # Rstats - Rust Stats
 
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/liborty/rstats?logo=github) ![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust)
+
 Rstats is particularly useful for analysis of multidimensional sets of points, with applications to Machine Learning and Data Analysis. Some original concepts are introduced and implemented. They are not likely to be found anywhere else.
 
 This is a lean minimalistic library that only depends on `anyhow` (for its error handling).

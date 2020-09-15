@@ -176,9 +176,9 @@ impl Vectors for &[f64] {
       let n = self.len()/d;
       let mut centre = vec![0_f64;d];
       for i in 0..n {
-         centre.as_mut_slice().mutvadd(self.get(i*d .. (i+1)*d).unwrap())
+         centre.mutvadd(self.get(i*d .. (i+1)*d).unwrap())
       }
-      centre.as_mut_slice().mutsmult(1.0/n as f64);
+      centre.mutsmult(1.0/n as f64);
       centre
    }
 
@@ -277,8 +277,8 @@ impl Vectors for &[f64] {
          for j in 0..i {
             let thatp = self.get(j*d .. (j+1)*d).unwrap();
             let e = thatp.vsub(&thisp).vunit(); // calculate each vector just once
-            eccs[i].as_mut_slice().mutvadd(&e); 
-            eccs[j].as_mut_slice().mutvsub(&e);  // mind the vector's orientation!   
+            eccs[i].mutvadd(&e); 
+            eccs[j].mutvsub(&e);  // mind the vector's orientation!   
          }
       }
    Ok(eccs)           
@@ -297,7 +297,7 @@ impl Vectors for &[f64] {
          if i == indx { continue }; // exclude this point  
          let thatp = self.get(i*d .. (i+1)*d).unwrap();       
          let unitdv = thatp.vsub(thisp).vunit();
-         vsum.as_mut_slice().mutvadd(&unitdv);   // add it to their sum
+         vsum.mutvadd(&unitdv);   // add it to their sum
       }
       vsum.vmag()/n as f64
    }
@@ -319,8 +319,8 @@ impl Vectors for &[f64] {
          let mag = vdif.vmag();
          if !mag.is_normal() { continue }; // thisp belongs to the set
          // use already known magnitude to compute vmag
-         vdif.as_mut_slice().mutsmult(1./mag); 
-         vsum.as_mut_slice().mutvadd(&vdif);   // add it to their sum
+         vdif.mutsmult(1./mag); 
+         vsum.mutvadd(&vdif);   // add it to their sum
       }
       Ok((vsum.vmag()/n as f64, vsum))
    }
@@ -383,7 +383,7 @@ impl Vectors for &[f64] {
       loop {
         let (rsum,mut newv) = betterpoint(self,d,&oldpoint)
             .with_context(||emsg(file!(),line!(),"nmedian betterpoint call failed"))?; // find new point 
-         newv.as_mut_slice().mutsmult(1.0/rsum); // scaling the returned sum of unit vectors 
+         newv.mutsmult(1.0/rsum); // scaling the returned sum of unit vectors 
          if newv.vdist(&oldpoint) < eps { // test the magnitude of this move for termination
             oldpoint = newv; break // use the last small iteration anyway, as it is already computed
          };
@@ -416,7 +416,7 @@ fn betterpoint(set:&[f64], d:usize, v:&[f64]) -> Result<(f64,Vec<f64>)> {
       if !dist.is_normal() { continue };  
       let recip = 1.0/dist;
       rsum += recip;
-      vsum.as_mut_slice().mutvadd(&thatp.smult(recip));
+      vsum.mutvadd(&thatp.smult(recip));
    }
    Ok((rsum,vsum))    
 }
