@@ -217,7 +217,9 @@ impl Vectors for &[f64] {
       Ok(dists)           
    }  
    
-   /// The sum of distances from within-set point given by indx to all points in self.    
+   /// The sum of distances from a set point given by its `indx` to all the other points in self.
+   /// This method is suitable for a single point. For all the points, use more
+   /// efficient `distances`.    
    fn distsuminset(self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut sum = 0_f64;
@@ -230,8 +232,8 @@ impl Vectors for &[f64] {
       sum
    }
 
-   /// The sum of distances from any point v to all points in self.    
-   /// Geometric Median is defined as v which minimises this function. 
+   /// The sum of distances from any point v (typically not in self) to all the points in self.    
+   /// Geometric Median is defined as the point v which minimises this function. 
    fn distsum(self, d:usize, v:&[f64]) -> f64 {
       let n = self.len()/v.len();
       let mut sum = 0_f64;
@@ -283,8 +285,10 @@ impl Vectors for &[f64] {
    }   
 
    /// Scalar positive measure of `not being a median` for a point belonging to the set.
-   /// The point is specified by its index indx.
-   /// The median is not needed for this, however the perfect median would return zero.
+   /// The point is specified by its index `indx`.
+   /// The median does not have to be known. The perfect median would return zero.
+   /// This is suitable for a single point. When eccentricities of all the points 
+   /// are needed, use more efficient `eccentricities`. 
    fn eccentr(self, d:usize, indx:usize) -> f64 {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
@@ -300,9 +304,11 @@ impl Vectors for &[f64] {
 
    /// Returns (Measure, Eccentricity-Vector) of any point (typically one not belonging to the set).
    /// The first (scalar) part of the result is a positive measure of `not being a median`.
-   /// The second part is the eccentricity vector, which points towards the median.
+   /// The second part is the eccentricity vector, which always points towards the median.
    /// The vector is of particular value and interest.
-   /// This function has no prior knowledge of the actual median.
+   /// This function has no prior knowledge of the actual median.  
+   /// This is suitable for a single point. When eccentricities of all the points 
+   /// are needed, use more efficient `eccentricities`. 
    fn veccentr(self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)> {
       let n = self.len()/d;
       let mut vsum = vec![0_f64;d];
@@ -320,7 +326,7 @@ impl Vectors for &[f64] {
    }
 
    /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual error for median).
-   fn ecc(self, d:usize, v:&[f64]) -> f64 {
+  fn ecc(self, d:usize, v:&[f64]) -> f64 {
       let (eccentricity,_) = self.veccentr(d,v).unwrap();
       eccentricity
    }
@@ -332,7 +338,21 @@ impl Vectors for &[f64] {
       scalarecc(self.eccentricities(d).unwrap()) .median().unwrap()
    }
 
-   /// Medoid and Outlier as defined by the eccentricities
+   /// Eccentricity defined Medoid and Outlier.
+   /// This can give different results to `medoid` above, defined by sums of distances,
+   /// especially for the outliers. See tests.rs.  
+   /// Consider some point c and some other points, bunched up at a distance r from c.
+   /// The sum of their distances will be n*r. Now, spread those points around a circle of radius r from c.
+   /// The sum of their distances from c will remain the same but the eccentricity of c will be much reduced. 
+   /// # Example
+   /// ```
+   /// use rstats::{Vectors,vimpls::genvec};
+   /// let d = 6_usize;
+   /// let pt = genvec(d,24,7,13); // random test data 5x20
+   /// let (_medoideccentricity,medei,_outlierecccentricity,outei) = pt.emedoid(d);
+   /// assert_eq!(medei,10); // index of e-medoid
+   /// assert_eq!(outei,9);  // index of e-outlier
+   /// ```
    fn emedoid(self, d:usize) -> (f64,usize,f64,usize) {
       scalarecc(self.eccentricities(d).unwrap()) .minmax()
    }
@@ -356,15 +376,15 @@ impl Vectors for &[f64] {
    fn nmedian(self, d:usize, eps:f64) -> Result<Vec<f64>> {
       let n = self.len()/d;
       ensure!(n*d == self.len(),emsg(file!(),line!(),"gmedian d must divide vector length"));
-      let mut oldpoint = self.acentroid(d); // start with the centroid
+      let mut oldpoint = self.acentroid(d); // start iterating from the centroid
       loop {
         let (rsum,mut newv) = betterpoint(self,d,&oldpoint)
             .with_context(||emsg(file!(),line!(),"nmedian betterpoint call failed"))?; // find new point 
-         newv.as_mut_slice().mutsmult(1.0/rsum); // adding vectors
-         if newv.vdist(&oldpoint) < eps { 
-            oldpoint = newv; break // use the last iteration anyway
+         newv.as_mut_slice().mutsmult(1.0/rsum); // scaling the returned sum of unit vectors 
+         if newv.vdist(&oldpoint) < eps { // test the magnitude of this move for termination
+            oldpoint = newv; break // use the last small iteration anyway, as it is already computed
          };
-         oldpoint = newv                       
+         oldpoint = newv  // set up next iteration                     
       }
       Ok(oldpoint)
    }  
