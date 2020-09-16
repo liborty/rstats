@@ -76,7 +76,7 @@ impl<T: fmt::Display> fmt::Display for GreenIt<T> {
    }
 }
 
-/// GreenVec struct facilitates printing (in green) of vectors of any type
+/// GreenVec struct facilitates printing (in green) vectors of any type
 /// that has Display implemented.
 pub struct GreenVec<T: fmt::Display>(pub Vec<T>);
 impl<T: fmt::Display> fmt::Display for GreenVec<T> {

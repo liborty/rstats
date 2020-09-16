@@ -177,8 +177,8 @@ impl RStats for &[i64] {
       let mut sum = 0_f64; let mut sx2 = 0_f64;
       for &x in self { 
          ensure!(x!=0_i64,emsg(file!(),line!(),"gmeanstd does not accept zero valued data!"));
-      let lx = (x as f64).ln();
-      sum += lx; sx2 += lx*lx    
+         let lx = (x as f64).ln();
+         sum += lx; sx2 += lx*lx    
       }
       sum /= n as f64;
       Ok( MStats { mean: sum.exp(), std: (sx2/(n as f64) - sum.powi(2)).sqrt().exp() } )

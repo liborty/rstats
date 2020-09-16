@@ -45,29 +45,29 @@ impl Vectors for &[f64] {
    
    /// Scalar multiplication of a vector, creates new vec
    fn smult(self, s:f64) -> Vec<f64> {
-      self.iter().map(|&x|s * x).collect()
+      self.iter().map(|&x|s*x).collect()
    }
   
    /// Scalar product of two f64 slices.   
    /// Must be of the same length - no error checking for speed
    fn dotp(self, v: &[f64]) -> f64 {
-      self.iter().enumerate().map(|(i,&x)| x*v[i]).sum::<f64>()    
+      self.iter().zip(v).map(|(&xi,&vi)|xi*vi).sum::<f64>()    
    }
 
    /// Vector subtraction, creates a new Vec result
    fn vsub(self, v: &[f64]) -> Vec<f64> {
-      self.iter().enumerate().map(|(i,&x)|x-v[i]).collect()
+      self.iter().zip(v).map(|(&xi,&vi)|xi-vi).collect()
    }
    
    /// Vector addition, creates a new Vec result
    fn vadd(self, v: &[f64]) -> Vec<f64> {
-      self.iter().enumerate().map(|(i,&x)|x+v[i]).collect()
+      self.iter().zip(v).map(|(&xi,&vi)|xi+vi).collect()
    }
  
    /// Euclidian distance between two n dimensional points (vectors).  
    /// Slightly faster than vsub followed by vmag, as both are done in one loop
    fn vdist(self, v: &[f64]) -> f64 {
-      self.iter().enumerate().map(|(i,&x)|(x-v[i]).powi(2)).sum::<f64>().sqrt()
+      self.iter().zip(v).map(|(&xi,&vi)|(xi-vi).powi(2)).sum::<f64>().sqrt()
    }
 
    /// Vector magnitude 
@@ -91,8 +91,7 @@ impl Vectors for &[f64] {
       ensure!(n>0,emsg(file!(),line!(),"correlation - first sample is empty"));
       ensure!(n==v.len(),emsg(file!(),line!(),"correlation - samples are not of the same size"));
       let (mut sy,mut sxy,mut sx2,mut sy2) = (0_f64,0_f64,0_f64,0_f64);
-      let sx:f64 = self.iter().enumerate().map(|(i,&x)| {
-         let y = v[i]; 
+      let sx:f64 = self.iter().zip(v).map(|(&x,&y)| {
          sy += y; sxy += x*y; sx2 += x*x; sy2 += y*y; x    
       }).sum();
    let nf = n as f64;
