@@ -1,14 +1,14 @@
 # Rstats - Rust Stats
 
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/liborty/rstats?logo=github) ![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust)
+![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust) ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/liborty/rstats?logo=github) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github)
 
-Rstats is particularly useful for analysis of multidimensional sets of points, with applications to Machine Learning and Data Analysis. Some original concepts are introduced and implemented. They are not likely to be found anywhere else.
+Rstats is particularly useful for analysis of multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with basic statistical measures and vector algebra, which provide self-contained tools for the more interesting algorithms but can also be used in their own right.
+
+Our treatment of multidimensional sets of points is constructed from the first principles. Thus some original concepts, unlikely to be found anywhere else, are introduced and implemented here. Going beyond one dimension, other people mostly cheat by using centroids or 'quasi medians' (1-d medians along each axis). They may be quicker to compute but they are a bad start to characterising multidimensional clouds of points. Specifically, all such 1-d measures depend on the choice of axis. Typically, such dependence has to be later removed by Principle Components Analysis or similarly laborious methods.
 
 This is a lean minimalistic library that only depends on `anyhow` (for its error handling).
 Trait RStats is carefully checked and will report all kinds of errors, such as empty input.
 Trait Vectors is sometimes unchecked for speed, so some caution is advisable.
-
-Basic statistical measures and vector algebra are implemented first. They provide self-contained tools for the more interesting algorithms but can also be used in their own right.
 
 ## Trait RStats
 
@@ -32,9 +32,11 @@ Included are:
 
 ## Trait MutVectors
 
-Some of the above more basic Vector methods are for memory efficiency reasons reimplemented so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that they do not return anything, so they can not be chained.
+Some of the methods are for memory efficiency reasons reimplemented in this trait so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that they do not return anything, so they can not be chained.
 
 ## Releases
+
+* **Version 0.4.14** Added `mutzeromd`: transforms mutable self to zero-median form.
 
 * **Version 0.4.13** Added `trend` between two sets of points. More comments, tests and examples.
 

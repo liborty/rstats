@@ -14,13 +14,27 @@ impl MutVectors for &mut[f64] {
    fn mutvsub(self, v: &[f64]) {
      self.iter_mut().enumerate().for_each(|(i,x)|*x-=v[i])
    }
-  /// Vector addition, mutates self
+   /// Vector addition, mutates self
    fn mutvadd(self, v: &[f64]) {
      self.iter_mut().enumerate().for_each(|(i,x)|*x+=v[i])
    }
-  /// Mutate to unit vector
+   /// Mutate to unit vector
    fn mutvunit(self) { 
       self.mutsmult(1_f64/self.iter().map(|x|x.powi(2)).sum::<f64>().sqrt())
+   }
+   /// Mutate a set of vetors of dimensions d to zero geometric median form.
+   /// In more than one dimensions, this result is invariant with respect to rotation,
+   /// unlike the often misguidedly used mean (`acentroid` here), which depends
+   /// on the choice of axis. 
+   /// To use separate 1-d medians for each axis is not right either.  
+   /// For safety, such quasi-median is not even implemented by rstats.
+   fn mutzeromd(self, d:usize, eps:f64) {
+      let n = self.len()/d;
+      let median = self.nmedian(d,eps,).unwrap();
+      for i in 0..n {
+         let point = self.get_mut(i*d .. (i+1)*d).unwrap();
+         point.mutvsub(&median);
+      }
    }
 }
 

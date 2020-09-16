@@ -70,7 +70,9 @@ pub trait MutVectors {
    /// mutable vector addition
    fn mutvadd(self, v:&[f64]);
    /// mutably makes into a unit vector
-   fn mutvunit(self);  
+   fn mutvunit(self);
+   /// transforms into zero median form  
+   fn mutzeromd(self, d:usize, eps:f64);
 }
 
 /// Implementing basic vector algebra and safe geometric median.

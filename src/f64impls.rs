@@ -254,4 +254,3 @@ pub fn wsum(n: usize) -> f64 { (n*(n+1)) as f64/2. }
 pub fn emsg(file:&'static str, line:u32, msg:&'static str)-> String {
    format!("{}:{} rstats {}",file,line,msg)
 }
-
