@@ -4,7 +4,7 @@
 
 use anyhow::{Result};
 use rstats::{RStats,MutVectors,Vectors};
-use rstats::vimpls::{GreenIt,GreenVec,genvec,scalarecc,sortf};
+use rstats::functions::{GreenIt,GreenVec,genvec,scalarecc,sortf};
 use devtimer::DevTime;
 
 #[test]
@@ -57,8 +57,7 @@ fn multidimensional() -> Result<()> {
    let sl = pt.as_slice();
    let outlier = sl.point(d,outi); 
    let eoutlier = sl.point(d,outei);
-   let mut zp = pt.clone();
-   zp.mutzeromd(d,1e-5); // zero median transformed data
+   let zmed = pt.setsub(d,&median); // zero median transformed data
   
    println!("\nSum of Outlier distances:\t{} Index: {}",GreenIt(outd),GreenIt(outi));
    println!("Outlier distance to Median:\t{}",GreenIt(outlier.vdist(&median)));
@@ -73,7 +72,7 @@ fn multidimensional() -> Result<()> {
    println!("Medoid ecentricity:\t\t{} Index: {}",GreenIt(mede),GreenIt(medei));
    println!("Centroid ecentricity:\t\t{}",GreenIt(pt.ecc(d,&centroid)));   
    println!("Median eccentricity:\t\t{}",GreenIt(pt.ecc(d,&median)));
-   println!("Zero med's median magnitude:\t{}\n",GreenIt(zp.nmedian(d,1e-5).unwrap().vmag()));
+   println!("Zero med's median magnitude:\t{}\n",GreenIt(zmed.nmedian(d,1e-5).unwrap().vmag()));
    println!("Median of eccentricities (MOE)\n{}",pt.moe(d));  
    Ok(())
 }

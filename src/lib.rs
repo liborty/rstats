@@ -1,9 +1,11 @@
 pub mod i64impls;
 pub mod f64impls;
 pub mod vimpls;
+pub mod functions;
 
 use anyhow::Result;
-use crate::vimpls::GreenIt;
+use crate::functions::GreenIt;
+
 
 /// Median and quartiles
 #[derive(Default)]
@@ -136,5 +138,6 @@ pub trait Vectors {
    fn nmedian(self, d:usize, eps:f64) -> Result<Vec<f64>>; 
    /// Trend between two sets
    fn trend(self, d:usize, eps:f64, v:&[f64]) -> Vec<f64>;
-   
+   /// Transform to zero median form. or subtract any other vector `m`
+   fn setsub(self, d:usize, m:&[f64]) -> Vec<f64>;
 }

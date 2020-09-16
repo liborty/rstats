@@ -1,8 +1,6 @@
 use anyhow::{Result,Context,ensure};
 use crate::{RStats,MutVectors,Vectors,Med};
-use crate::f64impls::{emsg};
-use std::cmp::Ordering::Equal;
-use std::fmt;
+use crate::functions::{scalarecc,betterpoint,emsg};
 
 impl MutVectors for &mut[f64] {
 
@@ -180,7 +178,7 @@ impl Vectors for &[f64] {
    /// Centroid = simple multidimensional arithmetic mean
    /// # Example
    /// ```
-   /// use rstats::{Vectors,vimpls::genvec};
+   /// use rstats::{Vectors,functions::genvec};
    /// let pts = genvec(15,15,255,30);
    /// let centre = pts.acentroid(15);
    /// let dist = pts.distsum(15,&centre);
@@ -268,7 +266,7 @@ impl Vectors for &[f64] {
    /// This is faster than vec of vecs but we have to handle the indices.  
    /// # Example
    /// ```
-   /// use rstats::{Vectors,vimpls::genvec};
+   /// use rstats::{Vectors,functions::genvec};
    /// let pts = genvec(15,15,255,30);
    /// let (dm,_,_,_) = pts.medoid(15);
    /// assert_eq!(dm,4.812334638782327_f64);
@@ -363,7 +361,7 @@ impl Vectors for &[f64] {
    /// The sum of their distances from c will remain the same but the eccentricity of c will be much reduced. 
    /// # Example
    /// ```
-   /// use rstats::{Vectors,vimpls::genvec};
+   /// use rstats::{Vectors,functions::genvec};
    /// let d = 6_usize;
    /// let pt = genvec(d,24,7,13); // random test data 5x20
    /// let (_medoideccentricity,medei,_outlierecccentricity,outei) = pt.emedoid(d);
@@ -384,7 +382,7 @@ impl Vectors for &[f64] {
    /// There will eventually be a multithreaded version of `nmedian`.
    /// # Example
    /// ```
-   /// use rstats::{Vectors,vimpls::genvec};
+   /// use rstats::{Vectors,functions::genvec};
    /// let pt = genvec(15,15,255,30);
    /// let gm = pt.nmedian(15, 1e-5).unwrap();
    /// let error = pt.ecc(15,&gm);
@@ -414,87 +412,22 @@ impl Vectors for &[f64] {
       let m2 = v.nmedian(d,eps).unwrap();
       m2.vsub(&m1)
    }
-}
 
-/// betterpoint is called by nmedian. 
-/// Scaling by rsum is left as the final step at calling level, 
-/// in order to facilitate data parallelism. 
-fn betterpoint(set:&[f64], d:usize, v:&[f64]) -> Result<(f64,Vec<f64>)> {
-   let n = set.len()/d;
-   let mut rsum = 0_f64;
-   let mut vsum = vec![0_f64;d];
-   for i in 0..n {
-      let thatp = set.get(i*d .. (i+1)*d)
-         .with_context(||emsg(file!(),line!(),"betterpoint failed to extract that point"))?; 
-      let dist = v.vdist(&thatp);
-      if !dist.is_normal() { continue };  
-      let recip = 1.0/dist;
-      rsum += recip;
-      vsum.mutvadd(&thatp.smult(recip));
-   }
-   Ok((rsum,vsum))    
-}
-
-/// Converts the set of vectors produced by `eccentricities`
-/// to their magnitudes normalised by n.
-/// the output can be typically passed to `median` 
-/// or `minmax` to find the Outlier and the Medoid
-pub fn scalarecc(ev:Vec<Vec<f64>>) -> Vec<f64> {
-   let mut scalars = Vec::new();
-   let n = ev.len();
-   let nf = n as f64;
-   for i in 0..n { scalars.push(ev[i].vmag()/nf) };
-   scalars
-}
-
-/// Sorts a mutable `Vec<f64>` in place.  
-/// It is the responsibility of the user to ensure that there are no NaNs etc.
-pub fn sortf(v: &mut [f64]) { 
-   v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
-}
-
-/// Generates a random f64 vector of size d x n suitable for testing. It needs two seeds.  
-/// Uses local closure `rand` to generate random numbers (avoids dependencies).  
-/// Random numbers are in the open interval 0..1 with uniform distribution.  
-pub fn genvec(d:usize, n:usize, s1:u32, s2:u32 ) -> Vec<f64> {
-   let size = d*n;
-   // change the seeds as desired
-   let mut m_z = s1 as u32;
-   let mut m_w = s2 as u32;
-   let mut rand = || {
-      m_z = 36969 * (m_z & 65535) + (m_z >> 16);
-      m_w = 18000 * (m_w & 65535) + (m_w >> 16);
-      (((m_z << 16) & m_w) as f64 + 1.0)*2.328306435454494e-10
-   };
-   let mut v = Vec::with_capacity(size); 
-   for _i in 0..size { v.push(rand()) }; // fills the lot with random numbers
-   return v
-}
-
-/// GreenIt struct facilitates printing (in green) any type
-/// that has Display implemented.
-pub struct GreenIt<T: fmt::Display>(pub T);
-impl<T: fmt::Display> fmt::Display for GreenIt<T> {
-   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-      write!(f,"\x1B[01;92m{}\x1B[0m",self.0.to_string())  
+   /// Generate a new set of vectors of dimensions d in zero (geometric) median form.
+   /// Or subtract from them all any other vector `m`
+   /// The geometric median is invariant with respect to rotation,
+   /// unlike the often misguidedly used mean (`acentroid` here), or the quasi median,
+   /// both of which depend on the choice of axis. 
+   /// For safety, the quasi-median is not even implemented by rstats.
+   /// Returns the zero medianized vectors as one flat vector.
+   fn setsub(self, d:usize, m:&[f64]) -> Vec<f64> {
+      let n = self.len()/d;
+      let mut result = Vec::new();
+      for i in 0..n {
+         let point = self.get(i*d .. (i+1)*d).unwrap();
+         let mut zp = point.vsub(m);
+         result.append(&mut zp);
+      }
+      result
    }
 }
-
-/// GreenVec struct facilitates printing (in green) of vectors of any type
-/// that has Display implemented.
-pub struct GreenVec<T: fmt::Display>(pub Vec<T>);
-impl<T: fmt::Display> fmt::Display for GreenVec<T> {
-   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-      let mut s = String::from("\x1B[01;92m[");
-      let n = self.0.len();
-      if n > 0 {
-         s.push_str(&self.0[0].to_string()); // first item
-         for i in 1..n {
-            s.push_str(", ");
-            s.push_str(&self.0[i].to_string());
-         }
-      }   
-      write!(f,"{}]\x1B[0m", s)
-   }
-}
-
