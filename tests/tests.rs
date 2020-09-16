@@ -56,8 +56,10 @@ fn multidimensional() -> Result<()> {
    let median = pt.nmedian(d, 1e-5).unwrap();
    let sl = pt.as_slice();
    let outlier = sl.point(d,outi); 
-   let eoutlier = sl.point(d,outei); 
- 
+   let eoutlier = sl.point(d,outei);
+   let mut zp = pt.clone();
+   zp.mutzeromd(d,1e-5); // zero median transformed data
+  
    println!("\nSum of Outlier distances:\t{} Index: {}",GreenIt(outd),GreenIt(outi));
    println!("Outlier distance to Median:\t{}",GreenIt(outlier.vdist(&median)));
    println!("Outlier eccentricity:\t\t{}",GreenIt(pt.eccentrinset(d, outi)));
@@ -70,7 +72,8 @@ fn multidimensional() -> Result<()> {
    println!("E-Outlier distances:\t\t{}",GreenIt(pt.distsuminset(d, outei)));   
    println!("Medoid ecentricity:\t\t{} Index: {}",GreenIt(mede),GreenIt(medei));
    println!("Centroid ecentricity:\t\t{}",GreenIt(pt.ecc(d,&centroid)));   
-   println!("Median eccentricity:\t\t{}\n",GreenIt(pt.ecc(d,&median)));
+   println!("Median eccentricity:\t\t{}",GreenIt(pt.ecc(d,&median)));
+   println!("Zero med's median magnitude:\t{}\n",GreenIt(zp.nmedian(d,1e-5).unwrap().vmag()));
    println!("Median of eccentricities (MOE)\n{}",pt.moe(d));  
    Ok(())
 }

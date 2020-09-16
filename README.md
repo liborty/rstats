@@ -36,7 +36,7 @@ Some of the methods are for memory efficiency reasons reimplemented in this trai
 
 ## Releases
 
-* **Version 0.4.14** Added `mutzeromd`: transforms mutable self to zero-median form.
+* **Version 0.4.14** Added `mutzeromd` - transforms mutable self to zero-median form.
 
 * **Version 0.4.13** Added `trend` between two sets of points. More comments, tests and examples.
 
