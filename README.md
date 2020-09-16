@@ -38,7 +38,7 @@ Some of the methods are for memory efficiency reasons reimplemented in this trai
 
 ## Releases
 
-* **Version 0.4.14** Added `setsub` similar to `mutzeromd` but it subtracts any given vector from a whole set.
+* **Version 0.4.15** Added `setsub` similar to `mutzeromd` but it subtracts any given vector from a whole set.
 Moved all functions into new module `functions.rs`. The other modules are now exclusively trait implementations.
 
 * **Version 0.4.14** Added `mutzeromd` - or mutated zero median data, which transforms mutable self to zero-median form.
