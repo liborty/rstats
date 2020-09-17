@@ -1,4 +1,4 @@
-use rstats::{Vectors};
+use rstats::{VecVec};
 use rstats::functions::{GreenIt,genvec};
 
 /*
@@ -74,10 +74,10 @@ fn main() {
       let pts = genvec(D,N,(i+1) as u32,N as u32); 
       // test over varying data and inreasing accuracies
       cmplx.start_timer("nmedian").unwrap();  
-      let g = pts.as_slice().nmedian(D,EPS).unwrap();
+      let g = pts.as_slice().nmedian(EPS);
       cmplx.stop_timer("nmedian").unwrap();
       sumtime += cmplx.time_in_nanos("nmedian").unwrap();
-      sumg += pts.as_slice().ecc(D,&g);  
+      sumg += pts.as_slice().ecc(&g);  
    };
    println!("\nSum of nmedian residual errors: {} time: {} ", GreenIt(sumg), GreenIt(sumtime));
   

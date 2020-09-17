@@ -14,7 +14,7 @@ Trait Vectors is sometimes unchecked for speed, so some caution is advisable.
 
 ## Trait RStats
 
-Statistical measures implemented for `&[i64]` and `&[f64]`.
+One dimensional statistical measures implemented for `&[i64]` and `&[f64]`.
 All these methods operate on one vector of data and take no arguments.
 For example, `s.amean()` computes the arithmetic mean of slice `s` of either type.
 
@@ -27,16 +27,23 @@ Included are:
 
 ## Trait Vectors
 
-* Vector algebra implemented for one or two `&[f64]` slices of any length (or space dimensionality).
+* Vector algebra implemented on one or two `&[f64]` slices of any length (vector dimensionality).
 * Pearson's, Spearman's and Kendall's correlations.
-* Relationships of one vector to a set of vectors (geometric median, eccentricity).
-* Relationships between sets of multidimensional vectors.
 
 ## Trait MutVectors
 
 Some of the methods are for memory efficiency reasons reimplemented in this trait so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that they do not return anything, so they can not be chained.
 
+## Trait VecVec
+
+* Relationships of one vector to a set of vectors: 
+Sums of distances, Centroid, Medoid, Geometric Median, Eccentricity.
+* Relationships between sets of multidimensional vectors: Zero median data, Trend.
+
+
 ## Releases
+
+* **Version 0.5.0** Introduces *VecVec* trait for all multi-point methods, now implemented for type `Vec<Vec<f64>>`. This is a breaking change but it did allow streamlining of the code and a clean separation of the traits. Main benefit to the user is in no longer having to explicitly pass around the dimensionality d.
 
 * **Version 0.4.15** Added `setsub` similar to `mutzeromd` but it subtracts any given vector from a whole set.
 Moved all functions into new module `functions.rs`. The other modules are now exclusively trait implementations.

@@ -3,8 +3,8 @@
 #[cfg(test)]
 
 use anyhow::{Result};
-use rstats::{RStats,MutVectors,Vectors};
-use rstats::functions::{GreenIt,GreenVec,genvec,scalarecc,sortf};
+use rstats::{RStats,MutVectors,Vectors,VecVec};
+use rstats::functions::{GreenIt,GreenVec,sortf,genvec};
 use devtimer::DevTime;
 
 #[test]
@@ -50,46 +50,38 @@ fn intstats() -> Result<()> {
 fn multidimensional() -> Result<()> { 
    let d = 6_usize;
    let pt = genvec(d,24,7,13); // random test data 
-   let (med,medi,outd,outi) = pt.medoid(d);
-   let (mede,medei,oute,outei) = pt.emedoid(d);
-   let centroid = pt.acentroid(d);
-   let median = pt.nmedian(d, 1e-5).unwrap();
-   let sl = pt.as_slice();
-   let outlier = sl.point(d,outi); 
-   let eoutlier = sl.point(d,outei);
-   let zmed = pt.setsub(d,&median); // zero median transformed data
+   let (med,medi,outd,outi) = pt.medoid();
+   let (mede,medei,oute,outei) = pt.emedoid();
+   let centroid = pt.acentroid();
+   let median = pt.nmedian(1e-5);
+   let outlier = &pt[outi]; 
+   let eoutlier = &pt[outei];
+   let zmed = pt.translate(&median); // zero median transformed data
   
    println!("\nSum of Outlier distances:\t{} Index: {}",GreenIt(outd),GreenIt(outi));
    println!("Outlier distance to Median:\t{}",GreenIt(outlier.vdist(&median)));
-   println!("Outlier eccentricity:\t\t{}",GreenIt(pt.eccentrinset(d, outi)));
+   println!("Outlier eccentricity:\t\t{}",GreenIt(pt.eccentrinset(outi)));
    println!("Sum of Medoid distances:\t{} Index: {}",GreenIt(med),GreenIt(medi));
-   println!("Sum of Centroid distances:\t{}",GreenIt(pt.distsum(d,&centroid)));
-   println!("Sum of Median distances:\t{}\n",GreenIt(pt.distsum(d,&median)));
+   println!("Sum of Centroid distances:\t{}",GreenIt(pt.distsum(&centroid)));
+   println!("Sum of Median distances:\t{}\n",GreenIt(pt.distsum(&median)));
 
    println!("E-Outlier eccentricity:\t\t{} Index: {}",GreenIt(oute),GreenIt(outei));
    println!("E-Outlier distance to Median:\t{}",GreenIt(eoutlier.vdist(&median)));
-   println!("E-Outlier distances:\t\t{}",GreenIt(pt.distsuminset(d, outei)));   
+   println!("E-Outlier distances:\t\t{}",GreenIt(pt.distsuminset(outei)));   
    println!("Medoid ecentricity:\t\t{} Index: {}",GreenIt(mede),GreenIt(medei));
-   println!("Centroid ecentricity:\t\t{}",GreenIt(pt.ecc(d,&centroid)));   
-   println!("Median eccentricity:\t\t{}",GreenIt(pt.ecc(d,&median)));
-   println!("Zero med's median magnitude:\t{}\n",GreenIt(zmed.nmedian(d,1e-5).unwrap().vmag()));
-   println!("Median of eccentricities (MOE)\n{}",pt.moe(d));  
+   println!("Centroid ecentricity:\t\t{}",GreenIt(pt.ecc(&centroid)));   
+   println!("Median eccentricity:\t\t{}",GreenIt(pt.ecc(&median)));
+   println!("Zero med's median magnitude:\t{}\n",GreenIt(zmed.nmedian(1e-5).vmag()));
+   println!("Median of eccentricities (MOE)\n{}",pt.moe());  
    Ok(())
 }
-#[test]
-fn difficult_data() -> Result<()> {
-   let pts:Vec<f64> = vec![0.,0.,0.,0., 1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,0.,1.,
-      -1.,0.,0.,0., 0.,-1.,0.,0., 0.,0.,-1.,0., 0.,0.,0.,-1.];
-   let gm = pts.nmedian(4, 1e-5).unwrap();
-   println!("\nMedian residual error: {}",GreenIt(pts.ecc(4,&gm)));
-   Ok(())
-}
+
 #[test]
 fn trend() -> Result<()> {
    let d = 7_usize;
    let pt1 = genvec(d,28,13,19); // random test data 
    let pt2 = genvec(d,38,23,31);
-   println!("\nTrend vector:\n{}",GreenVec(pt1.trend(d,1_e-5,&pt2)));
+   println!("\nTrend vector:\n{}",GreenVec(pt1.trend(1_e-5,pt2)));
    Ok(())
 }
 
@@ -103,10 +95,10 @@ fn medians() -> Result<()> {
    for i in 1..ITERATIONS {
       let pts = genvec(2,7000,i,2*i);
       timer.start();
-      let gm = pts.nmedian(2, 1e-5).unwrap();
+      let gm = pts.nmedian(1e-5);
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
-      sumg += pts.ecc(2,&gm);
+      sumg += pts.ecc(&gm);
    }
    println!("\nSum of {} medians residual errors {} in {} ns",
       GreenIt(ITERATIONS),GreenIt(sumg),GreenIt(sumtime));     
