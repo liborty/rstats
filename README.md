@@ -8,15 +8,14 @@ Our treatment of multidimensional sets of points is constructed from the first p
 
 Going beyond one dimension, other people mostly cheat by using centroids or 'quasi medians' (1-d medians along each axis). They may be quicker to compute but they are a poor start to characterising multidimensional clouds of points reliably. *Specifically, all such 1-d measures depend on the choice of axis.* Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on true Geometric Median, (computed here by `nmedian`), are axis (or rotation) independent.
 
-RStats is a lean minimalistic library that only depends on `anyhow` (for its error handling).
-Trait RStats is carefully checked and will report all kinds of errors, such as empty input.
-Trait Vectors is sometimes unchecked for speed, so some caution is advisable.
+Rstats is a lean minimalistic library that only depends on `anyhow` (for its error handling).
 
 ## Trait RStats
 
 One dimensional statistical measures implemented for `&[i64]` and `&[f64]`.
 All these methods operate on one vector of data and take no arguments.
 For example, `s.amean()` computes the arithmetic mean of slice `s` of either type.
+Trait RStats is carefully checked and will report all kinds of errors, such as empty input.
 
 Included are:
 
@@ -28,7 +27,9 @@ Included are:
 ## Trait Vectors
 
 * Vector algebra implemented on one or two `&[f64]` slices of any length (vector dimensionality).
-* Pearson's, Spearman's and Kendall's correlations.
+* Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
+
+Trait Vectors is sometimes unchecked for speed, so some caution is advisable.
 
 ## Trait MutVectors
 
@@ -40,6 +41,7 @@ Some of the methods are for memory efficiency reasons reimplemented in this trai
 Sums of distances, Centroid, Medoid, Geometric Median, Eccentricity.
 * Relationships between sets of multidimensional vectors: Zero median data, Trend.
 
+Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Releases
 
