@@ -45,7 +45,7 @@ Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Releases
 
-* **Version 0.5.0** Introduces *VecVec* trait for all multi-point methods, now implemented for type `Vec<Vec<f64>>`. This is a breaking change but it did allow streamlining of the code and a clean separation of the traits. Main benefit to the user is in no longer having to explicitly pass around the dimensionality d.
+* **Version 0.5.0** Introduces *VecVec* trait for all multi-point methods, now implemented for type `&[Vec<f64>]`. This is a breaking change but it did allow streamlining of the code and a clean separation of the traits. Main benefit to the user is in no longer having to explicitly pass around the dimensionality d.
 
 * **Version 0.4.15** Added `setsub` similar to `mutzeromd` but it subtracts any given vector from a whole set.
 Moved all functions into new module `functions.rs`. The other modules are now exclusively trait implementations.
