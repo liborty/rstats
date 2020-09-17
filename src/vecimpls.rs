@@ -3,16 +3,15 @@ use crate::functions::emsg;
 use anyhow::{ensure, Result};
 
 impl Vectors for &[f64] {
-    /// Retrieves from flat slice 'self' the (address of) sub-slice at index i,
-    /// where the length of each sub-slice is d.
-    /// Utility method for multidimensional flat vectors
-    fn point(&self, d: usize, i: usize) -> &[f64] {
-        self.get(i * d..(i + 1) * d).unwrap()
-    }
-
+ 
     /// Scalar multiplication of a vector, creates new vec
     fn smult(self, s: f64) -> Vec<f64> {
-        self.iter().map(|&x| s * x).collect()
+        self.iter().map(|&x| s*x).collect()
+    }
+
+    /// Scalar addition to a vector, creates new vec
+    fn sadd(self, s:f64) -> Vec<f64> {
+        self.iter().map(|&x| s+x).collect()
     }
 
     /// Scalar product of two f64 slices.   
@@ -227,6 +226,11 @@ impl Vectors for &[f64] {
             }
         }
         (min, mini, max, maxi)
+    }
+    /// Linear transform to interval [0,1]
+    fn lintrans(self) -> Vec<f64> {
+        let (min,_,max,_) = self.minmax();
+        self.iter().map(|&x| (x-min)/max).collect()        
     }
 }
 

@@ -69,10 +69,7 @@ pub trait RStats {
 
 /// Vector algebra on one or two vectors.
 pub trait Vectors {
-    /// Utility method to retrieve a sub-slice from multidimensional flat slice.
-    fn point(&self, d: usize, i: usize) -> &[f64];
-
-    /// Scalar product of two vectors
+   /// Scalar product of two vectors
     fn dotp(self, v: &[f64]) -> f64;
     /// Vector subtraction
     fn vsub(self, v: &[f64]) -> Vec<f64>;
@@ -84,6 +81,8 @@ pub trait Vectors {
     fn vdist(self, v: &[f64]) -> f64;
     /// Scalar multiplication
     fn smult(self, s: f64) -> Vec<f64>;
+    /// Scalar addition to vector
+    fn sadd(self, s: f64) -> Vec<f64>;
     /// Unit vector
     fn vunit(self) -> Vec<f64>;
 
@@ -96,38 +95,9 @@ pub trait Vectors {
     /// Autocorrelation
     fn autocorr(self) -> Result<f64>;
     /// Minimum, minimum's index, maximum, maximum's index.
-    fn minmax(self) -> (f64, usize, f64, usize);
-
-    /*
-       /// Sums of distances from each point to all other points
-       fn distances(self, d:usize) -> Result<Vec <f64>>;
-       /// Sum of distances from one point given by indx
-       fn distsuminset(self, d:usize, indx:usize) -> f64;
-       /// Sum of distances from arbitrary point (v) to all the points in self
-       fn distsum(self, d:usize, v:&[f64] ) -> f64;
-       /// Medoid and Outlier (by distance) of a set of points
-       fn medoid(self, d:usize) -> (f64,usize,f64,usize);
-
-       /// Eccentricity vectors from each point
-       fn eccentricities(self, d:usize) -> Result<Vec<Vec<f64>>>;
-       /// Ecentricity scalar measure of an internal point given by indx
-       fn eccentrinset(self, d:usize, indx:usize) -> f64;
-       /// Eccentricity scalar measure and vector of any point
-       fn veccentr(self, d:usize, thisp:&[f64]) -> Result<(f64,Vec<f64>)>;
-       /// Eccentricity scalar measure only, of any point
-       fn ecc(self, d:usize, v:&[f64]) -> f64;
-       /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
-       fn moe(self, d:usize) -> Med;
-       /// Medoid and Outlier as defined by eccentricities.
-       fn emedoid(self, d:usize) -> (f64,usize,f64,usize);
-
-       /// Geometric median of the set
-       fn nmedian(self, d:usize, eps:f64) -> Result<Vec<f64>>;
-       /// Trend between two sets
-       fn trend(self, d:usize, eps:f64, v:&[f64]) -> Vec<f64>;
-       /// Transform to zero median form. or subtract any other vector `m`
-       fn setsub(self, d:usize, m:&[f64]) -> Vec<f64>;
-    */
+    fn minmax(self) -> (f64, usize, f64, usize); 
+    /// Linear transformation to [0,1]
+    fn lintrans(self) -> Vec<f64>;
 }
 
 /// Mutable primitive vector operations.  
@@ -179,6 +149,5 @@ pub trait VecVec {
     fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>);
     /// Trend between two sets
     fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64>;
-    /// Transform to zero median form. or subtract any other vector `m`
-    fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
-}
+    /// Subtract m from all points - e.g. transform to zero median form
+    fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;}

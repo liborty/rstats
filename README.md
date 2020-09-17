@@ -28,6 +28,7 @@ Included are:
 
 * Vector algebra implemented on one or two `&[f64]` slices of any length (vector dimensionality).
 * Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
+* Finding minimum and maximum, linear transformation.
 
 Trait Vectors is sometimes unchecked for speed, so some caution is advisable.
 
@@ -38,12 +39,15 @@ Some of the methods are for memory efficiency reasons reimplemented in this trai
 ## Trait VecVec
 
 * Relationships of one vector to a set of vectors: 
-Sums of distances, Centroid, Medoid, Geometric Median, Eccentricity.
-* Relationships between sets of multidimensional vectors: Zero median data, Trend.
+Sums of distances, Centroid, Medoid, Geometric Median, Eccentricity,
+Zero median data.
+* Relationships between sets of multidimensional vectors: Trend.
 
 Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Releases
+
+* **Version 0.5.1** Added scalar addition `sadd` and linear transformation `lintrans` to `Vectors`.
 
 * **Version 0.5.0** Introduces *VecVec* trait for all multi-point methods, now implemented for type `&[Vec<f64>]`. This is a breaking change but it did allow streamlining of the code and a clean separation of the traits. Main benefit to the user is in no longer having to explicitly pass around the dimensionality d.
 
@@ -53,26 +57,3 @@ Moved all functions into new module `functions.rs`. The other modules are now ex
 * **Version 0.4.14** Added `mutzeromd` - or mutated zero median data, which transforms mutable self to zero-median form.
 
 * **Version 0.4.13** Added `trend` between two sets of points. More comments, tests and examples.
-
-* **Version 0.4.12** Some more utilities.
-
-* **Version 0.4.10**  Moved unimportant helper functions out of the main module.
-
-* **Version 0.4.9** Streamlining, introduced `distances` and `eccentricities`, with speedups up to 50%.
-
-* **Version 0.4.8** Added generics to emphasise print vectors and items of various types.
-
-* **Version 0.4.7** Added Spearman's Rho Correlation. Removed some spurious indirections.
-
-* **Version 0.4.6** Made eccentricity measure continuous. Added Kendall's Tau (rank) correlation. Moved all correlations to Vectors trait. Improved readme and doc comments.
-
-* **Version 0.4.4** Medoid now finds the Outlier as well. Improved tests.
-Defined and added MOE = median of eccentricities (spread) of multivariate data.
-
-* **Version 0.4.3** Introduced computation of `nmedian` residual errors. Improved tests and benchmarks.
-
-* **Version 0.4.2** Added `eccentricity` measures.
-
-* **Version 0.4.1** Tidier testing and benchmarks.
-
-* **Version 0.4.0** Cleanup. Changed the implementation types from Vecs to slices everywhere for consistency. You may need more .as_slice() conversions here and there. Made some subsidiary functions private.

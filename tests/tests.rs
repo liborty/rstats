@@ -11,6 +11,7 @@ use devtimer::DevTime;
 fn fstats() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
    println!("\n{:?}",v1);
+   println!("Lin trans: {}",GreenVec(v1.lintrans()));
    println!("Arithmetic mean:{}",GreenIt(v1.amean().unwrap()));
    println!("Geometric mean:\t{}",GreenIt(v1.gmean().unwrap()));
    println!("Harmonic mean:\t{}",GreenIt(v1.hmean().unwrap()));
