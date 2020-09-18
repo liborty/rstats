@@ -6,7 +6,7 @@ mod mutvecimpls;
 mod vecvecimpls;
 
 use crate::functions::GreenIt;
-use anyhow::Result;
+use anyhow::{Result,bail};
 
 /// Median and quartiles
 #[derive(Default)]
@@ -43,29 +43,37 @@ impl std::fmt::Display for MStats {
 /// All these methods operate on only one vector (of data). They take no arguments.
 pub trait Stats {
     /// Arithmetic mean
-    fn amean(self) -> Result<f64>;
+    fn amean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
     /// Arithmetic mean and standard deviation
-    fn ameanstd(self) -> Result<MStats>;
+    fn ameanstd(self) -> Result<MStats> 
+        where Self: std::marker::Sized { Ok(MStats { mean: 0., std: 0.})}
     /// Weighted arithmetic mean
-    fn awmean(self) -> Result<f64>;
+    fn awmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
     /// Weighted arithmetic men and standard deviation
-    fn awmeanstd(self) -> Result<MStats>;
+    fn awmeanstd(self) -> Result<MStats>
+        where Self: std::marker::Sized { Ok(MStats { mean: 0., std: 0.})} 
     /// Harmonic mean
-    fn hmean(self) -> Result<f64>;
+    fn hmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
     /// Weighted harmonic mean
-    fn hwmean(self) -> Result<f64>;
+    fn hwmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
     /// Geometric mean
-    fn gmean(self) -> Result<f64>;
+    fn gmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
     /// Geometric mean and stndard deviation ratio
-    fn gmeanstd(self) -> Result<MStats>;
+    fn gmeanstd(self) -> Result<MStats>
+        where Self: std::marker::Sized { Ok(MStats { mean: 0., std: 0.})} 
     /// Weighed geometric mean
-    fn gwmean(self) -> Result<f64>;
+    fn gwmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
     /// Weighted geometric mean and standard deviation ratio
-    fn gwmeanstd(self) -> Result<MStats>;
+    fn gwmeanstd(self) -> Result<MStats>
+        where Self: std::marker::Sized { Ok(MStats { mean: 0., std: 0.})} 
     /// Median and quartiles
-    fn median(self) -> Result<Med>;
+    fn median(self) -> Result<Med>
+        where Self: std::marker::Sized { Ok(Med { lquartile: 0., median: 0., uquartile: 0.})} 
+    
     /// Creates vector of ranks for values in self
     fn ranks(self) -> Result<Vec<f64>>;
+    fn uranks(self) -> Result<Vec<usize>>
+        where Self: std::marker::Sized { bail!("Not implemented") }
 }
 
 /// Vector algebra on one or two vectors.
@@ -155,4 +163,5 @@ pub trait VecVec {
     /// Trend between two sets
     fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
-    fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;}
+    fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
+}

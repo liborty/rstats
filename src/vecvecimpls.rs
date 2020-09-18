@@ -163,7 +163,7 @@ impl VecVec for &[Vec<f64>] {
         scecc
     }
 
-    /// Mean and Std (in Mstats struct) and Median and quartiles (in Med struct) 
+    /// Mean and Std (in MStats struct) and Median and quartiles (in Med struct) 
     /// of eccentricities scalar measures.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
     fn moe(self) -> (MStats, Med) {
