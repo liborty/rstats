@@ -5,7 +5,7 @@ mod vecimpls;
 mod mutvecimpls;
 mod vecvecimpls;
 
-use crate::functions::GreenIt;
+use crate::functions::{GreenIt};
 use anyhow::{Result,bail};
 
 /// Median and quartiles
@@ -43,42 +43,47 @@ impl std::fmt::Display for MStats {
 /// All these methods operate on only one vector (of data). They take no arguments.
 pub trait Stats {
     /// Arithmetic mean
-    fn amean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
+    fn amean(self) -> Result<f64> 
+        where Self: std::marker::Sized { bail!("amean not implemented for this type")}
     /// Arithmetic mean and standard deviation
     fn ameanstd(self) -> Result<MStats> 
-        where Self: std::marker::Sized { Ok(MStats { mean: 0., std: 0.})}
+        where Self: std::marker::Sized { bail!("ameanstd not implemented for this type")}
     /// Weighted arithmetic mean
-    fn awmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
+    fn awmean(self) -> Result<f64> 
+        where Self: std::marker::Sized { bail!("awmean not implemented for this type")}
     /// Weighted arithmetic men and standard deviation
     fn awmeanstd(self) -> Result<MStats>
-        where Self: std::marker::Sized { Ok(MStats { mean: 0., std: 0.})} 
+        where Self: std::marker::Sized { bail!("awmeanstd not implemented for this type")}
     /// Harmonic mean
-    fn hmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
+    fn hmean(self) -> Result<f64>
+        where Self: std::marker::Sized { bail!("hmean not implemented for this type")}
     /// Weighted harmonic mean
-    fn hwmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
+    fn hwmean(self) -> Result<f64> 
+        where Self: std::marker::Sized { bail!("hwmean not implemented for this type")}
     /// Geometric mean
-    fn gmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
-    /// Geometric mean and stndard deviation ratio
+    fn gmean(self) -> Result<f64>
+        where Self: std::marker::Sized { bail!("gmean not implemented for this type")}
+    /// Geometric mean and standard deviation ratio
     fn gmeanstd(self) -> Result<MStats>
-        where Self: std::marker::Sized { Ok(MStats { mean: 0., std: 0.})} 
+        where Self: std::marker::Sized { bail!("gmeanstd not implemented for this type")}
     /// Weighed geometric mean
-    fn gwmean(self) -> Result<f64> where Self: std::marker::Sized { Ok(0.) }
+    fn gwmean(self) -> Result<f64> 
+        where Self: std::marker::Sized { bail!("gwmean not implemented for this type")}
     /// Weighted geometric mean and standard deviation ratio
     fn gwmeanstd(self) -> Result<MStats>
-        where Self: std::marker::Sized { Ok(MStats { mean: 0., std: 0.})} 
+        where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
     /// Median and quartiles
     fn median(self) -> Result<Med>
-        where Self: std::marker::Sized { Ok(Med { lquartile: 0., median: 0., uquartile: 0.})} 
-    
+        where Self: std::marker::Sized { bail!("median not implemented for this type")}
     /// Creates vector of ranks for values in self
-    fn ranks(self) -> Result<Vec<f64>>;
-    fn uranks(self) -> Result<Vec<usize>>
-        where Self: std::marker::Sized { bail!("Not implemented") }
+    fn ranks(self) -> Result<Vec<f64>>
+        where Self: std::marker::Sized { bail!("ranks not implemented for this type")}
 }
 
 /// Vector algebra on one or two vectors.
 pub trait Vectors {
-   /// Scalar product of two vectors
+
+    /// Scalar product of two vectors
     fn dotp(self, v: &[f64]) -> f64;
     /// Vector subtraction
     fn vsub(self, v: &[f64]) -> Vec<f64>;
@@ -96,13 +101,18 @@ pub trait Vectors {
     fn vunit(self) -> Vec<f64>;
 
     /// Correlation
-    fn correlation(self, v: &[f64]) -> Result<f64>;
+    fn correlation(self, _v: &[f64]) -> Result<f64>
+    where Self: std::marker::Sized { bail!("correlation not implemented for this type") }
     /// Kendall's tau-b (rank order) correlation
-    fn kendalcorr(self, v: &[f64]) -> Result<f64>;
+    fn kendalcorr(self, _v: &[f64]) -> Result<f64>
+    where Self: std::marker::Sized { bail!("kendalcorr not implemented for this type") }
     /// Spearman's rho (rank differences) correlation
-    fn spearmancorr(self, v: &[f64]) -> Result<f64>;
+    fn spearmancorr(self, _v: &[f64]) -> Result<f64>
+    where Self: std::marker::Sized { bail!("spearmancorr not implemented for this type") }
     /// Autocorrelation
-    fn autocorr(self) -> Result<f64>;
+    fn autocorr(self) -> Result<f64>
+    where Self: std::marker::Sized { bail!("autocorr not implemented for this type") }
+
     /// Minimum, minimum's index, maximum, maximum's index.
     fn minmax(self) -> (f64, usize, f64, usize); 
     /// Linear transformation to [0,1]
@@ -115,15 +125,15 @@ pub trait Vectors {
 /// Some of the Vec trait methods reimplemented to mutate in-place (for efficiency).
 pub trait MutVectors {
     /// mutable multiplication by a scalar
-    fn mutsmult(self, s: f64);
+    fn mutsmult(self, _s: f64) where Self: std::marker::Sized {}  
     /// mutable vector subtraction
-    fn mutvsub(self, v: &[f64]);
+    fn mutvsub(self, _v: &[f64]) where Self: std::marker::Sized {}
     /// mutable vector addition
-    fn mutvadd(self, v: &[f64]);
+    fn mutvadd(self, _v: &[f64]) where Self: std::marker::Sized {}
     /// mutably makes into a unit vector
-    fn mutvunit(self); 
+    fn mutvunit(self) where Self: std::marker::Sized {}
     /// sort in place
-    fn mutsortf(self); 
+    fn mutsortf(self) where Self: std::marker::Sized {}
 }
 
 /// Methods applicable to sets of vectors

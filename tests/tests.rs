@@ -52,7 +52,7 @@ fn intstats() -> Result<()> {
 fn vecvec() -> Result<()> { 
    let d = 5_usize;
    let n = 60_usize;
-   println!("testing on a random set of {} points in {} dimensional space",n,d);
+   println!("testing on a random set of {} points in {} dimensional space",GreenIt(n),GreenIt(d));
    let pt = genvec(d,n,7,13); // random test data 
    let (med,medi,outd,outi) = pt.medoid();
    let (mede,medei,oute,outei) = pt.emedoid();
@@ -99,7 +99,7 @@ fn medians() -> Result<()> {
    let mut sumg = 0_f64;
    let mut sumtime = 0_u128;
    let mut timer = DevTime::new_simple();
-   println!("timing {} medians of {} points each in {} dimensions",ITERATIONS,n,d); 
+   println!("timing {} medians of {} points each in {} dimensions",GreenIt(ITERATIONS),GreenIt(n),GreenIt(d)); 
    for i in 1..ITERATIONS {
       let pts = genvec(d,n,i,2*i);
       timer.start();

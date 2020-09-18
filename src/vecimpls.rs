@@ -16,7 +16,7 @@ impl Vectors for &[f64] {
     }
 
     /// Scalar product of two f64 slices.   
-    /// Must be of the same length - no error checking for speed
+    /// Must be of the same length - no error checking (for speed)
     fn dotp(self, v: &[f64]) -> f64 {
         self.iter().zip(v).map(|(&xi, &vi)| xi * vi).sum::<f64>()
     }
