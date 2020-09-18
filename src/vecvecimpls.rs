@@ -1,4 +1,4 @@
-use crate::{Med, MutVectors, RStats, VecVec, Vectors};
+use crate::{Med, MStats, MutVectors, Stats, VecVec, Vectors};
 
 impl VecVec for &[Vec<f64>] {
     /// Centroid = simple multidimensional arithmetic mean
@@ -123,16 +123,17 @@ impl VecVec for &[Vec<f64>] {
     /// This is suitable for a single point. When eccentricities of all the points
     /// are needed, use more efficient `eccentricities`.
     fn veccentr(self, thisp: &[f64]) -> (f64, Vec<f64>) {
-        let mut vsum = vec![0_f64; self[0].len()];
+        let d = thisp.len();
+        let mut vsum = vec![0_f64; d];
         for thatp in self {
             let mut vdif = thatp.vsub(thisp);
             let mag = vdif.vmag();
             if mag.is_normal() {
-                vdif.mutsmult(1. / mag); // using already computed magnitude to find unit vdif
+                vdif.mutsmult(1./mag); // using already computed magnitude to find unit vdif
                 vsum.mutvadd(&vdif); // add it to the sum of vector eccentricities
             } // else mag = 0, so just skip thatp, as it is the same as thisp
         }
-        (vsum.vmag()/thisp.len() as f64, vsum)
+        (vsum.vmag()/d as f64, vsum)
     }
 
     /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual error for median).
@@ -140,11 +141,11 @@ impl VecVec for &[Vec<f64>] {
     /// but suited for any explicitly given point, typically not belonging to the set.  
     /// When the eccentricity vector is needed, use `veccentr`
     fn ecc(self, v: &[f64]) -> f64 {
-        let (eccentricity, _) = self.veccentr(v);
-        eccentricity
+        let (ecc, _) = self.veccentr(v);
+        ecc
     }
 
-    /// Magnitudes of the vectors in self
+    /// Magnitudes of all the vectors in self
     fn mags(self) -> Vec<f64> {
         let mut magsv = Vec::new();
         for v in self {
@@ -162,11 +163,12 @@ impl VecVec for &[Vec<f64>] {
         scecc
     }
 
-    /// Median of eccentricities measures (MOE).
-    /// This is a new robust measure of spread of multidimensional points
-    /// (or multivariate sample).  
-    fn moe(self) -> Med {
-        self.eccentricities().scalarecc().median().unwrap()
+    /// Mean and Std (in Mstats struct) and Median and quartiles (in Med struct) 
+    /// of eccentricities scalar measures.
+    /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
+    fn moe(self) -> (MStats, Med) {
+        let eccs = self.eccentricities().scalarecc();
+        (eccs.ameanstd().unwrap(),eccs.median().unwrap())
     }
 
     /// Eccentricity defined Medoid and Outlier.
@@ -209,12 +211,12 @@ impl VecVec for &[Vec<f64>] {
         loop {
             let (rsum, mut newv) = self.betterpoint(&oldpoint);
             newv.mutsmult(1.0 / rsum); // scaling the returned sum of unit vectors
+            // test the magnitude of the move for termination
             if newv.vdist(&oldpoint) < eps {
-                // test the magnitude of this move for termination
-                oldpoint = newv;
-                break; // use the last small iteration anyway, as it is already computed
+                oldpoint = newv; // use the last small iteration anyway
+                break; // from the loop
             };
-            oldpoint = newv // set up next iteration
+            oldpoint = newv // set up the next iteration
         }
         oldpoint
     }

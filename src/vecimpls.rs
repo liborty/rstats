@@ -1,6 +1,7 @@
-use crate::{MutVectors, RStats, Vectors};
+use crate::{MutVectors, Stats, Vectors};
 use crate::functions::emsg;
 use anyhow::{ensure, Result};
+
 
 impl Vectors for &[f64] {
  
@@ -230,25 +231,13 @@ impl Vectors for &[f64] {
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Vec<f64> {
         let (min,_,max,_) = self.minmax();
-        self.iter().map(|&x| (x-min)/max).collect()        
+        let range = max-min;
+        self.iter().map(|&x|(x-min)/range).collect()        
     }
-}
-
-impl MutVectors for &mut [f64] {
-    /// Scalar multiplication of a vector, mutates self
-    fn mutsmult(self, s: f64) {
-        self.iter_mut().for_each(|x| *x *= s);
+    /// Sorted vector
+    fn sortf(self) -> Vec<f64> {
+        let mut sorted:Vec<f64> = self.to_vec();
+        sorted.mutsortf();
+        sorted      
     }
-    /// Vector subtraction, mutates self
-    fn mutvsub(self, v: &[f64]) {
-        self.iter_mut().enumerate().for_each(|(i, x)| *x -= v[i])
-    }
-    /// Vector addition, mutates self
-    fn mutvadd(self, v: &[f64]) {
-        self.iter_mut().enumerate().for_each(|(i, x)| *x += v[i])
-    }
-    /// Mutate to unit vector
-    fn mutvunit(self) {
-        self.mutsmult(1_f64 / self.iter().map(|x| x.powi(2)).sum::<f64>().sqrt())
-    }    
 }

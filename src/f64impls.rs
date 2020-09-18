@@ -1,12 +1,12 @@
-use crate::functions::{emsg, sortf, wsum};
-use crate::{MStats, Med, RStats};
+use crate::functions::{emsg, wsum};
+use crate::{MStats, Med, Stats, MutVectors};
 use anyhow::{ensure, Result};
 
-impl RStats for &[f64] {
+impl Stats for &[f64] {
     /// Arithmetic mean of an f64 slice
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().amean().unwrap(),7.5_f64);
     /// ```
@@ -19,7 +19,7 @@ impl RStats for &[f64] {
     /// Arithmetic mean and standard deviation of an f64 slice
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.as_slice().ameanstd().unwrap();
     /// assert_eq!(res.mean,7.5_f64);
@@ -48,7 +48,7 @@ impl RStats for &[f64] {
     /// Time dependent data should be in the stack order - the last being the oldest.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().awmean().unwrap(),5.333333333333333_f64);
     /// ```
@@ -71,7 +71,7 @@ impl RStats for &[f64] {
     /// Time dependent data should be in the stack order - the last being the oldest.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.as_slice().awmeanstd().unwrap();
     /// assert_eq!(res.mean,5.333333333333333_f64);
@@ -104,7 +104,7 @@ impl RStats for &[f64] {
     /// Harmonic mean of an f64 slice.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().hmean().unwrap(),4.305622526633627_f64);
     /// ```
@@ -126,7 +126,7 @@ impl RStats for &[f64] {
     /// Time dependent data should be in the stack order - the last being the oldest.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().hwmean().unwrap(),3.019546395306663_f64);
     /// ```
@@ -153,7 +153,7 @@ impl RStats for &[f64] {
     /// Zero valued data is not allowed.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().gmean().unwrap(),6.045855171418503_f64);
     /// ```
@@ -180,7 +180,7 @@ impl RStats for &[f64] {
     /// Zero data is not allowed - would at best only produce zero result.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().gwmean().unwrap(),4.144953510241978_f64);
     /// ```
@@ -205,7 +205,7 @@ impl RStats for &[f64] {
     /// Std of ln data becomes a ratio after conversion back.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.as_slice().gmeanstd().unwrap();
     /// assert_eq!(res.mean,6.045855171418503_f64);
@@ -239,7 +239,7 @@ impl RStats for &[f64] {
     /// Linearly weighted version of gmeanstd.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.as_slice().gwmeanstd().unwrap();
     /// assert_eq!(res.mean,4.144953510241978_f64);
@@ -278,7 +278,7 @@ impl RStats for &[f64] {
     /// Median of an f64 slice
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.as_slice().median().unwrap();
     /// assert_eq!(res.median,7.5_f64);
@@ -289,7 +289,7 @@ impl RStats for &[f64] {
         let n = self.len();
         let mid = n / 2;
         let mut v = self.to_vec();
-        sortf(&mut v);
+        v.mutsortf();
         let mut result: Med = Default::default();
         result.median = if mid * 2 < n {
             v[mid]

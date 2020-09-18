@@ -2,6 +2,7 @@ mod f64impls;
 pub mod functions;
 mod i64impls;
 mod vecimpls;
+mod mutvecimpls;
 mod vecvecimpls;
 
 use crate::functions::GreenIt;
@@ -40,7 +41,7 @@ impl std::fmt::Display for MStats {
 
 /// Basic one dimensional (1-d) statistical measures.
 /// All these methods operate on only one vector (of data). They take no arguments.
-pub trait RStats {
+pub trait Stats {
     /// Arithmetic mean
     fn amean(self) -> Result<f64>;
     /// Arithmetic mean and standard deviation
@@ -98,6 +99,8 @@ pub trait Vectors {
     fn minmax(self) -> (f64, usize, f64, usize); 
     /// Linear transformation to [0,1]
     fn lintrans(self) -> Vec<f64>;
+    /// Sorted vector
+    fn sortf(self) -> Vec<f64>;
 }
 
 /// Mutable primitive vector operations.  
@@ -111,6 +114,8 @@ pub trait MutVectors {
     fn mutvadd(self, v: &[f64]);
     /// mutably makes into a unit vector
     fn mutvunit(self); 
+    /// sort in place
+    fn mutsortf(self); 
 }
 
 /// Methods applicable to sets of vectors
@@ -139,7 +144,7 @@ pub trait VecVec {
     /// scaled magnitudes (typically of eccentricities measures)
     fn scalarecc(self) -> Vec<f64>;
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
-    fn moe(self) -> Med;
+    fn moe(self) -> (MStats,Med);
     /// Medoid and Outlier as defined by eccentricities.
     fn emedoid(self) -> (f64, usize, f64, usize);
 

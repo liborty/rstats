@@ -1,12 +1,12 @@
 use crate::functions::{emsg, wsum};
-use crate::{MStats, Med, RStats};
+use crate::{MStats, Med, Stats};
 use anyhow::{ensure, Context, Result};
 
-impl RStats for &[i64] {
+impl Stats for &[i64] {
     /// Arithmetic mean of an i64 slice
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1:Vec<i64> = vec![1,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().amean().unwrap(),7.5_f64);
     /// ```
@@ -19,7 +19,7 @@ impl RStats for &[i64] {
     /// Arithmetic mean and standard deviation of an i64 slice
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// let res = v1.as_slice().ameanstd().unwrap();
     /// assert_eq!(res.mean,7.5_f64);
@@ -49,7 +49,7 @@ impl RStats for &[i64] {
     /// Time dependent data should be in the stack order - the last being the oldest.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().awmean().unwrap(),5.333333333333333_f64);
     /// ```
@@ -72,7 +72,7 @@ impl RStats for &[i64] {
     /// Time dependent data should be in the stack order - the last being the oldest.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// let res = v1.as_slice().awmeanstd().unwrap();
     /// assert_eq!(res.mean,5.333333333333333_f64);
@@ -106,7 +106,7 @@ impl RStats for &[i64] {
     /// Harmonic mean of an i64 slice.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().hmean().unwrap(),4.305622526633627_f64);
     /// ```
@@ -129,7 +129,7 @@ impl RStats for &[i64] {
     /// Time dependent data should be in the stack order - the last being the oldest.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().hwmean().unwrap(),3.019546395306663_f64);
     /// ```
@@ -156,7 +156,7 @@ impl RStats for &[i64] {
     /// Zero valued data is not allowed.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().gmean().unwrap(),6.045855171418503_f64);
     /// ```
@@ -183,7 +183,7 @@ impl RStats for &[i64] {
     /// Zero data is not allowed - would at best only produce zero result.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().gwmean().unwrap(),4.144953510241978_f64);
     /// ```
@@ -208,7 +208,7 @@ impl RStats for &[i64] {
     /// Std of ln data becomes a ratio after conversion back.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// let res = v1.as_slice().gmeanstd().unwrap();
     /// assert_eq!(res.mean,6.045855171418503_f64);
@@ -242,7 +242,7 @@ impl RStats for &[i64] {
     /// Linearly weighted version of gmeanstd.
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// let res = v1.as_slice().gwmeanstd().unwrap();
     /// assert_eq!(res.mean,4.144953510241978_f64);
@@ -282,7 +282,7 @@ impl RStats for &[i64] {
     /// The data values must be within a moderate range not exceeding u16size (65535).
     /// # Example
     /// ```
-    /// use rstats::RStats;
+    /// use rstats::Stats;
     /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// let res = v1.as_slice().median().unwrap();
     /// assert_eq!(res.median,7.5_f64);

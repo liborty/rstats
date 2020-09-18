@@ -1,4 +1,3 @@
-use std::cmp::Ordering::Equal;
 use std::fmt;
 
 /// Sum of linear weights
@@ -9,12 +8,6 @@ pub fn wsum(n: usize) -> f64 {
 /// helper function for formatting error messages
 pub fn emsg(file: &'static str, line: u32, msg: &'static str) -> String {
     format!("{}:{} rstats {}", file, line, msg)
-}
-
-/// Sorts a mutable `Vec<f64>` in place.  
-/// It is the responsibility of the user to ensure that there are no NaNs etc.
-pub fn sortf(v: &mut [f64]) {
-    v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
 }
 
 /// Generates a vector of n vectors, each of length d, all filled with random numbers for testing.

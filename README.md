@@ -6,16 +6,16 @@ Rstats is aimed at characterization of multidimensional sets of points, with app
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Thus some original concepts, unlikely to be found elsewhere, are introduced and implemented here.
 
-Going beyond one dimension, other people mostly cheat by using centroids or 'quasi medians' (1-d medians along each axis). They may be quicker to compute but they are a poor start to characterising multidimensional clouds of points reliably. *Specifically, all such 1-d measures depend on the choice of axis.* Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on true Geometric Median, (computed here by `nmedian`), are axis (or rotation) independent.
+Going beyond one dimension, most authors  cheat by using 'quasi medians' (1-d medians along each axis). Quazi medians may be quicker to compute but they are a poor start to characterising multidimensional clouds of points reliably. *Specifically, all such 1-d measures depend on the choice of axis.* Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on the true Geometric Median, (computed here by `nmedian`), are axis (or rotation) independent.
 
 Rstats is a lean minimalistic library that only depends on `anyhow` (for its error handling).
 
-## Trait RStats
+## Trait Stats
 
 One dimensional statistical measures implemented for `&[i64]` and `&[f64]`.
 All these methods operate on one vector of data and take no arguments.
-For example, `s.amean()` computes the arithmetic mean of slice `s` of either type.
-Trait RStats is carefully checked and will report all kinds of errors, such as empty input.
+For example, `s.amean()` returns the arithmetic mean of slice `s` of either type.
+Trait Stats is carefully checked and will report all kinds of errors, such as empty input.
 
 Included are:
 
@@ -30,7 +30,7 @@ Included are:
 * Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
 * Finding minimum and maximum, linear transformation.
 
-Trait Vectors is sometimes unchecked for speed, so some caution is advisable.
+Trait Vectors is sometimes unchecked for speed, so some caution with data is advisable.
 
 ## Trait MutVectors
 
@@ -46,6 +46,8 @@ Zero median data.
 Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Releases
+
+* **Version 0.5.2** Renamed trait RStats to Stats, to avoid naming confusion. Separated MutVecs implementations to their own module `mutvecimpls.rs`. Added some more tests. Expanded `moe` to include mean and std of eccentricities.
 
 * **Version 0.5.1** Added scalar addition `sadd` and linear transformation `lintrans` to `Vectors`.
 
