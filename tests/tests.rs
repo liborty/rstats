@@ -27,11 +27,12 @@ fn fstats() -> Result<()> {
    println!("Pearson's Correlation:\t{}",GreenIt(v1.correlation(&v2).unwrap())); 
    println!("Kendall's Correlation:\t{}",GreenIt(v1.kendalcorr(&v2).unwrap()));  
    println!("Spearman's Correlation:\t{}",GreenIt(v1.spearmancorr(&v2).unwrap()));     
-   println!("Scalar product: {}",GreenIt(v1.dotp(&v2)));
-   println!("Euclidian distance: {}",GreenIt(v1.vdist(&v2)));
-   println!("Magnitude of difference: {}",GreenIt(v1.vsub(&v2).as_slice().vmag()));   
-   println!("Vector difference:\n{}",GreenVec(v1.vsub(&v2))); 
-   println!("Vector addition:\n{}",GreenVec(v1.vadd(&v2)));   
+   println!("Euclidian distance:\t{}",GreenIt(v1.vdist(&v2)));
+   println!("Difference magnitude:\t{}",GreenIt(v1.vsub(&v2).as_slice().vmag()));   
+   println!("Vector difference: {}",GreenVec(v1.vsub(&v2))); 
+   println!("Vector addition:   {}",GreenVec(v1.vadd(&v2)));  
+   println!("Scalar product:\t{}",GreenIt(v1.dotp(&v2)));
+   println!("Area:\t\t{}\n",GreenIt(v1.varea(&v2))); 
    Ok(())
 }
 

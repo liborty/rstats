@@ -91,6 +91,8 @@ pub trait Vectors {
     fn vadd(self, v: &[f64]) -> Vec<f64>;
     /// Vector magnitude
     fn vmag(self) -> f64;
+    /// Vector magnitude squared
+    fn vmagsq(self) -> f64;
     /// Euclidian distance between two points
     fn vdist(self, v: &[f64]) -> f64;
     /// Scalar multiplication
@@ -99,6 +101,8 @@ pub trait Vectors {
     fn sadd(self, s: f64) -> Vec<f64>;
     /// Unit vector
     fn vunit(self) -> Vec<f64>;
+    /// Area of parallelogram between two vectors (magnitude of cross product)
+    fn varea(self, v:&[f64]) -> f64;
 
     /// Correlation
     fn correlation(self, _v: &[f64]) -> Result<f64>

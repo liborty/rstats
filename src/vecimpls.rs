@@ -46,10 +46,22 @@ impl Vectors for &[f64] {
         self.iter().map(|&x| x.powi(2)).sum::<f64>().sqrt()
     }
 
+    /// Vector magnitude squared
+    fn vmagsq(self) -> f64 {
+        self.iter().map(|&x| x.powi(2)).sum::<f64>()
+    }
+
     /// Unit vector - creates a new one
     fn vunit(self) -> Vec<f64> {
         self.smult(1. / self.iter().map(|x| x.powi(2)).sum::<f64>().sqrt())
     }
+
+    /// Area of a parallelogram between two vectors.
+    /// Same as the magnitude of their cross product.
+    fn varea(self, v:&[f64]) -> f64 {
+        (self.vmagsq()*v.vmagsq() - self.dotp(v).powi(2)).sqrt()
+    }
+   
 
     /// Correlation coefficient of a sample of two f64 variables.
     /// # Example
