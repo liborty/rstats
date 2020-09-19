@@ -176,21 +176,21 @@ impl Vectors for &[f64] {
                 "spearmancorr - samples are not of the same size"
             )
         );
-        let xvec = self.ranks().unwrap();
-        let yvec = v.ranks().unwrap();
+        let xvec = self.iranks().unwrap();
+        let yvec = v.iranks().unwrap();
         let mx = xvec.ameanstd().unwrap();
         let my = yvec.ameanstd().unwrap();
         let mut covar = 0_f64;
         for i in 0..n {
-            covar += (xvec[i] - mx.mean) * (yvec[i] - my.mean);
+            covar += (xvec[i] as f64 - mx.mean) * (yvec[i] as f64 - my.mean);
         }
         covar /= mx.std * my.std * (n as f64);
         // remove small truncation errors
-        if covar > 1.0 {
-            covar = 1_f64
-        } else if covar < -1_f64 {
-            covar = -1.0
-        };
+     //   if covar > 1.0 {
+     //       covar = 1_f64
+     //   } else if covar < -1_f64 {
+     //       covar = -1.0
+     //   };
         Ok(covar)
     }
 

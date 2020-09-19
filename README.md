@@ -47,6 +47,8 @@ Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Releases
 
+* **Version 0.5.4** Added irank.
+
 * **Version 0.5.3** Added `varea` =  magnitude of the cross product. Chenged status of some mathods from 'required' to 'provided'.
 
 * **Version 0.5.2** Renamed trait RStats to Stats, to avoid naming confusion. Separated MutVecs implementations to their own module `mutvecimpls.rs`. Added some more tests. Expanded `moe` to include mean and std of eccentricities.

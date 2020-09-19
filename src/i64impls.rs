@@ -362,20 +362,20 @@ impl Stats for &[i64] {
 
     /// Returns vector of ranks 1..n,
     /// ranked from the biggest number in self (rank 1) to the smallest (rank n).
-    /// Equalities lead to fractional ranks, hence Vec<f64> output and the range of rank values is reduced.
+    /// Equalities lead to fractional ranks (hence Vec<f64> output) and the range of rank values is reduced.
     fn ranks(self) -> Result<Vec<f64>> {
         let n = self.len();
         let mut rank = vec![1_f64; n];
-        // make all n*(n-1)/2 comparisons just once
+        // make each of n*(n-1)/2 comparisons just once
         for i in 1..n {
             let x = self[i];
             for j in 0..i {
                 if x > self[j] {
-                    rank[j] += 1_f64;
+                    rank[j] += 1_f64; // demoting j
                     continue;
                 };
                 if x < self[j] {
-                    rank[i] += 1_f64;
+                    rank[i] += 1_f64; // demoting i
                     continue;
                 };
                 rank[i] += 0.5;
@@ -384,4 +384,24 @@ impl Stats for &[i64] {
         }
         Ok(rank)
     }
+ 
+    /// Returns vector of ranks 1..n,
+    /// ranked from the biggest number in self (rank 1) to the smallest (rank n).
+    fn iranks(self) -> Result<Vec<i64>> {
+        let n = self.len();
+        let mut rank = vec![1_i64; n];
+        // make each of n*(n-1)/2 comparisons just once
+        for i in 1..n {
+            let x = self[i];
+            for j in 0..i {
+                if x > self[j] {
+                    rank[j] += 1_i64; // demoting j
+                } else if x < self[j] {
+                    rank[i] += 1_i64; // demoting i
+                };
+                // else items are equal, not demoting any
+            }
+        }
+        Ok(rank)
+    } 
 }

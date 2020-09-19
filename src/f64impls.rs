@@ -325,4 +325,27 @@ impl Stats for &[f64] {
         }
         Ok(rank)
     }
+    
+    /// Returns vector of ranks 1..n,
+    /// ranked from the biggest number in self (rank 1) to the smallest (rank n).
+    fn iranks(self) -> Result<Vec<i64>> {
+        let n = self.len();
+        let mut rank = vec![1_i64; n];
+        // make each of n*(n-1)/2 comparisons just once
+        for i in 1..n {
+            let x = self[i];
+            for j in 0..i {
+                if x > self[j] {
+                    rank[j] += 1_i64; // demoting j
+                    continue;
+                };
+                if x < self[j] {
+                    rank[i] += 1_i64; // demoting i
+                    continue;
+                };
+                // items are equal, not demoting any
+            }
+        }
+        Ok(rank)
+    }
 }

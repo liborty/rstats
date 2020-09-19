@@ -78,6 +78,8 @@ pub trait Stats {
     /// Creates vector of ranks for values in self
     fn ranks(self) -> Result<Vec<f64>>
         where Self: std::marker::Sized { bail!("ranks not implemented for this type")}
+    fn iranks(self) -> Result<Vec<i64>>
+        where Self: std::marker::Sized { bail!("iranks not implemented for this type")}    
 }
 
 /// Vector algebra on one or two vectors.
