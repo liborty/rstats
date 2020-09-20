@@ -224,6 +224,38 @@ impl Vectors for &[f64] {
         Ok(covar)
     }
 
+    /// Spearman correlation of five distances
+    /// against Kazutsugi discrete outcomes [0.00,0.25,0.50,0.75,1.00], ranked as [4,3,2,1,0] 
+    /// (the order is swapped to penalise distances). 
+    /// The result is in the range [0,1], rounded to five decimal places.
+    /// # Example
+    /// ```
+    /// use rstats::Vectors;
+    /// let v1 = vec![4.333_f64,1.111,2.222,3.333,0.];
+    /// assert_eq!(v1.kazutsugi().unwrap(),0.875);
+    /// ```
+    fn kazutsugi(self) -> Result<f64> {
+        let n = self.len();
+        ensure!( n == 5,
+            emsg(file!(), line!(), "Kazutsugi requires exactly five distances to ordered outcomes")
+        );  
+        let xvec = self.iranks().unwrap();
+        let yzmvec = vec![2_f64,1.,0.,-1.,-2.];
+        const YSTD:f64 = 1.4142135623730950488; // 2.sqrt()
+        let mx = xvec.ameanstd().unwrap();
+        let mut covar:f64 = xvec.iter().zip(yzmvec).map(|(&x,y)| {
+            (x as f64 - mx.mean)*y
+        }).sum();
+        covar /= 4.0 * mx.std * YSTD;
+        // remove small truncation errors
+        // if covar > 1.0 {
+        //    covar = 1_f64
+        // } else if covar < -1_f64 {
+        //   covar = -1.0
+        //};
+        Ok((100000.*(covar+1.)/2.).round()/100000.)
+    }
+
     /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.
     /// # Example
     /// ```

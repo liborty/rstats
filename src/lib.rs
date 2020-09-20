@@ -78,6 +78,7 @@ pub trait Stats {
     /// Creates vector of ranks for values in self
     fn ranks(self) -> Result<Vec<f64>>
         where Self: std::marker::Sized { bail!("ranks not implemented for this type")}
+    /// Creates vector of integer ranks for values in self
     fn iranks(self) -> Result<Vec<i64>>
         where Self: std::marker::Sized { bail!("iranks not implemented for this type")}    
 }
@@ -120,6 +121,9 @@ pub trait Vectors {
     /// Spearman's rho (rank differences) correlation
     fn spearmancorr(self, _v: &[f64]) -> Result<f64>
     where Self: std::marker::Sized { bail!("spearmancorr not implemented for this type") }
+    /// Kazutsugi Spearman's corelation against just four distances (outcomes)
+    fn kazutsugi(self) -> Result<f64>
+    where Self: std::marker::Sized { bail!("kazutsugi not implemented for this type") }
     /// Autocorrelation
     fn autocorr(self) -> Result<f64>
     where Self: std::marker::Sized { bail!("autocorr not implemented for this type") }
