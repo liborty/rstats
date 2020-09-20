@@ -47,7 +47,7 @@ Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Releases
 
-* **Version 0.5.4** Added irank.
+* **Version 0.5.4** Added `irank,dv,kazutsugi'. 
 
 * **Version 0.5.3** Added `varea` =  magnitude of the cross product. Chenged status of some mathods from 'required' to 'provided'.
 
