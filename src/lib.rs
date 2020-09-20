@@ -87,6 +87,8 @@ pub trait Vectors {
 
     /// Scalar product of two vectors
     fn dotp(self, v: &[f64]) -> f64;
+    /// Cosine = a.dotp(b)/(a.vmag*b.vmag)
+    fn  cosine(self, _v: &[f64]) -> f64; 
     /// Vector subtraction
     fn vsub(self, v: &[f64]) -> Vec<f64>;
     /// Vector addition
@@ -105,10 +107,13 @@ pub trait Vectors {
     fn vunit(self) -> Vec<f64>;
     /// Area of parallelogram between two vectors (magnitude of cross product)
     fn varea(self, v:&[f64]) -> f64;
+    /// Area proportional to the swept arc
+    fn dv(self, v:&[f64]) -> f64; 
 
     /// Correlation
     fn correlation(self, _v: &[f64]) -> Result<f64>
     where Self: std::marker::Sized { bail!("correlation not implemented for this type") }
+ 
     /// Kendall's tau-b (rank order) correlation
     fn kendalcorr(self, _v: &[f64]) -> Result<f64>
     where Self: std::marker::Sized { bail!("kendalcorr not implemented for this type") }

@@ -21,6 +21,29 @@ impl Vectors for &[f64] {
         self.iter().zip(v).map(|(&xi, &vi)| xi * vi).sum::<f64>()
     }
 
+    /// Cosine of an angle between two vectors.
+    /// # Example
+    /// ```
+    /// use rstats::Vectors;
+    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
+    /// assert_eq!(v1.cosine(&v2),0.7517241379310344);
+    /// ```
+    fn cosine(self, v: &[f64]) -> f64 {
+        let (mut sxy, mut sy2) = (0_f64, 0_f64);
+        let sx2: f64 = self
+            .iter()
+            .zip(v)
+            .map(|(&x, &y)| {
+                sxy += x * y;
+                sy2 += y * y;
+                x*x
+            })
+            .sum();
+        sxy / (sx2*sy2).sqrt()
+    }
+
+
     /// Vector subtraction, creates a new Vec result
     fn vsub(self, v: &[f64]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| xi - vi).collect()
@@ -58,8 +81,15 @@ impl Vectors for &[f64] {
 
     /// Area of a parallelogram between two vectors.
     /// Same as the magnitude of their cross product.
+    /// Attains maximum ||a||.||b|| when the vectors are othogonal.
     fn varea(self, v:&[f64]) -> f64 {
         (self.vmagsq()*v.vmagsq() - self.dotp(v).powi(2)).sqrt()
+    }
+
+    /// Are proportional to the swept arc. 
+    /// Attains maximum 2.||a||.||b|| when the vectors have opposite orientations.
+    fn dv(self, v:&[f64]) -> f64 { 
+        (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
     }
    
 
@@ -68,8 +98,8 @@ impl Vectors for &[f64] {
     /// ```
     /// use rstats::Vectors;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
-    /// assert_eq!(v1.correlation(&v2).unwrap(),-1_f64);
+    /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
+    /// assert_eq!(v1.correlation(&v2).unwrap(),-0.1076923076923077);
     /// ```
     fn correlation(self, v: &[f64]) -> Result<f64> {
         let n = self.len();
@@ -108,8 +138,8 @@ impl Vectors for &[f64] {
     /// ```
     /// use rstats::Vectors;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
-    /// assert_eq!(v1.kendalcorr(&v2).unwrap(),-1_f64);
+    /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
+    /// assert_eq!(v1.kendalcorr(&v2).unwrap(),-0.07692307692307693);
     /// ```
     fn kendalcorr(self, v: &[f64]) -> Result<f64> {
         let n = self.len();
@@ -159,8 +189,8 @@ impl Vectors for &[f64] {
     /// ```
     /// use rstats::Vectors;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let v2 = vec![14_f64,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.];
-    /// assert_eq!(v1.spearmancorr(&v2).unwrap(),-1_f64);
+    /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
+    /// assert_eq!(v1.spearmancorr(&v2).unwrap(),-0.10769230769230773);
     /// ```
     fn spearmancorr(self, v: &[f64]) -> Result<f64> {
         let n = self.len();
@@ -186,11 +216,11 @@ impl Vectors for &[f64] {
         }
         covar /= mx.std * my.std * (n as f64);
         // remove small truncation errors
-     //   if covar > 1.0 {
-     //       covar = 1_f64
-     //   } else if covar < -1_f64 {
-     //       covar = -1.0
-     //   };
+        if covar > 1.0 {
+            covar = 1_f64
+        } else if covar < -1_f64 {
+            covar = -1.0
+        };
         Ok(covar)
     }
 
