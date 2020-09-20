@@ -81,14 +81,14 @@ impl Vectors for &[f64] {
 
     /// Area of a parallelogram between two vectors.
     /// Same as the magnitude of their cross product.
-    /// Attains maximum ||a||.||b|| when the vectors are othogonal.
+    /// Attains maximum `|a|.|b|` when the vectors are othogonal.
     fn varea(self, v:&[f64]) -> f64 {
         (self.vmagsq()*v.vmagsq() - self.dotp(v).powi(2)).sqrt()
     }
 
-    /// Are proportional to the swept arc. 
-    /// Attains maximum 2.||a||.||b|| when the vectors have opposite orientations.
-    fn dv(self, v:&[f64]) -> f64 { 
+    /// Area proportional to the swept arc. 
+    /// Attains maximum of `2.|a|.|b|` when the vectors have opposite orientations.
+    fn varc(self, v:&[f64]) -> f64 { 
         (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
     }
    

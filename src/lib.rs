@@ -109,7 +109,7 @@ pub trait Vectors {
     /// Area of parallelogram between two vectors (magnitude of cross product)
     fn varea(self, v:&[f64]) -> f64;
     /// Area proportional to the swept arc
-    fn dv(self, v:&[f64]) -> f64; 
+    fn varc(self, v:&[f64]) -> f64; 
 
     /// Correlation
     fn correlation(self, _v: &[f64]) -> Result<f64>
@@ -121,7 +121,7 @@ pub trait Vectors {
     /// Spearman's rho (rank differences) correlation
     fn spearmancorr(self, _v: &[f64]) -> Result<f64>
     where Self: std::marker::Sized { bail!("spearmancorr not implemented for this type") }
-    /// Kazutsugi Spearman's corelation against just four distances (outcomes)
+    /// Kazutsugi Spearman's corelation against just five distances (to outcomes classes)
     fn kazutsugi(self) -> Result<f64>
     where Self: std::marker::Sized { bail!("kazutsugi not implemented for this type") }
     /// Autocorrelation
@@ -151,7 +151,7 @@ pub trait MutVectors {
     fn mutsortf(self) where Self: std::marker::Sized {}
 }
 
-/// Methods applicable to sets of vectors
+/// Methods applicable to sets of vectors.
 pub trait VecVec {
     /// Centroid = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;

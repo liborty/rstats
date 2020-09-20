@@ -34,7 +34,7 @@ fn fstats() -> Result<()> {
    println!("Vector addition:   {}",GreenVec(v1.vadd(&v2)));  
    println!("Scalar product:\t\t{}",GreenIt(v1.dotp(&v2)));
    println!("Parallelogram area:\t{}",GreenIt(v1.varea(&v2))); 
-   println!("Disc area:\t\t{}\n",GreenIt(v1.dv(&v2)));
+   println!("Disc area:\t\t{}\n",GreenIt(v1.varc(&v2)));
    Ok(())
 }
 
