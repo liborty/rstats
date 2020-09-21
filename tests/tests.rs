@@ -18,15 +18,15 @@ fn fstats() -> Result<()> {
    println!("Magnitude:\t{}",GreenIt(v1.vmag()));
    println!("Arithmetic {}",v1.ameanstd().unwrap());
    println!("Geometric {}",v1.gmeanstd().unwrap());
-   println!("Autocorrelation:{}",GreenIt(v1.autocorr().unwrap()));
+   println!("Autocorrelation:{}",GreenIt(v1.autocorr()));
    println!("{}",v1.median().unwrap());
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.];
    println!("\n{:?}",v2);
    println!("Ranking: {}",GreenVec(v2.ranks().unwrap()));
    println!("Sorted:  {}",GreenVec(v2.sortf()));
-   println!("Pearson's Correlation:\t{}",GreenIt(v1.correlation(&v2).unwrap())); 
-   println!("Kendall's Correlation:\t{}",GreenIt(v1.kendalcorr(&v2).unwrap()));  
-   println!("Spearman's Correlation:\t{}",GreenIt(v1.spearmancorr(&v2).unwrap()));  
+   println!("Pearson's Correlation:\t{}",GreenIt(v1.correlation(&v2))); 
+   println!("Kendall's Correlation:\t{}",GreenIt(v1.kendalcorr(&v2)));  
+   println!("Spearman's Correlation:\t{}",GreenIt(v1.spearmancorr(&v2)));  
    println!("Cosine:\t\t\t{}",GreenIt(v1.cosine(&v2)));     
    println!("Euclidian distance:\t{}",GreenIt(v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",GreenIt(v1.vsub(&v2).as_slice().vmag()));   
@@ -34,7 +34,7 @@ fn fstats() -> Result<()> {
    println!("Vector addition:   {}",GreenVec(v1.vadd(&v2)));  
    println!("Scalar product:\t\t{}",GreenIt(v1.dotp(&v2)));
    println!("Parallelogram area:\t{}",GreenIt(v1.varea(&v2))); 
-   println!("Disc area:\t\t{}\n",GreenIt(v1.varc(&v2)));
+   println!("Arc area:\t\t{}\n",GreenIt(v1.varc(&v2)));
    Ok(())
 }
 

@@ -1,7 +1,4 @@
 use crate::{MutVectors, Stats, Vectors};
-use crate::functions::emsg;
-use anyhow::{ensure, Result};
-
 
 impl Vectors for &[f64] {
  
@@ -93,28 +90,15 @@ impl Vectors for &[f64] {
     }
    
 
-    /// Correlation coefficient of a sample of two f64 variables.
+    /// Pearson's correlation coefficient of a sample of two f64 variables.
     /// # Example
     /// ```
     /// use rstats::Vectors;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
-    /// assert_eq!(v1.correlation(&v2).unwrap(),-0.1076923076923077);
+    /// assert_eq!(v1.correlation(&v2),-0.1076923076923077);
     /// ```
-    fn correlation(self, v: &[f64]) -> Result<f64> {
-        let n = self.len();
-        ensure!(
-            n > 0,
-            emsg(file!(), line!(), "correlation - first sample is empty")
-        );
-        ensure!(
-            n == v.len(),
-            emsg(
-                file!(),
-                line!(),
-                "correlation - samples are not of the same size"
-            )
-        );
+    fn correlation(self, v: &[f64]) -> f64 {
         let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
         let sx: f64 = self
             .iter()
@@ -127,8 +111,8 @@ impl Vectors for &[f64] {
                 x
             })
             .sum();
-        let nf = n as f64;
-        Ok((sxy - sx / nf * sy) / (((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()))
+        let nf = self.len() as f64;
+        (sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()
     }
 
     /// Kendall Tau-B correlation coefficient of a sample of two f64 variables.
@@ -139,24 +123,11 @@ impl Vectors for &[f64] {
     /// use rstats::Vectors;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
-    /// assert_eq!(v1.kendalcorr(&v2).unwrap(),-0.07692307692307693);
+    /// assert_eq!(v1.kendalcorr(&v2),-0.07692307692307693);
     /// ```
-    fn kendalcorr(self, v: &[f64]) -> Result<f64> {
-        let n = self.len();
-        ensure!(
-            n > 0,
-            emsg(file!(), line!(), "kendalcorr - first sample is empty")
-        );
-        ensure!(
-            n == v.len(),
-            emsg(
-                file!(),
-                line!(),
-                "kendalcorr - samples are not of the same size"
-            )
-        );
+    fn kendalcorr(self, v: &[f64]) -> f64 {
         let (mut conc, mut disc, mut tiesx, mut tiesy) = (0_i64, 0_i64, 0_i64, 0_i64);
-        for i in 1..n {
+        for i in 1..self.len() {
             let x = self[i];
             let y = v[i];
             for j in 0..i {
@@ -181,47 +152,22 @@ impl Vectors for &[f64] {
                 }
             }
         }
-        Ok((conc - disc) as f64 / (((conc + disc + tiesx) * (conc + disc + tiesy)) as f64).sqrt())
+        (conc - disc) as f64 / (((conc + disc + tiesx) * (conc + disc + tiesy)) as f64).sqrt()
     }
-    /// Spearman rho correlation coefficient of a sample of two f64 variables.
+    /// Spearman rho correlation coefficient of two f64 variables.
     /// This is the simplest implementation with no sorting.
     /// # Example
     /// ```
     /// use rstats::Vectors;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
-    /// assert_eq!(v1.spearmancorr(&v2).unwrap(),-0.10769230769230773);
+    /// assert_eq!(v1.spearmancorr(&v2),-0.1076923076923077);
     /// ```
-    fn spearmancorr(self, v: &[f64]) -> Result<f64> {
-        let n = self.len();
-        ensure!(
-            n > 0,
-            emsg(file!(), line!(), "spearmancorr - first sample is empty")
-        );
-        ensure!(
-            n == v.len(),
-            emsg(
-                file!(),
-                line!(),
-                "spearmancorr - samples are not of the same size"
-            )
-        );
-        let xvec = self.iranks().unwrap();
-        let yvec = v.iranks().unwrap();
-        let mx = xvec.ameanstd().unwrap();
-        let my = yvec.ameanstd().unwrap();
-        let mut covar = 0_f64;
-        for i in 0..n {
-            covar += (xvec[i] as f64 - mx.mean) * (yvec[i] as f64 - my.mean);
-        }
-        covar /= mx.std * my.std * (n as f64);
-        // remove small truncation errors
-        if covar > 1.0 {
-            covar = 1_f64
-        } else if covar < -1_f64 {
-            covar = -1.0
-        };
-        Ok(covar)
+    fn spearmancorr(self, v: &[f64]) -> f64 {
+        let xvec = self.ranks().unwrap();
+        let yvec = v.ranks().unwrap();
+        // It is just Pearson's correlation of ranks
+        xvec.correlation(&yvec)
     }
 
     /// Spearman correlation of five distances
@@ -231,29 +177,22 @@ impl Vectors for &[f64] {
     /// # Example
     /// ```
     /// use rstats::Vectors;
-    /// let v1 = vec![4.333_f64,1.111,2.222,3.333,0.];
-    /// assert_eq!(v1.kazutsugi().unwrap(),0.875);
+    /// let v1:Vec<f64> = vec![4.,1.,2.,0.,3.];
+    /// assert_eq!(v1.kazutsugi(),0.3);
     /// ```
-    fn kazutsugi(self) -> Result<f64> {
-        let n = self.len();
-        ensure!( n == 5,
-            emsg(file!(), line!(), "Kazutsugi requires exactly five distances to ordered outcomes")
-        );  
-        let xvec = self.iranks().unwrap();
-        let yzmvec = vec![2_f64,1.,0.,-1.,-2.];
-        const YSTD:f64 = 1.4142135623730950488; // 2.sqrt()
-        let mx = xvec.ameanstd().unwrap();
-        let mut covar:f64 = xvec.iter().zip(yzmvec).map(|(&x,y)| {
-            (x as f64 - mx.mean)*y
-        }).sum();
-        covar /= 4.0 * mx.std * YSTD;
-        // remove small truncation errors
-        // if covar > 1.0 {
-        //    covar = 1_f64
-        // } else if covar < -1_f64 {
-        //   covar = -1.0
-        //};
-        Ok((100000.*(covar+1.)/2.).round()/100000.)
+    fn kazutsugi(self) -> f64 {
+        let xvec = self.ranks().unwrap();
+        let yvec:Vec<f64> = vec![4.,3.,2.,1.,0.];
+        let (mut sxy, mut sx2) = (0_f64,0_f64);
+        const MY:f64 = 2.;  // y mean 
+        const SY:f64 = 10.; // sum of yvec
+        const SY2:f64 = 30.; // sum of y^2
+        let sx:f64 = xvec.iter().zip(yvec).map(|(&x,y)| {
+            sxy += x*y;
+            sx2 += x*x;
+            x }).sum();
+        let covar = (sxy - sx*MY) / ((SY2 - SY*MY)*(sx2-sx/5.*sx)).sqrt();
+        covar
     }
 
     /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.
@@ -261,26 +200,20 @@ impl Vectors for &[f64] {
     /// ```
     /// use rstats::Vectors;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.autocorr().unwrap(),0.9984603532054123_f64);
+    /// assert_eq!(v1.autocorr(),0.9984603532054123_f64);
     /// ```
-    fn autocorr(self) -> Result<f64> {
-        let n = self.len();
-        ensure!(
-            n >= 2,
-            emsg(file!(), line!(), "autocorr - sample is too small")
-        );
-        let (mut sx, mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64, 0_f64);
-        for i in 0..n - 1 {
-            let x = self[i];
-            let y = self[i + 1];
-            sx += x;
+    fn autocorr(self) -> f64 {
+        let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
+        let sx:f64 = self.windows(2).map(|w| {
+            let x = w[0];
+            let y = w[1];
             sy += y;
             sxy += x * y;
             sx2 += x * x;
-            sy2 += y * y
-        }
-        let nf = n as f64;
-        Ok((sxy - sx / nf * sy) / (((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()))
+            sy2 += y * y;
+            x }).sum();
+        let nf = self.len() as f64;
+        (sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()
     }
 
     /// Finds minimum, minimum's index, maximum, maximum's index of &[f64]

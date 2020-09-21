@@ -112,22 +112,16 @@ pub trait Vectors {
     fn varc(self, v:&[f64]) -> f64; 
 
     /// Correlation
-    fn correlation(self, _v: &[f64]) -> Result<f64>
-    where Self: std::marker::Sized { bail!("correlation not implemented for this type") }
- 
+    fn correlation(self, _v: &[f64]) -> f64; 
     /// Kendall's tau-b (rank order) correlation
-    fn kendalcorr(self, _v: &[f64]) -> Result<f64>
-    where Self: std::marker::Sized { bail!("kendalcorr not implemented for this type") }
+    fn kendalcorr(self, _v: &[f64]) -> f64;
     /// Spearman's rho (rank differences) correlation
-    fn spearmancorr(self, _v: &[f64]) -> Result<f64>
-    where Self: std::marker::Sized { bail!("spearmancorr not implemented for this type") }
+    fn spearmancorr(self, _v: &[f64]) -> f64;
     /// Kazutsugi Spearman's corelation against just five distances (to outcomes classes)
-    fn kazutsugi(self) -> Result<f64>
-    where Self: std::marker::Sized { bail!("kazutsugi not implemented for this type") }
+    fn kazutsugi(self) -> f64;
     /// Autocorrelation
-    fn autocorr(self) -> Result<f64>
-    where Self: std::marker::Sized { bail!("autocorr not implemented for this type") }
-
+    fn autocorr(self) -> f64;
+ 
     /// Minimum, minimum's index, maximum, maximum's index.
     fn minmax(self) -> (f64, usize, f64, usize); 
     /// Linear transformation to [0,1]
