@@ -128,6 +128,9 @@ pub trait Vectors {
     fn lintrans(self) -> Vec<f64>;
     /// Sorted vector
     fn sortf(self) -> Vec<f64>;
+    /// Reursive merge sort building ranks in n*log(n)
+    fn mergerank(self) -> Vec<usize>;
+    fn merger(self,i:usize,n:usize,ranks:&mut[usize],revindx:&mut[usize]);
 }
 
 /// Mutable primitive vector operations.  
@@ -184,3 +187,9 @@ pub trait VecVec {
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
 }
+
+pub trait Indices {
+
+    fn revindex(self) -> Vec<usize>;
+}
+

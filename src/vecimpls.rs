@@ -1,4 +1,4 @@
-use crate::{MutVectors, Stats, Vectors};
+use crate::{MutVectors, Stats, Vectors, Indices};
 
 impl Vectors for &[f64] {
  
@@ -247,4 +247,71 @@ impl Vectors for &[f64] {
         sorted.mutsortf();
         sorted      
     }
+
+    fn mergerank(self) -> Vec<usize> {
+        let n = self.len();
+        let mut ranked = vec![0_usize;n];
+        let mut revindx = vec![0_usize;n];
+        // for i in 0..n { revindx[i] = i };
+        self.merger(0,n,&mut ranked, &mut revindx);
+        ranked
+    }    
+
+    /// Merge sort working on the ranks of the sorted elements,
+    fn merger(self, i:usize, n:usize, ranks:&mut[usize], revindx:&mut[usize]) {
+        if n < 2 { return }; // recursion termination condition
+        if n == 1 { revindx[ranks[i]] = revindx[i]; return };
+        let n1 = n / 2;  // the first half
+        let n2 = n - n1; // the remaining second half
+        self.merger(i, n1, ranks, revindx); // sort first half
+        self.merger(i+n1, n2, ranks, revindx); // sort second half  
+        let mut k = i; // merge moving index to the first sorted list
+        let mut l = i+n1; // merge moving index to the second sorted list
+        let mut firstinc = 0;
+        let mut secondinc = 0;
+        let mut firsthead;
+        let mut secondhead;
+        loop {
+            firsthead = self[revindx[k]];
+            secondhead = self[revindx[l]];
+            if firsthead < secondhead { // compare heads of the two lists, pop the first
+                secondinc += 1; ranks[k] += firstinc; revindx[ranks[k]] = revindx[k]; k += 1
+            } 
+            else if firsthead > secondhead { // pop the second
+                firstinc += 1; ranks[l] += secondinc; revindx[ranks[l]] = revindx[l];  l += 1                
+            } 
+            else { // equal, so pop both, not incrementing any ranks
+                ranks[k] += firstinc; ranks[l] += secondinc; 
+                firstinc += 1; secondinc += 1;
+                revindx[ranks[k]] = revindx[k]; revindx[ranks[l]] = revindx[l];
+                k += 1; l += 1 
+            }; 
+            if k == (i + n1) 
+            {   // first one done, flush the rest of the second 
+                while l < i+n {  ranks[l] += secondinc; revindx[ranks[l]] = revindx[l]; l += 1 };
+                return 
+            };
+            if l == (i + n)
+            {   // second one done, flush the rest of the first
+                while k < i+n1 {  ranks[k] += firstinc;  revindx[ranks[k]] = revindx[k]; k += 1 };
+                return 
+            };
+            
+        }
+    }
+
+}
+/// Constructs reversed index, eg. from (sorted) ranks to data index, 
+/// giving an indirect access to sorted values;
+/// whereas the ranks vector is a mapping from data index to ranks.
+/// Thus reversal of sorted index gives ranks.
+impl Indices for &[usize] {
+
+    fn revindex(self) -> Vec<usize> {
+        let n = self.len();
+        let mut index = vec![0_usize;n];
+        for i in 0..self.len() { index[self[i]] = i };
+        index
+    }
+
 }

@@ -47,7 +47,7 @@ Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Recent Releases
 
-* **Version 0.5.5**
+* **Version 0.5.5** Changed all correlations to required (unchecked) methods.
 
 * **Version 0.5.4** Added `irank,varc,kazutsugi`.
 
