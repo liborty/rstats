@@ -47,6 +47,8 @@ Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Recent Releases
 
+* **Version 0.5.5**
+
 * **Version 0.5.4** Added `irank,varc,kazutsugi`.
 
 * **Version 0.5.3** Added `varea` =  magnitude of the cross product. Changed status of some methods from 'required' to 'provided'.
@@ -56,10 +58,3 @@ Trait VecVec is entirely unchecked, you should  check your data upfront.
 * **Version 0.5.1** Added scalar addition `sadd` and linear transformation `lintrans` to `Vectors`.
 
 * **Version 0.5.0** Introduces *VecVec* trait for all multi-point methods, now implemented for type `&[Vec<f64>]`. This is a breaking change but it did allow streamlining of the code and a clean separation of the traits. Main benefit to the user is in no longer having to explicitly pass around the dimensionality d.
-
-* **Version 0.4.15** Added `setsub` similar to `mutzeromd` but it subtracts any given vector from a whole set.
-Moved all functions into new module `functions.rs`. The other modules are now exclusively trait implementations.
-
-* **Version 0.4.14** Added `mutzeromd` - or mutated zero median data, which transforms mutable self to zero-median form.
-
-* **Version 0.4.13** Added `trend` between two sets of points. More comments, tests and examples.

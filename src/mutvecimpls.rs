@@ -1,5 +1,4 @@
 use crate::{MutVectors};
-use std::cmp::Ordering::Equal;
 
 impl MutVectors for &mut [f64] {
     /// Scalar multiplication of a vector, mutates self
@@ -21,6 +20,6 @@ impl MutVectors for &mut [f64] {
     /// Sorts a mutable `Vec<f64>` in place.  
     /// It is the responsibility of the user to ensure that there are no NaNs etc.
     fn mutsortf(self) {
-        self.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
+        self.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap())
     }   
 }
