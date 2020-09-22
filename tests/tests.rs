@@ -9,7 +9,7 @@ use devtimer::DevTime;
 
 #[test]
 fn fstats() -> Result<()> { 
-   let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+   let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
    println!("\n{:?}",v1);
    println!("Lin. trans: {}\n",GreenVec(v1.lintrans()));
    println!("Arithmetic mean:{}",GreenIt(v1.amean().unwrap()));
@@ -20,10 +20,10 @@ fn fstats() -> Result<()> {
    println!("Geometric {}",v1.gmeanstd().unwrap());
    println!("Autocorrelation:{}",GreenIt(v1.autocorr()));
    println!("{}",v1.median().unwrap());
-   let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.];
+   let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
    println!("\n{:?}",v2);
-   println!("Ranking: {}",GreenVec(v2.ranks().unwrap()));
-   println!("M. Ranking: {}",GreenVec(v2.mergerank()));
+   println!("Rank:      {}",GreenVec(v2.ranks().unwrap()));
+   println!("Mergerank: {}",GreenVec(v2.mergerank()));
    
    println!("Sorted:  {}",GreenVec(v2.sortf()));
    println!("Pearson's Correlation:\t{}",GreenIt(v1.correlation(&v2))); 
@@ -42,7 +42,7 @@ fn fstats() -> Result<()> {
 
 #[test]
 fn intstats() -> Result<()> { 
-   let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+   let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
    println!("\n{:?}",v1);
    println!("Arithmetic mean:{}",GreenIt(v1.amean().unwrap()));
    println!("Geometric mean:\t{}",GreenIt(v1.gmean().unwrap()));

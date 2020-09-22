@@ -1,6 +1,6 @@
 use crate::functions::{emsg, wsum};
 use crate::{MStats, Med, Stats};
-use anyhow::{ensure, Context, Result};
+use anyhow::{ensure, Result};
 
 impl Stats for &[i64] {
     /// Arithmetic mean of an i64 slice
@@ -278,87 +278,45 @@ impl Stats for &[i64] {
         })
     }
 
-    /// Fast median (avoids sorting).  
-    /// The data values must be within a moderate range not exceeding u16size (65535).
+    /// Median. 
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
     /// let res = v1.as_slice().median().unwrap();
-    /// assert_eq!(res.median,7.5_f64);
-    /// assert_eq!(res.lquartile,4_f64);
-    /// assert_eq!(res.uquartile,11_f64);
+    /// assert_eq!(res.median,8.);
+    /// assert_eq!(res.lquartile,4.5);
+    /// assert_eq!(res.uquartile,11.5);
     /// ```
     fn median(self) -> Result<Med> {
-        let n = self.len() as u32;
-        ensure!(n > 0, emsg(file!(), line!(), "median - sample is empty!"));
-        ensure!(
-            n <= u32::max_value(),
-            emsg(file!(), line!(), "median - sample is probably too large!")
-        );
-        let &max = self
-            .iter()
-            .max()
-            .with_context(|| emsg(file!(), line!(), "median failed to find maximum"))?;
-        let &min = self
-            .iter()
-            .min()
-            .with_context(|| emsg(file!(), line!(), "median failed to find minimum"))?;
-        let range = (max - min + 1) as usize;
-        ensure!(
-            range <= u32::max_value() as usize, // range is probably too large to use as subscripts
-            "{}:{} rstats median range {} of values is too large",
-            file!(),
-            line!(),
-            range
-        );
-        let mut acc = vec![0_u32; range]; // min max values inclusive
-        for &item in self {
-            acc[(item - min) as usize] += 1_u32
-        } // computes frequency distribution
+        let gaps = self.len()-1;
+        let mid = gaps / 2;
+        let quarter = gaps / 4;
+        let threeq = 3 * gaps / 4;
+        let qrem = gaps % 4;
+        let mut v:Vec<i64> = self.to_vec();
+        v.sort_unstable();     
         let mut result: Med = Default::default();
-        let mut cumm = 0_u32;
-        let mut i2;
-
-        for i in 0..range {
-            // find the lower quartile
-            cumm += acc[i]; // accummulate frequencies
-            if 4 * cumm >= n {
-                result.lquartile = (i as i64 + min) as f64; // restore min value
-                break;
-            }
-        }
-        cumm = 0u32;
-        for i in (0..range).rev() {
-            // find the upper quartile
-            cumm += acc[i]; // accummulate frequencies
-            if 4 * cumm >= n {
-                result.uquartile = (i as i64 + min) as f64;
-                break;
-            }
-        }
-        cumm = 0u32;
-        for i in 0..range {
-            // find the midpoint of the frequency distribution
-            cumm += acc[i]; // accummulate frequencies
-            if 2 * cumm == n {
-                // even, the other half must have the same value
-                i2 = i + 1;
-                while acc[i2] == 0 {
-                    i2 += 1
-                }
-                // first next non-zero acc[i2] must represent the other half
-                result.median = ((i + i2) as i64 + 2 * min) as f64 / 2_f64;
-                break;
-            }
-            if 2 * cumm > n {
-                // first over the half items, this must be the odd midpoint
-                result.median = (i as i64 + min) as f64;
-                break;
-            }
-        }
-        Ok(result)
-    }
+        result.median = if 2*mid < gaps { (v[mid] + v[mid + 1]) as f64 / 2.0 }
+            else { v[mid] as f64 };
+        if qrem == 0 {
+            result.lquartile = v[quarter] as f64;
+            result.uquartile = v[threeq] as f64;
+            return Ok(result) };
+        if qrem == 1 {
+            result.lquartile = (3*v[quarter] + v[quarter+1]) as f64 / 4.;
+            result.uquartile = (v[threeq] + 3*v[threeq+1]) as f64 / 4.;
+            return Ok(result) };
+        if qrem == 2 {
+            result.lquartile = (v[quarter]+v[quarter+1]) as f64 / 2.;
+            result.uquartile = (v[threeq] + v[threeq+1]) as f64 / 2.;
+            return Ok(result) };
+        if qrem == 3 {
+            result.lquartile = (v[quarter] + 3*v[quarter+1]) as f64 / 4.;
+            result.uquartile = (3*v[threeq] + v[threeq+1]) as f64 / 4.
+        };
+        Ok(result)       
+    }    
 
     /// Returns vector of ranks, 
     /// ranked from the smallest number in self (rank 0) to the biggest (rank n-1).

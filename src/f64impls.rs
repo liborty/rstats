@@ -1,5 +1,5 @@
 use crate::functions::{emsg, wsum};
-use crate::{MStats, Med, Stats, MutVectors};
+use crate::{MStats, Med, Stats, Vectors};
 use anyhow::{ensure, Result};
 
 impl Stats for &[f64] {
@@ -282,28 +282,42 @@ impl Stats for &[f64] {
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.as_slice().median().unwrap();
     /// assert_eq!(res.median,7.5_f64);
-    /// assert_eq!(res.lquartile,4_f64);
-    /// assert_eq!(res.uquartile,11_f64);
+    /// assert_eq!(res.lquartile,4.25_f64);
+    /// assert_eq!(res.uquartile,10.75_f64);
     /// ```
     fn median(self) -> Result<Med> {
-        let n = self.len();
-        let mid = n / 2;
-        let mut v = self.to_vec();
-        v.mutsortf();
+        let gaps = self.len()-1;
+        let mid = gaps / 2;
+        let quarter = gaps / 4;
+        let threeq = 3 * gaps / 4;
+        let qrem = gaps % 4;
+        let v = self.sortf();     
         let mut result: Med = Default::default();
-        result.median = if mid * 2 < n {
-            v[mid]
-        } else {
-            (v[mid] + v[mid - 1]) / 2.0
+        result.median = if 2*mid < gaps { (v[mid] + v[mid + 1]) / 2.0 }
+            else { v[mid] };
+        if qrem == 0 {
+            result.lquartile = v[quarter];
+            result.uquartile = v[threeq];
+            return Ok(result) };
+        if qrem == 1 {
+            result.lquartile = (3.*v[quarter] + v[quarter+1]) / 4.;
+            result.uquartile = (v[threeq] + 3.*v[threeq+1]) / 4.;
+            return Ok(result) };
+        if qrem == 2 {
+            result.lquartile = (v[quarter]+v[quarter+1]) / 2.;
+            result.uquartile = (v[threeq] + v[threeq+1]) / 2.;
+            return Ok(result) };
+        if qrem == 3 {
+            result.lquartile = (v[quarter] + 3.*v[quarter+1]) / 4.;
+            result.uquartile = (3.*v[threeq] + v[threeq+1]) / 4.
         };
-        result.lquartile = v[n / 4];
-        result.uquartile = v[3 * n / 4];
-        Ok(result)
-    }
+        Ok(result)       
+    }    
 
     /// Returns vector of ranks;
     /// ranked from the smallest number in self (rank 0) to the biggest (rank n-1).
     /// Equalities lead to fractional ranks, hence Vec<f64> output and the range of rank values is reduced.
+    /// Has complexity n*(n-1)/2. Use `mergerank` for long lists.
     fn ranks(self) -> Result<Vec<f64>> {
         let n = self.len();
         let mut rank = vec![0_f64; n];

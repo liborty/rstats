@@ -130,7 +130,8 @@ pub trait Vectors {
     fn sortf(self) -> Vec<f64>;
     /// Reursive merge sort building ranks in n*log(n)
     fn mergerank(self) -> Vec<usize>;
-    fn merger(self,i:usize,n:usize,ranks:&mut[usize],revindx:&mut[usize]);
+    /// Immutable merge sort, makes an index
+    fn mergesort(self, i:usize, n:usize) -> Vec<usize>;
 }
 
 /// Mutable primitive vector operations.  

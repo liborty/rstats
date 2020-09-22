@@ -241,63 +241,57 @@ impl Vectors for &[f64] {
         let range = max-min;
         self.iter().map(|&x|(x-min)/range).collect()        
     }
-    /// Sorted vector
+    /// Make sorted vector
     fn sortf(self) -> Vec<f64> {
         let mut sorted:Vec<f64> = self.to_vec();
         sorted.mutsortf();
         sorted      
     }
 
+    /// Reverses the sort index, thus ranking `self` with only n*(log(n)+1) complexity.
     fn mergerank(self) -> Vec<usize> {
         let n = self.len();
-        let mut ranked = vec![0_usize;n];
-        let mut revindx = vec![0_usize;n];
-        // for i in 0..n { revindx[i] = i };
-        self.merger(0,n,&mut ranked, &mut revindx);
-        ranked
+        let indx = self.mergesort(0,n);
+        indx.revindex()    
     }    
 
-    /// Merge sort working on the ranks of the sorted elements,
-    fn merger(self, i:usize, n:usize, ranks:&mut[usize], revindx:&mut[usize]) {
-        if n < 2 { return }; // recursion termination condition
-        if n == 1 { revindx[ranks[i]] = revindx[i]; return };
+    /// Recursive non-destructive merge sort.
+    /// Indexes self in sort-order from i to i+n
+    /// (instead of mutating self as the standard Rust sort does).
+    fn mergesort(self, i:usize, n:usize) -> Vec<usize> {
+        // if n < 1 { return }; // recursion termination condition 
+        if n == 1 { let res = vec![i]; return res };         
         let n1 = n / 2;  // the first half
         let n2 = n - n1; // the remaining second half
-        self.merger(i, n1, ranks, revindx); // sort first half
-        self.merger(i+n1, n2, ranks, revindx); // sort second half  
-        let mut k = i; // merge moving index to the first sorted list
-        let mut l = i+n1; // merge moving index to the second sorted list
-        let mut firstinc = 0;
-        let mut secondinc = 0;
+        let sv1 = self.mergesort(i, n1); // sort first half
+        let sv2 = self.mergesort(i+n1, n2); // sort second half 
+        let mut merged:Vec<usize> = Vec::with_capacity(n); 
+        let mut k = 0_usize;   // moving index to the first sorted list
+        let mut l = 0_usize;   // moving index to the second sorted list
         let mut firsthead;
         let mut secondhead;
         loop {
-            firsthead = self[revindx[k]];
-            secondhead = self[revindx[l]];
-            if firsthead < secondhead { // compare heads of the two lists, pop the first
-                secondinc += 1; ranks[k] += firstinc; revindx[ranks[k]] = revindx[k]; k += 1
-            } 
+            // accessing the data in self indirectly trough indx
+            firsthead = self[sv1[k]];
+            secondhead = self[sv2[l]];
+             
+            if firsthead < secondhead { // compare heads of the two sorted lists, pop the first
+                merged.push(sv1[k]); k += 1 }
             else if firsthead > secondhead { // pop the second
-                firstinc += 1; ranks[l] += secondinc; revindx[ranks[l]] = revindx[l];  l += 1                
-            } 
-            else { // equal, so pop both, not incrementing any ranks
-                ranks[k] += firstinc; ranks[l] += secondinc; 
-                firstinc += 1; secondinc += 1;
-                revindx[ranks[k]] = revindx[k]; revindx[ranks[l]] = revindx[l];
-                k += 1; l += 1 
-            }; 
-            if k == (i + n1) 
-            {   // first one done, flush the rest of the second 
-                while l < i+n {  ranks[l] += secondinc; revindx[ranks[l]] = revindx[l]; l += 1 };
-                return 
+                merged.push(sv2[l]); l += 1 } 
+            else { // they are equal, so pop both, keeping their order
+                merged.push(sv1[k]); k += 1;
+                merged.push(sv2[l]); l += 1 }
+            if k == sv1.len() {   // first one is done, flush the rest of the second 
+                while l < sv2.len() {  merged.push(sv2[l]); l += 1  };
+                break
             };
-            if l == (i + n)
-            {   // second one done, flush the rest of the first
-                while k < i+n1 {  ranks[k] += firstinc;  revindx[ranks[k]] = revindx[k]; k += 1 };
-                return 
-            };
-            
+            if l == sv2.len() {   // second one is done, flush the rest of the first
+                while k < sv1.len() {  merged.push(sv1[k]); k += 1 };
+                break
+            };            
         }
+        return merged
     }
 
 }
