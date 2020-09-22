@@ -259,8 +259,10 @@ impl Vectors for &[f64] {
     /// Indexes self in sort-order from i to i+n
     /// (instead of mutating self as the standard Rust sort does).
     fn mergesort(self, i:usize, n:usize) -> Vec<usize> {
-        // if n < 1 { return }; // recursion termination condition 
-        if n == 1 { let res = vec![i]; return res };         
+        if n == 1 { let res = vec![i]; return res };  // recursion termination
+        if n == 2 {            
+            if self[i+1] < self[i] { return vec![i+1,i] } else { return vec![i,i+1] }
+        }       
         let n1 = n / 2;  // the first half
         let n2 = n - n1; // the remaining second half
         let sv1 = self.mergesort(i, n1); // sort first half
@@ -295,17 +297,22 @@ impl Vectors for &[f64] {
     }
 
 }
-/// Constructs reversed index, eg. from (sorted) ranks to data index, 
-/// giving an indirect access to sorted values;
-/// whereas the ranks vector is a mapping from data index to ranks.
-/// Thus reversal of sorted index gives ranks.
+
 impl Indices for &[usize] {
 
+    /// Constructs reversed index, eg. from sort index to data ranks 
     fn revindex(self) -> Vec<usize> {
         let n = self.len();
         let mut index = vec![0_usize;n];
         for i in 0..self.len() { index[self[i]] = i };
         index
+    }
+
+    /// Collects values from v in the order given by self index.    
+    fn unindex(self, v:&[f64]) -> Vec<f64> {
+        let mut values = Vec::with_capacity(self.len());
+        for &i in self { values.push(v[i]) };
+        values
     }
 
 }

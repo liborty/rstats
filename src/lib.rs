@@ -189,8 +189,12 @@ pub trait VecVec {
     fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
 }
 
+/// Methods to manipulate indices
 pub trait Indices {
 
+    /// Reverse index
     fn revindex(self) -> Vec<usize>;
+    /// Collects values from `v` as per indices in self.
+    fn unindex(self, v:&[f64]) -> Vec<f64>;
 }
 

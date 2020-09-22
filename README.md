@@ -53,6 +53,8 @@ The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
 
+* **Version 0.5.6**
+
 * **Version 0.5.5** Introduced `revindex`, `mergerank` and `mergesort`. Made 1-d quartiles more accurate. Changed all correlations to required (unchecked) methods.
 
 * **Version 0.5.4** Added `irank,varc,kazutsugi`.

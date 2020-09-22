@@ -3,7 +3,7 @@
 #[cfg(test)]
 
 use anyhow::{Result};
-use rstats::{Stats,MutVectors,Vectors,VecVec};
+use rstats::{Stats,MutVectors,Vectors,VecVec,Indices};
 use rstats::functions::{GreenIt,GreenVec,genvec};
 use devtimer::DevTime;
 
@@ -24,8 +24,8 @@ fn fstats() -> Result<()> {
    println!("\n{:?}",v2);
    println!("Rank:      {}",GreenVec(v2.ranks().unwrap()));
    println!("Mergerank: {}",GreenVec(v2.mergerank()));
-   
-   println!("Sorted:  {}",GreenVec(v2.sortf()));
+   println!("M.sorted:  {}",GreenVec(v2.mergesort(0,v2.len()).unindex(&v2)));
+   println!("Sorted:    {}",GreenVec(v2.sortf()));
    println!("Pearson's Correlation:\t{}",GreenIt(v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",GreenIt(v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",GreenIt(v1.spearmancorr(&v2)));  
