@@ -23,8 +23,10 @@ fn fstats() -> Result<()> {
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
    println!("\n{:?}",v2);
    println!("Rank:      {}",GreenVec(v2.ranks().unwrap()));
+   println!("Sort index:{}",GreenVec(v2.mergesort(0,v2.len()))); 
+   println!("R reversed:{}",GreenVec(v2.mergerank().revindex()));    
    println!("Mergerank: {}",GreenVec(v2.mergerank()));
-   println!("M.sorted:  {}",GreenVec(v2.mergesort(0,v2.len()).unindex(&v2)));
+   println!("Mrg.sorted:{}",GreenVec(v2.mergesort(0,v2.len()).unindex(&v2)));
    println!("Sorted:    {}",GreenVec(v2.sortf()));
    println!("Pearson's Correlation:\t{}",GreenIt(v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",GreenIt(v1.kendalcorr(&v2)));  

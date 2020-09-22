@@ -1,4 +1,4 @@
-use crate::{MutVectors, Stats, Vectors, Indices};
+use crate::{MutVectors, Vectors, Indices};
 
 impl Vectors for &[f64] {
  
@@ -83,8 +83,9 @@ impl Vectors for &[f64] {
         (self.vmagsq()*v.vmagsq() - self.dotp(v).powi(2)).sqrt()
     }
 
-    /// Area proportional to the swept arc. 
-    /// Attains maximum of `2.|a|.|b|` when the vectors have opposite orientations.
+    /// Area proportional to the swept arc up to angle theta. 
+    /// Attains maximum of `2|a||b|` when the vectors have opposite orientations.
+    /// This is really |a||b|(1-cos(theta))
     fn varc(self, v:&[f64]) -> f64 { 
         (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
     }
@@ -164,10 +165,10 @@ impl Vectors for &[f64] {
     /// assert_eq!(v1.spearmancorr(&v2),-0.1076923076923077);
     /// ```
     fn spearmancorr(self, v: &[f64]) -> f64 {
-        let xvec = self.ranks().unwrap();
-        let yvec = v.ranks().unwrap();
+        let xvec = self.mergerank();
+        let yvec = v.mergerank();
         // It is just Pearson's correlation of ranks
-        xvec.correlation(&yvec)
+        xvec.ucorrelation(&yvec)
     }
 
     /// Spearman correlation of five distances
@@ -181,13 +182,14 @@ impl Vectors for &[f64] {
     /// assert_eq!(v1.kazutsugi(),0.3);
     /// ```
     fn kazutsugi(self) -> f64 {
-        let xvec = self.ranks().unwrap();
+        let xvec = self.mergerank();
         let yvec:Vec<f64> = vec![4.,3.,2.,1.,0.];
         let (mut sxy, mut sx2) = (0_f64,0_f64);
         const MY:f64 = 2.;  // y mean 
         const SY:f64 = 10.; // sum of yvec
         const SY2:f64 = 30.; // sum of y^2
-        let sx:f64 = xvec.iter().zip(yvec).map(|(&x,y)| {
+        let sx:f64 = xvec.iter().zip(yvec).map(|(&ux,y)| {
+            let x = ux as f64;
             sxy += x*y;
             sx2 += x*x;
             x }).sum();
@@ -300,7 +302,9 @@ impl Vectors for &[f64] {
 
 impl Indices for &[usize] {
 
-    /// Constructs reversed index, eg. from sort index to data ranks 
+    /// Constructs reversed index, eg. from sort index to data ranks
+    /// This is a symmetric operation, i.e. even numbers of applications 
+    /// all lead back to the original form.
     fn revindex(self) -> Vec<usize> {
         let n = self.len();
         let mut index = vec![0_usize;n];
@@ -314,5 +318,27 @@ impl Indices for &[usize] {
         for &i in self { values.push(v[i]) };
         values
     }
+
+    /// Pearson's correlation coefficient of a two $[usize] slices,
+    /// typically the ranks.  
+    fn ucorrelation(self, v: &[usize]) -> f64 {
+        let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
+        let sx: f64 = self
+            .iter()
+            .zip(v)
+            .map(|(&ux, &uy)| {
+                let x = ux as f64;
+                let y = uy as f64;
+                sy += y;
+                sxy += x * y;
+                sx2 += x * x;
+                sy2 += y * y;
+                x
+            })
+            .sum();
+        let nf = self.len() as f64;
+        (sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()
+    }
+
 
 }

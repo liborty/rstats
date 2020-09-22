@@ -16,7 +16,7 @@ impl Stats for &[f64] {
         Ok(self.iter().sum::<f64>() / (n as f64))
     }
 
-    /// Arithmetic mean and standard deviation of an f64 slice
+    /// Arithmetic mean and (population) standard deviation of an f64 slice
     /// # Example
     /// ```
     /// use rstats::Stats;

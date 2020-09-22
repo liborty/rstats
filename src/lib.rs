@@ -40,7 +40,7 @@ impl std::fmt::Display for MStats {
 }
 
 /// Basic one dimensional (1-d) statistical measures.
-/// All these methods operate on only one vector (of data). They take no arguments.
+/// These methods operate on just one vector (of data) and take no arguments.
 pub trait Stats {
     /// Arithmetic mean
     fn amean(self) -> Result<f64> 
@@ -134,8 +134,8 @@ pub trait Vectors {
     fn mergesort(self, i:usize, n:usize) -> Vec<usize>;
 }
 
-/// Mutable primitive vector operations.  
-/// Some of the Vec trait methods reimplemented to mutate in-place (for efficiency).
+/// Mutable primitive vector operations.
+/// Some of the Vectors trait methods reimplemented for efficiency to mutate in-place.
 pub trait MutVectors {
     /// mutable multiplication by a scalar
     fn mutsmult(self, _s: f64) where Self: std::marker::Sized {}  
@@ -196,5 +196,9 @@ pub trait Indices {
     fn revindex(self) -> Vec<usize>;
     /// Collects values from `v` as per indices in self.
     fn unindex(self, v:&[f64]) -> Vec<f64>;
+    /// Pearson's correlation coefficient of a two $[usize] slices,
+    /// typically the ranked data.  
+    fn ucorrelation(self, v: &[usize]) -> f64;
+  
 }
 
