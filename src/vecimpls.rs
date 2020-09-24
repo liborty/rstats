@@ -1,9 +1,22 @@
-use crate::{MutVectors, Vectors, Indices};
+use crate::{Scalars, MutVectors, Vectors, Indices};
 
-impl Vectors for &[f64] {
- 
+impl Scalars for &[u8] {
+     
+     /// Scalar multiplication of a vector, creates new vec
+     fn smult(self, s:f64) -> Vec<f64> {
+        self.iter().map(|&x| s*x as f64).collect()
+}
+    /// Scalar addition to a vector, creates new vec
+    fn sadd(self, s:f64) -> Vec<f64> {
+        self.iter().map(|&x| s+x as f64).collect()
+    }
+
+}
+
+impl Scalars for &[f64] {
+     
     /// Scalar multiplication of a vector, creates new vec
-    fn smult(self, s: f64) -> Vec<f64> {
+    fn smult(self, s:f64) -> Vec<f64> {
         self.iter().map(|&x| s*x).collect()
     }
 
@@ -11,6 +24,10 @@ impl Vectors for &[f64] {
     fn sadd(self, s:f64) -> Vec<f64> {
         self.iter().map(|&x| s+x).collect()
     }
+
+}
+
+impl Vectors for &[f64] {
 
     /// Scalar product of two f64 slices.   
     /// Must be of the same length - no error checking (for speed)
@@ -57,6 +74,14 @@ impl Vectors for &[f64] {
         self.iter()
             .zip(v)
             .map(|(&xi, &vi)| (xi - vi).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+    /// Euclidian distance, same as vdist but the argument is of &[u8] type  
+    fn vdistu8(self, v: &[u8]) -> f64 {
+        self.iter()
+            .zip(v)
+            .map(|(&xi, &vi)| (xi - vi as f64).powi(2))
             .sum::<f64>()
             .sqrt()
     }
@@ -262,7 +287,7 @@ impl Vectors for &[f64] {
     /// (instead of mutating self as the standard Rust sort does).
     fn mergesort(self, i:usize, n:usize) -> Vec<usize> {
         if n == 1 { let res = vec![i]; return res };  // recursion termination
-        if n == 2 {            
+        if n == 2 {  // also terminate (for efficiency)          
             if self[i+1] < self[i] { return vec![i+1,i] } else { return vec![i,i+1] }
         }       
         let n1 = n / 2;  // the first half

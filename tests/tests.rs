@@ -10,6 +10,7 @@ use devtimer::DevTime;
 #[test]
 fn fstats() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
+   let v1r = v1.ranks().unwrap();
    println!("\n{:?}",v1);
    println!("Lin. trans: {}\n",GreenVec(v1.lintrans()));
    println!("Arithmetic mean:{}",GreenIt(v1.amean().unwrap()));
@@ -21,6 +22,7 @@ fn fstats() -> Result<()> {
    println!("Autocorrelation:{}",GreenIt(v1.autocorr()));
    println!("{}",v1.median().unwrap());
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
+   let v2r = v2.ranks().unwrap();
    println!("\n{:?}",v2);
    println!("Rank:      {}",GreenVec(v2.ranks().unwrap()));
    println!("Sort index:{}",GreenVec(v2.mergesort(0,v2.len()))); 
@@ -31,7 +33,8 @@ fn fstats() -> Result<()> {
    println!("Pearson's Correlation:\t{}",GreenIt(v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",GreenIt(v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",GreenIt(v1.spearmancorr(&v2)));  
-   println!("Cosine:\t\t\t{}",GreenIt(v1.cosine(&v2)));     
+   println!("Cosine:\t\t\t{}",GreenIt(v1.cosine(&v2))); 
+   println!("Cosine of ranks:\t\t{}",GreenIt(v1r.cosine(&v2r)));        
    println!("Euclidian distance:\t{}",GreenIt(v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",GreenIt(v1.vsub(&v2).as_slice().vmag()));   
    println!("Vector difference: {}",GreenVec(v1.vsub(&v2))); 

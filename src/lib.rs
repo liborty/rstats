@@ -39,9 +39,19 @@ impl std::fmt::Display for MStats {
     }
 }
 
+pub trait Scalars {
+
+    /// Scalar multiplication with a vector
+    fn smult(self, s: f64) -> Vec<f64>;
+    /// Scalar addition to vector
+    fn sadd(self, s: f64) -> Vec<f64>;    
+
+}
+
 /// Basic one dimensional (1-d) statistical measures.
 /// These methods operate on just one vector (of data) and take no arguments.
 pub trait Stats {
+
     /// Arithmetic mean
     fn amean(self) -> Result<f64> 
         where Self: std::marker::Sized { bail!("amean not implemented for this type")}
@@ -89,7 +99,7 @@ pub trait Vectors {
     /// Scalar product of two vectors
     fn dotp(self, v: &[f64]) -> f64;
     /// Cosine = a.dotp(b)/(a.vmag*b.vmag)
-    fn  cosine(self, _v: &[f64]) -> f64; 
+    fn cosine(self, _v: &[f64]) -> f64; 
     /// Vector subtraction
     fn vsub(self, v: &[f64]) -> Vec<f64>;
     /// Vector addition
@@ -100,10 +110,8 @@ pub trait Vectors {
     fn vmagsq(self) -> f64;
     /// Euclidian distance between two points
     fn vdist(self, v: &[f64]) -> f64;
-    /// Scalar multiplication
-    fn smult(self, s: f64) -> Vec<f64>;
-    /// Scalar addition to vector
-    fn sadd(self, s: f64) -> Vec<f64>;
+    fn vdistu8(self, v: &[u8]) -> f64;
+ 
     /// Unit vector
     fn vunit(self) -> Vec<f64>;
     /// Area of parallelogram between two vectors (magnitude of cross product)

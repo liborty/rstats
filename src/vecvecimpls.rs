@@ -1,4 +1,4 @@
-use crate::{Med, MStats, MutVectors, Stats, VecVec, Vectors};
+use crate::{Med, MStats, Scalars, MutVectors, Stats, VecVec, Vectors};
 
 impl VecVec for &[Vec<f64>] {
     /// Centroid = simple multidimensional arithmetic mean
