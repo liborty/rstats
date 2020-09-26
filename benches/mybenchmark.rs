@@ -1,5 +1,5 @@
 use rstats::{VecVec};
-use rstats::functions::{GreenIt,genvec};
+use rstats::functions::{GI,genvec};
 
 /*
 use criterion::{black_box, criterion_group, criterion_main, Criterion}; //, BenchmarkId}
@@ -79,7 +79,7 @@ fn main() {
       sumtime += cmplx.time_in_nanos("nmedian").unwrap();
       sumg += pts.as_slice().ecc(&g);  
    };
-   println!("\nSum of nmedian residual errors: {} time: {} ", GreenIt(sumg), GreenIt(sumtime));
+   println!("\nSum of nmedian residual errors: {} time: {} ", GI(sumg), GI(sumtime));
   
 /*
   // Or we can iterate through all timers

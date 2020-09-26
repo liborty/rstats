@@ -1,4 +1,4 @@
-use crate::{Med, MStats, Scalars, MutVectors, Stats, VecVec, Vectors};
+use crate::{Med, MStats, MutVectors, Stats, VecVec, Vecf64};
 
 impl VecVec for &[Vec<f64>] {
     /// Centroid = simple multidimensional arithmetic mean
@@ -18,6 +18,7 @@ impl VecVec for &[Vec<f64>] {
         centre.mutsmult(1.0 / self.len() as f64);
         centre
     }
+
 
     /// For each point, gives its sum of distances to all other points.
     /// This is the efficient workhorse of distances based analysis.

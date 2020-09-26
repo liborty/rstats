@@ -1,11 +1,12 @@
 mod f64impls;
 pub mod functions;
 mod i64impls;
-mod vecimpls;
+mod vecf64impls;
+mod vecu8impls;
 mod mutvecimpls;
 mod vecvecimpls;
 
-use crate::functions::{GreenIt};
+use crate::functions::{GI};
 use anyhow::{Result,bail};
 
 /// Median and quartiles
@@ -20,9 +21,9 @@ impl std::fmt::Display for Med {
         write!(
             f,
             "(Lower Q: {}, Median: {}, Upper Q: {})",
-            GreenIt(self.lquartile),
-            GreenIt(self.median),
-            GreenIt(self.uquartile)
+            GI(self.lquartile),
+            GI(self.median),
+            GI(self.uquartile)
         )
     }
 }
@@ -35,17 +36,8 @@ pub struct MStats {
 }
 impl std::fmt::Display for MStats {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "mean±std: {}±{}", GreenIt(self.mean), GreenIt(self.std))
+        write!(f, "mean±std: {}±{}", GI(self.mean), GI(self.std))
     }
-}
-
-pub trait Scalars {
-
-    /// Scalar multiplication with a vector
-    fn smult(self, s: f64) -> Vec<f64>;
-    /// Scalar addition to vector
-    fn sadd(self, s: f64) -> Vec<f64>;    
-
 }
 
 /// Basic one dimensional (1-d) statistical measures.
@@ -93,9 +85,14 @@ pub trait Stats {
         where Self: std::marker::Sized { bail!("iranks not implemented for this type")}    
 }
 
-/// Vector algebra on one or two vectors.
-pub trait Vectors {
 
+/// Vector algebra on one or two vectors.
+pub trait Vecf64 {
+
+   /// Scalar multiplication with a vector
+    fn smult(self, s: f64) -> Vec<f64>;
+    /// Scalar addition to vector
+    fn sadd(self, s: f64) -> Vec<f64>; 
     /// Scalar product of two vectors
     fn dotp(self, v: &[f64]) -> f64;
     /// Cosine = a.dotp(b)/(a.vmag*b.vmag)
@@ -142,6 +139,18 @@ pub trait Vectors {
     fn mergesort(self, i:usize, n:usize) -> Vec<usize>;
 }
 
+/// Minimal support also for Vec[u8]
+pub trait Vecu8 {
+
+    /// Scalar multiplication with a vector
+    fn smult(self, s: f64) -> Vec<f64>;
+    /// Scalar addition to vector
+    fn sadd(self, s: f64) -> Vec<f64>;
+    /// Euclidian distance 
+    fn vdist(self, v: &[f64]) -> f64;  
+    
+}
+
 /// Mutable primitive vector operations.
 /// Some of the Vectors trait methods reimplemented for efficiency to mutate in-place.
 pub trait MutVectors {
@@ -149,12 +158,22 @@ pub trait MutVectors {
     fn mutsmult(self, _s: f64) where Self: std::marker::Sized {}  
     /// mutable vector subtraction
     fn mutvsub(self, _v: &[f64]) where Self: std::marker::Sized {}
+    fn mutvsubu8(self, _v: &[u8]) where Self: std::marker::Sized {} 
     /// mutable vector addition
     fn mutvadd(self, _v: &[f64]) where Self: std::marker::Sized {}
-    /// mutably makes into a unit vector
+    fn mutvaddu8(self, _v: &[u8]) where Self: std::marker::Sized {}
+     /// mutably makes into a unit vector
     fn mutvunit(self) where Self: std::marker::Sized {}
     /// sort in place
-    fn mutsortf(self) where Self: std::marker::Sized {}
+    fn mutsortf(self) where Self: std::marker::Sized {} 
+}
+
+/// Minimal support also for sets of bytes of type Vec<Vec<u8>>
+pub trait VecVecu8 {
+    /// Centroid = euclidian mean of a set of points  
+    fn acentroid(self) -> Vec<f64>; 
+    fn nmedian(self, eps:f64) -> Vec<f64>;
+    fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>);
 }
 
 /// Methods applicable to sets of vectors.

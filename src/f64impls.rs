@@ -1,5 +1,5 @@
 use crate::functions::{emsg, wsum};
-use crate::{MStats, Med, Stats, Vectors};
+use crate::{MStats, Med, Stats, Vecf64};
 use anyhow::{ensure, Result};
 
 impl Stats for &[f64] {

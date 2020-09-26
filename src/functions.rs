@@ -41,19 +41,19 @@ pub fn genvec(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<f64>> {
     return v;
 }
 
-/// GreenIt struct facilitates printing (in green) any type
+/// GreenIt (GI) struct facilitates printing (in green) any type
 /// that has Display implemented.
-pub struct GreenIt<T: fmt::Display>(pub T);
-impl<T: fmt::Display> fmt::Display for GreenIt<T> {
+pub struct GI<T: fmt::Display>(pub T);
+impl<T: fmt::Display> fmt::Display for GI<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "\x1B[01;92m{}\x1B[0m", self.0.to_string())
     }
 }
 
-/// GreenVec struct facilitates printing (in green) vectors of any type
+/// GreenVec (GV) struct facilitates printing (in green) vectors of any type
 /// that has Display implemented.
-pub struct GreenVec<T: fmt::Display>(pub Vec<T>);
-impl<T: fmt::Display> fmt::Display for GreenVec<T> {
+pub struct GV<T: fmt::Display>(pub Vec<T>);
+impl<T: fmt::Display> fmt::Display for GV<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut s = String::from("\x1B[01;92m[");
         let n = self.0.len();
