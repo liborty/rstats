@@ -4,7 +4,7 @@ impl VecVec for &[Vec<f64>] {
     /// Centroid = simple multidimensional arithmetic mean
     /// # Example
     /// ```
-    /// use rstats::{Vectors,VecVec,functions::genvec};
+    /// use rstats::{Vecf64,VecVec,functions::genvec};
     /// let pts = genvec(15,15,255,30);
     /// let centre = pts.acentroid();
     /// let dist = pts.distsum(&centre);
@@ -70,7 +70,7 @@ impl VecVec for &[Vec<f64>] {
     /// This is faster than vec of vecs but we have to handle the indices.  
     /// # Example
     /// ```
-    /// use rstats::{Vectors,VecVec,functions::genvec};
+    /// use rstats::{Vecf64,VecVec,functions::genvec};
     /// let pts = genvec(15,15,255,30);
     /// let (dm,_,_,_) = pts.medoid();
     /// assert_eq!(dm,4.812334638782327_f64);
@@ -180,7 +180,7 @@ impl VecVec for &[Vec<f64>] {
     /// The sum of their distances from c will remain the same but the eccentricity of c will be much reduced.
     /// # Example
     /// ```
-    /// use rstats::{Vectors,VecVec,functions::genvec};
+    /// use rstats::{Vecf64,VecVec,functions::genvec};
     /// let d = 6_usize;
     /// let pt = genvec(d,24,7,13); // random test data 5x20
     /// let (_medoideccentricity,medei,_outlierecccentricity,outei) = pt.emedoid();
