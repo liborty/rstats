@@ -24,13 +24,17 @@ Included are:
 * linearly weighted means (useful for time dependent data analysis),
 * median and quartiles.
 
-## Trait Vectors
+## Trait Vecf64
 
 * Vector algebra implemented on one or two `&[f64]` slices of any length (vector dimensionality).
 * Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
 * Finding minimum and maximum, linear transformation.
 
 Trait Vectors is sometimes unchecked for speed, so some caution with data is advisable.
+
+## Trait Vecu8
+
+Some minimal vector algebra allso for vectors of u8.
 
 ## Trait MutVectors
 
@@ -45,6 +49,10 @@ Zero median data.
 
 Trait VecVec is entirely unchecked, you should  check your data upfront.
 
+## Trait VecVecu8
+
+Minimal support also for sets of vectors of u8 end type
+
 ## Trait Index
 
 * `revindex` method for reversing an index.
@@ -53,7 +61,7 @@ The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
 
-* **Version 0.5.6**
+* **Version 0.5.6** Added minimal support also for vectors of bytes (of u8 end type) for vector algebra over files and images.
 
 * **Version 0.5.5** Introduced `revindex`, `mergerank` and `mergesort`. Made 1-d quartiles more accurate. Changed all correlations to required (unchecked) methods.
 
