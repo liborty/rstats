@@ -61,6 +61,8 @@ The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
 
+* **Version 0.5.7**
+
 * **Version 0.5.6** Added minimal support also for vectors of bytes (of u8 end type) for vector algebra over files and images.
 
 * **Version 0.5.5** Introduced `revindex`, `mergerank` and `mergesort`. Made 1-d quartiles more accurate. Changed all correlations to required (unchecked) methods.

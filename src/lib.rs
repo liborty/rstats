@@ -181,11 +181,13 @@ pub trait VecVec {
     /// Centroid = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
     /// Sums of distances from each point to all other points
-    fn distances(self) -> Vec<f64>;
+    fn distsums(self) -> Vec<f64>;
     /// Sum of distances from one point given by indx
     fn distsuminset(self, indx: usize) -> f64;
     /// Sum of distances from arbitrary point (v) to all the points in self   
     fn distsum(self, v: &[f64]) -> f64;
+    /// Individual distances from any point v (typically not in self) to all the points in self.    
+    fn dists(self, v: &[f64]) -> Vec<f64>;
     /// Medoid and Outlier (by distance) of a set of points
     fn medoid(self) -> (f64, usize, f64, usize);
 

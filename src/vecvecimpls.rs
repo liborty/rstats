@@ -22,7 +22,7 @@ impl VecVec for &[Vec<f64>] {
 
     /// For each point, gives its sum of distances to all other points.
     /// This is the efficient workhorse of distances based analysis.
-    fn distances(self) -> Vec<f64> {
+    fn distsums(self) -> Vec<f64> {
         let n = self.len();
         let mut dists = vec![0_f64; n]; // distances accumulator for all points
                                         // examine all unique pairings (lower triangular part of symmetric flat matrix)
@@ -54,11 +54,17 @@ impl VecVec for &[Vec<f64>] {
         sum
     }
 
+    /// Individual distances from any point v (typically not in self) to all the points in self.    
+    fn dists(self, v: &[f64]) -> Vec<f64> {
+        self.iter().map(|p| p.vdist(v)).collect()
+    }
+
     /// The sum of distances from any point v (typically not in self) to all the points in self.    
     /// Geometric Median is defined as the point v which minimises this function.
     fn distsum(self, v: &[f64]) -> f64 {
         self.iter().map(|p| p.vdist(v)).sum::<f64>()
     }
+
 
     /// Medoid is the point belonging to set of points `self`,
     /// which has the least sum of distances to all other points.
@@ -76,7 +82,7 @@ impl VecVec for &[Vec<f64>] {
     /// assert_eq!(dm,4.812334638782327_f64);
     /// ```
     fn medoid(self) -> (f64, usize, f64, usize) {
-        self.distances().minmax()
+        self.distsums().minmax()
     }
 
     /// Eccentricity vector for each point.
