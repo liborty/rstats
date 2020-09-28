@@ -61,7 +61,7 @@ The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
 
-* **Version 0.5.8** Improved some comments.
+* **Version 0.5.8** Improved some comments. Implemented `varc` for u8.
 
 * **Version 0.5.7** Minor version - added `dists`.
 

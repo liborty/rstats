@@ -19,13 +19,10 @@ impl Vecu8 for &[u8] {
     fn vmagsq(self) -> f64 {
         self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()
     } 
-
-    /// Same as varc but the argument is of &[u8] type
+    /// Area of swept arc
     fn varc(self, v:&[f64]) -> f64 { 
         (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
     }
-  
-
     /// Euclidian distance between self u8 point and v: &[f64].  
     /// Slightly faster than vsub followed by vmag, as both are done in one loop
     fn vdist(self, v: &[f64]) -> f64 {
