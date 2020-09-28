@@ -60,6 +60,7 @@ impl Vecf64 for &[f64] {
             .sum::<f64>()
             .sqrt()
     }
+
     /// Euclidian distance, same as vdist but the argument is of &[u8] type  
     fn vdistu8(self, v: &[u8]) -> f64 {
         self.iter()
@@ -182,7 +183,7 @@ impl Vecf64 for &[f64] {
     /// Spearman correlation of five distances
     /// against Kazutsugi discrete outcomes [0.00,0.25,0.50,0.75,1.00], ranked as [4,3,2,1,0] 
     /// (the order is swapped to penalise distances). 
-    /// The result is in the range [0,1], rounded to five decimal places.
+    /// The result is in the range [-1,1].
     /// # Example
     /// ```
     /// use rstats::Vecf64;
@@ -251,39 +252,46 @@ impl Vecf64 for &[f64] {
         let range = max-min;
         self.iter().map(|&x|(x-min)/range).collect()        
     }
-    /// Make sorted vector
+    /// New sorted vector
+    /// Copies self and then sorts it in place, leaving self unchanged (immutable).
     fn sortf(self) -> Vec<f64> {
         let mut sorted:Vec<f64> = self.to_vec();
         sorted.mutsortf();
         sorted      
     }
 
-    /// Reverses the sort index, thus ranking `self` with only n*(log(n)+1) complexity.
+    /// Inverts the (merge) sort index, giving the ranking.  
+    /// Sort index is in the order of sorted items, giving their indices to the original data.
+    /// Ranking is in the order of original data, giving their positions in the sort index.
+    /// Very fast ranking of many f64 items, ranking `self` with only n*(log(n)+1) complexity.
     fn mergerank(self) -> Vec<usize> {
         let n = self.len();
         let indx = self.mergesort(0,n);
         indx.revindex()    
     }    
 
-    /// Recursive non-destructive merge sort.
-    /// Indexes self in sort-order from i to i+n
-    /// (instead of mutating self as the standard Rust sort does).
+    /// Recursive non-destructive merge sort. The data is read-only, it is not moved or mutated. 
+    /// Returns vector of indices to self from i to i+n, such that the indexed values are in sort order.  
+    /// Thus we are moving the index values instead of the actual values. 
     fn mergesort(self, i:usize, n:usize) -> Vec<usize> {
+
         if n == 1 { let res = vec![i]; return res };  // recursion termination
-        if n == 2 {  // also terminate (for efficiency)          
+        if n == 2 {  // also terminate with two sorted items (for efficiency)          
             if self[i+1] < self[i] { return vec![i+1,i] } else { return vec![i,i+1] }
         }       
         let n1 = n / 2;  // the first half
         let n2 = n - n1; // the remaining second half
-        let sv1 = self.mergesort(i, n1); // sort first half
-        let sv2 = self.mergesort(i+n1, n2); // sort second half 
+        let sv1 = self.mergesort(i, n1); // recursively sort the first half
+        let sv2 = self.mergesort(i+n1, n2); // recursively sort the second half 
+
+        // Now we merge the two sorted indexes into one
         let mut merged:Vec<usize> = Vec::with_capacity(n); 
-        let mut k = 0_usize;   // moving index to the first sorted list
-        let mut l = 0_usize;   // moving index to the second sorted list
+        let mut k = 0_usize;   // subscript to the first sorted half
+        let mut l = 0_usize;   // subscript to the second sorted half
         let mut firsthead;
         let mut secondhead;
         loop {
-            // accessing the data in self indirectly trough indx
+            // accessing the data in self only indirectly trough the sort indexes
             firsthead = self[sv1[k]];
             secondhead = self[sv2[l]];
              
@@ -294,11 +302,11 @@ impl Vecf64 for &[f64] {
             else { // they are equal, so pop both, keeping their order
                 merged.push(sv1[k]); k += 1;
                 merged.push(sv2[l]); l += 1 }
-            if k == sv1.len() {   // first one is done, flush the rest of the second 
+            if k == sv1.len() {   // first one is empty, just copy the rest of the second 
                 while l < sv2.len() {  merged.push(sv2[l]); l += 1  };
                 break
             };
-            if l == sv2.len() {   // second one is done, flush the rest of the first
+            if l == sv2.len() {   // second one is empty, just copy the rest of the first
                 while k < sv1.len() {  merged.push(sv1[k]); k += 1 };
                 break
             };            
@@ -310,9 +318,9 @@ impl Vecf64 for &[f64] {
 
 impl Indices for &[usize] {
 
-    /// Constructs reversed index, eg. from sort index to data ranks
-    /// This is a symmetric operation, i.e. even numbers of applications 
-    /// all lead back to the original form.
+    /// Constructs reversed (inverted) index, eg. from sort index to data ranks
+    /// This is a symmetric operation, i.e. any even number of applications 
+    /// leads back to the original form.
     fn revindex(self) -> Vec<usize> {
         let n = self.len();
         let mut index = vec![0_usize;n];

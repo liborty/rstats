@@ -61,6 +61,8 @@ The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
 
+* **Version 0.5.8** Improved some comments.
+
 * **Version 0.5.7** Minor version - added `dists`.
 
 * **Version 0.5.6** Added minimal support also for vectors of bytes (of u8 end type) for vector algebra over files and images.

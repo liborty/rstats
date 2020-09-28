@@ -314,7 +314,7 @@ impl Stats for &[f64] {
         Ok(result)       
     }    
 
-    /// Returns vector of ranks;
+    /// Returns vector of f64 ranks;
     /// ranked from the smallest number in self (rank 0) to the biggest (rank n-1).
     /// Equalities lead to fractional ranks, hence Vec<f64> output and the range of rank values is reduced.
     /// Has complexity n*(n-1)/2. Use `mergerank` for long lists.
@@ -340,7 +340,7 @@ impl Stats for &[f64] {
         Ok(rank)
     }
     
-    /// Returns vector of ranks; 
+    /// Returns vector of i64 ranks; 
     /// ranked from the smallest number in self (rank 0) to the biggest (rank n-1).
     fn iranks(self) -> Result<Vec<i64>> {
         let n = self.len();

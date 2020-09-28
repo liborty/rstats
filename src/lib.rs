@@ -1,12 +1,12 @@
-mod f64impls;
-pub mod functions;
-mod i64impls;
+mod statsf64;
+mod statsi64;
 mod vecf64impls;
 mod vecu8impls;
 mod mutvecimpls;
 mod vecvecimpls;
+pub mod functions;
 
-use crate::functions::{GI};
+use crate::functions::GI;
 use anyhow::{Result,bail};
 
 /// Median and quartiles
