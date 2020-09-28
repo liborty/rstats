@@ -61,7 +61,7 @@ impl Vecf64 for &[f64] {
             .sqrt()
     }
 
-    /// Euclidian distance, same as vdist but the argument is of &[u8] type  
+    /* Euclidian distance, same as vdist but the argument is of &[u8] type  
     fn vdistu8(self, v: &[u8]) -> f64 {
         self.iter()
             .zip(v)
@@ -69,6 +69,7 @@ impl Vecf64 for &[f64] {
             .sum::<f64>()
             .sqrt()
     }
+    */
 
     /// Vector magnitude
     fn vmag(self) -> f64 {
@@ -98,8 +99,7 @@ impl Vecf64 for &[f64] {
     fn varc(self, v:&[f64]) -> f64 { 
         (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
     }
-   
-
+    
     /// Pearson's correlation coefficient of a sample of two f64 variables.
     /// # Example
     /// ```

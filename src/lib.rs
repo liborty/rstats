@@ -85,7 +85,6 @@ pub trait Stats {
         where Self: std::marker::Sized { bail!("iranks not implemented for this type")}    
 }
 
-
 /// Vector algebra on one or two vectors.
 pub trait Vecf64 {
 
@@ -107,15 +106,14 @@ pub trait Vecf64 {
     fn vmagsq(self) -> f64;
     /// Euclidian distance between two points
     fn vdist(self, v: &[f64]) -> f64;
-    fn vdistu8(self, v: &[u8]) -> f64;
- 
+    
     /// Unit vector
     fn vunit(self) -> Vec<f64>;
     /// Area of parallelogram between two vectors (magnitude of cross product)
     fn varea(self, v:&[f64]) -> f64;
     /// Area proportional to the swept arc
     fn varc(self, v:&[f64]) -> f64; 
-
+ 
     /// Correlation
     fn correlation(self, _v: &[f64]) -> f64; 
     /// Kendall's tau-b (rank order) correlation
@@ -146,6 +144,12 @@ pub trait Vecu8 {
     fn smult(self, s: f64) -> Vec<f64>;
     /// Scalar addition to vector
     fn sadd(self, s: f64) -> Vec<f64>;
+    /// Scalar product of two vectors
+    fn dotp(self, v: &[f64]) -> f64;
+    /// Vector magnitude squared (sum of squares)
+    fn vmagsq(self) -> f64;
+    /// Area proportional to the swept arc
+    fn varc(self, v:&[f64]) -> f64;
     /// Euclidian distance 
     fn vdist(self, v: &[f64]) -> f64;  
     

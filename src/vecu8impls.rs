@@ -10,6 +10,21 @@ impl Vecu8 for &[u8] {
     fn sadd(self, s:f64) -> Vec<f64> {
        self.iter().map(|&x| s+x as f64).collect()
     }
+    /// Scalar product.   
+    /// Must be of the same length - no error checking (for speed)
+    fn dotp(self, v: &[f64]) -> f64 {
+        self.iter().zip(v).map(|(&xi, &vi)| xi as f64 * vi).sum::<f64>()
+    }
+    /// Vector magnitude squared
+    fn vmagsq(self) -> f64 {
+        self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()
+    } 
+
+    /// Same as varc but the argument is of &[u8] type
+    fn varc(self, v:&[f64]) -> f64 { 
+        (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
+    }
+  
 
     /// Euclidian distance between self u8 point and v: &[f64].  
     /// Slightly faster than vsub followed by vmag, as both are done in one loop
