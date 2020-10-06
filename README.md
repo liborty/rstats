@@ -34,7 +34,7 @@ Trait Vectors is sometimes unchecked for speed, so some caution with data is adv
 
 ## Trait Vecu8
 
-Some minimal vector algebra allso for vectors of u8.
+Some vector algebra also for vectors of u8.
 
 ## Trait MutVectors
 
@@ -51,7 +51,7 @@ Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Trait VecVecu8
 
-Minimal support also for sets of vectors of u8 end type
+Some support also for sets of vectors of u8 end type.Some
 
 ## Trait Index
 
@@ -60,6 +60,8 @@ Minimal support also for sets of vectors of u8 end type
 The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
+
+* **Version 0.5.9** Added a few more u8 implementations, plus 'sortm' convenience wrapper.
 
 * **Version 0.5.8** Improved some comments. Implemented `varc` for u8.
 

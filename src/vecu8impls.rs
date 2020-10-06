@@ -15,6 +15,28 @@ impl Vecu8 for &[u8] {
     fn dotp(self, v: &[f64]) -> f64 {
         self.iter().zip(v).map(|(&xi, &vi)| xi as f64 * vi).sum::<f64>()
     }
+    /// Scalar product of two (positive) u8 slices.   
+    /// Must be of the same length - no error checking (for speed)
+    fn dotpu8(self, v: &[u8]) -> u64 {
+        self.iter().zip(v).map(|(&xi, &vi)| (xi * vi)as u64).sum::<u64>()
+    }
+    /// Cosine between two u8 vectors
+    fn cosineu8(self, v: &[u8]) -> f64 {
+        let (mut sxy, mut sy2) = (0_f64, 0_f64);
+        let sx2: f64 = self
+            .iter()
+            .zip(v)
+            .map(|(&ux, &uy)| {
+                let x  = ux as f64;
+                let y = uy as f64;
+                sxy += x * y;
+                sy2 += y * y;
+                x*x as f64
+            })
+            .sum();
+        sxy / (sx2*sy2).sqrt()
+    }
+
     /// Vector magnitude squared
     fn vmagsq(self) -> f64 {
         self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()

@@ -131,9 +131,11 @@ pub trait Vecf64 {
     fn lintrans(self) -> Vec<f64>;
     /// Sorted vector
     fn sortf(self) -> Vec<f64>;
-    /// Reursive merge sort building ranks in n*log(n)
+    /// Sorted vector, is wrapper for mergesort below
+    fn sortm(self) -> Vec<f64>;
+    /// Ranking in n*log(n), using 'mergesort'
     fn mergerank(self) -> Vec<usize>;
-    /// Immutable merge sort, makes an index
+    /// Immutable merge sort, makes a sort index
     fn mergesort(self, i:usize, n:usize) -> Vec<usize>;
 }
 
@@ -144,8 +146,12 @@ pub trait Vecu8 {
     fn smult(self, s: f64) -> Vec<f64>;
     /// Scalar addition to vector
     fn sadd(self, s: f64) -> Vec<f64>;
-    /// Scalar product of two vectors
+    /// Scalar product of u8 and f64 vectors
     fn dotp(self, v: &[f64]) -> f64;
+    /// Scalar product of two u8 vectors
+    fn dotpu8(self, v: &[u8]) -> u64;
+    /// Cosine between two positive u8 vectors
+    fn cosineu8(self, v: &[u8]) -> f64;
     /// Vector magnitude squared (sum of squares)
     fn vmagsq(self) -> f64;
     /// Area proportional to the swept arc
@@ -158,6 +164,7 @@ pub trait Vecu8 {
 /// Mutable primitive vector operations.
 /// Some of the Vectors trait methods reimplemented for efficiency to mutate in-place.
 pub trait MutVectors {
+
     /// mutable multiplication by a scalar
     fn mutsmult(self, _s: f64) where Self: std::marker::Sized {}  
     /// mutable vector subtraction
@@ -170,18 +177,22 @@ pub trait MutVectors {
     fn mutvunit(self) where Self: std::marker::Sized {}
     /// sort in place
     fn mutsortf(self) where Self: std::marker::Sized {} 
+
 }
 
 /// Minimal support also for sets of bytes of type Vec<Vec<u8>>
 pub trait VecVecu8 {
+
     /// Centroid = euclidian mean of a set of points  
     fn acentroid(self) -> Vec<f64>; 
     fn nmedian(self, eps:f64) -> Vec<f64>;
     fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>);
+
 }
 
 /// Methods applicable to sets of vectors.
 pub trait VecVec {
+
     /// Centroid = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
     /// Sums of distances from each point to all other points
@@ -220,6 +231,7 @@ pub trait VecVec {
     fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
+
 }
 
 /// Methods to manipulate indices
@@ -229,8 +241,7 @@ pub trait Indices {
     fn revindex(self) -> Vec<usize>;
     /// Collects values from `v` as per indices in self.
     fn unindex(self, v:&[f64]) -> Vec<f64>;
-    /// Pearson's correlation coefficient of a two $[usize] slices,
-    /// typically the ranked data.  
+    /// Pearson's correlation coefficient of two slices, typically the ranks.  
     fn ucorrelation(self, v: &[usize]) -> f64;
   
 }

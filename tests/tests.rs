@@ -28,7 +28,7 @@ fn fstats() -> Result<()> {
    println!("Sort index:{}",GV(v2.mergesort(0,v2.len()))); 
    println!("R reversed:{}",GV(v2.mergerank().revindex()));    
    println!("Mergerank: {}",GV(v2.mergerank()));
-   println!("Mrg.sorted:{}",GV(v2.mergesort(0,v2.len()).unindex(&v2)));
+   println!("Mrg.sorted:{}",GV(v2.sortm()));
    println!("Sorted:    {}",GV(v2.sortf()));
    println!("Pearson's Correlation:\t{}",GI(v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",GI(v1.kendalcorr(&v2)));  

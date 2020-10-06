@@ -259,6 +259,11 @@ impl Vecf64 for &[f64] {
         sorted.mutsortf();
         sorted      
     }
+    /// Returns new sorted vector, just as 'sortf' above
+    /// but using our indexing 'mergesort' below
+    fn sortm(self) -> Vec<f64> {
+        self.mergesort(0,self.len()).unindex(&self)
+    }
 
     /// Inverts the (merge) sort index, giving the ranking.  
     /// Sort index is in the order of sorted items, giving their indices to the original data.
@@ -336,7 +341,8 @@ impl Indices for &[usize] {
     }
 
     /// Pearson's correlation coefficient of a two $[usize] slices,
-    /// typically the ranks.  
+    /// typically the ranks. In which case this is the Spearman's correlation, where the ranks
+    /// have been computed previously.
     fn ucorrelation(self, v: &[usize]) -> f64 {
         let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
         let sx: f64 = self
