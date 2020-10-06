@@ -20,7 +20,7 @@ impl Vecu8 for &[u8] {
     fn dotpu8(self, v: &[u8]) -> u64 {
         self.iter().zip(v).map(|(&xi, &vi)| (xi * vi)as u64).sum::<u64>()
     }
-    /// Cosine between two u8 vectors
+    /// Cosine between two (positive) u8 slices.
     fn cosineu8(self, v: &[u8]) -> f64 {
         let (mut sxy, mut sy2) = (0_f64, 0_f64);
         let sx2: f64 = self

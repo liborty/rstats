@@ -51,7 +51,7 @@ Trait VecVec is entirely unchecked, you should  check your data upfront.
 
 ## Trait VecVecu8
 
-Some support also for sets of vectors of u8 end type.Some
+Some support also for sets of vectors of u8 end type.
 
 ## Trait Index
 
@@ -60,6 +60,8 @@ Some support also for sets of vectors of u8 end type.Some
 The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
+
+* **Version 0.5.10**
 
 * **Version 0.5.9** Added a few more u8 implementations, plus 'sortm' convenience wrapper.
 
