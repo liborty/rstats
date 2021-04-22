@@ -2,10 +2,10 @@ README
 
 # Rstats - Rust Stats
 
-![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github)
+![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github)  
 22/04/2021 23:46
 
-Rstats is for characterisation of multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with basic statistical measures and vector algebra, which provide self-contained tools for the more interesting algorithms but can also be used in their own right.
+Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right.
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Thus some original concepts, unlikely to be found elsewhere, are introduced and implemented here.
 
@@ -62,8 +62,10 @@ Trait VecVec is entirely unchecked, so check your data upfront.
 Some of the above for sets of vectors of u8 end type.
 
 ## Trait Index
-
-* `revindex` method for reversing an index.
+ 
+* `ucorrelation`(self, v: &[usize]) -> f64; Pearson's correlation coefficient of two slices, typically containing the ranks.  
+* `revindex`(self) -> Vec<usize>; method for reversing an index, e.g. given a sort index, returns ranks.
+* `unindex`(self, v:&[f64]) -> Vec<f64>; collects values from v in the order given by self index. 
 
 The methods of this trait are implemented for `&[usize]`.
 
