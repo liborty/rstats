@@ -1,14 +1,21 @@
+README
+
 # Rstats - Rust Stats
 
 ![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github)
+22/04/2021 23:46
 
-Rstats is aimed at characterization of multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with basic statistical measures and vector algebra, which provide self-contained tools for the more interesting algorithms but can also be used in their own right.
+Rstats is for characterisation of multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with basic statistical measures and vector algebra, which provide self-contained tools for the more interesting algorithms but can also be used in their own right.
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Thus some original concepts, unlikely to be found elsewhere, are introduced and implemented here.
 
-Going beyond one dimension, most authors  cheat by using 'quasi medians' (1-d medians along each axis). Quazi medians may be quicker to compute but they are a poor start to characterising multidimensional clouds of points reliably. *Specifically, all such 1-d measures depend on the choice of axis.* Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on the true Geometric Median, (computed here by `nmedian`), are axis (or rotation) independent.
+Going beyond one dimension, most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are quick to compute but they are a poor start to characterising multidimensional clouds of points reliably. 
+*Specifically, all such 1-d measures depend on the choice of axis.*
+Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on true Geometric Median, computed here by `nmedian`, are axis (rotation) independent.
 
 Rstats is a lean minimalistic library that only depends on `anyhow` (for its error handling).
+
+The constituent parts of Rstats are Rust traits grouping together various functions applicable to vectors of data of relevant types: 
 
 ## Trait Stats
 
@@ -17,7 +24,7 @@ All these methods operate on one vector of data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of slice `s` of either type.
 Trait Stats is carefully checked and will report all kinds of errors, such as empty input.
 
-Included are:
+Included in this trait are:
 
 * means (arithmetic, geometric and harmonic),
 * standard deviations,
@@ -26,32 +33,33 @@ Included are:
 
 ## Trait Vecf64
 
-* Vector algebra implemented on one or two `&[f64]` slices of any length (vector dimensionality).
+Vector algebra implemented on one or two `&[f64]` slices of any length (vector dimensionality):
 * Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
 * Finding minimum and maximum, linear transformation.
 
-Trait Vectors is sometimes unchecked for speed, so some caution with data is advisable.
+This trait is sometimes unchecked for speed, so some caution with data is advisable.
 
 ## Trait Vecu8
 
-Some vector algebra also for vectors of u8.
+Some but not all vector algebra as above, for vectors of u8.
 
 ## Trait MutVectors
 
-Some of the methods are for memory efficiency reasons reimplemented in this trait so that they mutate `self` in place instead of creating a new Vec. They are useful in vector iterative methods. Beware that they do not return anything, so they can not be chained.
+Some of the methods are for memory efficiency reasons reimplemented in this trait so that they mutate `self` in place, instead of creating a new Vec. They are useful in vector iterative methods. Beware that they work by side-effect and do not return anything, so they can not be chained.
 
 ## Trait VecVec
 
-* Relationships of one vector to a set of vectors:
-Sums of distances, Centroid, Medoid, Geometric Median, Eccentricity,
-Zero median data.
-* Relationships between sets of multidimensional vectors: Trend.
+Relationships of one vector to a set of vectors (of `&[f64]` end types):
+* Sums of distances, eccentricity,
+* centroid, medoid, geometric median, 
+* transformation to zero (geometric) median data,
+* relationship between sets of multidimensional vectors: trend.
 
-Trait VecVec is entirely unchecked, you should  check your data upfront.
+Trait VecVec is entirely unchecked, so check your data upfront.
 
 ## Trait VecVecu8
 
-Some support also for sets of vectors of u8 end type.
+Some of the above for sets of vectors of u8 end type.
 
 ## Trait Index
 
@@ -61,7 +69,7 @@ The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
 
-* **Version 0.5.10**
+* **Version 0.5.10** Added information theory measure.
 
 * **Version 0.5.9** Added a few more u8 implementations, plus 'sortm' convenience wrapper.
 
