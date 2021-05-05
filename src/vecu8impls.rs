@@ -1,7 +1,29 @@
 use crate::{Vecu8,Vecf64,MutVectors,VecVecu8};
 
 impl Vecu8 for &[u8] {
-     
+
+    /// Vector magnitude squared
+    fn vmagsq(self) -> f64 {
+        self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()
+    } 
+    /// Probability density function of bytes data
+    fn pdf(self) -> Vec<u64> {  
+        let n = self.len();
+        let mut pdfv = vec![0_u64;n];
+        for i in 0..self.len() { pdfv[self[i] as usize] += 1 };
+        pdfv
+    }
+
+    /// Information (entropy) in nats of &[u8]
+    fn entropy(self) -> f64 {
+        let pdfv = self.pdf();
+        let n = self.len() as f64;
+        pdfv.iter().map(|&ux| {
+                if ux == 0 { return 0_f64 }
+                let x = ux as f64 / n;
+                (-x)*(x.ln())}).sum::<f64>()           
+    }
+
     /// Scalar multiplication of a vector, creates new vec
     fn smult(self, s:f64) -> Vec<f64> {
        self.iter().map(|&x| s*x as f64).collect()
@@ -15,6 +37,7 @@ impl Vecu8 for &[u8] {
     fn dotp(self, v: &[f64]) -> f64 {
         self.iter().zip(v).map(|(&xi, &vi)| xi as f64 * vi).sum::<f64>()
     }
+
     /// Scalar product of two (positive) u8 slices.   
     /// Must be of the same length - no error checking (for speed)
     fn dotpu8(self, v: &[u8]) -> u64 {
@@ -36,17 +59,12 @@ impl Vecu8 for &[u8] {
             .sum();
         sxy / (sx2*sy2).sqrt()
     }
-
-    /// Vector magnitude squared
-    fn vmagsq(self) -> f64 {
-        self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()
-    } 
-    /// Area of swept arc
+    /// Area of swept arc between self &[u8] and v:&[f64]
     fn varc(self, v:&[f64]) -> f64 { 
         (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
     }
-    /// Euclidian distance between self u8 point and v: &[f64].  
-    /// Slightly faster than vsub followed by vmag, as both are done in one loop
+    /// Euclidian distance between self &[u8] and v:&[f64].  
+    /// Faster than vsub followed by vmag, as both are done in one loop
     fn vdist(self, v: &[f64]) -> f64 {
         self.iter()
             .zip(v)

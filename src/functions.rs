@@ -16,7 +16,7 @@ pub fn emsg(file: &'static str, line: u32, msg: &'static str) -> String {
 /// Random numbers are in the open interval 0..1 with uniform distribution.  
 pub fn genvec(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<f64>> {
     if n * d < 1 {
-        panic!(emsg(
+        panic!("{}",emsg(
             file!(),
             line!(),
             "genvec given zero or wrong dimensions"

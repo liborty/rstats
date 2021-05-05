@@ -1,6 +1,7 @@
 mod statsf64;
 mod statsi64;
 mod vecf64impls;
+mod indices;
 mod vecu8impls;
 mod mutvecimpls;
 mod vecvecimpls;
@@ -139,9 +140,15 @@ pub trait Vecf64 {
     fn mergesort(self, i:usize, n:usize) -> Vec<usize>;
 }
 
-/// Minimal support also for Vec[u8]
+/// Some support for Vec<u8> (vector of bytes)
 pub trait Vecu8 {
 
+    /// Vector magnitude squared (sum of squares)
+    fn vmagsq(self) -> f64;
+    /// Probability density function of bytes data
+    fn pdf(self) -> Vec<u64>;
+    /// Information (entropy) in nats of &[u8]
+    fn entropy(self) -> f64;
     /// Scalar multiplication with a vector
     fn smult(self, s: f64) -> Vec<f64>;
     /// Scalar addition to vector
@@ -152,8 +159,6 @@ pub trait Vecu8 {
     fn dotpu8(self, v: &[u8]) -> u64;
     /// Cosine between two positive u8 vectors
     fn cosineu8(self, v: &[u8]) -> f64;
-    /// Vector magnitude squared (sum of squares)
-    fn vmagsq(self) -> f64;
     /// Area proportional to the swept arc
     fn varc(self, v:&[f64]) -> f64;
     /// Euclidian distance 
@@ -161,8 +166,8 @@ pub trait Vecu8 {
     
 }
 
-/// Mutable primitive vector operations.
-/// Some of the Vectors trait methods reimplemented for efficiency to mutate in-place.
+/// Mutable vector operations.
+/// Some of the vectors trait methods reimplemented here for efficiency, to mutate in-place
 pub trait MutVectors {
 
     /// mutable multiplication by a scalar
@@ -180,7 +185,7 @@ pub trait MutVectors {
 
 }
 
-/// Minimal support also for sets of bytes of type Vec<Vec<u8>>
+/// Some support for self argument of Vec<Vec<u8>> type (vector of vectors of bytes)
 pub trait VecVecu8 {
 
     /// Centroid = euclidian mean of a set of points  
@@ -190,7 +195,7 @@ pub trait VecVecu8 {
 
 }
 
-/// Methods applicable to sets of vectors.
+/// Methods applicable to vector of vectors of <f64>
 pub trait VecVec {
 
     /// Centroid = euclidian mean of a set of points
@@ -234,15 +239,12 @@ pub trait VecVec {
 
 }
 
-/// Methods to manipulate indices
+/// Methods to manipulate indices of Vec<usize> type
 pub trait Indices {
-
     /// Reverse index
     fn revindex(self) -> Vec<usize>;
     /// Collects values from `v` as per indices in self.
     fn unindex(self, v:&[f64]) -> Vec<f64>;
     /// Pearson's correlation coefficient of two slices, typically the ranks.  
-    fn ucorrelation(self, v: &[usize]) -> f64;
-  
+    fn ucorrelation(self, v: &[usize]) -> f64;  
 }
-

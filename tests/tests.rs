@@ -3,7 +3,7 @@
 #[cfg(test)]
 
 use anyhow::{Result};
-use rstats::{Stats,MutVectors,Vecf64,VecVec,Indices};
+use rstats::{Stats,MutVectors,Vecf64,VecVec,Vecu8,Indices};
 use rstats::functions::{GI,GV,genvec};
 use devtimer::DevTime;
 
@@ -54,7 +54,11 @@ fn intstats() -> Result<()> {
    println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
    println!("Arithmetic\t{}",v1.ameanstd().unwrap());
    println!("Geometric\t{}",v1.gmeanstd().unwrap());
-   println!("{}",v1.median().unwrap());   
+   println!("{}",v1.median().unwrap()); 
+   let v2 = vec![1_u8,2,2,3,3,3,4,4,4,4]; 
+   println!("\n{:?}",v2);
+   println!("Entropy\t{}",v2.entropy());
+
    Ok(())
 }
 

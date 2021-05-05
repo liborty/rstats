@@ -42,6 +42,7 @@ This trait is sometimes unchecked for speed, so some caution with data is advisa
 ## Trait Vecu8
 
 Some but not all vector algebra as above, for vectors of u8.
+Information (entropy) measure for vectors of u8.
 
 ## Trait MutVectors
 
