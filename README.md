@@ -3,7 +3,6 @@ README
 # Rstats - Rust Stats
 
 ![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github)  
-22/04/2021 23:46
 
 Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right.
 
@@ -41,8 +40,9 @@ This trait is sometimes unchecked for speed, so some caution with data is advisa
 
 ## Trait Vecu8
 
-Some but not all vector algebra as above, for vectors of u8.
-Information (entropy) measure for vectors of u8.
+* Some but not all vector algebra as above, for vectors of u8.
+* Frequency count of bytes by their values (Probability Density Function).
+* Entropy measure for vectors of u8 (bytes), using natural logarithms.
 
 ## Trait MutVectors
 
