@@ -17,19 +17,21 @@ Such dependence has to be later removed by Principle Components Analysis or simi
 ### Terminology for sets of points in n dimensions
 * `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of `squares` of distances to all member points. Thus it is susceptible to outliers. In other words, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, is is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if confusing) usage and always mean the actual Centre.
 
-* `Quasi Median` is the point given by minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis) is a mistaken concept which we do not use here. The only good thing about it is that it is dead easy to compute.
+* `Quasi Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here. The only good thing about it is that it is dead easy to compute.
 
-* `Medoid` is the member of the set which minimises the sum of distances to all other members. 
+* `Medoid` is the member of the set with the least sum of distances to all other members.
 
-* `Median or the true geometric median`, is the point (generally non member), which minimises the sum of distances to all other members. This is the one we want. It is much less susceptible to outliers and is rotation independent.
+* `Outlier` is the member of the set with the greatest sum of distances to all other members.
+
+* `Median or the true geometric median`, is the point (generally non member), which minimises the sum of distances to all other members. This is the one we want. It is much less susceptible to outliers and it is rotation independent.
 
 ### Implementation 
-Rstats is a lean minimalistic library that only depends on `anyhow` (for its error handling).
+Rstats is a lean minimalistic library that only depends on *anyhow* (for its error handling).
 
 The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant types. This division is necessary because generic vectors are problematic in Rust.
 
 ### Documentation 
-To see the documentation, click the link on the right. Then, to see just the skeletal comments, select a trait of interest. To see more deailed comments plus some examples, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see tests, consult `test.rs`.
+To see the documentation, click the link on the right. Then, to see just the skeletal comments, select a trait of interest. To see more deailed comments plus some examples, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see tests, consult `tests.rs`.
 
 To run the tests, use single thread. It will be slower but will produce the results in the right order:   
 `cargo test --release -- --nocapture --color always --test-threads=1` 
