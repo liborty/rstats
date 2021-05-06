@@ -7,8 +7,9 @@ mod mutvecimpls;
 mod vecvecimpls;
 pub mod functions;
 
-use crate::functions::GI;
-use anyhow::{Result,bail};
+use crate::functions::GI; 
+/// simple error handling
+use anyhow::{Result,bail}; 
 
 /// Median and quartiles
 #[derive(Default)]
@@ -41,7 +42,7 @@ impl std::fmt::Display for MStats {
     }
 }
 
-/// Basic one dimensional (1-d) statistical measures.
+/// Basic one dimensional (1-d) statistical measures and ranking.
 /// These methods operate on just one vector (of data) and take no arguments.
 pub trait Stats {
 

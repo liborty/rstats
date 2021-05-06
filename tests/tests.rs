@@ -1,18 +1,27 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
-#[cfg(test)]
 
 use anyhow::{Result};
 use rstats::{Stats,MutVectors,Vecf64,VecVec,Vecu8,Indices};
 use rstats::functions::{GI,GV,genvec};
 use devtimer::DevTime;
 
+#[cfg(test)]
+
+#[test]
+fn entropy() -> Result<()> {
+   let v = vec![1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6]; 
+   println!("\n{:?}",v);
+   println!("Entropy: {}",GI(v.entropy()));
+   Ok(())
+}
+
 #[test]
 fn fstats() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
    let v1r = v1.ranks().unwrap();
    println!("\n{:?}",v1);
-   println!("Lin. trans: {}\n",GV(v1.lintrans()));
+   println!("Linear transform:\n{}",GV(v1.lintrans()));
    println!("Arithmetic mean:{}",GI(v1.amean().unwrap()));
    println!("Geometric mean:\t{}",GI(v1.gmean().unwrap()));
    println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
@@ -34,7 +43,7 @@ fn fstats() -> Result<()> {
    println!("Kendall's Correlation:\t{}",GI(v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",GI(v1.spearmancorr(&v2)));  
    println!("Cosine:\t\t\t{}",GI(v1.cosine(&v2))); 
-   println!("Cosine of ranks:\t\t{}",GI(v1r.cosine(&v2r)));        
+   println!("Cosine of ranks:\t{}",GI(v1r.cosine(&v2r)));        
    println!("Euclidian distance:\t{}",GI(v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",GI(v1.vsub(&v2).as_slice().vmag()));   
    println!("Vector difference: {}",GV(v1.vsub(&v2))); 
@@ -52,20 +61,16 @@ fn intstats() -> Result<()> {
    println!("Arithmetic mean:{}",GI(v1.amean().unwrap()));
    println!("Geometric mean:\t{}",GI(v1.gmean().unwrap()));
    println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
-   println!("Arithmetic\t{}",v1.ameanstd().unwrap());
-   println!("Geometric\t{}",v1.gmeanstd().unwrap());
+   println!("Arithmetic {}",v1.ameanstd().unwrap());
+   println!("Geometric {}",v1.gmeanstd().unwrap());
    println!("{}",v1.median().unwrap()); 
-   let v2 = vec![1_u8,2,2,3,3,3,4,4,4,4]; 
-   println!("\n{:?}",v2);
-   println!("Entropy\t{}",v2.entropy());
-
    Ok(())
 }
 
 #[test]
 fn vecvec() -> Result<()> { 
-   let d = 5_usize;
-   let n = 60_usize;
+   let d = 7_usize;
+   let n = 100_usize;
    println!("testing on a random set of {} points in {} dimensional space",GI(n),GI(d));
    let pt = genvec(d,n,7,13); // random test data 
    let (med,medi,outd,outi) = pt.medoid();
@@ -89,10 +94,10 @@ fn vecvec() -> Result<()> {
    println!("Medoid's eccentricity:\t\t{} Index: {}",GI(mede),GI(medei));
    println!("Centroid's eccentricity:\t{}",GI(pt.ecc(&centroid)));   
    println!("Median's eccentricity:\t\t{}",GI(pt.ecc(&median)));
-   println!("Zero med's median magnitude:\t{}",GI(zmed.nmedian(1e-5).vmag()));
+   println!("Zero median data's median magnitude\nor approximate median error:\t{}",GI(zmed.nmedian(1e-5).vmag()));
    let (mu,med) = pt.moe();
    println!("Eccentricities\t{}",mu);  
-   println!("Eccentricities median\n{}",med);  
+   println!("Eccentricities median:\n{}",med);  
    Ok(())
 }
 

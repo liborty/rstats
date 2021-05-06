@@ -19,9 +19,8 @@ impl VecVec for &[Vec<f64>] {
         centre
     }
 
-
-    /// For each point, gives its sum of distances to all other points.
-    /// This is the efficient workhorse of distances based analysis.
+    /// For each member point, gives its sum of distances to all other points.
+    /// This is the efficient workhorse of distance based analysis.
     fn distsums(self) -> Vec<f64> {
         let n = self.len();
         let mut dists = vec![0_f64; n]; // distances accumulator for all points
@@ -38,9 +37,8 @@ impl VecVec for &[Vec<f64>] {
         dists
     }
 
-    /// The sum of distances from a set point given by its `indx` to all the other points in self.
-    /// This method is suitable for a single point. For all the points, use more
-    /// efficient `distances`.    
+    /// The sum of distances from one member point, given by its `indx`, to all the other points in self.
+    /// For all the points, use more efficient `distsums`.    
     fn distsuminset(self, indx: usize) -> f64 {
         let n = self.len();
         let mut sum = 0_f64;
@@ -54,26 +52,23 @@ impl VecVec for &[Vec<f64>] {
         sum
     }
 
-    /// Individual distances from any point v (typically not in self) to all the points in self.    
+    /// Individual distances from any point v, typically not a member, to all the members of self.    
     fn dists(self, v: &[f64]) -> Vec<f64> {
         self.iter().map(|p| p.vdist(v)).collect()
     }
 
-    /// The sum of distances from any point v (typically not in self) to all the points in self.    
-    /// Geometric Median is defined as the point v which minimises this function.
+    /// The sum of distances from any single point v, typically not a member, to all the members of self.    
+    /// Geometric Median is defined as the point which minimises this function.
     fn distsum(self, v: &[f64]) -> f64 {
         self.iter().map(|p| p.vdist(v)).sum::<f64>()
     }
 
-
-    /// Medoid is the point belonging to set of points `self`,
+    /// Medoid is the member point (point belonging to the set of points `self`), 
     /// which has the least sum of distances to all other points.
     /// Outlier is the point with the greatest sum of distances.
+    /// In other words, they are the members nearest and furthest from the median.
     /// This function returns a four-tuple:  
     /// (medoid_distance, medoid_index, outlier_distance, outlier_index).
-    /// `d` is the number of dimensions = length of the point sub-slices.
-    /// The entire set of points is held in one flat `&[f64]`.  
-    /// This is faster than vec of vecs but we have to handle the indices.  
     /// # Example
     /// ```
     /// use rstats::{Vecf64,VecVec,functions::genvec};
@@ -85,8 +80,7 @@ impl VecVec for &[Vec<f64>] {
         self.distsums().minmax()
     }
 
-    /// Eccentricity vector for each point.
-    /// This is the efficient workhorse of eccentrities analysis.
+    /// `eccentricities` finds vectors from each member point towards the geometric median.
     fn eccentricities(self) -> Vec<Vec<f64>> {
         let n = self.len();
         // allocate vectors for the results
@@ -95,20 +89,24 @@ impl VecVec for &[Vec<f64>] {
         // examine all unique pairings (lower triangular part of symmetric flat matrix)
         for i in 1..n {
             let thisp = &self[i];
-            for j in 0..i {
-                let e = self[j].vsub(&thisp).vunit(); // calculate each vector just once
+            for j in 0..i { 
+                // calculate each unit vector between any pair of points just once
+                let e = self[j].vsub(&thisp).vunit(); 
                 eccs[i].mutvadd(&e);
-                eccs[j].mutvsub(&e); // mind the vector's orientation!
+                // mind the vector's opposite orientations w.r.t. to the two points!
+                eccs[j].mutvsub(&e); 
             }
         }
         eccs
     }
 
-    /// Scalar positive measure of `not being a median` for a point belonging to the set.
-    /// The point is specified by its index `indx`.
-    /// The median does not have to be known. The perfect median would return zero.
-    /// This is suitable for a single point. When eccentricities of all the points
-    /// are needed, use more efficient `eccentricities`.
+    /// Scalar positive measure of `not being the geometric median` for a member point,
+    /// while the true geometric median is as yet unknown.
+    /// Returns the magnitude of the eccentricity vector.
+    /// The true geometric median would return zero.
+    /// The member point is specified by its index `indx`.
+    /// This function is suitable for a single member point. 
+    /// When eccentricities of all the points are needed, use `eccentricities`.
     fn eccentrinset(self, indx: usize) -> f64 {
         let n = self.len();
         let mut vsum = vec![0_f64; self[0].len()];

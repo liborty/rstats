@@ -1,4 +1,5 @@
 use std::fmt;
+/// generate random data for testing, plus some auxilliary pretty printing functions
 
 /// Sum of linear weights
 pub fn wsum(n: usize) -> f64 {
