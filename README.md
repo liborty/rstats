@@ -3,7 +3,7 @@ README
 # Rstats - Rust Stats
 
 ![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github)  
-Thu 06 May 2021 - Now forward compliant with Rust 2021 Edition!
+Now forward compliant with Rust 2021 Edition!
 
 ## Introduction
 Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right.
@@ -91,6 +91,7 @@ Some of the above for sets of vectors of bytes.
 The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
+* **Version 0.6.2** 
 
 * **Version 0.6.1** Improved documentation and tests.
 
@@ -105,13 +106,3 @@ The methods of this trait are implemented for `&[usize]`.
 * **Version 0.5.6** Added minimal support also for vectors of bytes (of u8 end type) for vector algebra over files and images.
 
 * **Version 0.5.5** Introduced `revindex`, `mergerank` and `mergesort`. Made 1-d quartiles more accurate. Changed all correlations to required (unchecked) methods.
-
-* **Version 0.5.4** Added `irank,varc,kazutsugi`.
-
-* **Version 0.5.3** Added `varea` =  magnitude of the cross product. Changed status of some methods from 'required' to 'provided'.
-
-* **Version 0.5.2** Renamed trait RStats to Stats, to avoid naming confusion. Separated MutVecs implementations to their own module `mutvecimpls.rs`. Added some more tests. Expanded `moe` to include mean and std of eccentricities.
-
-* **Version 0.5.1** Added scalar addition `sadd` and linear transformation `lintrans` to `Vectors`.
-
-* **Version 0.5.0** Introduces *VecVec* trait for all multi-point methods, now implemented for type `&[Vec<f64>]`. This is a breaking change but it did allow streamlining of the code and a clean separation of the traits. Main benefit to the user is in no longer having to explicitly pass around the dimensionality d.
