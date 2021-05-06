@@ -92,7 +92,7 @@ The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
 
-* **Version 0.6.0** Improved documentation and tests.
+* **Version 0.6.1** Improved documentation and tests.
 
 * **Version 0.5.10** Added information theory measure.
 
