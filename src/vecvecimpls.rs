@@ -232,10 +232,10 @@ impl VecVec for &[Vec<f64>] {
         let mut vsum = vec![0_f64; v.len()];
         for thatp in self {
             let dist = v.vdist(&thatp);
-            if dist.is_normal() {
+            if dist.is_normal() { // exclude points that are too close
                 let recip = 1.0 / dist;
-                rsum += recip;
-                vsum.mutvadd(&thatp.smult(recip))
+                rsum += recip; // accumulate reciprocal scaling weights
+                vsum.mutvadd(&thatp.smult(recip)) // accumulate vectors
             }
         }
         (rsum, vsum)
