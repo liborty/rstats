@@ -141,9 +141,8 @@ impl VecVec for &[Vec<f64>] {
         (vsum.vmag()/d as f64, vsum)
     }
 
-    /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual error for median).
-    /// Thus this method is the equivalent of `eccentr`
-    /// but suited for any explicitly given point, typically not belonging to the set.  
+    /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual median error).
+    /// Thus this method is the non-member equivalent of `eccentrinset`.
     /// When the eccentricity vector is needed, use `veccentr`
     fn ecc(self, v: &[f64]) -> f64 {
         let (ecc, _) = self.veccentr(v);
@@ -199,8 +198,7 @@ impl VecVec for &[Vec<f64>] {
     /// It has (provably) only vector iterative solutions.
     /// Search methods are slow and difficult in highly dimensional space.
     /// Weiszfeld's fixed point iteration formula had known problems with sometimes failing to converge.
-    /// Especially, when the points are dense in the close proximity of the gm,
-    /// or it coincides with one of them.  
+    /// Especially, when the points are dense in the close proximity of the gm, or it coincides with one of them.  
     /// However, these problems are fixed in my new algorithm here.      
     /// There will eventually be a multithreaded version of `nmedian`.
     /// # Example
@@ -218,15 +216,15 @@ impl VecVec for &[Vec<f64>] {
             newv.mutsmult(1.0 / rsum); // scaling the returned sum of unit vectors
             // test the magnitude of the move for termination
             if newv.vdist(&oldpoint) < eps {
-                oldpoint = newv; // use the last small iteration anyway
+                oldpoint = newv; // make the last small step anyway
                 break; // from the loop
             };
-            oldpoint = newv // set up the next iteration
+            oldpoint = newv // move to the new point
         }
         oldpoint
     }
 
-    /// betterpoint is called by nmedian.
+    /// Called by nmedian.
     /// Scaling by rsum is left as the final step at calling level,
     /// in order to facilitate data parallelism.
     fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>) {

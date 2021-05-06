@@ -1,13 +1,13 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
+#[cfg(test)]
 
 use anyhow::{Result};
 use rstats::{Stats,MutVectors,Vecf64,VecVec,Vecu8,Indices};
 use rstats::functions::{GI,GV,genvec};
 use devtimer::DevTime;
 
-#[cfg(test)]
-
+pub const EPS:f64 = 1e-6;
 #[test]
 fn entropy() -> Result<()> {
    let v = vec![1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6]; 
@@ -76,7 +76,7 @@ fn vecvec() -> Result<()> {
    let (med,medi,outd,outi) = pt.medoid();
    let (mede,medei,oute,outei) = pt.emedoid();
    let centroid = pt.acentroid();
-   let median = pt.nmedian(1e-5);
+   let median = pt.nmedian(EPS);
    let outlier = &pt[outi]; 
    let eoutlier = &pt[outei];
    let zmed = pt.translate(&median); // zero median transformed data
@@ -94,7 +94,7 @@ fn vecvec() -> Result<()> {
    println!("Medoid's eccentricity:\t\t{} Index: {}",GI(mede),GI(medei));
    println!("Centroid's eccentricity:\t{}",GI(pt.ecc(&centroid)));   
    println!("Median's eccentricity:\t\t{}",GI(pt.ecc(&median)));
-   println!("Zero median data's median magnitude\nor approximate median error:\t{}",GI(zmed.nmedian(1e-5).vmag()));
+   println!("Zero median data's median magnitude\nor approximate median error:\t{}",GI(zmed.nmedian(EPS).vmag()));
    let (mu,med) = pt.moe();
    println!("Eccentricities\t{}",mu);  
    println!("Eccentricities median:\n{}",med);  
@@ -106,7 +106,7 @@ fn trend() -> Result<()> {
    let d = 7_usize;
    let pt1 = genvec(d,28,13,19); // random test data 
    let pt2 = genvec(d,38,23,31);
-   println!("\nTrend vector:\n{}",GV(pt1.trend(1_e-5,pt2)));
+   println!("\nTrend vector:\n{}",GV(pt1.trend(EPS,pt2)));
    Ok(())
 }
 
@@ -122,7 +122,7 @@ fn medians() -> Result<()> {
    for i in 1..ITERATIONS {
       let pts = genvec(d,n,i,2*i);
       timer.start();
-      let gm = pts.nmedian(1e-5);
+      let gm = pts.nmedian(EPS);
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
       sumg += pts.ecc(&gm);
