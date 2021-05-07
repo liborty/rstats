@@ -37,7 +37,7 @@ The constituent parts of Rstats are Rust traits grouping together functions appl
 
 ### Documentation
 
-To see the documentation, click the link on the right. Then, to see just the skeletal comments, select a trait of interest. To see more deailed comments plus some examples, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see tests, consult `tests.rs`.
+Follow the 'documentation' link. Then select a trait of interest to see the skeletal comments on the prototype function declarations in lib.rs. To see more detailed comments, plus some examples from the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests.rs`.
 
 To run the tests, use single thread. It will be slower but will produce the results in the right order:
 
@@ -96,13 +96,16 @@ Some of the above for sets of vectors of bytes.
 
 ## Trait Index
 
+The functions of this trait are implemented for vetors of subscripts, i.e. `&[usize]`.
+
 * `ucorrelation`(self, v: &[usize]) -> f64; Pearson's correlation coefficient of two slices, typically containing the ranks.  
 * `revindex`(self) -> Vec\<usize\>; method for reversing an index, e.g. given a sort index, returns ranks and vice versa.
 * `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
 
-The methods of this trait are implemented for `&[usize].
 
 ## Recent Releases
+
+* **Version 0.6.4**
 
 * **Version 0.6.3** Fixed dependence measure interval to [0,1].
 
