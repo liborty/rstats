@@ -13,7 +13,7 @@ fn entropy() -> Result<()> {
    let v1 = vec![1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6]; 
    println!("\n{:?}",v1);
    println!("Entropy: {}",GI(v1.entropy()));
-   let v2 = vec![1_u8,2,2,3,3,3,4,4,4,4,3,3,3,3,3,2,2,2,2,2,2]; 
+   let v2 = vec![1_u8,2,2,3,3,3,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2]; 
    println!("\n{:?}",v2);
    println!("Entropy: {}",GI(v2.entropy()));
    println!("Joint E: {}",GI(v1.jointentropy(&v2)));
