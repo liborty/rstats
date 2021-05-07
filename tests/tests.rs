@@ -10,13 +10,10 @@ use devtimer::DevTime;
 pub const EPS:f64 = 1e-6;
 #[test]
 fn entropy() -> Result<()> {
-   let v = vec![1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6]; 
-   println!("\n{:?}",v);
-   println!("Entropy: {}",GI(v.entropy()));
-   let v1 = vec![1_u8,2,3,4,5,6,7,8,9,10,11,12,13,14,15,15,15,15,15,15];
+   let v1 = vec![1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6]; 
    println!("\n{:?}",v1);
    println!("Entropy: {}",GI(v1.entropy()));
-   let v2 = vec![1_u8,14,2,13,3,12,4,11,5,10,6,9,9,9,15,15,15,15,15,15];
+   let v2 = vec![1_u8,2,2,3,3,3,4,4,4,4,3,3,3,3,3,2,2,2,2,2,2]; 
    println!("\n{:?}",v2);
    println!("Entropy: {}",GI(v2.entropy()));
    println!("Joint E: {}",GI(v1.jointentropy(&v2)));

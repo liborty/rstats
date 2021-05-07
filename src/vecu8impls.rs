@@ -55,10 +55,11 @@ impl Vecu8 for &[u8] {
         };            
         entr           
     }
-    /// Mutual information or transinformation or dependence between two &[u8] variables
-    /// This is symmetric function 
+    /// Dependence of two &[u8] variables, the range is [0,1],
+    /// i.e. it returns 0 iff they are statistically independent
+    /// and 1 when they are identical
     fn dependence(self, v:&[u8]) -> f64 {
-        2.0*self.jointentropy(v) - self.entropy() - v.entropy()
+        2.0 * (1.0 - self.jointentropy(v) / (self.entropy() + v.entropy()))
     }
 
     /// Scalar multiplication of a vector, creates new vec

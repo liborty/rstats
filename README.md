@@ -35,10 +35,12 @@ The constituent parts of Rstats are Rust traits grouping together functions appl
 ### Documentation 
 To see the documentation, click the link on the right. Then, to see just the skeletal comments, select a trait of interest. To see more deailed comments plus some examples, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see tests, consult `tests.rs`.
 
-To run the tests, use single thread. It will be slower but will produce the results in the right order:   
-`cargo test --release --  
-    --nocapture --color always --test-threads=1`
-    
+To run the tests, use single thread. It will be slower but will produce the results in the right order:
+```
+cargo test --release -- --test-threads=1
+    --nocapture --color always 
+```
+
 ## Trait Stats
 
 One dimensional statistical measures implemented for `&[i64]` and `&[f64]`. 
@@ -65,7 +67,7 @@ This trait is sometimes unchecked (for speed), so some caution with data is advi
 
 * Some vector algebra as above for vectors of u8 (bytes).
 * Frequency count of bytes by their values (Histogram or Probability Density Function).
-* Entropy measure in units of e (using natural logarithms).
+* Entropy measures in units of e (using natural logarithms).
 
 ## Trait MutVectors
 
@@ -94,6 +96,9 @@ Some of the above for sets of vectors of bytes.
 The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
+
+* **Version 0.6.3** Fixed dependence measure interval to [0,1].
+
 * **Version 0.6.2** Fixed entropy bug, added jointpdf, joint entropy and dependence.
 
 * **Version 0.6.1** Improved documentation and tests.

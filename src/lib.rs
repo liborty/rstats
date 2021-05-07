@@ -154,7 +154,7 @@ pub trait Vecu8 {
     fn jointpdf(self, v:&[u8]) -> Vec<Vec<u32>>;
     /// Joint entropy of &[u8],&[u8] in nats 
     fn jointentropy(self, v:&[u8]) -> f64;
-    /// Mutual Information / Transinformation / Statistical Dependence
+    /// Statistical independence measure based on joint entropy
     fn dependence(self, v:&[u8]) -> f64;
     /// Scalar multiplication with a vector
     fn smult(self, s: f64) -> Vec<f64>;
