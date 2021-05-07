@@ -6,6 +6,7 @@ README
 Now forward compliant with Rust 2021 Edition!
 
 ## Introduction
+
 Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right.
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, new multidimensional median algorithm.
@@ -17,6 +18,7 @@ Going beyond one dimension, most authors  'cheat' by using *quasi medians* (1-d 
 Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on the True Geometric Median, computed here by `nmedian`, are axis (rotation) independent from the first step.
 
 ### Terminology for sets of points in n dimensions
+
 * `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of `squares` of distances to all member points. Thus it is susceptible to outliers. In other words, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, is is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if confusing) usage and always mean the actual Centre.
 
 * `Quasi Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here. The only good thing about it is that it is dead easy to compute.
@@ -27,16 +29,19 @@ Such dependence has to be later removed by Principle Components Analysis or simi
 
 * `Median or the true geometric median`, is the point (generally non member), which minimises the sum of distances to all other members. This is the one we want. It is much less susceptible to outliers and it is rotation independent.
 
-### Implementation 
+### Implementation
+
 Rstats is a lean minimalistic library that only depends on *anyhow* (for its error handling).
 
 The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant types. This division is necessary because generic vectors are problematic in Rust.
 
-### Documentation 
+### Documentation
+
 To see the documentation, click the link on the right. Then, to see just the skeletal comments, select a trait of interest. To see more deailed comments plus some examples, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see tests, consult `tests.rs`.
 
 To run the tests, use single thread. It will be slower but will produce the results in the right order:
-```
+
+```rust
 cargo test --release -- --test-threads=1
     --nocapture --color always 
 ```
@@ -58,6 +63,7 @@ Included in this trait are:
 ## Trait Vecf64
 
 Vector algebra implemented on one or two `&[f64]` slices of any length (dimensionality):
+
 * Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
 * Finding minimum and maximum, linear transformation.
 
@@ -76,8 +82,9 @@ Some of the methods are for memory efficiency reasons reimplemented in this trai
 ## Trait VecVec
 
 Relationships of one vector to a set of vectors (of `&[f64]` end types):
-* Sums of distances, eccentricity,
-* centroid, medoid, true geometric median, 
+
+* sums of distances, eccentricity,
+* centroid, medoid, true geometric median,
 * transformation to zero (geometric) median data,
 * relationship between sets of multidimensional vectors: trend.
 
@@ -88,12 +95,12 @@ Trait VecVec is entirely unchecked, so check your data upfront. This is the more
 Some of the above for sets of vectors of bytes.
 
 ## Trait Index
- 
-* `ucorrelation`(self, v: &[usize]) -> f64; Pearson's correlation coefficient of two slices, typically containing the ranks.  
-* `revindex`(self) -> Vec<usize>; method for reversing an index, e.g. given a sort index, returns ranks and vice versa.
-* `unindex`(self, v:&[f64]) -> Vec<f64>; collects values from v in the order given by self index. 
 
-The methods of this trait are implemented for `&[usize]`.
+* `ucorrelation`(self, v: &[usize]) -> f64; Pearson's correlation coefficient of two slices, typically containing the ranks.  
+* `revindex`(self) -> Vec\<usize\>; method for reversing an index, e.g. given a sort index, returns ranks and vice versa.
+* `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
+
+The methods of this trait are implemented for `&[usize].
 
 ## Recent Releases
 
