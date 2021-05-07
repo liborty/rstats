@@ -10,8 +10,10 @@ Rstats is primarily about characterising multidimensional sets of points, with a
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, new multidimensional median algorithm.
 
-Going beyond one dimension, most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians may be easy to compute but they are a poor start to stable characterisation of multidimensional data.  
-*Specifically, all such 1-d measures are not invariant with respect to the choice of axis.*  
+Going beyond one dimension, most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians may be easy to compute but they are a poor start to stable characterisation of multidimensional data.
+
+*Specifically, all such 1-d measures are sensitive to the choice of axis.* 
+
 Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on the True Geometric Median, computed here by `nmedian`, are axis (rotation) independent from the first step.
 
 ### Terminology for sets of points in n dimensions
@@ -34,8 +36,9 @@ The constituent parts of Rstats are Rust traits grouping together functions appl
 To see the documentation, click the link on the right. Then, to see just the skeletal comments, select a trait of interest. To see more deailed comments plus some examples, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see tests, consult `tests.rs`.
 
 To run the tests, use single thread. It will be slower but will produce the results in the right order:   
-`cargo test --release -- --nocapture --color always --test-threads=1` 
-
+`cargo test --release --  
+    --nocapture --color always --test-threads=1`
+    
 ## Trait Stats
 
 One dimensional statistical measures implemented for `&[i64]` and `&[f64]`. 
@@ -91,7 +94,7 @@ Some of the above for sets of vectors of bytes.
 The methods of this trait are implemented for `&[usize]`.
 
 ## Recent Releases
-* **Version 0.6.2** 
+* **Version 0.6.2** Fixed entropy bug, added jointpdf, joint entropy and dependence.
 
 * **Version 0.6.1** Improved documentation and tests.
 
@@ -100,9 +103,3 @@ The methods of this trait are implemented for `&[usize]`.
 * **Version 0.5.9** Added a few more u8 implementations, plus 'sortm' convenience wrapper.
 
 * **Version 0.5.8** Improved some comments. Implemented `varc` for u8.
-
-* **Version 0.5.7** Minor version - added `dists`.
-
-* **Version 0.5.6** Added minimal support also for vectors of bytes (of u8 end type) for vector algebra over files and images.
-
-* **Version 0.5.5** Introduced `revindex`, `mergerank` and `mergesort`. Made 1-d quartiles more accurate. Changed all correlations to required (unchecked) methods.

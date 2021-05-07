@@ -1,4 +1,5 @@
-use crate::{Vecu8,Vecf64,MutVectors,VecVecu8};
+use crate::{Vecu8,VecVecu8,MutVectors,Vecf64,functions};
+use functions::emsg;
 
 impl Vecu8 for &[u8] {
 
@@ -7,21 +8,57 @@ impl Vecu8 for &[u8] {
         self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()
     } 
     /// Probability density function of bytes data
-    fn pdf(self) -> Vec<u64> {  
-        let n = self.len();
-        let mut pdfv = vec![0_u64;n];
-        for i in 0..self.len() { pdfv[self[i] as usize] += 1 };
+    fn pdf(self) -> Vec<f64> {  
+        let nf = self.len() as f64;
+        let mut pdfv = vec![0_f64;256];        
+        for &x in self { pdfv[x as usize] += 1_f64 };
+        for i in 0..255 {  pdfv[i] /= nf };
         pdfv
     }
-
-    /// Information (entropy) in nats of &[u8]
+    /// Information (entropy) of &[u8] (in nats)
     fn entropy(self) -> f64 {
         let pdfv = self.pdf();
-        let n = self.len() as f64;
-        pdfv.iter().map(|&ux| {
-                if ux == 0 { return 0_f64 }
-                let x = ux as f64 / n;
-                (-x)*(x.ln())}).sum::<f64>()           
+        let mut entr = 0_f64;
+        for x in pdfv {
+            if x.is_normal() // ignore zero probabilities
+                { entr -= x*(x.ln()) }
+        };            
+        entr           
+    }
+    /// Joint probability density function (actually just co-occurence counts) 
+    //  of two vectors of bytes of the same length.
+    /// Needs n^2 x 32bits of memory. Do not use for very long vectors, 
+    /// those will need hashing implementation.
+    fn jointpdf(self, v:&[u8]) -> Vec<Vec<u32>> {  
+        let n = self.len();
+        if v.len() != n {
+            panic!("{}",emsg(
+            file!(),line!(),"jointpdf argument vectors must be of equal length!"))
+        }
+        let mut jocc = vec![vec![0_u32; 256]; 256];
+        for i in 0..n { jocc[self[i] as usize][v[i] as usize] += 1 };
+        jocc
+    }
+    /// Joint entropy of &[u8],&[u8] (in nats)
+    fn jointentropy(self, v:&[u8]) -> f64 {
+        let nf = self.len() as f64;
+        let pdfv = self.jointpdf(v);
+        let mut entr = 0_f64;
+        for i in 0..255 {
+            for j in 0..255 {
+                let cx = pdfv[i][j];
+                if cx > 0 { // ignore zero counts
+                    let x = cx as f64 / nf;  // turn count into probability
+                    entr -= x*(x.ln()) 
+                }
+            }
+        };            
+        entr           
+    }
+    /// Mutual information or transinformation or dependence between two &[u8] variables
+    /// This is symmetric function 
+    fn dependence(self, v:&[u8]) -> f64 {
+        2.0*self.jointentropy(v) - self.entropy() - v.entropy()
     }
 
     /// Scalar multiplication of a vector, creates new vec
@@ -75,7 +112,7 @@ impl Vecu8 for &[u8] {
 
 }
 
-impl VecVecu8 for  &[Vec<u8>] {
+impl VecVecu8 for &[Vec<u8>] {
 
     fn acentroid(self) -> Vec<f64> {
     let mut centre = vec![0_f64; self[0].len()];

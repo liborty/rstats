@@ -147,9 +147,15 @@ pub trait Vecu8 {
     /// Vector magnitude squared (sum of squares)
     fn vmagsq(self) -> f64;
     /// Probability density function of bytes data
-    fn pdf(self) -> Vec<u64>;
+    fn pdf(self) -> Vec<f64>;
+    /// Counts of joint bytes values
     /// Information (entropy) in nats of &[u8]
     fn entropy(self) -> f64;
+    fn jointpdf(self, v:&[u8]) -> Vec<Vec<u32>>;
+    /// Joint entropy of &[u8],&[u8] in nats 
+    fn jointentropy(self, v:&[u8]) -> f64;
+    /// Mutual Information / Transinformation / Statistical Dependence
+    fn dependence(self, v:&[u8]) -> f64;
     /// Scalar multiplication with a vector
     fn smult(self, s: f64) -> Vec<f64>;
     /// Scalar addition to vector
