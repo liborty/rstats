@@ -254,6 +254,8 @@ pub trait VecVec {
     fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
     /// Vector iterative two point method for finding the geometric median
     fn gmedian(self, eps: f64) -> Vec<f64>;
+    fn smedian(self, eps: f64) -> Vec<f64>;
+ 
 }
 
 /// Methods to manipulate indices of Vec<usize> type

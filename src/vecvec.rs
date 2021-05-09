@@ -263,7 +263,7 @@ impl VecVec for &[Vec<f64>] {
         let mut oldpoint = self.acentroid(); // start iterating from the centroid
         loop {
             let (rsum, mut newv) = self.betterpoint(&oldpoint);
-            newv.mutsmult(1.0 / rsum); // scaling the returned sum of unit vectors
+            newv.mutsmult(rsum); // scaling the returned sum of unit vectors
             // test the magnitude of the move for termination
             if newv.vdist(&oldpoint) < eps {
                 oldpoint = newv; // make the last small step anyway
@@ -288,7 +288,7 @@ impl VecVec for &[Vec<f64>] {
                 vsum.mutvadd(&thatp.smult(recip)) // accumulate vectors
             }
         }
-        (rsum, vsum)
+        (1.0/rsum, vsum)
     }
 
     /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.
@@ -319,14 +319,16 @@ impl VecVec for &[Vec<f64>] {
     //    let (mut op1,mut op2) = self.halfcentroid(); // start iterating from the centroids
         let vsize = self[0].len();
         let mut op1 = vec![0_f64; vsize];
-        let mut op2 = vec![1_f64; vsize];
+        let mut op2 = self.acentroid();
         loop {
             let u = self.eccnonmember(&op1).vunit(); // eccentricity unit vectors
             let v = self.eccnonmember(&op2).vunit(); // for both points
             let uv = u.dotp(&v);
             let pd = op2.vsub(&op1);
-            let b = (uv*u.dotp(&pd)-v.dotp(&pd))/(1.0-uv.powi(2));
-            let a = u.dotp(&pd)+b*uv;
+            let udotpd = u.dotp(&pd);
+            let b = (uv*udotpd-v.dotp(&pd))/(1.0-uv.powi(2));
+            let a = udotpd+b*uv;
+
             let f1 = op1.vadd(&u.smult(a)); // parmetric vector equations 
             let f2 = op2.vadd(&v.smult(b)); // for the new points
             if (f1.vdist(&op1) < eps) || (f2.vdist(&op2) < eps) {    // termination condition, points are close 
@@ -337,4 +339,18 @@ impl VecVec for &[Vec<f64>] {
         }
     }
 
+    /// Iterative annealing method for finding the geometric median
+    /// Be careful, might fail to converge
+    fn smedian(self, eps: f64) -> Vec<f64> {     
+        let (mut anneal, mut u) = self.betterpoint(&self.acentroid());
+        let mut point = u.smult(anneal);     
+        loop {       
+            u = self.eccnonmember(&point); // new eccentricity vector
+            let mag = u.vmag();         
+            let newpoint = point.vadd(&u.smult(anneal)); // move to a new point           
+            if mag < eps { return newpoint } // termination 
+            anneal = newpoint.vdist(&point)/mag;
+            point = newpoint
+        }         
+    }    
 }

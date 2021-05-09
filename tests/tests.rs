@@ -137,10 +137,10 @@ fn medians() -> Result<()> {
    for i in 1..ITERATIONS {
       let pts = genvec(d,n,i,2*i);
       timer.start();
-      let gm = pts.nmedian(EPS);
+      let gm = pts.gmedian(EPS);
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
-      sumg += pts.translate(&gm).nmedian(EPS).vmag();
+      sumg += pts.translate(&gm).gmedian(EPS).vmag();
    }
    println!("Sum of residual errors: {} in {} ns",GI(sumg),GI(sumtime));     
    Ok(())  
