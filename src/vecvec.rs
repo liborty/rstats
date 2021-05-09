@@ -157,6 +157,19 @@ impl VecVec for &[Vec<f64>] {
         vsum.vmag() / (n - 1) as f64
     }
 
+    /// Eccentricity vector for a non member point,
+    /// while the true geometric median is as yet unknown.
+    /// Returns the eccentricity vector.
+    /// The true geometric median would return zero vector.
+    /// This function is suitable for a single non-member point. 
+    fn eccnonmember(self, p:&[f64]) -> Vec<f64> {
+        let mut vsum = vec![0_f64; self[0].len()];
+        for x in self { 
+            vsum.mutvadd(&x.vsub(&p).vunit());
+        }
+        vsum
+    }
+
     /// Returns (Measure, Eccentricity-Vector) of any point (typically one not belonging to the set).
     /// The first (scalar) part of the result is a positive measure of `not being a median`.
     /// The second part is the eccentricity vector, which always points towards the median.
@@ -292,12 +305,36 @@ impl VecVec for &[Vec<f64>] {
     /// The geometric median is invariant with respect to rotation,
     /// unlike the often misguidedly used mean (`acentroid` here), or the quasi median,
     /// both of which depend on the choice of axis.
-    /// The quasi-median is not even implemented by rstats.
-    fn translate(self, m: &[f64]) -> Vec<Vec<f64>> {
+     fn translate(self, m: &[f64]) -> Vec<Vec<f64>> {
         let mut result = Vec::new();
         for point in self {
             result.push(point.vsub(m))
         }
         result
     }
+
+    /// Iterative two point method for finding the geometric median
+    /// without reciprocal scaling
+    fn gmedian(self, eps: f64) -> Vec<f64> {
+    //    let (mut op1,mut op2) = self.halfcentroid(); // start iterating from the centroids
+        let vsize = self[0].len();
+        let mut op1 = vec![0_f64; vsize];
+        let mut op2 = vec![1_f64; vsize];
+        loop {
+            let u = self.eccnonmember(&op1).vunit(); // eccentricity unit vectors
+            let v = self.eccnonmember(&op2).vunit(); // for both points
+            let uv = u.dotp(&v);
+            let pd = op2.vsub(&op1);
+            let b = (uv*u.dotp(&pd)-v.dotp(&pd))/(1.0-uv.powi(2));
+            let a = u.dotp(&pd)+b*uv;
+            let f1 = op1.vadd(&u.smult(a)); // parmetric vector equations 
+            let f2 = op2.vadd(&v.smult(b)); // for the new points
+            if (f1.vdist(&op1) < eps) || (f2.vdist(&op2) < eps) {    // termination condition, points are close 
+                return f2.vadd(&f1).smult(0.5) // return their midpoint
+            }
+            op1 = f1;
+            op2 = f2;
+        }
+    }
+
 }

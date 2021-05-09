@@ -7,7 +7,7 @@ use rstats::{Stats,MutVectors,Vecf64,VecVec,Vecu8,Indices};
 use rstats::functions::{GI,GV,genvec};
 use devtimer::DevTime;
 
-pub const EPS:f64 = 1e-6;
+pub const EPS:f64 = 1e-7;
 #[test]
 fn entropy() -> Result<()> {
    let v1 = vec![1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6]; 
@@ -86,7 +86,7 @@ fn vecvec() -> Result<()> {
    let hcentroid = pt.hcentroid();
    let acentroid = pt.acentroid();
    let (ac1,ac2) = pt.halfcentroid();
-   let median = pt.nmedian(EPS);
+   let median = pt.gmedian(EPS);
    let outlier = &pt[outi]; 
    let eoutlier = &pt[outei];
    let zmed = pt.translate(&median); // zero median transformed data
@@ -109,7 +109,7 @@ fn vecvec() -> Result<()> {
    println!("First halfentroid's ecc:\t{}",GI(pt.ecc(&ac1)));
    println!("Second halfentroid's ecc:\t{}",GI(pt.ecc(&ac2)));    
    println!("Median's eccentricity:\t\t{}",GI(pt.ecc(&median)));
-   println!("Zero median data's median magnitude\nor approximate median error:\t{}",GI(zmed.nmedian(EPS).vmag()));
+   println!("Zero median data's median magnitude\nor approximate median error:\t{}",GI(zmed.gmedian(EPS).vmag()));
    let (mu,med) = pt.moe();
    println!("Eccentricities\t{}",mu);  
    println!("Eccentricities\t{}\n",med);  
@@ -140,7 +140,7 @@ fn medians() -> Result<()> {
       let gm = pts.nmedian(EPS);
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
-      sumg += pts.ecc(&gm);
+      sumg += pts.translate(&gm).nmedian(EPS).vmag();
    }
    println!("Sum of residual errors: {} in {} ns",GI(sumg),GI(sumtime));     
    Ok(())  

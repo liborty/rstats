@@ -224,11 +224,13 @@ pub trait VecVec {
     fn dists(self, v: &[f64]) -> Vec<f64>;
     /// Medoid and Outlier (by distance) of a set of points
     fn medoid(self) -> (f64, usize, f64, usize);
-
+ 
     /// Eccentricity vectors from each point
     fn eccentricities(self) -> Vec<Vec<f64>>;
     /// Ecentricity scalar measure of an internal point given by indx
     fn eccentrinset(self, indx: usize) -> f64;
+    /// Eccentricity vector for a non member point
+    fn eccnonmember(self, p:&[f64]) -> Vec<f64>;
     /// Eccentricity scalar measure and vector of any point     
     fn veccentr(self, thisp: &[f64]) -> (f64, Vec<f64>);
     /// Eccentricity scalar measure only, of any point
@@ -250,7 +252,8 @@ pub trait VecVec {
     fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
-
+    /// Vector iterative two point method for finding the geometric median
+    fn gmedian(self, eps: f64) -> Vec<f64>;
 }
 
 /// Methods to manipulate indices of Vec<usize> type
