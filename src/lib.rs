@@ -1,10 +1,10 @@
 mod statsf64;
 mod statsi64;
-mod vecf64impls;
+mod vecf64;
 mod indices;
-mod vecu8impls;
-mod mutvecimpls;
-mod vecvecimpls;
+mod vecu8;
+mod mutvec;
+mod vecvec;
 pub mod functions;
 
 use crate::functions::GI; 
@@ -22,7 +22,7 @@ impl std::fmt::Display for Med {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "(Lower Q: {}, Median: {}, Upper Q: {})",
+            "median:\n\tLower Q: {}\n\tMedian:  {}\n\tUpper Q: {}",
             GI(self.lquartile),
             GI(self.median),
             GI(self.uquartile)
@@ -96,6 +96,8 @@ pub trait Vecf64 {
     fn sadd(self, s: f64) -> Vec<f64>; 
     /// Scalar product of two vectors
     fn dotp(self, v: &[f64]) -> f64;
+    /// Inverse vecor of magnitude 1/|v|
+    fn vinverse(self) -> Vec<f64>;
     /// Cosine = a.dotp(b)/(a.vmag*b.vmag)
     fn cosine(self, _v: &[f64]) -> f64; 
     /// Vector subtraction
@@ -148,9 +150,9 @@ pub trait Vecu8 {
     fn vmagsq(self) -> f64;
     /// Probability density function of bytes data
     fn pdf(self) -> Vec<f64>;
-    /// Counts of joint bytes values
     /// Information (entropy) in nats of &[u8]
     fn entropy(self) -> f64;
+    /// Counts of joint bytes values
     fn jointpdf(self, v:&[u8]) -> Vec<Vec<u32>>;
     /// Joint entropy of &[u8],&[u8] in nats 
     fn jointentropy(self, v:&[u8]) -> f64;
@@ -163,14 +165,15 @@ pub trait Vecu8 {
     /// Scalar product of u8 and f64 vectors
     fn dotp(self, v: &[f64]) -> f64;
     /// Scalar product of two u8 vectors
-    fn dotpu8(self, v: &[u8]) -> u64;
+     fn dotpu8(self, v: &[u8]) -> u64;
     /// Cosine between two positive u8 vectors
     fn cosineu8(self, v: &[u8]) -> f64;
     /// Area proportional to the swept arc
     fn varc(self, v:&[f64]) -> f64;
     /// Euclidian distance 
-    fn vdist(self, v: &[f64]) -> f64;  
-    
+    fn vdist(self, v: &[f64]) -> f64;
+    /// Euclidian distance between byte vectors
+    fn vdistsq(self, v: &[u8]) -> u64;    
 }
 
 /// Mutable vector operations.
@@ -205,8 +208,12 @@ pub trait VecVecu8 {
 /// Methods applicable to vector of vectors of <f64>
 pub trait VecVec {
 
-    /// Centroid = euclidian mean of a set of points
+    /// Arithmetic Centroid = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
+    /// Harmonic Centroid = harmonic mean of a set of points
+    fn hcentroid(self) -> Vec<f64>;
+    /// Arithmetis Centroids of two halves of the set of points
+    fn halfcentroid(self) -> (Vec<f64>,Vec<f64>);
     /// Sums of distances from each point to all other points
     fn distsums(self) -> Vec<f64>;
     /// Sum of distances from one point given by indx

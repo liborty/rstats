@@ -290,27 +290,29 @@ impl Stats for &[f64] {
         let mid = gaps / 2;
         let quarter = gaps / 4;
         let threeq = 3 * gaps / 4;
-        let qrem = gaps % 4;
         let v = self.sortf();     
         let mut result: Med = Default::default();
         result.median = if 2*mid < gaps { (v[mid] + v[mid + 1]) / 2.0 }
             else { v[mid] };
-        if qrem == 0 {
+        match gaps % 4 {
+        0 => {
             result.lquartile = v[quarter];
             result.uquartile = v[threeq];
-            return Ok(result) };
-        if qrem == 1 {
+            return Ok(result) },
+        1 => {
             result.lquartile = (3.*v[quarter] + v[quarter+1]) / 4.;
             result.uquartile = (v[threeq] + 3.*v[threeq+1]) / 4.;
-            return Ok(result) };
-        if qrem == 2 {
+            return Ok(result) },
+        2 => {
             result.lquartile = (v[quarter]+v[quarter+1]) / 2.;
             result.uquartile = (v[threeq] + v[threeq+1]) / 2.;
-            return Ok(result) };
-        if qrem == 3 {
+            return Ok(result) },
+        3 => {
             result.lquartile = (v[quarter] + 3.*v[quarter+1]) / 4.;
             result.uquartile = (3.*v[threeq] + v[threeq+1]) / 4.
-        };
+            },
+        _ => { }  
+        }
         Ok(result)       
     }    
 

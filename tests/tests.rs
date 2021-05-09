@@ -14,17 +14,16 @@ fn entropy() -> Result<()> {
    println!("\n{:?}",v1);
    println!("Entropy: {}",GI(v1.entropy()));
    let v2 = vec![1_u8,2,2,3,3,3,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2]; 
-   println!("\n{:?}",v2);
+   println!("{:?}",v2);
    println!("Entropy: {}",GI(v2.entropy()));
    println!("Joint E: {}",GI(v1.jointentropy(&v2)));
-   println!("Dependence: {}",GI(v1.dependence(&v2)));
+   println!("Dependence: {}\n",GI(v1.dependence(&v2)));
    Ok(())
 }
 
 #[test]
 fn fstats() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
-   let v1r = v1.ranks().unwrap();
    println!("\n{:?}",v1);
    println!("Linear transform:\n{}",GV(v1.lintrans()));
    println!("Arithmetic mean:{}",GI(v1.amean().unwrap()));
@@ -32,12 +31,29 @@ fn fstats() -> Result<()> {
    println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
    println!("Magnitude:\t{}",GI(v1.vmag()));
    println!("Arithmetic {}",v1.ameanstd().unwrap());
-   println!("Geometric {}",v1.gmeanstd().unwrap());
+   println!("Geometric  {}",v1.gmeanstd().unwrap());
    println!("Autocorrelation:{}",GI(v1.autocorr()));
-   println!("{}",v1.median().unwrap());
+   println!("{}\n",v1.median().unwrap());
+   Ok(())
+}
+#[test]
+fn intstats() -> Result<()> { 
+   let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+   println!("\n{:?}",v1);
+   println!("Arithmetic mean:{}",GI(v1.amean().unwrap()));
+   println!("Geometric mean:\t{}",GI(v1.gmean().unwrap()));
+   println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
+   println!("Arithmetic {}",v1.ameanstd().unwrap());
+   println!("Geometric {}",v1.gmeanstd().unwrap());
+   println!("{}\n",v1.median().unwrap()); 
+   Ok(())
+}
+#[test]
+fn vecf64() -> Result<()> { 
+   let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
+   println!("\n{:?}",v1);
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
-   let v2r = v2.ranks().unwrap();
-   println!("\n{:?}",v2);
+   println!("{:?}",v2);
    println!("Rank:      {}",GV(v2.ranks().unwrap()));
    println!("Sort index:{}",GV(v2.mergesort(0,v2.len()))); 
    println!("R reversed:{}",GV(v2.mergerank().revindex()));    
@@ -48,7 +64,8 @@ fn fstats() -> Result<()> {
    println!("Kendall's Correlation:\t{}",GI(v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",GI(v1.spearmancorr(&v2)));  
    println!("Cosine:\t\t\t{}",GI(v1.cosine(&v2))); 
-   println!("Cosine of ranks:\t{}",GI(v1r.cosine(&v2r)));        
+   println!("Cosine of ranks:\t{}",
+        GI(v1.ranks().unwrap().cosine(&v2.ranks().unwrap())));        
    println!("Euclidian distance:\t{}",GI(v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",GI(v1.vsub(&v2).as_slice().vmag()));   
    println!("Vector difference: {}",GV(v1.vsub(&v2))); 
@@ -58,29 +75,17 @@ fn fstats() -> Result<()> {
    println!("Arc area:\t\t{}\n",GI(v1.varc(&v2)));
    Ok(())
 }
-
-#[test]
-fn intstats() -> Result<()> { 
-   let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-   println!("\n{:?}",v1);
-   println!("Arithmetic mean:{}",GI(v1.amean().unwrap()));
-   println!("Geometric mean:\t{}",GI(v1.gmean().unwrap()));
-   println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
-   println!("Arithmetic {}",v1.ameanstd().unwrap());
-   println!("Geometric {}",v1.gmeanstd().unwrap());
-   println!("{}",v1.median().unwrap()); 
-   Ok(())
-}
-
 #[test]
 fn vecvec() -> Result<()> { 
-   let d = 7_usize;
+   let d = 10_usize;
    let n = 100_usize;
    println!("testing on a random set of {} points in {} dimensional space",GI(n),GI(d));
-   let pt = genvec(d,n,7,13); // random test data 
+   let pt = genvec(d,n,5,17); // random test data 
    let (med,medi,outd,outi) = pt.medoid();
    let (mede,medei,oute,outei) = pt.emedoid();
-   let centroid = pt.acentroid();
+   let hcentroid = pt.hcentroid();
+   let acentroid = pt.acentroid();
+   let (ac1,ac2) = pt.halfcentroid();
    let median = pt.nmedian(EPS);
    let outlier = &pt[outi]; 
    let eoutlier = &pt[outei];
@@ -90,19 +95,24 @@ fn vecvec() -> Result<()> {
    println!("Outlier's distance to Median:\t{}",GI(outlier.vdist(&median)));
    println!("Outlier's eccentricity:\t\t{}",GI(pt.eccentrinset(outi)));
    println!("Sum of Medoid's distances:\t{} Index: {}",GI(med),GI(medi));
-   println!("Sum of Centroid's distances:\t{}",GI(pt.distsum(&centroid)));
+   println!("Sum of HCentroid's distances:\t{}",GI(pt.distsum(&hcentroid)));
+   println!("Sum of ACentroid's distances:\t{}",GI(pt.distsum(&acentroid)));
+   println!("First halfentroid's distances:\t{}",GI(pt.distsum(&ac1)));
+   println!("Second halfentroid's distances:\t{}",GI(pt.distsum(&ac2))); 
    println!("Sum of Median's distances:\t{}\n",GI(pt.distsum(&median)));
 
    println!("E-Outlier's eccentricity:\t{} Index: {}",GI(oute),GI(outei));
    println!("E-Outlier's distance to Median:\t{}",GI(eoutlier.vdist(&median)));
    println!("E-Outlier's distances:\t\t{}",GI(pt.distsuminset(outei)));   
    println!("Medoid's eccentricity:\t\t{} Index: {}",GI(mede),GI(medei));
-   println!("Centroid's eccentricity:\t{}",GI(pt.ecc(&centroid)));   
+   println!("Centroid's eccentricity:\t{}",GI(pt.ecc(&acentroid)));
+   println!("First halfentroid's ecc:\t{}",GI(pt.ecc(&ac1)));
+   println!("Second halfentroid's ecc:\t{}",GI(pt.ecc(&ac2)));    
    println!("Median's eccentricity:\t\t{}",GI(pt.ecc(&median)));
    println!("Zero median data's median magnitude\nor approximate median error:\t{}",GI(zmed.nmedian(EPS).vmag()));
    let (mu,med) = pt.moe();
    println!("Eccentricities\t{}",mu);  
-   println!("Eccentricities median:\n{}",med);  
+   println!("Eccentricities\t{}\n",med);  
    Ok(())
 }
 
@@ -111,7 +121,7 @@ fn trend() -> Result<()> {
    let d = 7_usize;
    let pt1 = genvec(d,28,13,19); // random test data 
    let pt2 = genvec(d,38,23,31);
-   println!("\nTrend vector:\n{}",GV(pt1.trend(EPS,pt2)));
+   println!("\nTrend vector:\n{}\n",GV(pt1.trend(EPS,pt2)));
    Ok(())
 }
 
