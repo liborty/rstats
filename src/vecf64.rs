@@ -64,6 +64,15 @@ impl Vecf64 for &[f64] {
             .sum::<f64>()
             .sqrt()
     }
+    /// Euclidian distance squared between two n dimensional points (vectors).  
+    /// Slightly faster than vsub followed by vmasq, as both are done in one loop
+    /// Same as vdist without taking the square root
+    fn vdistsq(self, v: &[f64]) -> f64 {
+        self.iter()
+            .zip(v)
+            .map(|(&xi, &vi)| (xi - vi).powi(2))
+            .sum::<f64>() 
+    }
 
  
     /// Vector magnitude

@@ -105,8 +105,8 @@ The functions of this trait are implemented for vetors of subscripts, i.e. `&[us
 
 ## Recent Releases
 
-* **Version 0.6.4**
-
+* **Version 0.6.4** Added pwopoint and secant GM algorithms (experimental).
+ 
 * **Version 0.6.3** Fixed dependence measure interval to [0,1].
 
 * **Version 0.6.2** Fixed entropy bug, added jointpdf, joint entropy and dependence.

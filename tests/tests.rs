@@ -84,8 +84,7 @@ fn vecvec() -> Result<()> {
    let (med,medi,outd,outi) = pt.medoid();
    let (mede,medei,oute,outei) = pt.emedoid();
    let hcentroid = pt.hcentroid();
-   let acentroid = pt.acentroid();
-   let (ac1,ac2) = pt.halfcentroid();
+   let acentroid = pt.acentroid(); 
    let median = pt.gmedian(EPS);
    let outlier = &pt[outi]; 
    let eoutlier = &pt[outei];
@@ -96,9 +95,7 @@ fn vecvec() -> Result<()> {
    println!("Outlier's eccentricity:\t\t{}",GI(pt.eccentrinset(outi)));
    println!("Sum of Medoid's distances:\t{} Index: {}",GI(med),GI(medi));
    println!("Sum of HCentroid's distances:\t{}",GI(pt.distsum(&hcentroid)));
-   println!("Sum of ACentroid's distances:\t{}",GI(pt.distsum(&acentroid)));
-   println!("First halfentroid's distances:\t{}",GI(pt.distsum(&ac1)));
-   println!("Second halfentroid's distances:\t{}",GI(pt.distsum(&ac2))); 
+   println!("Sum of ACentroid's distances:\t{}",GI(pt.distsum(&acentroid)));  
    println!("Sum of Median's distances:\t{}\n",GI(pt.distsum(&median)));
 
    println!("E-Outlier's eccentricity:\t{} Index: {}",GI(oute),GI(outei));
@@ -106,8 +103,6 @@ fn vecvec() -> Result<()> {
    println!("E-Outlier's distances:\t\t{}",GI(pt.distsuminset(outei)));   
    println!("Medoid's eccentricity:\t\t{} Index: {}",GI(mede),GI(medei));
    println!("Centroid's eccentricity:\t{}",GI(pt.ecc(&acentroid)));
-   println!("First halfentroid's ecc:\t{}",GI(pt.ecc(&ac1)));
-   println!("Second halfentroid's ecc:\t{}",GI(pt.ecc(&ac2)));    
    println!("Median's eccentricity:\t\t{}",GI(pt.ecc(&median)));
    println!("Zero median data's median magnitude\nor approximate median error:\t{}",GI(zmed.gmedian(EPS).vmag()));
    let (mu,med) = pt.moe();
@@ -137,11 +132,39 @@ fn medians() -> Result<()> {
    for i in 1..ITERATIONS {
       let pts = genvec(d,n,i,2*i);
       timer.start();
+      let gm = pts.nmedian(EPS);
+      timer.stop();
+      sumtime += timer.time_in_nanos().unwrap();
+      sumg += pts.translate(&gm).nmedian(EPS).vmag();
+   }   
+   println!("Nmedian errors: {} ns:   {}",GI(sumg),GI(sumtime));  
+   
+   sumg = 0_f64;
+   sumtime = 0_u128;
+   timer = DevTime::new_simple();
+   for i in 1..ITERATIONS {
+      let pts = genvec(d,n,i,2*i);
+      timer.start();
       let gm = pts.gmedian(EPS);
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
       sumg += pts.translate(&gm).gmedian(EPS).vmag();
    }
-   println!("Sum of residual errors: {} in {} ns",GI(sumg),GI(sumtime));     
-   Ok(())  
-}
+   println!("Gmedian errors: {} ns: {}",GI(sumg),GI(sumtime));  
+
+    sumg = 0_f64;
+    sumtime = 0_u128;
+    timer = DevTime::new_simple();
+    for i in 1..ITERATIONS {
+       let pts = genvec(d,n,i,2*i);
+       timer.start();
+       let gm = pts.smedian(EPS);
+       timer.stop();
+       sumtime += timer.time_in_nanos().unwrap();
+       sumg += pts.translate(&gm).smedian(EPS).vmag();
+    }
+    println!("Smedian errors: {} ns: {}",GI(sumg),GI(sumtime));  
+ 
+    Ok(())  
+ }
+

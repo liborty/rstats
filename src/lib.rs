@@ -110,7 +110,8 @@ pub trait Vecf64 {
     fn vmagsq(self) -> f64;
     /// Euclidian distance between two points
     fn vdist(self, v: &[f64]) -> f64;
-    
+    /// vdist between two points squared
+    fn vdistsq(self, v: &[f64]) -> f64;   
     /// Unit vector
     fn vunit(self) -> Vec<f64>;
     /// Area of parallelogram between two vectors (magnitude of cross product)
@@ -211,9 +212,7 @@ pub trait VecVec {
     /// Arithmetic Centroid = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
     /// Harmonic Centroid = harmonic mean of a set of points
-    fn hcentroid(self) -> Vec<f64>;
-    /// Arithmetis Centroids of two halves of the set of points
-    fn halfcentroid(self) -> (Vec<f64>,Vec<f64>);
+    fn hcentroid(self) -> Vec<f64>; 
     /// Sums of distances from each point to all other points
     fn distsums(self) -> Vec<f64>;
     /// Sum of distances from one point given by indx
@@ -248,12 +247,15 @@ pub trait VecVec {
     fn nmedian(self, eps: f64) -> Vec<f64>;
     /// Betterpoint gives new approximation to nmedian
     fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>);
+    /// First iteration point for geometric medians
+    fn firstpoint(self) -> Vec<f64>;
     /// Trend between two sets
     fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
     /// Vector iterative two point method for finding the geometric median
     fn gmedian(self, eps: f64) -> Vec<f64>;
+    /// Secant nethod for finding the geometric median
     fn smedian(self, eps: f64) -> Vec<f64>;
  
 }

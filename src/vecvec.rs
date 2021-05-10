@@ -18,25 +18,6 @@ impl VecVec for &[Vec<f64>] {
         centre.mutsmult(1.0 / self.len() as f64);
         centre
     }
-    /// Centroids of halves of points.
-    /// Used to initialise the two point iterative method for finding the geometric median
-    fn halfcentroid(self) -> (Vec<f64>,Vec<f64>) {
-        let n = self.len();
-        let nh = n/2;
-        let j = self[0].len();
-        let mut centre1 = vec![0_f64; j];
-        let mut centre2 = vec![0_f64; j];
-        for i in 0..nh {
-            centre1.mutvadd(&self[i])
-        }
-        centre1.mutsmult(1.0 / nh as f64);
-        for i in nh..n {
-            centre2.mutvadd(&self[i]) 
-        }
-        centre2.mutsmult(1.0 / (n-nh) as f64);
-
-        (centre1,centre2)
-    }
 
     /// hcentroid =  multidimensional harmonic mean
     /// # Example
@@ -263,20 +244,29 @@ impl VecVec for &[Vec<f64>] {
         let mut oldpoint = self.acentroid(); // start iterating from the centroid
         loop {
             let (rsum, mut newv) = self.betterpoint(&oldpoint);
-            newv.mutsmult(rsum); // scaling the returned sum of unit vectors
+            newv.mutsmult(1.0/rsum); // scaling the returned sum of unit vectors
             // test the magnitude of the move for termination
-            if newv.vdist(&oldpoint) < eps {
-                oldpoint = newv; // make the last small step anyway
-                break; // from the loop
-            };
+            if newv.vdist(&oldpoint) < eps { return newv }; // make the last small step anyway
             oldpoint = newv // move to the new point
-        }
-        oldpoint
+        } 
     }
-
+    /// First iteration point for geometric medians.
+    fn firstpoint(self) -> Vec<f64> {
+        let mut rsum = 0_f64;
+        let mut vsum = vec![0_f64; self[0].len()];
+        for thisp in self {
+            let mag = thisp.vmag();
+            if mag.is_normal() {  
+                let invmod = 1.0_f64/mag;
+                rsum += invmod;
+                vsum.mutvadd(&thisp.smult(invmod)) // accumulate unit vectors
+            }
+        }
+        vsum.smult(1.0/rsum)
+    }
     /// Called by nmedian.
     /// Scaling by rsum is left as the final step at calling level,
-    /// in order to facilitate data parallelism.
+    /// in order to facilitate data points parallelism.
     fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>) {
         let mut rsum = 0_f64;
         let mut vsum = vec![0_f64; v.len()];
@@ -285,10 +275,10 @@ impl VecVec for &[Vec<f64>] {
             if dist.is_normal() { // exclude points that are too close
                 let recip = 1.0 / dist;
                 rsum += recip; // accumulate reciprocal scaling weights
-                vsum.mutvadd(&thatp.smult(recip)) // accumulate vectors
+                vsum.mutvadd(&thatp.smult(recip)) // accumulate p vectors
             }
         }
-        (1.0/rsum, vsum)
+        (rsum, vsum)
     }
 
     /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.
@@ -316,9 +306,7 @@ impl VecVec for &[Vec<f64>] {
     /// Iterative two point method for finding the geometric median
     /// without reciprocal scaling
     fn gmedian(self, eps: f64) -> Vec<f64> {
-    //    let (mut op1,mut op2) = self.halfcentroid(); // start iterating from the centroids
-        let vsize = self[0].len();
-        let mut op1 = vec![0_f64; vsize];
+        let mut op1 = self.firstpoint();
         let mut op2 = self.acentroid();
         loop {
             let u = self.eccnonmember(&op1).vunit(); // eccentricity unit vectors
@@ -328,29 +316,36 @@ impl VecVec for &[Vec<f64>] {
             let udotpd = u.dotp(&pd);
             let b = (uv*udotpd-v.dotp(&pd))/(1.0-uv.powi(2));
             let a = udotpd+b*uv;
-
             let f1 = op1.vadd(&u.smult(a)); // parmetric vector equations 
             let f2 = op2.vadd(&v.smult(b)); // for the new points
-            if (f1.vdist(&op1) < eps) || (f2.vdist(&op2) < eps) {    // termination condition, points are close 
-                return f2.vadd(&f1).smult(0.5) // return their midpoint
+            if f1.vdist(&f2).sqrt() < eps {    // termination condition, points are close 
+                return f1.vadd(&f2).smult(0.5)                 // return their midpoint
             }
             op1 = f1;
             op2 = f2;
         }
     }
 
-    /// Iterative annealing method for finding the geometric median
-    /// Be careful, might fail to converge
-    fn smedian(self, eps: f64) -> Vec<f64> {     
-        let (mut anneal, mut u) = self.betterpoint(&self.acentroid());
-        let mut point = u.smult(anneal);     
-        loop {       
-            u = self.eccnonmember(&point); // new eccentricity vector
-            let mag = u.vmag();         
-            let newpoint = point.vadd(&u.smult(anneal)); // move to a new point           
-            if mag < eps { return newpoint } // termination 
-            anneal = newpoint.vdist(&point)/mag;
-            point = newpoint
-        }         
+    /// Secant method for finding the geometric median
+    fn smedian(self, eps: f64) -> Vec<f64> {
+        let np = self.len() as f64;
+        let mut p1 = self.firstpoint();     
+        let e1 = self.eccnonmember(&p1); // eccentricity vector1 
+        let mut e1mag = e1.vmag(); 
+        let mut p2 = p1.vadd(&e1.smult(p1.vmag()/e1mag/np));   
+        //   while p2.vdist(&p1) > eps { 
+        loop {
+            let e2 = self.eccnonmember(&p2); // eccentricity vector2
+            let e2mag = e2.vmag();           
+            if e2mag < eps  { return p2 }; 
+            let ed = if e1mag > e2mag { e1mag-e2mag } else { e1mag + e2mag };
+            let scale = p1.vsub(&p2).vmag()/ed; // secant formula
+            // println!(" {}, {}",e2mag,scale); 
+            let newp = p2.vadd(&e2.smult(scale)); // generate a new point          
+            p1 = p2;        
+            p2 = newp;  
+            e1mag = e2mag;         
+        }       
     }    
+
 }
