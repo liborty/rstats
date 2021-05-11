@@ -102,11 +102,12 @@ The functions of this trait are implemented for vetors of subscripts, i.e. `&[us
 * `revindex`(self) -> Vec\<usize\>; method for reversing an index, e.g. given a sort index, returns ranks and vice versa.
 * `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
 
-
 ## Recent Releases
 
-* **Version 0.6.4** Added pwopoint and secant GM algorithms (experimental).
- 
+* **Version 0.6.5** Simplified eccentricities functions.
+
+* **Version 0.6.4** Added twopoint and secant GM algorithms (experimental).
+
 * **Version 0.6.3** Fixed dependence measure interval to [0,1].
 
 * **Version 0.6.2** Fixed entropy bug, added jointpdf, joint entropy and dependence.

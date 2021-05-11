@@ -136,9 +136,9 @@ pub trait Vecf64 {
     fn lintrans(self) -> Vec<f64>;
     /// Sorted vector
     fn sortf(self) -> Vec<f64>;
-    /// Sorted vector, is wrapper for mergesort below
+    /// Sorted vector, sortf is wrapper for mergesort below
     fn sortm(self) -> Vec<f64>;
-    /// Ranking in n*log(n), using 'mergesort'
+    /// Ranking with only n*log(n) complexity, using 'mergesort'
     fn mergerank(self) -> Vec<usize>;
     /// Immutable merge sort, makes a sort index
     fn mergesort(self, i:usize, n:usize) -> Vec<usize>;
@@ -226,18 +226,12 @@ pub trait VecVec {
  
     /// Eccentricity vectors from each point
     fn eccentricities(self) -> Vec<Vec<f64>>;
-    /// Ecentricity scalar measure of an internal point given by indx
-    fn eccentrinset(self, indx: usize) -> f64;
+    /// Ecentricity of a member point given by its indx
+    fn eccmember(self, indx: usize) -> Vec<f64>;
     /// Eccentricity vector for a non member point
-    fn eccnonmember(self, p:&[f64]) -> Vec<f64>;
-    /// Eccentricity scalar measure and vector of any point     
-    fn veccentr(self, thisp: &[f64]) -> (f64, Vec<f64>);
-    /// Eccentricity scalar measure only, of any point
-    fn ecc(self, v: &[f64]) -> f64;
+    fn eccnonmember(self, p:&[f64]) -> Vec<f64>; 
     /// magnitudes of a set of vectors
-    fn mags(self) -> Vec<f64>;
-    /// scaled magnitudes (typically of eccentricities measures)
-    fn scalarecc(self) -> Vec<f64>;
+    fn mags(self) -> Vec<f64>; 
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
     fn moe(self) -> (MStats,Med);
     /// Medoid and Outlier as defined by eccentricities.

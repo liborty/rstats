@@ -98,44 +98,57 @@ impl VecVec for &[Vec<f64>] {
         self.distsums().minmax()
     }
 
-    /// `eccentricities` finds vectors from each member point towards the geometric median.
+    /// Finds approximate vectors from each member point towards the geometric median.
+    /// Twice as fast as doing them individually, using symmetry.
     fn eccentricities(self) -> Vec<Vec<f64>> {
         let n = self.len();
         // allocate vectors for the results
-        let mut eccs = vec![vec![0_f64; self[0].len()]; n];
+        let mut eccs = vec![vec![0_f64; self[0].len()]; n]; // can be reduced to half
+        let mut recips = vec![0_f64; n];
         // ecentricities vectors accumulator for all points
         // examine all unique pairings (lower triangular part of symmetric flat matrix)
         for i in 1..n {
             let thisp = &self[i];
             for j in 0..i { 
                 // calculate each unit vector between any pair of points just once
-                let e = self[j].vsub(&thisp).vunit(); 
-                eccs[i].mutvadd(&e);
+                let dv = self[j].vsub(&thisp);
+                let dvmag = dv.vmag();
+                if !dvmag.is_normal() { continue }
+                let rec = 1.0/dvmag;
+                eccs[i].mutvadd(&dv.smult(rec));
+                recips[i] += rec;
                 // mind the vector's opposite orientations w.r.t. to the two points!
-                eccs[j].mutvsub(&e); 
+                eccs[j].mutvsub(&dv.smult(rec)); 
+                recips[j] += rec;
             }
         }
+        for i in 0..n { eccs[i].mutsmult(1.0/recips[i])}
         eccs
     }
 
-    /// Scalar positive measure of `not being the geometric median` for a member point,
-    /// while the true geometric median is as yet unknown.
-    /// Returns the magnitude of the eccentricity vector.
+    /// Vector `eccentricity` or measure of  
+    /// `not being the geometric median` for a member point.
+    /// The true geometric median is as yet unknown.
     /// The true geometric median would return zero.
-    /// The member point is specified by its index `indx`.
+    /// The member point iin question is specified by its index `indx`.
     /// This function is suitable for a single member point. 
-    /// When eccentricities of all the points are needed, use `eccentricities`.
-    fn eccentrinset(self, indx: usize) -> f64 {
+    /// When eccentricities of all the points are needed, use `eccentricities` above.
+    fn eccmember(self, indx: usize) -> Vec<f64> {
         let n = self.len();
         let mut vsum = vec![0_f64; self[0].len()];
         let thisp = &self[indx];
+        let mut recip = 0_f64;
         for i in 0..n {
-            if i == indx {
-                continue;
-            }; // exclude this point
-            vsum.mutvadd(&self[i].vsub(&thisp).vunit());
+            if i == indx { continue  }; // exclude this point
+            let dv = self[i].vsub(&thisp);
+            let dvmag = dv.vmag();
+            if !dvmag.is_normal() { continue }
+            let rec = 1.0/dvmag;
+            vsum.mutvadd(&dv.smult(rec)); // add unit vector
+            recip += rec // add separately the reciprocals
         }
-        vsum.vmag() / (n - 1) as f64
+        vsum.mutsmult(1.0/recip);
+        vsum
     }
 
     /// Eccentricity vector for a non member point,
@@ -145,40 +158,18 @@ impl VecVec for &[Vec<f64>] {
     /// This function is suitable for a single non-member point. 
     fn eccnonmember(self, p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
+        let mut recip = 0_f64;
         for x in self { 
-            vsum.mutvadd(&x.vsub(&p).vunit());
+            let dv = x.vsub(&p);
+            let dvmag = dv.vmag();
+            if !dvmag.is_normal() { continue }
+            let rec = 1.0/dvmag;
+            vsum.mutvadd(&dv.smult(rec)); // add unit vector
+            recip += rec // add separately the reciprocals    
         }
+        vsum.mutsmult(1.0/recip);
         vsum
-    }
-
-    /// Returns (Measure, Eccentricity-Vector) of any point (typically one not belonging to the set).
-    /// The first (scalar) part of the result is a positive measure of `not being a median`.
-    /// The second part is the eccentricity vector, which always points towards the median.
-    /// The vector is of particular value and interest.
-    /// This function has no prior knowledge of the actual median.  
-    /// This is suitable for a single point. When eccentricities of all the points
-    /// are needed, use more efficient `eccentricities`.
-    fn veccentr(self, thisp: &[f64]) -> (f64, Vec<f64>) {
-        let d = thisp.len();
-        let mut vsum = vec![0_f64; d];
-        for thatp in self {
-            let mut vdif = thatp.vsub(thisp);
-            let mag = vdif.vmag();
-            if mag.is_normal() {
-                vdif.mutsmult(1./mag); // using already computed magnitude to find unit vdif
-                vsum.mutvadd(&vdif); // add it to the sum of vector eccentricities
-            } // else mag = 0, so just skip thatp, as it is the same as thisp
-        }
-        (vsum.vmag()/d as f64, vsum)
-    }
-
-    /// This convenience wrapper calls `veccentr` and extracts just the eccentricity (residual median error).
-    /// Thus this method is the non-member equivalent of `eccentrinset`.
-    /// When the eccentricity vector is needed, use `veccentr`
-    fn ecc(self, v: &[f64]) -> f64 {
-        let (ecc, _) = self.veccentr(v);
-        ecc
-    }
+    }  
 
     /// Magnitudes of all the vectors in self
     fn mags(self) -> Vec<f64> {
@@ -187,22 +178,13 @@ impl VecVec for &[Vec<f64>] {
             magsv.push(v.vmag())
         }
         magsv
-    }
-
-    /// Scalar measures of eccentricity for the whole set.
-    /// The output can be typically passed to `median`
-    /// or `minmax` to find the Outlier and the Medoid.
-    fn scalarecc(self) -> Vec<f64> {
-        let mut scecc = self.mags();
-        scecc.mutsmult(1_f64 / self.len() as f64);
-        scecc
-    }
+    } 
 
     /// Mean and Std (in MStats struct), Median and quartiles (in Med struct) 
     /// of scalar eccentricities of points in self.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
     fn moe(self) -> (MStats, Med) {
-        let eccs = self.eccentricities().scalarecc();
+        let eccs = self.eccentricities().mags();
         (eccs.ameanstd().unwrap(),eccs.median().unwrap())
     }
 
@@ -222,7 +204,7 @@ impl VecVec for &[Vec<f64>] {
     /// assert_eq!(outei,9);  // index of e-outlier
     /// ```
     fn emedoid(self) -> (f64, usize, f64, usize) {
-        self.eccentricities().scalarecc().minmax()
+        self.eccentricities().mags().minmax()
     }
 
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
@@ -240,8 +222,8 @@ impl VecVec for &[Vec<f64>] {
     /// let error = pt.ecc(&gm);
     /// assert_eq!(error,0.000004826966175302838_f64);
     /// ```
-    fn nmedian(self, eps: f64) -> Vec<f64> {
-        let mut oldpoint = self.acentroid(); // start iterating from the centroid
+    /*  fn nmedian(self, eps: f64) -> Vec<f64> {
+        let mut oldpoint = self.acentroid(); // start iterating 
         loop {
             let (rsum, mut newv) = self.betterpoint(&oldpoint);
             newv.mutsmult(1.0/rsum); // scaling the returned sum of unit vectors
@@ -250,19 +232,29 @@ impl VecVec for &[Vec<f64>] {
             oldpoint = newv // move to the new point
         } 
     }
+    */
+    fn nmedian(self, eps: f64) -> Vec<f64> {
+        let mut oldpoint = self.acentroid(); // start iterating 
+        loop {
+            let movev = self.eccnonmember(&oldpoint);
+            oldpoint = oldpoint.vadd(&movev);
+            if movev.vmag() < eps { return oldpoint } // make the last small step anyway    
+        } 
+    }
     /// First iteration point for geometric medians.
+    /// Same as eccnonmember(origin), just saving the zero subtractions
     fn firstpoint(self) -> Vec<f64> {
         let mut rsum = 0_f64;
         let mut vsum = vec![0_f64; self[0].len()];
         for thisp in self {
             let mag = thisp.vmag();
             if mag.is_normal() {  
-                let invmod = 1.0_f64/mag;
-                rsum += invmod;
-                vsum.mutvadd(&thisp.smult(invmod)) // accumulate unit vectors
+                let invmag = 1.0_f64/mag;
+                rsum += invmag;
+                vsum.mutvadd(&thisp.smult(invmag)) // accumulate unit vectors
             }
         }
-        vsum.smult(1.0/rsum)
+        vsum.smult(1.0/rsum) // scale by the sum of reciprocals
     }
     /// Called by nmedian.
     /// Scaling by rsum is left as the final step at calling level,
@@ -306,41 +298,40 @@ impl VecVec for &[Vec<f64>] {
     /// Iterative two point method for finding the geometric median
     /// without reciprocal scaling
     fn gmedian(self, eps: f64) -> Vec<f64> {
-        let mut op1 = self.firstpoint();
-        let mut op2 = self.acentroid();
+        let mut p1 = self.acentroid();
+        let mut p2 = self.firstpoint();
         loop {
-            let u = self.eccnonmember(&op1).vunit(); // eccentricity unit vectors
-            let v = self.eccnonmember(&op2).vunit(); // for both points
+            let u = self.eccnonmember(&p1).vunit(); // eccentricity unit vectors
+            let v = self.eccnonmember(&p2).vunit(); // for both points
             let uv = u.dotp(&v);
-            let pd = op2.vsub(&op1);
+            let pd = p2.vsub(&p1);
             let udotpd = u.dotp(&pd);
             let b = (uv*udotpd-v.dotp(&pd))/(1.0-uv.powi(2));
             let a = udotpd+b*uv;
-            let f1 = op1.vadd(&u.smult(a)); // parmetric vector equations 
-            let f2 = op2.vadd(&v.smult(b)); // for the new points
+            let f1 = p1.vadd(&u.smult(a)); // parmetric vector equations 
+            let f2 = p2.vadd(&v.smult(b)); // for the new points
             if f1.vdist(&f2).sqrt() < eps {    // termination condition, points are close 
                 return f1.vadd(&f2).smult(0.5)                 // return their midpoint
             }
-            op1 = f1;
-            op2 = f2;
+            p1 = f1;
+            p2 = f2;
         }
     }
 
-    /// Secant method for finding the geometric median
+    /// Secant method with recovery from divergence
+    /// for finding the geometric median
     fn smedian(self, eps: f64) -> Vec<f64> {
-        let np = self.len() as f64;
-        let mut p1 = self.firstpoint();     
+        // let np = self.len() as f64;
+        let mut p1 = self.acentroid();     
         let e1 = self.eccnonmember(&p1); // eccentricity vector1 
         let mut e1mag = e1.vmag(); 
-        let mut p2 = p1.vadd(&e1.smult(p1.vmag()/e1mag/np));   
-        //   while p2.vdist(&p1) > eps { 
+        let mut p2 = p1.vadd(&e1);   
         loop {
             let e2 = self.eccnonmember(&p2); // eccentricity vector2
             let e2mag = e2.vmag();           
             if e2mag < eps  { return p2 }; 
             let ed = if e1mag > e2mag { e1mag-e2mag } else { e1mag + e2mag };
             let scale = p1.vsub(&p2).vmag()/ed; // secant formula
-            // println!(" {}, {}",e2mag,scale); 
             let newp = p2.vadd(&e2.smult(scale)); // generate a new point          
             p1 = p2;        
             p2 = newp;  
