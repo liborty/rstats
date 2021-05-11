@@ -37,6 +37,28 @@ impl VecVec for &[Vec<f64>] {
         centre.vinverse()       
     }
 
+    /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.
+    /// This is a robust relationship between two unordered multidimensional sets.
+    /// The two sets have to be in the same space but can have different numbers of points.
+    fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64> {
+        let m1 = self.smedian(eps);
+        let m2 = v.smedian(eps);
+        m2.vsub(&m1)
+    }
+
+    /// Translates the whole set by vector -m. Returns Vec of Vecs.
+    /// When m is set to the geometric median, this produces the zero median form.
+    /// The geometric median is invariant with respect to rotation,
+    /// unlike the often misguidedly used mean (`acentroid` here), or the quasi median,
+    /// both of which depend on the choice of axis.
+     fn translate(self, m: &[f64]) -> Vec<Vec<f64>> {
+        let mut result = Vec::new();
+        for point in self {
+            result.push(point.vsub(m))
+        }
+        result
+    }
+
     /// For each member point, gives its sum of distances to all other points.
     /// This is the efficient workhorse of distance based analysis.
     fn distsums(self) -> Vec<f64> {
@@ -200,8 +222,8 @@ impl VecVec for &[Vec<f64>] {
     /// let d = 6_usize;
     /// let pt = genvec(d,24,7,13); // random test data 5x20
     /// let (_medoideccentricity,medei,_outlierecccentricity,outei) = pt.emedoid();
-    /// assert_eq!(medei,10); // index of e-medoid
-    /// assert_eq!(outei,9);  // index of e-outlier
+    /// assert_eq!(medei,19); // index of e-medoid
+    /// assert_eq!(outei,20);  // index of e-outlier
     /// ```
     fn emedoid(self) -> (f64, usize, f64, usize) {
         self.eccentricities().mags().minmax()
@@ -214,25 +236,6 @@ impl VecVec for &[Vec<f64>] {
     /// Especially, when the points are dense in the close proximity of the gm, or it coincides with one of them.  
     /// However, these problems are fixed in my new algorithm here.      
     /// There will eventually be a multithreaded version of `nmedian`.
-    /// # Example
-    /// ```
-    /// use rstats::{VecVec,functions::genvec};
-    /// let pt = genvec(15,15,255,30);
-    /// let gm = pt.nmedian(1e-5);
-    /// let error = pt.ecc(&gm);
-    /// assert_eq!(error,0.000004826966175302838_f64);
-    /// ```
-    /*  fn nmedian(self, eps: f64) -> Vec<f64> {
-        let mut oldpoint = self.acentroid(); // start iterating 
-        loop {
-            let (rsum, mut newv) = self.betterpoint(&oldpoint);
-            newv.mutsmult(1.0/rsum); // scaling the returned sum of unit vectors
-            // test the magnitude of the move for termination
-            if newv.vdist(&oldpoint) < eps { return newv }; // make the last small step anyway
-            oldpoint = newv // move to the new point
-        } 
-    }
-    */
     fn nmedian(self, eps: f64) -> Vec<f64> {
         let mut oldpoint = self.acentroid(); // start iterating 
         loop {
@@ -241,6 +244,7 @@ impl VecVec for &[Vec<f64>] {
             if movev.vmag() < eps { return oldpoint } // make the last small step anyway    
         } 
     }
+
     /// First iteration point for geometric medians.
     /// Same as eccnonmember(origin), just saving the zero subtractions
     fn firstpoint(self) -> Vec<f64> {
@@ -256,45 +260,7 @@ impl VecVec for &[Vec<f64>] {
         }
         vsum.smult(1.0/rsum) // scale by the sum of reciprocals
     }
-    /// Called by nmedian.
-    /// Scaling by rsum is left as the final step at calling level,
-    /// in order to facilitate data points parallelism.
-    fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>) {
-        let mut rsum = 0_f64;
-        let mut vsum = vec![0_f64; v.len()];
-        for thatp in self {
-            let dist = v.vdist(&thatp);
-            if dist.is_normal() { // exclude points that are too close
-                let recip = 1.0 / dist;
-                rsum += recip; // accumulate reciprocal scaling weights
-                vsum.mutvadd(&thatp.smult(recip)) // accumulate p vectors
-            }
-        }
-        (rsum, vsum)
-    }
-
-    /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.
-    /// This is a robust relationship between two unordered multidimensional sets.
-    /// The two sets have to be in the same space but can have different numbers of points.
-    fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64> {
-        let m1 = self.nmedian(eps);
-        let m2 = v.nmedian(eps);
-        m2.vsub(&m1)
-    }
-
-    /// Translates the whole set by vector -m. Returns Vec of Vecs.
-    /// When m is set to the geometric median, this produces the zero median form.
-    /// The geometric median is invariant with respect to rotation,
-    /// unlike the often misguidedly used mean (`acentroid` here), or the quasi median,
-    /// both of which depend on the choice of axis.
-     fn translate(self, m: &[f64]) -> Vec<Vec<f64>> {
-        let mut result = Vec::new();
-        for point in self {
-            result.push(point.vsub(m))
-        }
-        result
-    }
-
+ 
     /// Iterative two point method for finding the geometric median
     /// without reciprocal scaling
     fn gmedian(self, eps: f64) -> Vec<f64> {

@@ -169,4 +169,3 @@ fn medians() -> Result<()> {
  
     Ok(())  
  }
-

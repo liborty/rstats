@@ -213,7 +213,12 @@ pub trait VecVec {
     fn acentroid(self) -> Vec<f64>;
     /// Harmonic Centroid = harmonic mean of a set of points
     fn hcentroid(self) -> Vec<f64>; 
+    /// Trend between two sets
+    fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64>;
+    /// Subtract m from all points - e.g. transform to zero median form
+    fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
     /// Sums of distances from each point to all other points
+ 
     fn distsums(self) -> Vec<f64>;
     /// Sum of distances from one point given by indx
     fn distsuminset(self, indx: usize) -> f64;
@@ -237,19 +242,16 @@ pub trait VecVec {
     /// Medoid and Outlier as defined by eccentricities.
     fn emedoid(self) -> (f64, usize, f64, usize);
 
-    /// Geometric median of a set
-    fn nmedian(self, eps: f64) -> Vec<f64>;
-    /// Betterpoint gives new approximation to nmedian
-    fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>);
+    /// Geometric medians of a set
+
     /// First iteration point for geometric medians
     fn firstpoint(self) -> Vec<f64>;
-    /// Trend between two sets
-    fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64>;
-    /// Subtract m from all points - e.g. transform to zero median form
-    fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
-    /// Vector iterative two point method for finding the geometric median
+
+    /// Improved Weizsfeld's Algorithm for geometric median
+    fn nmedian(self, eps: f64) -> Vec<f64>;
+    /// Vector iterative two point method for geometric median
     fn gmedian(self, eps: f64) -> Vec<f64>;
-    /// Secant nethod for finding the geometric median
+    /// Secant nethod for geometric median
     fn smedian(self, eps: f64) -> Vec<f64>;
  
 }
