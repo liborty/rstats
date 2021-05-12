@@ -41,8 +41,8 @@ impl VecVec for &[Vec<f64>] {
     /// This is a robust relationship between two unordered multidimensional sets.
     /// The two sets have to be in the same space but can have different numbers of points.
     fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64> {
-        let m1 = self.smedian(eps);
-        let m2 = v.smedian(eps);
+        let m1 = self.gmedian(eps);
+        let m2 = v.gmedian(eps);
         m2.vsub(&m1)
     }
 
@@ -233,20 +233,21 @@ impl VecVec for &[Vec<f64>] {
     /// It has (provably) only vector iterative solutions.
     /// Search methods are slow and difficult in highly dimensional space.
     /// Weiszfeld's fixed point iteration formula had known problems with sometimes failing to converge.
-    /// Especially, when the points are dense in the close proximity of the gm, or it coincides with one of them.  
+    /// Especially, when the points are dense in the close proximity of the gm, or gm coincides with one of them.  
     /// However, these problems are fixed in my new algorithm here.      
-    /// There will eventually be a multithreaded version of `nmedian`.
+    /// There will eventually be a multithreaded version.
     fn nmedian(self, eps: f64) -> Vec<f64> {
-        let mut oldpoint = self.acentroid(); // start iterating 
+        let mut point = self.acentroid(); // start iterating 
         loop {
-            let movev = self.eccnonmember(&oldpoint);
-            oldpoint = oldpoint.vadd(&movev);
-            if movev.vmag() < eps { return oldpoint } // make the last small step anyway    
+            let e = self.eccnonmember(&point);
+            point.mutvadd(&e);
+            if e.vmag() < eps { return point } // make the last small step anyway
         } 
     }
-
-    /// First iteration point for geometric medians.
+ 
+    /// Possible first iteration point for geometric medians.
     /// Same as eccnonmember(origin), just saving the zero subtractions
+    /// when moving from the origin
     fn firstpoint(self) -> Vec<f64> {
         let mut rsum = 0_f64;
         let mut vsum = vec![0_f64; self[0].len()];
@@ -260,48 +261,28 @@ impl VecVec for &[Vec<f64>] {
         }
         vsum.smult(1.0/rsum) // scale by the sum of reciprocals
     }
- 
-    /// Iterative two point method for finding the geometric median
-    /// without reciprocal scaling
-    fn gmedian(self, eps: f64) -> Vec<f64> {
-        let mut p1 = self.acentroid();
-        let mut p2 = self.firstpoint();
-        loop {
-            let u = self.eccnonmember(&p1).vunit(); // eccentricity unit vectors
-            let v = self.eccnonmember(&p2).vunit(); // for both points
-            let uv = u.dotp(&v);
-            let pd = p2.vsub(&p1);
-            let udotpd = u.dotp(&pd);
-            let b = (uv*udotpd-v.dotp(&pd))/(1.0-uv.powi(2));
-            let a = udotpd+b*uv;
-            let f1 = p1.vadd(&u.smult(a)); // parmetric vector equations 
-            let f2 = p2.vadd(&v.smult(b)); // for the new points
-            if f1.vdist(&f2).sqrt() < eps {    // termination condition, points are close 
-                return f1.vadd(&f2).smult(0.5)                 // return their midpoint
-            }
-            p1 = f1;
-            p2 = f2;
-        }
-    }
 
     /// Secant method with recovery from divergence
     /// for finding the geometric median
-    fn smedian(self, eps: f64) -> Vec<f64> {
-        // let np = self.len() as f64;
+    fn gmedian(self, eps: f64) -> Vec<f64> {
         let mut p1 = self.acentroid();     
         let e1 = self.eccnonmember(&p1); // eccentricity vector1 
         let mut e1mag = e1.vmag(); 
         let mut p2 = p1.vadd(&e1);   
         loop {
             let e2 = self.eccnonmember(&p2); // eccentricity vector2
-            let e2mag = e2.vmag();           
+            let e2mag = e2.vmag(); 
             if e2mag < eps  { return p2 }; 
-            let ed = if e1mag > e2mag { e1mag-e2mag } else { e1mag + e2mag };
-            let scale = p1.vsub(&p2).vmag()/ed; // secant formula
-            let newp = p2.vadd(&e2.smult(scale)); // generate a new point          
+            let newp;         
+            if e1mag > e2mag {  // eccentricity magnitude decreased, good, employ secant
+                newp = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag-e2mag)))                   
+            }
+            else { // probably overshot the minimum, go nearer, back 
+               newp = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag+e2mag)))                    
+            } 
             p1 = p2;        
             p2 = newp;  
-            e1mag = e2mag;         
+            e1mag = e2mag             
         }       
     }    
 

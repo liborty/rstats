@@ -104,7 +104,9 @@ The functions of this trait are implemented for vetors of subscripts, i.e. `&[us
 
 ## Recent Releases
 
-* **Version 0.6.5** Simplified eccentricities functions. `Rstats` is now leaner and meaner. The new secant algorithm `smedian` beats even the improved Weizsfeld `nmedian`.
+* **Version 0.6.6** Tweaked gmedian.
+
+* **Version 0.6.5** Simplified eccentricities functions. The new geometric median algorithm `gmedian` consistently beats on time even the improved Weizsfeld `nmedian`.
 
 * **Version 0.6.4** Added twopoint and secant GM algorithms (experimental).
 

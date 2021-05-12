@@ -127,45 +127,34 @@ fn medians() -> Result<()> {
    const ITERATIONS:u32 = 10;
    let n = 700_usize;
    let d = 10_usize;
-   let mut sumg = 0_f64;
-   let mut sumtime = 0_u128;
-   let mut timer = DevTime::new_simple();
    println!("timing {} medians of {} points each in {} dimensions",GI(ITERATIONS),GI(n),GI(d)); 
-   for i in 1..ITERATIONS {
-      let pts = genvec(d,n,3*i,5*i);
-      timer.start();
-      let gm = pts.nmedian(EPS);
-      timer.stop();
-      sumtime += timer.time_in_nanos().unwrap();
-      sumg += pts.translate(&gm).nmedian(EPS).vmag();
-   }   
-   println!("Nmedian errors: {} ns:\t{}",GI(sumg),GI(sumtime));  
    
-   sumg = 0_f64;
-   sumtime = 0_u128;
-   timer = DevTime::new_simple();
+   let mut timer = DevTime::new_simple();
+   let mut sumg = 0_f64;
+   let mut sumtime = 0_u128; 
    for i in 1..ITERATIONS {
-      let pts = genvec(d,n,3*i,5*i);
+      let pts = genvec(d,n,i,5*i);
       timer.start();
       let gm = pts.gmedian(EPS);
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
-      sumg += pts.translate(&gm).gmedian(EPS).vmag();
+      sumg += pts.distsum(&gm)    
    }
-   println!("Gmedian errors: {} ns:\t{}",GI(sumg),GI(sumtime));  
 
-    sumg = 0_f64;
-    sumtime = 0_u128;
-    timer = DevTime::new_simple();
-    for i in 1..ITERATIONS {
-       let pts = genvec(d,n,3*i,5*i);
-       timer.start();
-       let gm = pts.smedian(EPS);
-       timer.stop();
-       sumtime += timer.time_in_nanos().unwrap();
-       sumg += pts.translate(&gm).smedian(EPS).vmag();
-    }
-    println!("Smedian errors: {} ns:\t {}",GI(sumg),GI(sumtime));  
+   println!("Gmedian errors: {} ns:\t {}",GI(sumg),GI(sumtime));   
+   sumg = 0_f64;
+   sumtime = 0_u128;
+   timer = DevTime::new_simple();
  
+   for i in 1..ITERATIONS {
+      let pts = genvec(d,n,i,5*i);
+      timer.start();
+      let gm = pts.nmedian(EPS);
+      timer.stop();
+      sumtime += timer.time_in_nanos().unwrap();
+      sumg += pts.distsum(&gm)
+   }   
+   println!("Nmedian errors: {}  ns:\t{}",GI(sumg),GI(sumtime));  
+  
     Ok(())  
  }

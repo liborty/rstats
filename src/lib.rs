@@ -246,14 +246,10 @@ pub trait VecVec {
 
     /// First iteration point for geometric medians
     fn firstpoint(self) -> Vec<f64>;
-
     /// Improved Weizsfeld's Algorithm for geometric median
     fn nmedian(self, eps: f64) -> Vec<f64>;
-    /// Vector iterative two point method for geometric median
-    fn gmedian(self, eps: f64) -> Vec<f64>;
-    /// Secant nethod for geometric median
-    fn smedian(self, eps: f64) -> Vec<f64>;
- 
+    /// New secant algorithm for geometric median
+    fn gmedian(self, eps: f64) -> Vec<f64>; 
 }
 
 /// Methods to manipulate indices of Vec<usize> type
