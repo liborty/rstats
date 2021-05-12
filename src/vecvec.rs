@@ -133,18 +133,20 @@ impl VecVec for &[Vec<f64>] {
             let thisp = &self[i];
             for j in 0..i { 
                 // calculate each unit vector between any pair of points just once
-                let dv = self[j].vsub(&thisp);
-                let dvmag = dv.vmag();
+                let dvmag = self[j].vdist(&thisp);             
                 if !dvmag.is_normal() { continue }
                 let rec = 1.0/dvmag;
-                eccs[i].mutvadd(&dv.smult(rec));
+                eccs[i].mutvadd(&self[j].smult(rec));
                 recips[i] += rec;
                 // mind the vector's opposite orientations w.r.t. to the two points!
-                eccs[j].mutvsub(&dv.smult(rec)); 
+                eccs[j].mutvsub(&self[j].smult(rec)); 
                 recips[j] += rec;
             }
         }
-        for i in 0..n { eccs[i].mutsmult(1.0/recips[i])}
+        for i in 0..n { 
+            eccs[i].mutsmult(1.0/recips[i]); 
+            eccs[i].mutvsub(&self[i]) 
+        }
         eccs
     }
 
@@ -152,7 +154,7 @@ impl VecVec for &[Vec<f64>] {
     /// `not being the geometric median` for a member point.
     /// The true geometric median is as yet unknown.
     /// The true geometric median would return zero.
-    /// The member point iin question is specified by its index `indx`.
+    /// The member point in question is specified by its index `indx`.
     /// This function is suitable for a single member point. 
     /// When eccentricities of all the points are needed, use `eccentricities` above.
     fn eccmember(self, indx: usize) -> Vec<f64> {
@@ -162,15 +164,14 @@ impl VecVec for &[Vec<f64>] {
         let mut recip = 0_f64;
         for i in 0..n {
             if i == indx { continue  }; // exclude this point
-            let dv = self[i].vsub(&thisp);
-            let dvmag = dv.vmag();
-            if !dvmag.is_normal() { continue }
+            let dvmag = self[i].vdist(&thisp);
+            if !dvmag.is_normal() { continue } // too close to this one
             let rec = 1.0/dvmag;
-            vsum.mutvadd(&dv.smult(rec)); // add unit vector
+            vsum.mutvadd(&self[i].smult(rec)); // add unit vector
             recip += rec // add separately the reciprocals
         }
         vsum.mutsmult(1.0/recip);
-        vsum
+        vsum.vsub(&thisp)
     }
 
     /// Eccentricity vector for a non member point,
@@ -182,15 +183,14 @@ impl VecVec for &[Vec<f64>] {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for x in self { 
-            let dv = x.vsub(&p);
-            let dvmag = dv.vmag();
-            if !dvmag.is_normal() { continue }
+            let dvmag = x.vdist(&p);
+            if !dvmag.is_normal() { continue } // zero distance, safe to ignore
             let rec = 1.0/dvmag;
-            vsum.mutvadd(&dv.smult(rec)); // add unit vector
+            vsum.mutvadd(&x.smult(rec)); // add unit vector
             recip += rec // add separately the reciprocals    
         }
         vsum.mutsmult(1.0/recip);
-        vsum
+        vsum.vsub(&p)
     }  
 
     /// Magnitudes of all the vectors in self
@@ -223,7 +223,7 @@ impl VecVec for &[Vec<f64>] {
     /// let pt = genvec(d,24,7,13); // random test data 5x20
     /// let (_medoideccentricity,medei,_outlierecccentricity,outei) = pt.emedoid();
     /// assert_eq!(medei,19); // index of e-medoid
-    /// assert_eq!(outei,20);  // index of e-outlier
+    /// assert_eq!(outei,4);  // index of e-outlier
     /// ```
     fn emedoid(self) -> (f64, usize, f64, usize) {
         self.eccentricities().mags().minmax()

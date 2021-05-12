@@ -201,8 +201,10 @@ pub trait VecVecu8 {
 
     /// Centroid = euclidian mean of a set of points  
     fn acentroid(self) -> Vec<f64>; 
-    fn nmedian(self, eps:f64) -> Vec<f64>;
-    fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>);
+    /// Eccentricity vector for a non member point. 
+    fn eccnonmember(self, p:&[f64]) -> Vec<f64>;
+    /// Geometric median of a set of nD points
+    fn gmedian(self, eps:f64) -> Vec<f64>;  
 
 }
 

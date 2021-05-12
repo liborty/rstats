@@ -102,11 +102,11 @@ fn vecvec() -> Result<()> {
 
    println!("Outlier's eccentricity:\t\t{}",GI(pt.eccmember(outi).vmag()));
    println!("E-Outlier's eccentricity:\t{} Index: {}",GI(oute),GI(outei));
-   println!("Medoid's eccentricity:\t\t{} Index: {}",GI(mede),GI(medei));
+   println!("E-Medoid's eccentricity:\t{} Index: {}",GI(mede),GI(medei));
    println!("Centroid's eccentricity:\t{}",GI(pt.eccnonmember(&acentroid).vmag()));
    println!("Firstpoint's eccentricity:\t{}",GI(pt.eccnonmember(&firstp).vmag()));
    println!("Median's eccentricity:\t\t{}",GI(pt.eccnonmember(&median).vmag()));
-   println!("Median error:\t{}",GI(zmed.gmedian(EPS).vmag()));
+   println!("Median's error:\t{}",GI(zmed.gmedian(EPS).vmag()));
    let (mu,eccmed) = pt.moe();
    println!("Eccentricities\t{}",mu);  
    println!("Eccentricities\t{}\n",eccmed);  
@@ -123,8 +123,8 @@ fn trend() -> Result<()> {
 }
 
 #[test]
-fn medians() -> Result<()> {
-   const ITERATIONS:u32 = 10;
+fn geometric_medians() -> Result<()> {
+   const ITERATIONS:u32 = 20;
    let n = 700_usize;
    let d = 10_usize;
    println!("timing {} medians of {} points each in {} dimensions",GI(ITERATIONS),GI(n),GI(d)); 
@@ -141,7 +141,7 @@ fn medians() -> Result<()> {
       sumg += pts.distsum(&gm)    
    }
 
-   println!("Gmedian errors: {} ns:\t {}",GI(sumg),GI(sumtime));   
+   println!("Gmedian errors: {} ns:\t{}",GI(sumg),GI(sumtime));   
    sumg = 0_f64;
    sumtime = 0_u128;
    timer = DevTime::new_simple();

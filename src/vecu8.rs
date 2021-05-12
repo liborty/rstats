@@ -130,39 +130,48 @@ impl VecVecu8 for &[Vec<u8>] {
     for v in self {
         centre.mutvaddu8(&v)
     }
-    centre.mutsmult(1.0 / self.len() as f64);
+    centre.mutsmult(1.0 / (self.len() as f64));
     centre
     }
 
-    fn nmedian(self, eps: f64) -> Vec<f64> {
-        let mut oldpoint = self.acentroid(); // start iterating from the centroid
+    /// Eccentricity vector for a non member point.
+    /// The true geometric median is as yet unknown.
+    /// Returns the eccentricity vector.
+    /// The true geometric median would return zero vector.
+   fn eccnonmember(self, p:&[f64]) -> Vec<f64> {
+        let mut vsum = vec![0_f64; self[0].len()];
+        let mut recip = 0_f64;
+        for x in self { 
+            let dvmag = x.vdist(&p);
+            if !dvmag.is_normal() { continue } // zero distance, safe to ignore
+            let rec = 1.0/dvmag;
+            vsum.mutvadd(&x.smult(rec)); // add unit vector
+            recip += rec // add separately the reciprocals    
+        }
+        vsum.mutsmult(1.0/recip);
+        vsum.vsub(&p)
+    }
+    /// Secant method with recovery from divergence
+    /// for finding the geometric median of vectors of vectors of bytes
+    fn gmedian(self, eps: f64) -> Vec<f64> {
+        let mut p1 = self.acentroid();     
+        let e1 = self.eccnonmember(&p1); // eccentricity vector1 
+        let mut e1mag = e1.vmag(); 
+        let mut p2 = p1.vadd(&e1);   
         loop {
-            let (rsum, mut newv) = self.betterpoint(&oldpoint);
-            newv.mutsmult(1.0 / rsum); // scaling the returned sum of unit vectors
-            // test the magnitude of the move for termination
-            if newv.vdist(&oldpoint) < eps {
-                oldpoint = newv; // use the last small iteration anyway
-                break; // from the loop
-            };
-            oldpoint = newv // set up the next iteration
-        }
-        oldpoint
-    }
-
-    /// betterpoint is called by nmedian.
-    /// Scaling by rsum is left as the final step at calling level,
-    /// in order to facilitate data parallelism.
-    fn betterpoint(self, v: &[f64]) -> (f64, Vec<f64>) {
-        let mut rsum = 0_f64;
-        let mut vsum = vec![0_f64; v.len()];
-        for thatp in self {
-            let dist = thatp.vdist(&v);
-            if dist.is_normal() {
-                let recip = 1.0 / dist;
-                rsum += recip;
-                vsum.mutvadd(&thatp.smult(recip))
+            let e2 = self.eccnonmember(&p2); // eccentricity vector2
+            let e2mag = e2.vmag(); 
+            if e2mag < eps  { return p2 }; 
+            let newp;         
+            if e1mag > e2mag {  // eccentricity magnitude decreased, good, employ secant
+                newp = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag-e2mag)))                   
             }
-        }
-        (rsum, vsum)
-    }
+            else { // probably overshot the minimum, go nearer, back 
+               newp = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag+e2mag)))                    
+            } 
+            p1 = p2;        
+            p2 = newp;  
+            e1mag = e2mag             
+        }       
+    }    
 }

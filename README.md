@@ -104,7 +104,9 @@ The functions of this trait are implemented for vetors of subscripts, i.e. `&[us
 
 ## Recent Releases
 
-* **Version 0.6.6** Tweaked gmedian.
+* **Version 0.6.7** Eccentricities and geometric medians optimisations. Gmedian ported also to points defined by &[u8].
+
+* **Version 0.6.6** Deleted some defunct functions.
 
 * **Version 0.6.5** Simplified eccentricities functions. The new geometric median algorithm `gmedian` consistently beats on time even the improved Weizsfeld `nmedian`.
 
