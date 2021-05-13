@@ -104,7 +104,7 @@ The functions of this trait are implemented for vetors of subscripts, i.e. `&[us
 
 ## Recent Releases
 
-* **Version 0.6.7** Added `exacteccs` for obtaining eccentricities after the gm has been found.
+* **Version 0.6.7** Added `exacteccs` for obtaining eccentricities after the gm has been found. Added some tests.
 
 * **Version 0.6.7** Eccentricities and geometric medians optimisations. Gmedian ported also to points defined by &[u8].
 
