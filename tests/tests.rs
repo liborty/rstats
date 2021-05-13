@@ -82,7 +82,7 @@ fn vecvec() -> Result<()> {
    println!("testing on a random set of {} points in {} dimensional space",GI(n),GI(d));
    let pt = genvec(d,n,5,17); // random test data 
    let (med,medi,outd,outi) = pt.medoid();
-   let (mede,medei,oute,outei) = pt.emedoid();
+   let (mede,medei,oute,outei) = pt.emedoid(EPS);
    let hcentroid = pt.hcentroid();
    let acentroid = pt.acentroid(); 
    let firstp = pt.firstpoint();
@@ -98,16 +98,19 @@ fn vecvec() -> Result<()> {
    println!("Sum of Medoid's distances:\t{} Index: {}",GI(med),GI(medi));
    println!("Sum of HCentroid's distances:\t{}",GI(pt.distsum(&hcentroid)));
    println!("Sum of ACentroid's distances:\t{}",GI(pt.distsum(&acentroid)));  
-   println!("Sum of Median's distances:\t{}\n",GI(pt.distsum(&median)));
+   println!("Sum of Median's distances:\t{}",GI(pt.distsum(&median)));
+   let dists = pt.distsums();
+   println!("Distances\t{}",dists.ameanstd().unwrap());
+   println!("Distances\t{}\n",dists.median().unwrap());
 
-   println!("Outlier's eccentricity:\t\t{}",GI(pt.eccmember(outi).vmag()));
+   println!("Outlier's approx eccentricity:\t{}",GI(pt.eccmember(outi).vmag()));
    println!("E-Outlier's eccentricity:\t{} Index: {}",GI(oute),GI(outei));
    println!("E-Medoid's eccentricity:\t{} Index: {}",GI(mede),GI(medei));
-   println!("Centroid's eccentricity:\t{}",GI(pt.eccnonmember(&acentroid).vmag()));
-   println!("Firstpoint's eccentricity:\t{}",GI(pt.eccnonmember(&firstp).vmag()));
-   println!("Median's eccentricity:\t\t{}",GI(pt.eccnonmember(&median).vmag()));
+   println!("Centroid's approx eccentricity:\t{}",GI(pt.eccnonmember(&acentroid).vmag()));
+   println!("Firstpoint's app eccentricity:\t{}",GI(pt.eccnonmember(&firstp).vmag()));
+   println!("Median's ecc (passed epsilon):\t{}",GI(pt.eccnonmember(&median).vmag()));
    println!("Median's error:\t{}",GI(zmed.gmedian(EPS).vmag()));
-   let (mu,eccmed) = pt.moe();
+   let (mu,eccmed) = pt.moe(EPS);
    println!("Eccentricities\t{}",mu);  
    println!("Eccentricities\t{}\n",eccmed);  
    Ok(())

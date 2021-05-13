@@ -233,6 +233,9 @@ pub trait VecVec {
  
     /// Eccentricity vectors from each point
     fn eccentricities(self) -> Vec<Vec<f64>>;
+    /// Exact eccentricity vectors from all member points by first finding the Geometric Median
+    /// Usually faster than `eccentricities` above, especially when there are many points
+    fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
     /// Ecentricity of a member point given by its indx
     fn eccmember(self, indx: usize) -> Vec<f64>;
     /// Eccentricity vector for a non member point
@@ -240,9 +243,9 @@ pub trait VecVec {
     /// magnitudes of a set of vectors
     fn mags(self) -> Vec<f64>; 
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
-    fn moe(self) -> (MStats,Med);
+    fn moe(self, eps: f64) -> (MStats,Med);
     /// Medoid and Outlier as defined by eccentricities.
-    fn emedoid(self) -> (f64, usize, f64, usize);
+    fn emedoid(self, eps: f64) -> (f64, usize, f64, usize);
 
     /// Geometric medians of a set
 

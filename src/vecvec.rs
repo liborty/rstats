@@ -125,7 +125,7 @@ impl VecVec for &[Vec<f64>] {
     fn eccentricities(self) -> Vec<Vec<f64>> {
         let n = self.len();
         // allocate vectors for the results
-        let mut eccs = vec![vec![0_f64; self[0].len()]; n]; // can be reduced to half
+        let mut eccs = vec![vec![0_f64; self[0].len()]; n];
         let mut recips = vec![0_f64; n];
         // ecentricities vectors accumulator for all points
         // examine all unique pairings (lower triangular part of symmetric flat matrix)
@@ -150,13 +150,24 @@ impl VecVec for &[Vec<f64>] {
         eccs
     }
 
+    /// Exact eccentricity vectors from all member points by first finding the Geometric Median.
+    /// Usually faster than the approximate `eccentricities` above, especially when there are many points.
+    fn exacteccs(self, eps:f64) -> Vec<Vec<f64>> {        
+        let mut eccs = Vec::with_capacity(self.len()); // Vectors for the results
+        let gm = self.gmedian(eps);
+        for v in self {
+            eccs.push(gm.vsub(&v))
+        }
+        eccs
+    }
+
     /// Vector `eccentricity` or measure of  
     /// `not being the geometric median` for a member point.
     /// The true geometric median is as yet unknown.
     /// The true geometric median would return zero.
     /// The member point in question is specified by its index `indx`.
     /// This function is suitable for a single member point. 
-    /// When eccentricities of all the points are needed, use `eccentricities` above.
+    /// When eccentricities of all the points are needed, use `exacteccs` above.
     fn eccmember(self, indx: usize) -> Vec<f64> {
         let n = self.len();
         let mut vsum = vec![0_f64; self[0].len()];
@@ -205,8 +216,8 @@ impl VecVec for &[Vec<f64>] {
     /// Mean and Std (in MStats struct), Median and quartiles (in Med struct) 
     /// of scalar eccentricities of points in self.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
-    fn moe(self) -> (MStats, Med) {
-        let eccs = self.eccentricities().mags();
+    fn moe(self, eps: f64) -> (MStats, Med) {
+        let eccs = self.exacteccs(eps).mags();
         (eccs.ameanstd().unwrap(),eccs.median().unwrap())
     }
 
@@ -214,19 +225,20 @@ impl VecVec for &[Vec<f64>] {
     /// This can give different results to `medoid` above, defined by sums of distances,
     /// especially for the outliers. See tests.rs.  
     /// Consider some point c and some other points, bunched up at a distance r from c.
-    /// The sum of their distances will be n*r. Now, spread those points around a circle of radius r from c.
+    /// The sum of their distances will be nr. Now, spread those points around a circle of radius r from c.
     /// The sum of their distances from c will remain the same but the eccentricity of c will be much reduced.
     /// # Example
     /// ```
     /// use rstats::{Vecf64,VecVec,functions::genvec};
+    /// pub const EPS:f64 = 1e-7;
     /// let d = 6_usize;
     /// let pt = genvec(d,24,7,13); // random test data 5x20
-    /// let (_medoideccentricity,medei,_outlierecccentricity,outei) = pt.emedoid();
-    /// assert_eq!(medei,19); // index of e-medoid
-    /// assert_eq!(outei,4);  // index of e-outlier
+    /// let (_medoideccentricity,medei,_outlierecccentricity,outei) = pt.emedoid(EPS);
+    /// assert_eq!(medei,10); // index of e-medoid
+    /// assert_eq!(outei,20);  // index of e-outlier
     /// ```
-    fn emedoid(self) -> (f64, usize, f64, usize) {
-        self.eccentricities().mags().minmax()
+    fn emedoid(self, eps: f64) -> (f64, usize, f64, usize) {
+        self.exacteccs(eps).mags().minmax()
     }
 
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
