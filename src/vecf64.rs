@@ -72,9 +72,7 @@ impl Vecf64 for &[f64] {
             .zip(v)
             .map(|(&xi, &vi)| (xi - vi).powi(2))
             .sum::<f64>() 
-    }
-
- 
+    } 
     /// Vector magnitude
     fn vmag(self) -> f64 {
         self.iter().map(|&x| x.powi(2)).sum::<f64>().sqrt()

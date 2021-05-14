@@ -223,10 +223,10 @@ pub trait VecVec {
     fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
-    /// Sums of distances from each point to all other points
- 
-    fn distsums(self) -> Vec<f64>;
-    /// Sum of distances from one point given by indx
+
+    /// Sums of distances from each point to all other points.
+     fn distsums(self) -> Vec<f64>;
+    /// Fast sums of distances from each point to all other points 
     fn distsuminset(self, indx: usize) -> f64;
     /// Sum of distances from arbitrary point (v) to all the points in self   
     fn distsum(self, v: &[f64]) -> f64;
@@ -237,8 +237,9 @@ pub trait VecVec {
  
     /// Eccentricity vectors from each point
     fn eccentricities(self) -> Vec<Vec<f64>>;
-    /// Exact eccentricity vectors from all member points by first finding the Geometric Median
-    /// Usually faster than `eccentricities` above, especially when there are many points
+    /// Exact eccentricity vectors from all member points by first finding the Geometric Median.
+    /// As well as being more accurate, it is usually faster than `eccentricities` above, 
+    /// especially for large numbers of points.
     fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
     /// Returns ( gm, sorted eccentricities magnitudes )
     fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> );

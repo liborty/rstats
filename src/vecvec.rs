@@ -160,7 +160,7 @@ impl VecVec for &[Vec<f64>] {
         }
         eccs
     }
-
+ 
     /// GM and sorted eccentricities magnitudes.
     /// Describing a set of points `self` in n dimensions
      fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> ) { 
