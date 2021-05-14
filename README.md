@@ -7,7 +7,7 @@ Now forward compliant with Rust 2021 Edition!
 
 ## Introduction
 
-Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right.
+Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting and searching. 
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm.
 
