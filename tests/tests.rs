@@ -78,7 +78,7 @@ fn vecf64() -> Result<()> {
 #[test]
 fn vecvec() -> Result<()> { 
    let d = 10_usize;
-   let n = 100_usize;
+   let n = 101_usize;
    println!("testing on a random set of {} points in {} dimensional space",GI(n),GI(d));
    let pt = genvec(d,n,5,17); // random test data 
    let (med,medi,outd,outi) = pt.medoid();
@@ -112,7 +112,11 @@ fn vecvec() -> Result<()> {
    println!("Median's error:\t{}",GI(zmed.gmedian(EPS).vmag()));
    let (mu,eccmed) = pt.moe(EPS);
    println!("Eccentricities\t{}",mu);  
-   println!("Eccentricities\t{}\n",eccmed);  
+   println!("Eccentricities\t{}",eccmed);
+   let (_, seccs) = pt.sortedeccs(EPS); 
+   // println!("Sorted eccs: {}\n", GV(seccs));
+   let medindx = seccs.binsearch(eccmed.median);
+   println!("Lookup of median of eccs indx: {} value: {}", GI(medindx), GI(seccs[medindx]));
    Ok(())
 }
 

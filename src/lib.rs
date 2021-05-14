@@ -134,9 +134,13 @@ pub trait Vecf64 {
     fn minmax(self) -> (f64, usize, f64, usize); 
     /// Linear transformation to [0,1]
     fn lintrans(self) -> Vec<f64>;
-    /// Sorted vector
+
+    /// Binary search for insert index I in sorted vector 
+    fn binsearch(self, v: f64) -> usize;
+
+    /// Sort vector in a standard way
     fn sortf(self) -> Vec<f64>;
-    /// Sorted vector, sortf is wrapper for mergesort below
+    /// Sorted vector, is wrapper for mergesort below
     fn sortm(self) -> Vec<f64>;
     /// Ranking with only n*log(n) complexity, using 'mergesort'
     fn mergerank(self) -> Vec<usize>;
@@ -236,6 +240,8 @@ pub trait VecVec {
     /// Exact eccentricity vectors from all member points by first finding the Geometric Median
     /// Usually faster than `eccentricities` above, especially when there are many points
     fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
+    /// Returns ( gm, sorted eccentricities magnitudes )
+    fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> );
     /// Ecentricity of a member point given by its indx
     fn eccmember(self, indx: usize) -> Vec<f64>;
     /// Eccentricity vector for a non member point

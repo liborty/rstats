@@ -161,6 +161,17 @@ impl VecVec for &[Vec<f64>] {
         eccs
     }
 
+    /// GM and sorted eccentricities magnitudes.
+    /// Describing a set of points `self` in n dimensions
+     fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> ) { 
+        let mut eccs = Vec::with_capacity(self.len());       
+        let gm = self.gmedian(eps);
+        for v in self { // collect ecentricities magnitudes
+            eccs.push(gm.vdist(&v)) 
+        }
+        ( gm, eccs.sortm() )
+    }
+
     /// Vector `eccentricity` or measure of  
     /// `not being the geometric median` for a member point.
     /// The true geometric median is as yet unknown.

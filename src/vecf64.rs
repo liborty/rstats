@@ -256,8 +256,27 @@ impl Vecf64 for &[f64] {
         let range = max-min;
         self.iter().map(|&x|(x-min)/range).collect()        
     }
+
+    /// Counts how many items in sorted self are less than or equal to value v
+    ///  using binary search. 
+    fn binsearch(self, v: f64) -> usize {
+        let mut lo = 0_usize;
+        let mut hi = self.len();
+        loop {
+            let newi = lo + (hi - lo)/2;
+            if newi == lo { return lo }; // termination
+            let thisv = self[newi];
+            // value is under, reduce the high limit
+            if v < thisv { hi  = newi; continue };
+            // the value is greater than or equal to the one here
+            // raise the low limit (i.e. count also the equal ones)
+            lo = newi
+        }  
+    }
+
     /// New sorted vector
     /// Copies self and then sorts it in place, leaving self unchanged (immutable).
+    /// Calls mutsortf and that calls the standard self.sort_unstable_by
     fn sortf(self) -> Vec<f64> {
         let mut sorted:Vec<f64> = self.to_vec();
         sorted.mutsortf();
@@ -269,13 +288,12 @@ impl Vecf64 for &[f64] {
         self.mergesort(0,self.len()).unindex(&self)
     }
 
-    /// Inverts the (merge) sort index, giving the ranking.  
+    /// Ranking of self by inverting the (merge) sort index.  
     /// Sort index is in the order of sorted items, giving their indices to the original data.
     /// Ranking is in the order of original data, giving their positions in the sort index.
     /// Very fast ranking of many f64 items, ranking `self` with only n*(log(n)+1) complexity.
     fn mergerank(self) -> Vec<usize> {
-        let n = self.len();
-        let indx = self.mergesort(0,n);
+        let indx = self.mergesort(0,self.len());
         indx.revindex()    
     }    
 

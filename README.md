@@ -9,31 +9,31 @@ Now forward compliant with Rust 2021 Edition!
 
 Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right.
 
-Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, new multidimensional median algorithm.
+Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm.
 
 Going beyond one dimension, most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians may be easy to compute but they are a poor start to stable characterisation of multidimensional data.
 
 *Specifically, all such 1-d measures are sensitive to the choice of axis.* 
 
-Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on the True Geometric Median, computed here by `nmedian`, are axis (rotation) independent from the first step.
+Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on the True Geometric Median, computed here by `gmedian`, are axis (rotation) independent from the first step.
 
 ### Terminology for sets of points in n dimensions
 
-* `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of `squares` of distances to all member points. Thus it is susceptible to outliers. In other words, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, is is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if confusing) usage and always mean the actual Centre.
+* `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of *squares* of distances to all member points. Thus it is susceptible to outliers. In other words, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, it is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if confusing) usage and always mean the actual Centre.
 
-* `Quasi Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here. The only good thing about it is that it is dead easy to compute.
+* `Quasi Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here. The only good thing about it is that it is easy to compute.
 
 * `Medoid` is the member of the set with the least sum of distances to all other members.
 
 * `Outlier` is the member of the set with the greatest sum of distances to all other members.
 
-* `Median or the true geometric median`, is the point (generally non member), which minimises the sum of distances to all other members. This is the one we want. It is much less susceptible to outliers and it is rotation independent.
+* `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all other members. This is the one we want. It is much less susceptible to outliers and it is rotation independent.
 
 ### Implementation
 
-Rstats is a lean minimalistic library that only depends on *anyhow* (for its error handling).
+Rstats is a lean minimalistic library that only depends on *anyhow* (for its simple error handling).
 
-The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant types. This division is necessary because generic vectors are problematic in Rust.
+The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. This division is necessary because generic vectors are problematic in Rust.
 
 ### Documentation
 
@@ -49,9 +49,11 @@ cargo test --release -- --test-threads=1
 ## Trait Stats
 
 One dimensional statistical measures implemented for `&[i64]` and `&[f64]`. 
+
 All these methods operate on one vector of data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of slice `s` of either type. This is the only attempt at genericity.  
 Trait Stats is carefully checked and will report all kinds of errors, such as empty input.
+This means you have to call unwrap or something akin to it on its results.
 
 Included in this trait are:
 
@@ -65,7 +67,7 @@ Included in this trait are:
 Vector algebra implemented on one or two `&[f64]` slices of any length (dimensionality):
 
 * Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
-* Finding minimum and maximum, linear transformation.
+* Finding minimum and maximum, linear transformation to [0,1].
 
 This trait is sometimes unchecked (for speed), so some caution with data is advisable.
 
@@ -92,7 +94,7 @@ Trait VecVec is entirely unchecked, so check your data upfront. This is the more
 
 ## Trait VecVecu8
 
-Some of the above for sets of vectors of bytes.
+Some of above for sets of vectors of bytes.
 
 ## Trait Index
 
@@ -103,6 +105,8 @@ The functions of this trait are implemented for vetors of subscripts, i.e. `&[us
 * `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
 
 ## Recent Releases
+
+* **Version 0.6.9** Added `sortedeccs` : good descriptive measure for a set of points in nD. Added `binsearch`.
 
 * **Version 0.6.8** Added `exacteccs` for obtaining eccentricities after the gm has been found. Added some tests.
 
