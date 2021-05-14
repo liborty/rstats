@@ -51,9 +51,10 @@ cargo test --release -- --test-threads=1
 One dimensional statistical measures implemented for `&[i64]` and `&[f64]`. 
 
 All these methods operate on one vector of data and take no arguments.
-For example, `s.amean()` returns the arithmetic mean of slice `s` of either type. This is the only attempt at genericity.  
-Trait Stats is carefully checked and will report all kinds of errors, such as empty input.
-This means you have to call unwrap or something akin to it on its results.
+For example, `s.amean()` returns the arithmetic mean of slice `s` of either type.
+This is the only attempt at genericity.  
+This trait is carefully checked and will report all kinds of errors, such as empty input.
+This means you have to call `.unwrap()` or something similar on its results.
 
 Included in this trait are:
 
@@ -94,11 +95,11 @@ Trait VecVec is entirely unchecked, so check your data upfront. This is the more
 
 ## Trait VecVecu8
 
-Some of above for sets of vectors of bytes.
+Some of the above for vectors of vectors of bytes.
 
 ## Trait Index
 
-The functions of this trait are implemented for vetors of subscripts, i.e. `&[usize]`.
+The functions of this trait are implemented for vectors of subscripts, i.e. `&[usize]`.
 
 * `ucorrelation`(self, v: &[usize]) -> f64; Pearson's correlation coefficient of two slices, typically containing the ranks.  
 * `revindex`(self) -> Vec\<usize\>; method for reversing an index, e.g. given a sort index, returns ranks and vice versa.
