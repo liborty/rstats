@@ -69,6 +69,7 @@ Vector algebra implemented on one or two `&[f64]` slices of any length (dimensio
 
 * Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
 * Finding minimum and maximum, linear transformation to [0,1].
+* Indirect merge sort, binary search. 
 
 This trait is sometimes unchecked (for speed), so some caution with data is advisable.
 
@@ -106,6 +107,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 * `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
 
 ## Recent Releases
+
+* **Version 0.6.10** 
 
 * **Version 0.6.9** Added `sortedeccs` : good descriptive measure for a set of points in nD. Added `binsearch`.
 

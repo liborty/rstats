@@ -78,7 +78,7 @@ fn vecf64() -> Result<()> {
 #[test]
 fn vecvec() -> Result<()> { 
    let d = 10_usize;
-   let n = 101_usize;
+   let n = 100_usize;
    println!("testing on a random set of {} points in {} dimensional space",GI(n),GI(d));
    let pt = genvec(d,n,5,17); // random test data 
    let (med,medi,outd,outi) = pt.medoid();
@@ -115,8 +115,8 @@ fn vecvec() -> Result<()> {
    println!("Eccentricities\t{}",eccmed);
    let (_, seccs) = pt.sortedeccs(EPS); 
    // println!("Sorted eccs: {}\n", GV(seccs));
-   let medindx = seccs.binsearch(eccmed.median);
-   println!("Lookup of median of eccs indx: {} value: {}", GI(medindx), GI(seccs[medindx]));
+   let medcnt = seccs.binsearch(eccmed.median);
+   println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
    Ok(())
 }
 

@@ -255,20 +255,22 @@ impl Vecf64 for &[f64] {
         self.iter().map(|&x|(x-min)/range).collect()        
     }
 
-    /// Counts how many items in sorted self are less than or equal to value v
-    ///  using binary search. 
+    /// Counts how many items in sorted self are less than or equal to 
+    /// the value v, using binary search. 
     fn binsearch(self, v: f64) -> usize {
-        let mut lo = 0_usize;
-        let mut hi = self.len();
+        let mut lo = 0_usize; // index of the first item
+        let mut hi = self.len()-1; // index of the last item
+        if v < self[0] { return 0_usize }; // v is less than the first
+        if v >= self[hi] { return hi+1 }; // v is at the top or over
         loop {
-            let newi = lo + (hi - lo)/2;
-            if newi == lo { return lo }; // termination
-            let thisv = self[newi];
-            // value is under, reduce the high limit
-            if v < thisv { hi  = newi; continue };
-            // the value is greater than or equal to the one here
-            // raise the low limit (i.e. count also the equal ones)
-            lo = newi
+            let gap = hi - lo;
+            if gap == 1 { return hi }
+            let tryi = lo+gap/2;          
+            // if value is above or equal, raise the low limit.
+            // counts also repeating equal values. 
+            if v >= self[tryi] { lo = tryi; continue };                 
+            // else value is strictly below, reduce the high limit
+            hi = tryi    
         }  
     }
 
