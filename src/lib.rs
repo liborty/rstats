@@ -185,6 +185,9 @@ pub trait Vecu8 {
     fn jointentropy(self, v:&[u8]) -> f64;
     /// Statistical independence measure based on joint entropy
     fn dependence(self, v:&[u8]) -> f64; 
+
+    /// cast vector of u8s to vector of f64s
+    fn vecu8asvecf64(self) -> Vec<f64>;
 }
 
 /// Mutable vector operations.

@@ -108,6 +108,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Recent Releases
 
+* **Version 0.6.11** Added vecu8asvecf64 utility conversion.
+
 * **Version 0.6.10** Added to vecu8 for completeness. 
 
 * **Version 0.6.9** Added `sortedeccs` : good descriptive measure for a set of points in nD. Added `binsearch`.
@@ -127,9 +129,3 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 * **Version 0.6.2** Fixed entropy bug, added jointpdf, joint entropy and dependence.
 
 * **Version 0.6.1** Improved documentation and tests.
-
-* **Version 0.5.10** Added information theory measure.
-
-* **Version 0.5.9** Added a few more u8 implementations, plus 'sortm' convenience wrapper.
-
-* **Version 0.5.8** Improved some comments. Implemented `varc` for u8.
