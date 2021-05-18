@@ -2,11 +2,88 @@ use crate::{Vecu8,VecVecu8,MutVectors,Vecf64,functions};
 use functions::emsg;
 
 impl Vecu8 for &[u8] {
-
+    /// Scalar multiplication of a vector, creates new vec
+    fn smult(self, s:f64) -> Vec<f64> {
+        self.iter().map(|&x| s*x as f64).collect()
+     }
+     /// Scalar addition to a vector, creates new vec
+     fn sadd(self, s:f64) -> Vec<f64> {
+        self.iter().map(|&x| s+x as f64).collect()
+     }
+    /// Scalar product.   
+    /// Must be of the same length - no error checking (for speed)
+    fn dotp(self, v: &[f64]) -> f64 {
+        self.iter().zip(v).map(|(&xi, &vi)| xi as f64 * vi).sum::<f64>()
+    }
+    /// Scalar product of two (positive) u8 slices.   
+    /// Must be of the same length - no error checking (for speed)
+    fn dotpu8(self, v: &[u8]) -> u64 {
+        self.iter().zip(v).map(|(&xi, &vi)| (xi * vi)as u64).sum::<u64>()
+    }
+    /// Cosine between two (positive) u8 slices.
+    fn cosine(self, v: &[u8]) -> f64 {
+     let (mut sxy, mut sy2) = (0_f64, 0_f64);
+     let sx2: f64 = self
+         .iter()
+         .zip(v)
+         .map(|(&ux, &uy)| {
+             let x  = ux as f64;
+             let y = uy as f64;
+             sxy += x * y;
+             sy2 += y * y;
+             x*x as f64
+         })
+         .sum();
+     sxy / (sx2*sy2).sqrt()
+    }
+    /// Vector subtraction (converts results to f64 as they can be negative)
+    fn vsubu8(self, v: &[u8]) -> Vec<f64> {
+        self.iter().zip(v).map(|(&xi, &vi)| xi as f64 - vi as f64).collect()
+    }
+    /// Vector addition ( converts results to f64, as they can exceed 255 )
+    fn vadd(self, v: &[u8]) -> Vec<f64> {
+        self.iter().zip(v).map(|(&xi, &vi)| (xi + vi) as f64).collect()
+    }
+    /// Vector magnitude
+    fn vmag(self) -> f64{
+        self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>().sqrt()
+    }
     /// Vector magnitude squared
     fn vmagsq(self) -> f64 {
         self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()
     } 
+    /// Euclidian distance between self &[u8] and v:&[u8].  
+    fn vdist(self, v:&[f64]) -> f64 {
+        self.iter()
+            .zip(v)
+            .map(|(&xi, &vi)| (((xi as f64) - vi).powi(2)))
+            .sum::<f64>()
+            .sqrt()
+    }    
+    /// Euclidian distance between self &[u8] and v:&[u8].  
+    /// Faster than vsub followed by vmag, as both are done in one loop
+    fn vdistu8(self, v: &[u8]) -> f64 {
+        self.iter()
+            .zip(v)
+            .map(|(&xi, &vi)| (xi as f64 - vi as f64).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+    ///Euclidian distance squared, the arguments are both of &[u8] type  
+    fn vdistsq(self, v: &[u8]) -> u64 {
+        self.iter()
+            .zip(v)
+            .map(|(&xi, &vi)| {
+               let x = xi as i32;
+               let y = vi as i32;
+                (x - y).pow(2) as u64})           
+            .sum::<u64>()
+    }
+    /// Area proportional to the swept arc/// Area of swept arc between self &[u8] and v:&[f64]
+    fn varc(self, v:&[f64]) -> f64 { 
+        (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
+    }
+
     /// Probability density function of bytes data
     fn pdf(self) -> Vec<f64> {  
         let nf = self.len() as f64;
@@ -25,10 +102,10 @@ impl Vecu8 for &[u8] {
         };            
         entr           
     }
-    /// Joint probability density function (actually just co-occurence counts) 
-    //  of two vectors of bytes of the same length.
+    /// Joint probability density function (here just co-occurence counts) 
+    /// of paired values in two vectors of bytes of the same length.
     /// Needs n^2 x 32bits of memory. Do not use for very long vectors, 
-    /// those will need hashing implementation.
+    /// those need hashing implementation.
     fn jointpdf(self, v:&[u8]) -> Vec<Vec<u32>> {  
         let n = self.len();
         if v.len() != n {
@@ -60,67 +137,7 @@ impl Vecu8 for &[u8] {
     /// and 1 when they are identical
     fn dependence(self, v:&[u8]) -> f64 {
         2.0 * (1.0 - self.jointentropy(v) / (self.entropy() + v.entropy()))
-    }
-
-    /// Scalar multiplication of a vector, creates new vec
-    fn smult(self, s:f64) -> Vec<f64> {
-       self.iter().map(|&x| s*x as f64).collect()
-    }
-    /// Scalar addition to a vector, creates new vec
-    fn sadd(self, s:f64) -> Vec<f64> {
-       self.iter().map(|&x| s+x as f64).collect()
-    }
-    /// Scalar product.   
-    /// Must be of the same length - no error checking (for speed)
-    fn dotp(self, v: &[f64]) -> f64 {
-        self.iter().zip(v).map(|(&xi, &vi)| xi as f64 * vi).sum::<f64>()
-    }
-
-    /// Scalar product of two (positive) u8 slices.   
-    /// Must be of the same length - no error checking (for speed)
-    fn dotpu8(self, v: &[u8]) -> u64 {
-        self.iter().zip(v).map(|(&xi, &vi)| (xi * vi)as u64).sum::<u64>()
-    }
-    /// Cosine between two (positive) u8 slices.
-    fn cosineu8(self, v: &[u8]) -> f64 {
-        let (mut sxy, mut sy2) = (0_f64, 0_f64);
-        let sx2: f64 = self
-            .iter()
-            .zip(v)
-            .map(|(&ux, &uy)| {
-                let x  = ux as f64;
-                let y = uy as f64;
-                sxy += x * y;
-                sy2 += y * y;
-                x*x as f64
-            })
-            .sum();
-        sxy / (sx2*sy2).sqrt()
-    }
-    /// Area of swept arc between self &[u8] and v:&[f64]
-    fn varc(self, v:&[f64]) -> f64 { 
-        (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
-    }
-    /// Euclidian distance between self &[u8] and v:&[f64].  
-    /// Faster than vsub followed by vmag, as both are done in one loop
-    fn vdist(self, v: &[f64]) -> f64 {
-        self.iter()
-            .zip(v)
-            .map(|(&xi, &vi)| (xi as f64 - vi).powi(2))
-            .sum::<f64>()
-            .sqrt()
-    }
-    ///Euclidian distance squared, the arguments are both of &[u8] type  
-    fn vdistsq(self, v: &[u8]) -> u64 {
-        self.iter()
-            .zip(v)
-            .map(|(&xi, &vi)| {
-               let x = xi as i32;
-               let y = vi as i32;
-                (x - y).pow(2) as u64})           
-            .sum::<u64>()
-    }
-
+    } 
 }
 
 impl VecVecu8 for &[Vec<u8>] {

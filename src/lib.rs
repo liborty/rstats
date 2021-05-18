@@ -89,8 +89,7 @@ pub trait Stats {
 
 /// Vector algebra on one or two vectors.
 pub trait Vecf64 {
-
-   /// Scalar multiplication with a vector
+    /// Scalar multiplication of a vector
     fn smult(self, s: f64) -> Vec<f64>;
     /// Scalar addition to vector
     fn sadd(self, s: f64) -> Vec<f64>; 
@@ -137,7 +136,6 @@ pub trait Vecf64 {
 
     /// Binary search for insert index I in sorted vector 
     fn binsearch(self, v: f64) -> usize;
-
     /// Sort vector in a standard way
     fn sortf(self) -> Vec<f64>;
     /// Sorted vector, is wrapper for mergesort below
@@ -150,10 +148,34 @@ pub trait Vecf64 {
 
 /// Some support for Vec<u8> (vector of bytes)
 pub trait Vecu8 {
-
+    /// Scalar multiplication of a vector
+    fn smult(self, s: f64) -> Vec<f64>;
+    /// Scalar addition to vector
+    fn sadd(self, s: f64) -> Vec<f64>;
+    /// Scalar product of u8 and f64 vectors
+    fn dotp(self, v: &[f64]) -> f64;
+    /// Scalar product of two u8 vectors -> u64
+     fn dotpu8(self, v: &[u8]) -> u64;
+    /// Cosine between two u8 vectors
+    fn cosine(self, v: &[u8]) -> f64;
+    /// Vector subtraction
+    fn vsubu8(self, v: &[u8]) -> Vec<f64>;
+    /// Vector addition
+    fn vadd(self, v: &[u8]) -> Vec<f64>;
+    /// Vector magnitude
+    fn vmag(self) -> f64;
     /// Vector magnitude squared (sum of squares)
     fn vmagsq(self) -> f64;
-    /// Probability density function of bytes data
+    /// Euclidian distance to &[f64]
+    fn vdist(self, v:&[f64]) -> f64;
+    /// Euclidian distance to &[u8]
+    fn vdistu8(self, v:&[u8]) -> f64;
+    /// Euclidian distance between byte vectors
+    fn vdistsq(self, v: &[u8]) -> u64;    
+    /// Area proportional to the swept arc
+    fn varc(self, v:&[f64]) -> f64; 
+
+    /// Probability density function (pdf) of bytes data
     fn pdf(self) -> Vec<f64>;
     /// Information (entropy) in nats of &[u8]
     fn entropy(self) -> f64;
@@ -162,23 +184,7 @@ pub trait Vecu8 {
     /// Joint entropy of &[u8],&[u8] in nats 
     fn jointentropy(self, v:&[u8]) -> f64;
     /// Statistical independence measure based on joint entropy
-    fn dependence(self, v:&[u8]) -> f64;
-    /// Scalar multiplication with a vector
-    fn smult(self, s: f64) -> Vec<f64>;
-    /// Scalar addition to vector
-    fn sadd(self, s: f64) -> Vec<f64>;
-    /// Scalar product of u8 and f64 vectors
-    fn dotp(self, v: &[f64]) -> f64;
-    /// Scalar product of two u8 vectors
-     fn dotpu8(self, v: &[u8]) -> u64;
-    /// Cosine between two positive u8 vectors
-    fn cosineu8(self, v: &[u8]) -> f64;
-    /// Area proportional to the swept arc
-    fn varc(self, v:&[f64]) -> f64;
-    /// Euclidian distance 
-    fn vdist(self, v: &[f64]) -> f64;
-    /// Euclidian distance between byte vectors
-    fn vdistsq(self, v: &[u8]) -> u64;    
+    fn dependence(self, v:&[u8]) -> f64; 
 }
 
 /// Mutable vector operations.

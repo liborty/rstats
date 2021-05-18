@@ -15,6 +15,7 @@ fn entropy() -> Result<()> {
    println!("Entropy: {}",GI(v1.entropy()));
    let v2 = vec![1_u8,2,2,3,3,3,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2]; 
    println!("{:?}",v2);
+   // println!("|v2-v1|: {}",GI(v2.vdistu8(&v1)));
    println!("Entropy: {}",GI(v2.entropy()));
    println!("Joint E: {}",GI(v1.jointentropy(&v2)));
    println!("Dependence: {}\n",GI(v1.dependence(&v2)));
