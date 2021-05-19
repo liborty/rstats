@@ -171,15 +171,23 @@ impl VecVec for &[Vec<f64>] {
         }
         ( gm, eccs.sortm() )
     }
+    /// WGM and sorted eccentricities magnitudes.
+    /// Describing a set of points `self` in n dimensions
+    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64> ) { 
+        let mut eccs = Vec::with_capacity(self.len());       
+        let gm = self.wgmedian(ws,eps);
+        for v in self { // collect ecentricities magnitudes
+            eccs.push(gm.vdist(&v)) 
+        }
+        ( gm, eccs.sortm() )
+    }    
 
     /// Vector `eccentricity` or measure of  
-    /// `not being the geometric median` for a member point.
+    /// `not being the geometric median`, added to a given member point.
     /// The true geometric median is as yet unknown.
-    /// The true geometric median would return zero.
     /// The member point in question is specified by its index `indx`.
     /// This function is suitable for a single member point. 
-    /// When eccentricities of all the points are needed, use `exacteccs` above.
-    fn eccmember(self, indx: usize) -> Vec<f64> {
+    fn nxmember(self, indx: usize) -> Vec<f64> {
         let n = self.len();
         let mut vsum = vec![0_f64; self[0].len()];
         let thisp = &self[indx];
@@ -189,11 +197,39 @@ impl VecVec for &[Vec<f64>] {
             let dvmag = self[i].vdist(&thisp);
             if !dvmag.is_normal() { continue } // too close to this one
             let rec = 1.0/dvmag;
-            vsum.mutvadd(&self[i].smult(rec)); // add unit vector
+            vsum.mutvadd(&self[i].smult(rec)); // add vector
             recip += rec // add separately the reciprocals
         }
         vsum.mutsmult(1.0/recip);
-        vsum.vsub(&thisp)
+        vsum 
+    }    
+
+    /// Vector `eccentricity` or measure of  
+    /// `not being the geometric median` for a member point.
+    /// The true geometric median is as yet unknown.
+    /// The true geometric median would return zero.
+    /// The member point in question is specified by its index `indx`.
+    /// This function is suitable for a single member point. 
+    /// When eccentricities of all the points are needed, use `exacteccs` above.
+    fn eccmember(self, indx: usize) -> Vec<f64> {
+        self.nxmember(indx).vsub(&self[indx])
+    }
+
+    /// Eccentricity vector added to a non member point,
+    /// while the true geometric median is as yet unknown. 
+    /// This function is suitable for a single non-member point. 
+    fn nxnonmember(self, p:&[f64]) -> Vec<f64> {
+        let mut vsum = vec![0_f64; self[0].len()];
+        let mut recip = 0_f64;
+        for x in self { 
+            let dvmag = x.vdist(&p);
+            if !dvmag.is_normal() { continue } // zero distance, safe to ignore
+            let rec = 1.0/dvmag;
+            vsum.mutvadd(&x.smult(rec)); // add vector
+            recip += rec // add separately the reciprocals    
+        }
+        vsum.mutsmult(1.0/recip);
+        vsum
     }
 
     /// Eccentricity vector for a non member point,
@@ -202,18 +238,24 @@ impl VecVec for &[Vec<f64>] {
     /// The true geometric median would return zero vector.
     /// This function is suitable for a single non-member point. 
     fn eccnonmember(self, p:&[f64]) -> Vec<f64> {
+        self.nxnonmember(p).vsub(&p)
+    }
+
+    /// Better approximate weighted median, from a non member point. 
+    fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
-        for x in self { 
-            let dvmag = x.vdist(&p);
+        for i in 0..self.len() { 
+            let dvmag = self[i].vdist(&p);
             if !dvmag.is_normal() { continue } // zero distance, safe to ignore
-            let rec = 1.0/dvmag;
-            vsum.mutvadd(&x.smult(rec)); // add unit vector
+            let rec = 
+            ws[i]/dvmag; // ws[i] is weigth for this point self[i]
+            vsum.mutvadd(&self[i].smult(rec)); // add weighted vector
             recip += rec // add separately the reciprocals    
         }
         vsum.mutsmult(1.0/recip);
-        vsum.vsub(&p)
-    }  
+        vsum
+    } 
 
     /// Magnitudes of all the vectors in self
     fn mags(self) -> Vec<f64> {
@@ -262,9 +304,9 @@ impl VecVec for &[Vec<f64>] {
     fn nmedian(self, eps: f64) -> Vec<f64> {
         let mut point = self.acentroid(); // start iterating 
         loop {
-            let e = self.eccnonmember(&point);
-            point.mutvadd(&e);
-            if e.vmag() < eps { return point } // make the last small step anyway
+            let nextp = self.nxnonmember(&point);         
+            if nextp.vdist(&point) < eps { return nextp }; 
+            point = nextp
         } 
     }
  
@@ -289,24 +331,51 @@ impl VecVec for &[Vec<f64>] {
     /// for finding the geometric median
     fn gmedian(self, eps: f64) -> Vec<f64> {
         let mut p1 = self.acentroid();     
-        let e1 = self.eccnonmember(&p1); // eccentricity vector1 
-        let mut e1mag = e1.vmag(); 
-        let mut p2 = p1.vadd(&e1);   
+        let mut p2 = self.nxnonmember(&p1); 
+        let mut e1mag = p2.vdist(&p1);    
         loop {
-            let e2 = self.eccnonmember(&p2); // eccentricity vector2
+            // will not use this np as does nmedian, using secant instead
+            let mut np = self.nxnonmember(&p2); 
+            let e2 = np.vsub(&p2); // new vetor error, or eccentricity
             let e2mag = e2.vmag(); 
-            if e2mag < eps  { return p2 }; 
-            let newp;         
+            if e2mag < eps  { return np };  
             if e1mag > e2mag {  // eccentricity magnitude decreased, good, employ secant
-                newp = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag-e2mag)))                   
+                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag-e2mag)));                   
             }
-            else { // probably overshot the minimum, go nearer, back 
-               newp = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag+e2mag)))                    
+            else { // recovery: probably overshot the minimum, shorten the jump 
+                   // e2 will already be pointing moreless back
+                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag+e2mag)));                    
             } 
             p1 = p2;        
-            p2 = newp;  
+            p2 = np;  
             e1mag = e2mag             
         }       
-    }    
+    }
+
+    /// Secant method with recovery
+    /// for finding the weighted geometric median
+    fn wgmedian(self, ws: &[f64],  eps: f64) -> Vec<f64> {
+        let mut p1 = self.acentroid();     
+        let mut p2 = self.wnxnonmember(ws,&p1); 
+        let mut e1mag = p2.vdist(&p1);    
+        loop {
+            // will not use this np as does nmedian, using secant instead
+            let mut np = self.wnxnonmember(ws,&p2); 
+            let e2 = np.vsub(&p2); // new vetor error, or eccentricity
+            let e2mag = e2.vmag(); 
+            if e2mag < eps  { return np };  
+            if e1mag > e2mag {  // eccentricity magnitude decreased, good, employ secant
+                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag-e2mag)));                   
+            }
+            else { // recovery: probably overshot the minimum, shorten the jump 
+                   // e2 will already be pointing moreless back
+                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag+e2mag)));                    
+            } 
+            p1 = p2;        
+            p2 = np;  
+            e1mag = e2mag             
+        }       
+    }
+        
 
 }

@@ -5,6 +5,12 @@ README
 ![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github)  
 Now forward compliant with Rust 2021 Edition!
 
+## Usage
+
+Insert into your Cargo.toml file [dependencies] section:
+```rust
+rstats = "^" 
+```
 ## Introduction
 
 Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting and searching. 
@@ -33,22 +39,23 @@ Such dependence has to be later removed by Principle Components Analysis or simi
 
 Rstats is a lean minimalistic library that only depends on *anyhow* (for its simple error handling).
 
-The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. This division is necessary because generic vectors are problematic in Rust.
+The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. This division is necessary because generic vectors are problematic in Rust. 
+
+End type f64 is most commonly used. Facilities for other end types are limited. For lots of data of other end types, it is always possible to clone to f64, see for example the included utility function `vecu8asvecf64`.
 
 ### Documentation
 
-Follow the 'documentation' link. Then select a trait of interest to see the skeletal comments on the prototype function declarations in lib.rs. To see more detailed comments, plus some examples from the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests.rs`.
+Follow the documentation link. Then select a trait of interest to see the skeletal comments on the prototype function declarations in lib.rs. To see more detailed comments, plus some examples from the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests.rs`.
 
 To run the tests, use single thread. It will be slower but will produce the results in the right order:
 
 ```rust
-cargo test --release -- --test-threads=1
-    --nocapture --color always 
+cargo test --release -- --test-threads=1 --nocapture --color always 
 ```
 
 ## Trait Stats
 
-One dimensional statistical measures implemented for `&[i64]` and `&[f64]`. 
+One dimensional statistical measures implemented for `&[i64]` and `&[f64]`.
 
 All these methods operate on one vector of data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of slice `s` of either type.
@@ -81,7 +88,7 @@ This trait is sometimes unchecked (for speed), so some caution with data is advi
 
 ## Trait MutVectors
 
-Some of the methods are for memory efficiency reasons reimplemented in this trait so that they mutate `self` in place, instead of creating a new Vec. They are useful in vector iterative methods. Beware that they work by side-effect and do not return anything, so they can not be chained.
+Some of the above functions are for memory efficiency reasons reimplemented in this trait so that they mutate `self` in place, instead of creating a new Vec. Clearly, they can only be applied to a mutable variable. They are useful in vector iterative methods. Beware that they work by side-effect and do not return anything, so they can not be chained.
 
 ## Trait VecVec
 
@@ -108,7 +115,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Recent Releases
 
-* **Version 0.6.11** Added vecu8asvecf64 utility conversion.
+* **Version 0.7.0** Made gmedian slightly more accurate. Added Weighted Geometric Median and supporing functions. Added vecu8asvecf64 utility conversion.
 
 * **Version 0.6.10** Added to vecu8 for completeness. 
 

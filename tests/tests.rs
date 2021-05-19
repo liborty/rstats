@@ -24,7 +24,8 @@ fn entropy() -> Result<()> {
 
 #[test]
 fn fstats() -> Result<()> { 
-   let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
+   let v0 = vec![1_u8,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+   let v1 = v0.vecu8asvecf64(); // testing the cast
    println!("\n{:?}",v1);
    println!("Linear transform:\n{}",GV(v1.lintrans()));
    println!("Arithmetic mean:{}",GI(v1.amean().unwrap()));
@@ -118,6 +119,9 @@ fn vecvec() -> Result<()> {
    // println!("Sorted eccs: {}\n", GV(seccs));
    let medcnt = seccs.binsearch(eccmed.median);
    println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
+   let mut weights = Vec::new();
+   for i in 0..n { weights.push(i as f64) }; // weight data 
+   println!("Weighted median: {}",GV(pt.wgmedian(&weights,EPS)));
    Ok(())
 }
 

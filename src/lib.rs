@@ -252,10 +252,18 @@ pub trait VecVec {
     fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
     /// Returns ( gm, sorted eccentricities magnitudes )
     fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> );
+    /// WGM and sorted eccentricities magnitudes. 
+    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64> ); 
+    /// Next approx median point from this member point given by its indx
+    fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Ecentricity of a member point given by its indx
     fn eccmember(self, indx: usize) -> Vec<f64>;
+    /// Next approx median point from this nonmember point
+    fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
     /// Eccentricity vector for a non member point
     fn eccnonmember(self, p:&[f64]) -> Vec<f64>; 
+    /// Weighted eccentricity vector for a non member point
+    fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64>; 
     /// magnitudes of a set of vectors
     fn mags(self) -> Vec<f64>; 
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
@@ -271,6 +279,8 @@ pub trait VecVec {
     fn nmedian(self, eps: f64) -> Vec<f64>;
     /// New secant algorithm for geometric median
     fn gmedian(self, eps: f64) -> Vec<f64>; 
+    /// The weighted geometric median
+    fn wgmedian(self, ws: &[f64],eps: f64) -> Vec<f64>; 
 }
 
 /// Methods to manipulate indices of Vec<usize> type
