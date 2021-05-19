@@ -8,9 +8,11 @@ Now forward compliant with Rust 2021 Edition!
 ## Usage
 
 Insert into your Cargo.toml file [dependencies] section:
+
 ```rust
 rstats = "^0" 
 ```
+
 ## Introduction
 
 Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting and searching. 
@@ -114,6 +116,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 * `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
 
 ## Recent Releases
+
+* **Version 0.7.1** Ported the improved gmedian also to VecVecu8. Added to wsortedeccs outputs associated cummulative probability density function of the weights.
 
 * **Version 0.7.0** Made gmedian slightly more accurate. Added Weighted Geometric Median and supporing functions. Added vecu8asvecf64 utility conversion.
 

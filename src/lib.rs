@@ -210,15 +210,13 @@ pub trait MutVectors {
 }
 
 /// Some support for self argument of Vec<Vec<u8>> type (vector of vectors of bytes)
-pub trait VecVecu8 {
-
+pub trait VecVecu8 { 
     /// Centroid = euclidian mean of a set of points  
     fn acentroid(self) -> Vec<f64>; 
-    /// Eccentricity vector for a non member point. 
-    fn eccnonmember(self, p:&[f64]) -> Vec<f64>;
+    /// Eccentricity vector added to a non member point,
+    fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
     /// Geometric median of a set of nD points
-    fn gmedian(self, eps:f64) -> Vec<f64>;  
-
+    fn gmedian(self, eps:f64) -> Vec<f64>; 
 }
 
 /// Methods applicable to vector of vectors of <f64>
@@ -252,8 +250,8 @@ pub trait VecVec {
     fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
     /// Returns ( gm, sorted eccentricities magnitudes )
     fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> );
-    /// WGM and sorted eccentricities magnitudes. 
-    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64> ); 
+    /// ( wgm, sorted eccentricities magnitudes, associated cpdf of weights )
+    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Next approx median point from this member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Ecentricity of a member point given by its indx

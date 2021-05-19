@@ -274,16 +274,16 @@ impl Vecf64 for &[f64] {
         }  
     }
 
-    /// New sorted vector
-    /// Copies self and then sorts it in place, leaving self unchanged (immutable).
+    /// New sorted vector. Immutable sort.
+    /// Copies self and then sorts it in place, leaving self unchanged.
     /// Calls mutsortf and that calls the standard self.sort_unstable_by
     fn sortf(self) -> Vec<f64> {
         let mut sorted:Vec<f64> = self.to_vec();
         sorted.mutsortf();
         sorted      
     }
-    /// Returns new sorted vector, just as 'sortf' above
-    /// but using our indexing 'mergesort' below
+    /// Immutable sort. Returns new sorted vector, just like 'sortf' above
+    /// but using our indexing 'mergesort' below.
     fn sortm(self) -> Vec<f64> {
         self.mergesort(0,self.len()).unindex(&self)
     }

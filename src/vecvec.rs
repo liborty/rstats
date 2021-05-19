@@ -1,4 +1,4 @@
-use crate::{Med, MStats, MutVectors, Stats, VecVec, Vecf64};
+use crate::{Med, MStats, MutVectors, Stats, VecVec, Vecf64, Indices};
 
 impl VecVec for &[Vec<f64>] {
     /// acentroid = simple multidimensional arithmetic mean
@@ -171,16 +171,26 @@ impl VecVec for &[Vec<f64>] {
         }
         ( gm, eccs.sortm() )
     }
-    /// WGM and sorted eccentricities magnitudes.
-    /// Describing a set of points `self` in n dimensions
-    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64> ) { 
-        let mut eccs = Vec::with_capacity(self.len());       
+    /// Weighted geometric median, sorted eccentricities magnitudes,
+    /// associated cummulative probability density function of the weights
+    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 
+        let mut eccs = Vec::with_capacity(self.len()); 
         let gm = self.wgmedian(ws,eps);
         for v in self { // collect ecentricities magnitudes
             eccs.push(gm.vdist(&v)) 
         }
-        ( gm, eccs.sortm() )
-    }    
+        // create sort index of the eccs
+        let index = eccs.mergesort(0,self.len());
+        // pick the associated points weights in the same order as the sorted eccs
+        let mut weights = index.unindex(&ws);
+        let mut sumw = 0_f64;
+        // accummulate the weights 
+        for i in 0..weights.len() {
+            sumw += weights[i]; 
+            weights[i] = sumw
+        }
+        ( gm, index.unindex(&eccs), weights )
+    }
 
     /// Vector `eccentricity` or measure of  
     /// `not being the geometric median`, added to a given member point.
