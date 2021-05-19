@@ -9,7 +9,7 @@ Now forward compliant with Rust 2021 Edition!
 
 Insert into your Cargo.toml file [dependencies] section:
 ```rust
-rstats = "^" 
+rstats = "^0" 
 ```
 ## Introduction
 
