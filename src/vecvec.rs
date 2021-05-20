@@ -171,6 +171,7 @@ impl VecVec for &[Vec<f64>] {
         }
         ( gm, eccs.sortm() )
     }
+    
     /// Weighted geometric median, sorted eccentricities magnitudes,
     /// associated cummulative probability density function of the weights
     fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 

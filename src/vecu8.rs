@@ -1,4 +1,4 @@
-use crate::{Vecu8,VecVecu8,MutVectors,Vecf64,functions};
+use crate::{Vecu8,VecVecu8,MutVectors,Vecf64,functions,Indices};
 use functions::emsg;
 
 impl Vecu8 for &[u8] {
@@ -52,7 +52,7 @@ impl Vecu8 for &[u8] {
     fn vmagsq(self) -> f64 {
         self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()
     } 
-    /// Euclidian distance between self &[u8] and v:&[u8].  
+    /// Euclidian distance between self &[u8] and v:&[f64].  
     fn vdist(self, v:&[f64]) -> f64 {
         self.iter()
             .zip(v)
@@ -187,6 +187,28 @@ impl VecVecu8 for &[Vec<u8>] {
         vsum.mutsmult(1.0/recip);
         vsum
     } 
+
+    /// Weighted geometric median, sorted eccentricities magnitudes,
+    /// associated cummulative probability density function of the weights
+    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 
+        let mut eccs = Vec::with_capacity(self.len()); 
+        let gm = self.wgmedian(ws,eps);
+        for v in self { // collect ecentricities magnitudes
+            eccs.push(v.vdist(&gm)) 
+        }
+        // create sort index of the eccs
+        let index = eccs.mergesort(0,self.len());
+        // pick the associated points weights in the same order as the sorted eccs
+        let mut weights = index.unindex(&ws);
+        let mut sumw = 0_f64;
+        // accummulate the weights 
+        for i in 0..weights.len() {
+            sumw += weights[i]; 
+            weights[i] = sumw
+        }
+        ( gm, index.unindex(&eccs), weights )
+    }
+
 
     /// Secant method with recovery from divergence
     /// for finding the geometric median
