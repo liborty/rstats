@@ -1,5 +1,4 @@
-use crate::{Vecu8,VecVecu8,MutVectors,Vecf64,functions,Indices};
-use functions::emsg;
+use crate::{Vecu8,VecVecu8,MutVectors,Vecf64,Indices};
 
 impl VecVecu8 for &[Vec<u8>] {
     
@@ -36,8 +35,7 @@ impl VecVecu8 for &[Vec<u8>] {
         for i in 0..self.len() { 
             let dvmag = self[i].vdist(&p);
             if !dvmag.is_normal() { continue } // zero distance, safe to ignore
-            let rec = 
-            ws[i]/dvmag; // ws[i] is weigth for this point self[i]
+            let rec = ws[i]/dvmag; // ws[i] is weigth for this point self[i]
             vsum.mutvadd(&self[i].smult(rec)); // add weighted vector
             recip += rec // add separately the reciprocals    
         }

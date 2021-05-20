@@ -1,24 +1,23 @@
-use crate::{Vecu8,Vecf64,functions};
-use functions::emsg;
+use crate::{Vecu8,Vecf64,functions::emsg};
 
 impl Vecu8 for &[u8] {
     /// Scalar multiplication of a vector, creates new vec
     fn smult(self, s:f64) -> Vec<f64> {
-        self.iter().map(|&x| s*x as f64).collect()
+        self.iter().map(|&x| s*(x as f64)).collect()
      }
      /// Scalar addition to a vector, creates new vec
      fn sadd(self, s:f64) -> Vec<f64> {
-        self.iter().map(|&x| s+x as f64).collect()
+        self.iter().map(|&x| s+(x as f64)).collect()
      }
     /// Scalar product.   
     /// Must be of the same length - no error checking (for speed)
     fn dotp(self, v: &[f64]) -> f64 {
-        self.iter().zip(v).map(|(&xi, &vi)| xi as f64 * vi).sum::<f64>()
+        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64)*vi).sum::<f64>()
     }
     /// Scalar product of two (positive) u8 slices.   
     /// Must be of the same length - no error checking (for speed)
     fn dotpu8(self, v: &[u8]) -> u64 {
-        self.iter().zip(v).map(|(&xi, &vi)| (xi * vi)as u64).sum::<u64>()
+        self.iter().zip(v).map(|(&xi, &vi)| (xi as u64)*(vi as u64)).sum::<u64>()
     }
     /// Cosine between two (positive) u8 slices.
     fn cosine(self, v: &[u8]) -> f64 {
@@ -38,11 +37,11 @@ impl Vecu8 for &[u8] {
     }
     /// Vector subtraction (converts results to f64 as they can be negative)
     fn vsubu8(self, v: &[u8]) -> Vec<f64> {
-        self.iter().zip(v).map(|(&xi, &vi)| xi as f64 - vi as f64).collect()
+        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) - (vi as f64)).collect()
     }
     /// Vector addition ( converts results to f64, as they can exceed 255 )
     fn vadd(self, v: &[u8]) -> Vec<f64> {
-        self.iter().zip(v).map(|(&xi, &vi)| (xi + vi) as f64).collect()
+        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) + (vi as f64)).collect()
     }
     /// Vector magnitude
     fn vmag(self) -> f64{
@@ -65,7 +64,7 @@ impl Vecu8 for &[u8] {
     fn vdistu8(self, v: &[u8]) -> f64 {
         self.iter()
             .zip(v)
-            .map(|(&xi, &vi)| (xi as f64 - vi as f64).powi(2))
+            .map(|(&xi, &vi)| ((xi as f64)-(vi as f64)).powi(2))
             .sum::<f64>()
             .sqrt()
     }
