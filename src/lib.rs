@@ -3,6 +3,7 @@ mod statsi64;
 mod vecf64;
 mod indices;
 mod vecu8;
+mod vecvecu8;
 mod mutvec;
 mod vecvec;
 pub mod functions;
