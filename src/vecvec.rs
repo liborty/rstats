@@ -251,7 +251,7 @@ impl VecVec for &[Vec<f64>] {
         self.nxnonmember(p).vsub(&p)
     }
 
-    /// Better approximate weighted median, from a non member point. 
+    /// Next approximate weighted median, from a non member point. 
     fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
@@ -371,7 +371,7 @@ impl VecVec for &[Vec<f64>] {
         loop {
             // will not use this np as does nmedian, using secant instead
             let mut np = self.wnxnonmember(ws,&p2); 
-            let e2 = np.vsub(&p2); // new vetor error, or eccentricity
+            let e2 = np.vsub(&p2); // new vector error, or eccentricity
             let e2mag = e2.vmag(); 
             if e2mag < eps  { return np };  
             if e1mag > e2mag {  // eccentricity magnitude decreased, good, employ secant

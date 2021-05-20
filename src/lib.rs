@@ -215,8 +215,12 @@ pub trait VecVecu8 {
     fn acentroid(self) -> Vec<f64>; 
     /// Eccentricity vector added to a non member point,
     fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
+    /// Weighted eccentricity vector for a non member point
+    fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64>; 
     /// Geometric median of a set of nD points
     fn gmedian(self, eps:f64) -> Vec<f64>; 
+    /// The weighted geometric median
+    fn wgmedian(self, ws: &[f64],eps: f64) -> Vec<f64>; 
 }
 
 /// Methods applicable to vector of vectors of <f64>
