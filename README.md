@@ -117,7 +117,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Recent Releases
 
-* **Version 0.7.2** Added weighted median to VecVecu8.
+* **Version 0.7.2** Added weighted `wgmedian` and `wsortedeccs` to VecVecu8. Created new source file for VecVecu8 trait.
 
 * **Version 0.7.1** Ported the improved gmedian also to VecVecu8. Added to wsortedeccs outputs associated cummulative probability density function of the weights.
 
