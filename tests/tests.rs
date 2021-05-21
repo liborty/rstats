@@ -70,11 +70,13 @@ fn vecf64() -> Result<()> {
         GI(v1.ranks().unwrap().cosine(&v2.ranks().unwrap())));        
    println!("Euclidian distance:\t{}",GI(v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",GI(v1.vsub(&v2).as_slice().vmag()));   
-   println!("Vector difference: {}",GV(v1.vsub(&v2))); 
-   println!("Vector addition:   {}",GV(v1.vadd(&v2)));  
+   println!("Vector difference:\n{}",GV(v1.vsub(&v2))); 
+   println!("Vector addition:\n{}",GV(v1.vadd(&v2)));  
    println!("Scalar product:\t\t{}",GI(v1.dotp(&v2)));
    println!("Parallelogram area:\t{}",GI(v1.varea(&v2))); 
-   println!("Arc area:\t\t{}\n",GI(v1.varc(&v2)));
+   println!("Similarity:\t\t{}",GI(v1.vsim(&v2)));
+   println!("Dissimilarity:\t\t{}\n",GI(v1.vdisim(&v2))); 
+   // println!("Arc area:\t\t{}\n",GI(v1.varc(&v2)));
    Ok(())
 }
 #[test]

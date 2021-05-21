@@ -117,8 +117,11 @@ pub trait Vecf64 {
     /// Area of parallelogram between two vectors (magnitude of cross product)
     fn varea(self, v:&[f64]) -> f64;
     /// Area proportional to the swept arc
-    fn varc(self, v:&[f64]) -> f64; 
- 
+    // fn varc(self, v:&[f64]) -> f64; 
+    /// Vector similarity in the interval [0,1]: (1+cos(theta))/2
+    fn vsim(self, v:&[f64]) -> f64;
+    /// Vector dissimilarity in the interval [0,1]: (1-cos(theta))/2
+    fn vdisim(self, v:&[f64]) -> f64; 
     /// Correlation
     fn correlation(self, _v: &[f64]) -> f64; 
     /// Kendall's tau-b (rank order) correlation

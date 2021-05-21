@@ -89,7 +89,7 @@ impl Vecf64 for &[f64] {
     }
 
     /// Area of a parallelogram between two vectors.
-    /// Same as the magnitude of their cross product.
+    /// Same as the magnitude of their cross product |a ^ b| = |a||b|sin(theta).
     /// Attains maximum `|a|.|b|` when the vectors are othogonal.
     fn varea(self, v:&[f64]) -> f64 {
         (self.vmagsq()*v.vmagsq() - self.dotp(v).powi(2)).sqrt()
@@ -98,9 +98,18 @@ impl Vecf64 for &[f64] {
     /// Area proportional to the swept arc up to angle theta. 
     /// Attains maximum of `2|a||b|` when the vectors have opposite orientations.
     /// This is really |a||b|(1-cos(theta))
-    fn varc(self, v:&[f64]) -> f64 { 
-        (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
-    }
+    // fn varc(self, v:&[f64]) -> f64 { 
+    //     (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
+    // }
+
+    /// We define vector similarity S in the interval [0,1] as
+    /// S = (1+cos(theta))/2
+    fn vsim(self, v:&[f64]) -> f64 { (1.0+self.cosine(&v))/2.0 }
+
+    /// We define vector dissimilarity D in the interval [0,1] as
+    /// D = 1-S = (1-cos(theta))/2
+    fn vdisim(self, v:&[f64]) -> f64 { (1.0-self.cosine(&v))/2.0 }
+
     
     /// Pearson's correlation coefficient of a sample of two f64 variables.
     /// # Example
