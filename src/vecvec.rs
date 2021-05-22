@@ -166,18 +166,18 @@ impl VecVec for &[Vec<f64>] {
      fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len());       
         let gm = self.gmedian(eps);
-        for v in self { // collect ecentricities magnitudes
+        for v in self { // collect raw ecentricities magnitudes
             eccs.push(gm.vdist(&v)) 
         }
         ( gm, eccs.sortm() )
     }
     
     /// Weighted geometric median, sorted eccentricities magnitudes,
-    /// associated cummulative probability density function of the weights
+    /// associated cummulative probability density function in [0,1] of the weights
     fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len()); 
         let gm = self.wgmedian(ws,eps);
-        for v in self { // collect ecentricities magnitudes
+        for v in self { // collect true ecentricities magnitudes
             eccs.push(gm.vdist(&v)) 
         }
         // create sort index of the eccs
@@ -190,6 +190,8 @@ impl VecVec for &[Vec<f64>] {
             sumw += weights[i]; 
             weights[i] = sumw
         }
+        // divide by the sum to get cum. probabilities in [0,1]
+        for i in 0..weights.len() { weights[i] /= sumw };
         ( gm, index.unindex(&eccs), weights )
     }
 

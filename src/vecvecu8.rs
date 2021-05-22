@@ -61,9 +61,10 @@ impl VecVecu8 for &[Vec<u8>] {
             sumw += weights[i]; 
             weights[i] = sumw
         }
+        // divide by the sumw to get cummulative probabilities in [0,1]
+        for i in 0..weights.len() { weights[i] /= sumw }; 
         ( gm, index.unindex(&eccs), weights )
     }
-
 
     /// Secant method with recovery from divergence
     /// for finding the geometric median

@@ -122,8 +122,9 @@ fn vecvec() -> Result<()> {
    let medcnt = seccs.binsearch(eccmed.median);
    println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
    let mut weights = Vec::new();
-   for i in 0..n { weights.push(i as f64) }; // weight data 
-   println!("Weighted median: {}",GV(pt.wgmedian(&weights,EPS)));
+   for i in 1..n+1 { weights.push(i as f64) }; // create weights data
+   let (m, se, cpdf) = pt.wsortedeccs(&weights, EPS);
+   println!("Weighted median:\n{}\nSorted eccs:\n{}\nCPDF:\n{}\n",GV(m),GV(se),GV(cpdf));
    Ok(())
 }
 

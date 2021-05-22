@@ -221,7 +221,7 @@ pub trait VecVecu8 {
     fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
     /// Weighted eccentricity vector for a non member point
     fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64>; 
-    /// Weighted geometric median, sorted eccentricities magnitudes, cummulative weights
+    /// Weighted geometric median, sorted eccentricities magnitudes, cpdf of the weights
     fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Geometric median of a set of nD points
     fn gmedian(self, eps:f64) -> Vec<f64>; 
@@ -260,7 +260,7 @@ pub trait VecVec {
     fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
     /// Returns ( gm, sorted eccentricities magnitudes )
     fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> );
-    /// ( wgm, sorted eccentricities magnitudes, associated cpdf of weights )
+    /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
     fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Next approx median point from this member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;

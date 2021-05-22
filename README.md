@@ -117,6 +117,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Recent Releases
 
+* **Version 0.7.4** 
+
 * **Version 0.7.3** Replaced varc with vector similarity and dissimilarity in [0,1] in terms of their cosines. Similar to unstandardised Pearson's correlation.
 
 * **Version 0.7.2** Added weighted `wgmedian` and `wsortedeccs` to VecVecu8. Created new source file for VecVecu8 trait.
