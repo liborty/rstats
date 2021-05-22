@@ -82,7 +82,7 @@ fn vecf64() -> Result<()> {
 #[test]
 fn vecvec() -> Result<()> { 
    let d = 10_usize;
-   let n = 100_usize;
+   let n = 101_usize;
    println!("testing on a random set of {} points in {} dimensional space",GI(n),GI(d));
    let pt = genvec(d,n,5,17); // random test data 
    let (med,medi,outd,outi) = pt.medoid();
@@ -122,9 +122,12 @@ fn vecvec() -> Result<()> {
    let medcnt = seccs.binsearch(eccmed.median);
    println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
    let mut weights = Vec::new();
-   for i in 1..n+1 { weights.push(i as f64) }; // create weights data
-   let (m, se, cpdf) = pt.wsortedeccs(&weights, EPS);
-   println!("Weighted median:\n{}\nSorted eccs:\n{}\nCPDF:\n{}\n",GV(m),GV(se),GV(cpdf));
+   for i in 1..n+1 { weights.push(i as f64) }; // create test weights data
+   // create pretend median of medians
+   let medmed = vec![0.5_f64;n];
+   let (se, cpdf) = 
+    pt.wsortedcos(&medmed, &pt.wgmedian(&weights, EPS), &weights, EPS);
+   println!("Sorted cos diffs:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
    Ok(())
 }
 

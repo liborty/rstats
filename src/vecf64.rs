@@ -97,10 +97,10 @@ impl Vecf64 for &[f64] {
 
     /// Area proportional to the swept arc up to angle theta. 
     /// Attains maximum of `2|a||b|` when the vectors have opposite orientations.
-    /// This is really |a||b|(1-cos(theta))
-    // fn varc(self, v:&[f64]) -> f64 { 
-    //     (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
-    // }
+    /// This is really |a||b|(1-cos(theta)) = 2|a||b|D
+    fn varc(self, v:&[f64]) -> f64 { 
+         (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
+    }
 
     /// We define vector similarity S in the interval [0,1] as
     /// S = (1+cos(theta))/2

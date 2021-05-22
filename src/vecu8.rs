@@ -19,8 +19,23 @@ impl Vecu8 for &[u8] {
     fn dotpu8(self, v: &[u8]) -> u64 {
         self.iter().zip(v).map(|(&xi, &vi)| (xi as u64)*(vi as u64)).sum::<u64>()
     }
+    /// Cosine between &[u8] and &[f64].
+    fn cosine(self, v: &[f64]) -> f64 {
+        let (mut sxy, mut sy2) = (0_f64, 0_f64);
+        let sx2: f64 = self
+            .iter()
+            .zip(v)
+            .map(|(&ux, &y)| {
+                let x  = ux as f64;             
+                sxy += x * y;
+                sy2 += y * y;
+                x*x
+            })
+            .sum();
+        sxy / (sx2*sy2).sqrt()
+       }
     /// Cosine between two (positive) u8 slices.
-    fn cosine(self, v: &[u8]) -> f64 {
+    fn cosineu8(self, v: &[u8]) -> f64 {
      let (mut sxy, mut sy2) = (0_f64, 0_f64);
      let sx2: f64 = self
          .iter()
@@ -30,7 +45,7 @@ impl Vecu8 for &[u8] {
              let y = uy as f64;
              sxy += x * y;
              sy2 += y * y;
-             x*x as f64
+             x*x
          })
          .sum();
      sxy / (sx2*sy2).sqrt()
@@ -78,10 +93,18 @@ impl Vecu8 for &[u8] {
                 (x - y).pow(2) as u64})           
             .sum::<u64>()
     }
-    /// Area proportional to the swept arc/// Area of swept arc between self &[u8] and v:&[f64]
+    /// Area of swept arc between self &[u8] and v:&[f64]
+    /// = |a||b|(1-cos(theta)) = 2|a||b|D
     fn varc(self, v:&[f64]) -> f64 { 
         (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
-    }
+    } 
+    /// We define vector similarity S in the interval [0,1] as
+    /// S = (1+cos(theta))/2
+    fn vsim(self, v:&[f64]) -> f64 { (1.0+self.cosine(v))/2.0 }
+
+    /// We define vector dissimilarity D in the interval [0,1] as
+    /// D = 1-S = (1-cos(theta))/2
+    fn vdisim(self, v:&[f64]) -> f64 { (1.0-self.cosine(v))/2.0 }
 
     /// Probability density function of bytes data
     fn pdf(self) -> Vec<f64> {  

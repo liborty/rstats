@@ -117,7 +117,7 @@ pub trait Vecf64 {
     /// Area of parallelogram between two vectors (magnitude of cross product)
     fn varea(self, v:&[f64]) -> f64;
     /// Area proportional to the swept arc
-    // fn varc(self, v:&[f64]) -> f64; 
+    fn varc(self, v:&[f64]) -> f64; 
     /// Vector similarity in the interval [0,1]: (1+cos(theta))/2
     fn vsim(self, v:&[f64]) -> f64;
     /// Vector dissimilarity in the interval [0,1]: (1-cos(theta))/2
@@ -160,8 +160,10 @@ pub trait Vecu8 {
     fn dotp(self, v: &[f64]) -> f64;
     /// Scalar product of two u8 vectors -> u64
      fn dotpu8(self, v: &[u8]) -> u64;
+    /// Cosine between u8 and f64 vectors
+    fn cosine(self, v: &[f64]) -> f64;
     /// Cosine between two u8 vectors
-    fn cosine(self, v: &[u8]) -> f64;
+    fn cosineu8(self, v: &[u8]) -> f64;
     /// Vector subtraction
     fn vsubu8(self, v: &[u8]) -> Vec<f64>;
     /// Vector addition
@@ -175,7 +177,11 @@ pub trait Vecu8 {
     /// Euclidian distance to &[u8]
     fn vdistu8(self, v:&[u8]) -> f64;
     /// Euclidian distance between byte vectors
-    fn vdistsq(self, v: &[u8]) -> u64;    
+    fn vdistsq(self, v: &[u8]) -> u64; 
+    /// Vector similarity S in the interval [0,1]: S = (1+cos(theta))/2
+    fn vsim(self, v:&[f64]) -> f64;
+    /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2
+    fn vdisim(self, v:&[f64]) -> f64;   
     /// Area proportional to the swept arc
     fn varc(self, v:&[f64]) -> f64; 
 
@@ -262,6 +268,8 @@ pub trait VecVec {
     fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> );
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
     fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
+    /// Sorted cosines magnitudes and cpdf, needs central median
+    fn wsortedcos(self, medmed: &[f64], med: &[f64], ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64> ); 
     /// Next approx median point from this member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Ecentricity of a member point given by its indx
