@@ -1,4 +1,4 @@
-use crate::{MutVectors, Vecf64, Indices};
+use crate::{MutVectors, Vecf64, Indices, functions::emsg};
 
 impl Vecf64 for &[f64] {
 
@@ -264,22 +264,29 @@ impl Vecf64 for &[f64] {
         self.iter().map(|&x|(x-min)/range).collect()        
     }
 
-    /// Counts how many items in sorted self are less than or equal to 
-    /// the value v, using binary search. 
+    /// Returns index to the first item that is strictly greater than v, 
+    /// using binary search of an ascending sorted list.
+    /// When none are greater, returns self.len(). 
+    /// User must check for this index overflow: if the returned index == 0, then v was below the list,
+    /// else use index-1 as a valid index to the last item that is less than or equal to v.
+    /// This then is the right index to use for looking up cummulative probability density functions. 
     fn binsearch(self, v: f64) -> usize {
-        let mut lo = 0_usize; // index of the first item
-        let mut hi = self.len()-1; // index of the last item
-        if v < self[0] { return 0_usize }; // v is less than the first
-        if v >= self[hi] { return hi+1 }; // v is at the top or over
+        let n = self.len();
+        if n < 2 { emsg(file!(), line!(), "binsearch list is too short!"); }
+        if v < self[0] { return 0_usize }; // v is smaller than the first item
+        let mut hi = n-1; // valid index of the last item
+        if v > self[hi] { return n }; // indicates that v is greater than the last item
+        let mut lo = 0_usize; // initial index of the low limit 
+    
         loop {
             let gap = hi - lo;
-            if gap == 1 { return hi }
-            let tryi = lo+gap/2;          
-            // if value is above or equal, raise the low limit.
-            // counts also repeating equal values. 
-            if v >= self[tryi] { lo = tryi; continue };                 
-            // else value is strictly below, reduce the high limit
-            hi = tryi    
+            if gap <= 1 { return hi }
+            let tryi = lo+gap/2; 
+            // if tryi index's value is above v, reduce the high index
+            if self[tryi] > v { hi = tryi; continue }            
+            // else indexed value is not greater than v, raise the low index;
+            // jumps also repeating equal values. 
+            lo = tryi
         }  
     }
 
