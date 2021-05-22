@@ -126,7 +126,7 @@ fn vecvec() -> Result<()> {
    // create pretend median of medians
    let medmed = vec![0.5_f64;n];
    let (se, cpdf) = 
-    pt.wsortedcos(&medmed, &pt.wgmedian(&weights, EPS), &weights, EPS);
+    pt.wsortedcos(&medmed, &pt.wgmedian(&weights,EPS), &weights);
    println!("Sorted cos diffs:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
    Ok(())
 }

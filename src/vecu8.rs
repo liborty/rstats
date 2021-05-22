@@ -50,6 +50,10 @@ impl Vecu8 for &[u8] {
          .sum();
      sxy / (sx2*sy2).sqrt()
     }
+    /// Vector subtraction 
+    fn vsub(self, v: &[f64]) -> Vec<f64> {
+        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) - vi).collect()
+    }
     /// Vector subtraction (converts results to f64 as they can be negative)
     fn vsubu8(self, v: &[u8]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) - (vi as f64)).collect()
