@@ -180,6 +180,8 @@ impl VecVec for &[Vec<f64>] {
         for v in self { // collect true ecentricities magnitudes
             eccs.push(gm.vdist(&v)) 
         }
+        // Apply linear transform
+        // eccs = eccs.lintrans();
         // create sort index of the eccs
         let index = eccs.mergesort(0,self.len());
         // pick the associated points weights in the same order as the sorted eccs
@@ -201,8 +203,10 @@ impl VecVec for &[Vec<f64>] {
     fn wsortedcos(self, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut coses = Vec::with_capacity(self.len());  
         for p in self { // collect coses      
-            coses.push(p.vsub(&medmed).vdisim(&zeromed)); 
+            coses.push(p.vsub(&medmed).vsim(&zeromed)); 
         }
+        // Apply linear transform
+        // coses = coses.lintrans();
         // create sort index of the coses
         let index = coses.mergesort(0,self.len());
         // pick the associated points weights in the same order as the sorted coses

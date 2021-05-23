@@ -118,7 +118,7 @@ fn vecvec() -> Result<()> {
    println!("Eccentricities\t{}",mu);  
    println!("Eccentricities\t{}",eccmed);
    let (_, seccs) = pt.sortedeccs(EPS); 
-   // println!("Sorted eccs: {}\n", GV(seccs));
+   println!("Sorted eccs: {:?}\n", seccs);
    let medcnt = seccs.binsearch(eccmed.median);
    println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
    let mut weights = Vec::new();
@@ -127,7 +127,7 @@ fn vecvec() -> Result<()> {
    let medmed = vec![0.5_f64;n];
    let (se, cpdf) = 
     pt.wsortedcos(&medmed, &pt.wgmedian(&weights,EPS), &weights);
-   println!("Sorted cos diffs:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
+   println!("Sorted coses:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
    Ok(())
 }
 
