@@ -3,7 +3,7 @@
 #[cfg(test)]
 
 use anyhow::{Result};
-use rstats::{Stats,MutVectors,Vecf64,VecVec,Vecu8,VecVecu8,Indices};
+use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8,Indices};
 use rstats::functions::{GI,GV,genvec,genvecu8};
 use devtimer::DevTime;
 

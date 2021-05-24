@@ -10,6 +10,12 @@ Insert into your Cargo.toml file [dependencies] section:
 rstats = "^0" 
 ```
 
+and import into your source file(s) any of these functions and/or traits that you want:
+
+```rust
+use rstats::{functions,Stats,Vecf64,Vecu8,VecVecf64,VecVecu8,Mutvectors,Indices};
+```
+
 ## Introduction
 
 Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting and searching.
@@ -113,6 +119,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 * `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
 
 ## Recent Releases
+
+* **Version 0.7.5** Renamed VecVec trait to VecVecf64 to make the naming consistent.
 
 * **Version 0.7.4** Added merge of two sorted &[f64]. Added `ascending` boolean flag to `unindex`, `sortm` and functions that call them, to facilitate easy sorting in ascending or descending order. Added `genvecu8` to `functions` to generate sets of random u8 vectors. Normalised cummulative probability density functions  to [0,1].
 

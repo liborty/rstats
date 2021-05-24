@@ -5,7 +5,7 @@ mod indices;
 mod vecu8;
 mod vecvecu8;
 mod mutvec;
-mod vecvec;
+mod vecvecf64;
 pub mod functions;
 
 use crate::functions::GI; 
@@ -242,7 +242,7 @@ pub trait VecVecu8 {
 }
 
 /// Methods applicable to vector of vectors of <f64>
-pub trait VecVec {
+pub trait VecVecf64 {
 
     /// Arithmetic Centroid = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
