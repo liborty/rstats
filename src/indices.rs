@@ -12,11 +12,13 @@ impl Indices for &[usize] {
         index
     }
 
-    /// Collects values from v in the order given by self index.    
-    fn unindex(self, v:&[f64]) -> Vec<f64> {
-        let mut values = Vec::with_capacity(self.len());
-        for &i in self { values.push(v[i]) };
-        values
+    /// Collects values from v in the order given by self index 
+    /// when ascending is true, otherwise in reverse (descending) order.
+    /// Used by msort for ascending or descending sort.
+    /// Good for efficient sorting of any vectors by their separate keys.    
+    fn unindex(self, ascending: bool, v:&[f64]) -> Vec<f64> {
+        if ascending { self.iter().map(|&i| v[i]).collect() }
+        else { self.iter().rev().map(|&i| v[i]).collect()   } 
     }
 
     /// Pearson's correlation coefficient of a two $[usize] slices,

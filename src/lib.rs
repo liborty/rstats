@@ -140,10 +140,12 @@ pub trait Vecf64 {
 
     /// Binary search for insert index I in sorted vector 
     fn binsearch(self, v: f64) -> usize;
+    /// Merges two ascending sorted vectors
+    fn merge(self, v: &[f64]) -> Vec<f64>;
     /// Sort vector in a standard way
     fn sortf(self) -> Vec<f64>;
     /// Sorted vector, is wrapper for mergesort below
-    fn sortm(self) -> Vec<f64>;
+    fn sortm(self, ascending:bool) -> Vec<f64>;
     /// Ranking with only n*log(n) complexity, using 'mergesort'
     fn mergerank(self) -> Vec<usize>;
     /// Immutable merge sort, makes a sort index
@@ -230,9 +232,9 @@ pub trait VecVecu8 {
     /// Weighted eccentricity vector for a non member point
     fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64>; 
     /// Weighted geometric median, sorted eccentricities magnitudes, cpdf of the weights
-    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
+    fn wsortedeccs(self, ascending:bool, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Sorted cosines magnitudes
-    fn wsortedcos(self, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
+    fn wsortedcos(self, ascending:bool, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
     /// Geometric median of a set of nD points
     fn gmedian(self, eps:f64) -> Vec<f64>; 
     /// The weighted geometric median
@@ -269,11 +271,11 @@ pub trait VecVec {
     /// especially for large numbers of points.
     fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
     /// Returns ( gm, sorted eccentricities magnitudes )
-    fn sortedeccs(self, eps:f64) -> ( Vec<f64>,Vec<f64> );
+    fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> );
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
-    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
+    fn wsortedeccs(self, ascending:bool, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Sorted cosines magnitudes and cpdf, needs central median
-    fn wsortedcos(self, medmed: &[f64], med: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
+    fn wsortedcos(self, ascending:bool, medmed: &[f64], med: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
     /// Next approx median point from this member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Ecentricity of a member point given by its indx
@@ -308,7 +310,7 @@ pub trait Indices {
     /// Reverse index
     fn revindex(self) -> Vec<usize>;
     /// Collects values from `v` as per indices in self.
-    fn unindex(self, v:&[f64]) -> Vec<f64>;
+    fn unindex(self, ascending:bool, v:&[f64]) -> Vec<f64>;
     /// Pearson's correlation coefficient of two slices, typically the ranks.  
     fn ucorrelation(self, v: &[usize]) -> f64;  
 }

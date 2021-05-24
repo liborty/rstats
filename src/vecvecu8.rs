@@ -45,7 +45,7 @@ impl VecVecu8 for &[Vec<u8>] {
 
     /// Weighted geometric median, sorted eccentricities magnitudes,
     /// associated cummulative probability density function of the weights
-    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 
+    fn wsortedeccs(self, ascending:bool, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len()); 
         let gm = self.wgmedian(ws,eps);
         for v in self { // collect ecentricities magnitudes
@@ -54,7 +54,7 @@ impl VecVecu8 for &[Vec<u8>] {
         // create sort index of the eccs
         let index = eccs.mergesort(0,self.len());
         // pick the associated points weights in the same order as the sorted eccs
-        let mut weights = index.unindex(&ws);
+        let mut weights = index.unindex(ascending,&ws);
         let mut sumw = 0_f64;
         // accummulate the weights 
         for i in 0..weights.len() {
@@ -63,12 +63,12 @@ impl VecVecu8 for &[Vec<u8>] {
         }
         // divide by the sumw to get cummulative probabilities in [0,1]
         for i in 0..weights.len() { weights[i] /= sumw }; 
-        ( gm, index.unindex(&eccs), weights )
+        ( gm, index.unindex(ascending, &eccs), weights )
     }
     /// Sorted cosines magnitudes,
     /// associated cummulative probability density function in [0,1] of the weights.
     /// Needs central median
-    fn wsortedcos(self, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
+    fn wsortedcos(self, ascending:bool, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut coses = Vec::with_capacity(self.len());  
         for p in self { // collect coses      
             coses.push(p.vsub(&medmed).vdisim(&zeromed)); 
@@ -76,7 +76,7 @@ impl VecVecu8 for &[Vec<u8>] {
         // create sort index of the coses
         let index = coses.mergesort(0,self.len());
         // pick the associated points weights in the same order as the sorted coses
-        let mut weights = index.unindex(&ws);
+        let mut weights = index.unindex(ascending,&ws);
         let mut sumw = 0_f64;
         // accummulate the weights to from cpdf
         for i in 0..weights.len() {
@@ -85,7 +85,7 @@ impl VecVecu8 for &[Vec<u8>] {
         }
         // divide by the sum to get cum. probabilities in [0,1]
         for i in 0..weights.len() { weights[i] /= sumw };
-        ( index.unindex(&coses), weights )
+        ( index.unindex(ascending,&coses), weights )
     }
 
 

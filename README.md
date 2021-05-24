@@ -1,9 +1,6 @@
-README
-
 # Rstats - Rust Stats
 
 ![Crates.io](https://img.shields.io/crates/v/rstats?logo=rust) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github)  
-Now forward compliant with Rust 2021 Edition!
 
 ## Usage
 
@@ -15,13 +12,13 @@ rstats = "^0"
 
 ## Introduction
 
-Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting and searching. 
+Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting and searching.
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm.
 
 Going beyond one dimension, most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians may be easy to compute but they are a poor start to stable characterisation of multidimensional data.
 
-*Specifically, all such 1-d measures are sensitive to the choice of axis.* 
+*Specifically, all such 1-d measures are sensitive to the choice of axis.*
 
 Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on the True Geometric Median, computed here by `gmedian`, are axis (rotation) independent from the first step.
 
@@ -41,7 +38,7 @@ Such dependence has to be later removed by Principle Components Analysis or simi
 
 Rstats is a lean minimalistic library that only depends on *anyhow* (for its simple error handling).
 
-The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. This division is necessary because generic vectors are problematic in Rust. 
+The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. This division is necessary because generic vectors are problematic in Rust.
 
 End type f64 is most commonly used. Facilities for other end types are limited. For lots of data of other end types, it is always possible to clone to f64, see for example the included utility function `vecu8asvecf64`.
 
@@ -78,7 +75,7 @@ Vector algebra implemented on one or two `&[f64]` slices of any length (dimensio
 
 * Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
 * Finding minimum and maximum, linear transformation to [0,1].
-* Indirect merge sort, binary search. 
+* Indirect merge sort, binary search.
 
 This trait is sometimes unchecked (for speed), so some caution with data is advisable.
 
@@ -117,7 +114,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Recent Releases
 
-* **Version 0.7.4** Normalised cpdfs to [0,1].
+* **Version 0.7.4** Added merge of two sorted &[f64]. Added `ascending` boolean flag to `unindex`, `sortm` and functions that call them, to facilitate easy sorting in ascending or descending order. Added `genvecu8` to `functions` to generate sets of random u8 vectors. Normalised cummulative probability density functions  to [0,1].
 
 * **Version 0.7.3** Replaced varc with vector similarity and dissimilarity in [0,1] in terms of their cosines. Similar to unstandardised Pearson's correlation.
 
@@ -127,7 +124,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 * **Version 0.7.0** Made gmedian slightly more accurate. Added Weighted Geometric Median and supporing functions. Added vecu8asvecf64 utility conversion.
 
-* **Version 0.6.10** Added to vecu8 for completeness. 
+* **Version 0.6.10** Added to vecu8 for completeness.
 
 * **Version 0.6.9** Added `sortedeccs` : good descriptive measure for a set of points in nD. Added `binsearch`.
 

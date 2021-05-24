@@ -290,6 +290,31 @@ impl Vecf64 for &[f64] {
         }  
     }
 
+    /// Merges two ascending sorted vectors &[f64]
+    fn merge(self, v: &[f64]) -> Vec<f64> {
+        let mut resvec:Vec<f64> = Vec::new();
+        let l1 = self.len();
+        let l2 = v.len();
+        let mut i1 = 0;
+        let mut i2 = 0;
+        loop {
+            if i1 == l1 { // self is now processed
+                for i in i2..l2 { resvec.push(v[i]) } // copy out the rest of v
+                break // and terminate
+            }
+            if i2 == l2 { // v is now processed
+                for i in i1..l1 { resvec.push(self[i])} // copy out the rest of self
+                break // and terminate
+            }
+            if self[i1] < v[i2] { resvec.push(self[i1]); i1 += 1; continue };
+            if self[i1] > v[i2] { resvec.push(v[i2]); i2 += 1; continue }; 
+            // here they are equal, so consume both
+            resvec.push(self[i1]); i1 += 1;
+            resvec.push(v[i2]); i2 += 1
+        }
+        resvec
+    }
+
     /// New sorted vector. Immutable sort.
     /// Copies self and then sorts it in place, leaving self unchanged.
     /// Calls mutsortf and that calls the standard self.sort_unstable_by
@@ -300,8 +325,9 @@ impl Vecf64 for &[f64] {
     }
     /// Immutable sort. Returns new sorted vector, just like 'sortf' above
     /// but using our indexing 'mergesort' below.
-    fn sortm(self) -> Vec<f64> {
-        self.mergesort(0,self.len()).unindex(&self)
+    /// Simply passes the boolean flag 'ascending' onto 'unindex'.
+    fn sortm(self, ascending:bool) -> Vec<f64> {
+        self.mergesort(0,self.len()).unindex(ascending,&self)
     }
 
     /// Ranking of self by inverting the (merge) sort index.  
@@ -315,7 +341,7 @@ impl Vecf64 for &[f64] {
 
     /// Recursive non-destructive merge sort. The data is read-only, it is not moved or mutated. 
     /// Returns vector of indices to self from i to i+n, such that the indexed values are in sort order.  
-    /// Thus we are moving the index values instead of the actual values. 
+    /// Thus we are moving only the index (key) values instead of the actual values. 
     fn mergesort(self, i:usize, n:usize) -> Vec<usize> {
 
         if n == 1 { let res = vec![i]; return res };  // recursion termination
@@ -327,14 +353,14 @@ impl Vecf64 for &[f64] {
         let sv1 = self.mergesort(i, n1); // recursively sort the first half
         let sv2 = self.mergesort(i+n1, n2); // recursively sort the second half 
 
-        // Now we merge the two sorted indexes into one
+        // Now we will merge the two sorted indices into one
         let mut merged:Vec<usize> = Vec::with_capacity(n); 
         let mut k = 0_usize;   // subscript to the first sorted half
         let mut l = 0_usize;   // subscript to the second sorted half
         let mut firsthead;
         let mut secondhead;
         loop {
-            // accessing the data in self only indirectly trough the sort indexes
+            // accessing the data in self only indirectly trough the sort indices
             firsthead = self[sv1[k]];
             secondhead = self[sv2[l]];
              
@@ -342,19 +368,20 @@ impl Vecf64 for &[f64] {
                 merged.push(sv1[k]); k += 1 }
             else if firsthead > secondhead { // pop the second
                 merged.push(sv2[l]); l += 1 } 
-            else { // they are equal, so pop both, keeping their order
-                merged.push(sv1[k]); k += 1;
-                merged.push(sv2[l]); l += 1 }
-            if k == sv1.len() {   // first one is empty, just copy the rest of the second 
+                else { // they are equal, so pop both, keeping their order
+                    merged.push(sv1[k]); k += 1;
+                    merged.push(sv2[l]); l += 1 }
+            if k == sv1.len() {   // first one is now empty, just copy the rest of the second 
                 while l < sv2.len() {  merged.push(sv2[l]); l += 1  };
-                break
+                break // either done pushing or both are empty
             };
-            if l == sv2.len() {   // second one is empty, just copy the rest of the first
+            // second one is empty, first one is non-empty, just copy the rest of the first
+            if l == sv2.len() {   
                 while k < sv1.len() {  merged.push(sv1[k]); k += 1 };
                 break
-            };            
+            }
+            // here both are still non-empty, so go round the merge loop again                      
         }
         return merged
     }
-
 }

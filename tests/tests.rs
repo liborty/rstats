@@ -60,7 +60,7 @@ fn vecf64() -> Result<()> {
    println!("Sort index:{}",GV(v2.mergesort(0,v2.len()))); 
    println!("R reversed:{}",GV(v2.mergerank().revindex()));    
    println!("Mergerank: {}",GV(v2.mergerank()));
-   println!("Mrg.sorted:{}",GV(v2.sortm()));
+   println!("Mrg.reverse sorted:{}",GV(v2.sortm(false)));
    println!("Sorted:    {}",GV(v2.sortf()));
    println!("Pearson's Correlation:\t{}",GI(v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",GI(v1.kendalcorr(&v2)));  
@@ -117,7 +117,7 @@ fn vecvec() -> Result<()> {
    let (mu,eccmed) = pt.moe(EPS);
    println!("Eccentricities\t{}",mu);  
    println!("Eccentricities\t{}",eccmed);
-   let (_, seccs) = pt.sortedeccs(EPS); 
+   let (_, seccs) = pt.sortedeccs(true,EPS); 
    println!("Sorted eccs: {:?}\n", seccs);
    let medcnt = seccs.binsearch(eccmed.median);
    println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
@@ -126,8 +126,8 @@ fn vecvec() -> Result<()> {
    // create pretend median of medians
    let medmed = vec![0.5_f64;n];
    let (se, cpdf) = 
-    pt.wsortedcos(&medmed, &pt.wgmedian(&weights,EPS), &weights);
-   println!("Sorted coses:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
+    pt.wsortedcos(false, &medmed, &pt.wgmedian(&weights,EPS), &weights);
+   println!("Reverse sorted coses:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
    Ok(())
 }
 
