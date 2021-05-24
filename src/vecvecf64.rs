@@ -185,10 +185,10 @@ impl VecVecf64 for &[Vec<f64>] {
         // create sort index of the eccs
         let index = eccs.mergesort(0,self.len());
         // pick the associated points weights in the reverse order of the sorted eccs
-        let mut weights = index.unindex(false,&ws);
+        let mut weights = index.unindex(true,&ws);
         let mut sumw = 0_f64;
         // accummulate the weights 
-        for i in 0..weights.len() {
+        for i in (0..weights.len()).rev() {
             sumw += weights[i]; 
             weights[i] = sumw
         }
