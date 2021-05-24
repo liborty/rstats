@@ -3,8 +3,8 @@
 #[cfg(test)]
 
 use anyhow::{Result};
-use rstats::{Stats,MutVectors,Vecf64,VecVec,Vecu8,Indices};
-use rstats::functions::{GI,GV,genvec};
+use rstats::{Stats,MutVectors,Vecf64,VecVec,Vecu8,VecVecu8,Indices};
+use rstats::functions::{GI,GV,genvec,genvecu8};
 use devtimer::DevTime;
 
 pub const EPS:f64 = 1e-7;
@@ -85,6 +85,7 @@ fn vecvec() -> Result<()> {
    let n = 101_usize;
    println!("testing on a random set of {} points in {} dimensional space",GI(n),GI(d));
    let pt = genvec(d,n,5,17); // random test data 
+   let ptu8 = genvecu8(d,n,5,17); // random u8 dataset 
    let (med,medi,outd,outi) = pt.medoid();
    let (mede,medei,oute,outei) = pt.emedoid(EPS);
    let hcentroid = pt.hcentroid();
@@ -126,7 +127,7 @@ fn vecvec() -> Result<()> {
    // create pretend median of medians
    let medmed = vec![0.5_f64;n];
    let (se, cpdf) = 
-    pt.wsortedcos(false, &medmed, &pt.wgmedian(&weights,EPS), &weights);
+    ptu8.wsortedcos(false, &medmed, &pt.wgmedian(&weights,EPS), &weights);
    println!("Reverse sorted coses:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
    Ok(())
 }
