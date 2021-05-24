@@ -232,9 +232,9 @@ pub trait VecVecu8 {
     /// Weighted eccentricity vector for a non member point
     fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64>; 
     /// Weighted geometric median, sorted eccentricities magnitudes, cpdf of the weights
-    fn wsortedeccs(self, ascending:bool, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
+    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Sorted cosines magnitudes
-    fn wsortedcos(self, ascending:bool, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
+    fn wsortedcos(self, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
     /// Geometric median of a set of nD points
     fn gmedian(self, eps:f64) -> Vec<f64>; 
     /// The weighted geometric median
@@ -273,9 +273,9 @@ pub trait VecVecf64 {
     /// Returns ( gm, sorted eccentricities magnitudes )
     fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> );
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
-    fn wsortedeccs(self, ascending:bool, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
+    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Sorted cosines magnitudes and cpdf, needs central median
-    fn wsortedcos(self, ascending:bool, medmed: &[f64], med: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
+    fn wsortedcos(self, medmed: &[f64], med: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
     /// Next approx median point from this member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Ecentricity of a member point given by its indx
