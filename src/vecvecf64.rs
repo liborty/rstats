@@ -188,7 +188,7 @@ impl VecVecf64 for &[Vec<f64>] {
         let mut weights = index.unindex(true,&ws);
         let mut sumw = 0_f64;
         // accummulate the weights 
-        for i in (0..weights.len()).rev() {
+        for i in 0..weights.len() {
             sumw += weights[i]; 
             weights[i] = sumw
         }
