@@ -230,15 +230,11 @@ pub trait VecVecu8 {
     /// Eccentricity vector added to a non member point,
     fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
     /// Weighted eccentricity vector for a non member point
-    fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64>; 
+    fn wnxnonmember(self, ws:&[u8], p:&[f64]) -> Vec<f64>; 
     /// Weighted geometric median, sorted eccentricities magnitudes, cpdf of the weights
-    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
-    /// Sorted cosines magnitudes
-    fn wsortedcos(self, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
-    /// Geometric median of a set of nD points
     fn gmedian(self, eps:f64) -> Vec<f64>; 
     /// The weighted geometric median
-    fn wgmedian(self, ws: &[f64],eps: f64) -> Vec<f64>; 
+    fn wgmedian(self, ws: &[u8],eps: f64) -> Vec<f64>; 
 }
 
 /// Methods applicable to vector of vectors of <f64>
@@ -309,8 +305,10 @@ pub trait VecVecf64 {
 pub trait Indices {
     /// Reverse index
     fn revindex(self) -> Vec<usize>;
-    /// Collects values from `v` as per indices in self.
+    /// Collects f64 values from `v` as per indices in self.
     fn unindex(self, ascending:bool, v:&[f64]) -> Vec<f64>;
+    /// Collects u8 from `v` as per indices in self.
+    fn unindexu8(self, ascending:bool, v:&[u8]) -> Vec<u8>;
     /// Pearson's correlation coefficient of two slices, typically the ranks.  
     fn ucorrelation(self, v: &[usize]) -> f64;  
 }

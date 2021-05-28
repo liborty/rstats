@@ -1,5 +1,6 @@
-use std::fmt;
 /// generate random data for testing, plus some auxilliary pretty printing functions
+
+use std::fmt;
 
 /// Sum of linear weights
 pub fn wsum(n: usize) -> f64 {
@@ -74,8 +75,8 @@ pub fn genvecu8(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<u8>> {
 }
 
 
-/// GreenIt (GI) struct facilitates printing (in green) any type
-/// that has Display implemented.
+/// GreenIt (GI) struct facilitates printing (in green) any
+/// singular type that has Display implemented.
 pub struct GI<T: fmt::Display>(pub T);
 impl<T: fmt::Display> fmt::Display for GI<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -83,8 +84,8 @@ impl<T: fmt::Display> fmt::Display for GI<T> {
     }
 }
 
-/// GreenVec (GV) struct facilitates printing (in green) vectors of any type
-/// that has Display implemented.
+/// GreenVec (GV) struct facilitates printing (in green) vectors
+/// of any end type that has Display implemented.
 pub struct GV<T: fmt::Display>(pub Vec<T>);
 impl<T: fmt::Display> fmt::Display for GV<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

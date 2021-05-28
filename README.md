@@ -120,7 +120,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Recent Releases
 
-* **Version 0.7.5** Renamed VecVec trait to VecVecf64 to make the naming consistent.
+* **Version 0.7.5** Renamed VecVec trait to VecVecf64 to make the naming consistent. Added `unindexu8`. Removed `wsortedeccs` and `wsortedcos` for being too application specific.
 
 * **Version 0.7.4** Added merge of two sorted &[f64]. Added `ascending` boolean flag to `unindex`, `sortm` and functions that call them, to facilitate easy sorting in ascending or descending order. Added `genvecu8` to `functions` to generate sets of random u8 vectors. Normalised cummulative probability density functions  to [0,1].
 

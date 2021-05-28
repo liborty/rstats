@@ -20,10 +20,16 @@ impl Indices for &[usize] {
         if ascending { self.iter().map(|&i| v[i]).collect() }
         else { self.iter().rev().map(|&i| v[i]).collect()   } 
     }
+    fn unindexu8(self, ascending: bool, v:&[u8]) -> Vec<u8> {
+        if ascending { self.iter().map(|&i| v[i]).collect() }
+        else { self.iter().rev().map(|&i| v[i]).collect()   } 
+    }
+
 
     /// Pearson's correlation coefficient of a two $[usize] slices,
-    /// typically the ranks. In which case this is the Spearman's correlation, where the ranks
-    /// have been computed previously.
+    /// typically the ranks. In which case this becomes 
+    /// the Spearman's correlation of the original data,
+    /// whose ranks have been computed previously.
     fn ucorrelation(self, v: &[usize]) -> f64 {
         let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
         let sx: f64 = self

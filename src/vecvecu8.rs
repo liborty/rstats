@@ -1,4 +1,4 @@
-use crate::{Vecu8,VecVecu8,MutVectors,Vecf64,Indices};
+use crate::{Vecu8,VecVecu8,MutVectors,Vecf64};
 
 impl VecVecu8 for &[Vec<u8>] {
     
@@ -29,67 +29,19 @@ impl VecVecu8 for &[Vec<u8>] {
     }
 
     /// Next approximate weighted median, from a non member point. 
-    fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64> {
+    fn wnxnonmember(self, ws:&[u8], p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for i in 0..self.len() { 
             let dvmag = self[i].vdist(&p);
             if !dvmag.is_normal() { continue } // zero distance, safe to ignore
-            let rec = ws[i]/dvmag; // ws[i] is weigth for this point self[i]
+            let rec = ws[i] as f64/dvmag; // ws[i] is weigth for this point self[i]
             vsum.mutvadd(&self[i].smult(rec)); // add weighted vector
             recip += rec // add separately the reciprocals    
         }
         vsum.mutsmult(1.0/recip);
         vsum
     } 
-
-    /// Weighted geometric median, sorted eccentricities magnitudes,
-    /// associated reversed cummulative probability density function of the weights.
-    /// So that small ecc. magnitude means high probability of being in set represented by self.
-    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 
-        let mut eccs = Vec::with_capacity(self.len()); 
-        let gm = self.wgmedian(ws,eps);
-        for v in self { // collect ecentricities magnitudes
-            eccs.push(v.vdist(&gm)) 
-        }
-        // create sort index of the eccs
-        let index = eccs.mergesort(0,self.len());
-        // pick the associated points weights in the same order as the sorted eccs
-        let mut weights = index.unindex(true,&ws);
-        let mut sumw = 0_f64;
-        // accummulate the weights 
-        for i in 0..weights.len() {
-            sumw += weights[i]; 
-            weights[i] = sumw
-        }
-        // divide by the sumw to get cummulative probabilities in [0,1]
-        for i in 0..weights.len() { weights[i] /= sumw }; 
-        ( gm, index.unindex(true, &eccs), weights )
-    }
-    /// Sorted cosines magnitudes,
-    /// associated cummulative probability density function in [0,1] of the weights.
-    /// Needs central median. 
-    /// Small cos means low probability 
-    fn wsortedcos(self, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
-        let mut coses = Vec::with_capacity(self.len());  
-        for p in self { // collect coses      
-            coses.push(p.vsub(&medmed).vdisim(&zeromed)); 
-        }
-        // create sort index of the coses
-        let index = coses.mergesort(0,self.len());
-        // pick the associated points weights in the same order as the sorted coses
-        let mut weights = index.unindex(true,&ws);
-        let mut sumw = 0_f64;
-        // accummulate the weights to from cpdf
-        for i in 0..weights.len() {
-            sumw += weights[i]; 
-            weights[i] = sumw
-        }
-        // divide by the sum to get cum. probabilities in [0,1]
-        for i in 0..weights.len() { weights[i] /= sumw };
-        ( index.unindex(true,&coses), weights )
-    }
-
 
     /// Secant method with recovery from divergence
     /// for finding the geometric median
@@ -118,12 +70,12 @@ impl VecVecu8 for &[Vec<u8>] {
 
     /// Secant method with recovery
     /// for finding the weighted geometric median
-    fn wgmedian(self, ws: &[f64],  eps: f64) -> Vec<f64> {
+    fn wgmedian(self, ws: &[u8],  eps: f64) -> Vec<f64> {
         let mut p1 = self.acentroid();     
         let mut p2 = self.wnxnonmember(ws,&p1); 
         let mut e1mag = p2.vdist(&p1);    
         loop {
-            // will not use this np as does nmedian, using secant instead
+            // will not use this np directly as does nmedian, using secant instead
             let mut np = self.wnxnonmember(ws,&p2); 
             let e2 = np.vsub(&p2); // new vector error, or eccentricity
             let e2mag = e2.vmag(); 

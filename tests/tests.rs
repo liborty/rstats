@@ -85,7 +85,7 @@ fn vecvec() -> Result<()> {
    let n = 101_usize;
    println!("testing on a random set of {} points in {} dimensional space",GI(n),GI(d));
    let pt = genvec(d,n,5,17); // random test data 
-   let ptu8 = genvecu8(d,n,5,17); // random u8 dataset 
+    //  let ptu8 = genvecu8(d,n,5,17); // random u8 dataset 
    let (med,medi,outd,outi) = pt.medoid();
    let (mede,medei,oute,outei) = pt.emedoid(EPS);
    let hcentroid = pt.hcentroid();
@@ -124,11 +124,11 @@ fn vecvec() -> Result<()> {
    println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
    let mut weights = Vec::new();
    for i in 1..n+1 { weights.push(i as f64) }; // create test weights data
-   // create pretend median of medians
-   let medmed = vec![0.5_f64;n];
-   let (se, cpdf) = 
-    ptu8.wsortedcos( &medmed, &pt.wgmedian(&weights,EPS), &weights);
-   println!("Sorted coses:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
+// create pretend median of medians
+//   let medmed = vec![0.5_f64;n];
+//   let (se, cpdf) = 
+//    ptu8.wsortedcos( &medmed, &pt.wgmedian(&weights,EPS), &weights);
+//   println!("Sorted coses:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
    Ok(())
 }
 
