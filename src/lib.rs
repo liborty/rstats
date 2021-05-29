@@ -234,7 +234,7 @@ pub trait VecVecu8 {
     /// Weighted geometric median, sorted eccentricities magnitudes, cpdf of the weights
     fn gmedian(self, eps:f64) -> Vec<f64>; 
     /// The weighted geometric median
-    fn wgmedian(self, ws: &[u8],eps: f64) -> Vec<f64>; 
+    fn wgmedian(self, ws:&[u8], eps: f64) -> Vec<f64>; 
 }
 
 /// Methods applicable to vector of vectors of <f64>
