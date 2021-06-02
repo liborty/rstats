@@ -21,7 +21,7 @@ impl Indices for &[usize] {
         else { self.iter().rev().map(|&i| v[i]).collect()   } 
     }
     fn unindexu8(self, ascending: bool, v:&[u8]) -> Vec<u8> {
-        if ascending { self.iter().map(|&i| v[i]).collect() }
+        if ascending { self.iter().map(|&i|v[i]).collect() }
         else { self.iter().rev().map(|&i| v[i]).collect()   } 
     }
 

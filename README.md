@@ -120,6 +120,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Recent Releases
 
+* **Version 0.7.6**
+
 * **Version 0.7.5** Renamed VecVec trait to VecVecf64 to make the naming consistent. Added `unindexu8`. Removed `wsortedeccs` and `wsortedcos` for being too application specific.
 
 * **Version 0.7.4** Added merge of two sorted &[f64]. Added `ascending` boolean flag to `unindex`, `sortm` and functions that call them, to facilitate easy sorting in ascending or descending order. Added `genvecu8` to `functions` to generate sets of random u8 vectors. Normalised cummulative probability density functions  to [0,1].
@@ -131,23 +133,3 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 * **Version 0.7.1** Ported the improved gmedian also to VecVecu8. Added to wsortedeccs outputs associated cummulative probability density function of the weights.
 
 * **Version 0.7.0** Made gmedian slightly more accurate. Added Weighted Geometric Median and supporing functions. Added vecu8asvecf64 utility conversion.
-
-* **Version 0.6.10** Added to vecu8 for completeness.
-
-* **Version 0.6.9** Added `sortedeccs` : good descriptive measure for a set of points in nD. Added `binsearch`.
-
-* **Version 0.6.8** Added `exacteccs` for obtaining eccentricities after the gm has been found. Added some tests.
-
-* **Version 0.6.7** Eccentricities and geometric medians optimisations. Gmedian ported also to points defined by &[u8].
-
-* **Version 0.6.6** Deleted some defunct functions.
-
-* **Version 0.6.5** Simplified eccentricities functions. The new geometric median algorithm `gmedian` consistently beats on time even the improved Weizsfeld `nmedian`.
-
-* **Version 0.6.4** Added twopoint and secant GM algorithms (experimental).
-
-* **Version 0.6.3** Fixed dependence measure interval to [0,1].
-
-* **Version 0.6.2** Fixed entropy bug, added jointpdf, joint entropy and dependence.
-
-* **Version 0.6.1** Improved documentation and tests.
