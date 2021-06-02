@@ -4,7 +4,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// acentroid = simple multidimensional arithmetic mean
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVec,functions::genvec};
+    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
     /// let pts = genvec(15,15,255,30);
     /// let centre = pts.acentroid();
     /// let dist = pts.distsum(&centre);
@@ -22,7 +22,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// hcentroid =  multidimensional harmonic mean
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVec,functions::genvec};
+    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
     /// let pts = genvec(15,15,255,30);
     /// let centre = pts.hcentroid();
     /// let dist = pts.distsum(&centre);
@@ -111,7 +111,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// (medoid_distance, medoid_index, outlier_distance, outlier_index).
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVec,functions::genvec};
+    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
     /// let pts = genvec(15,15,255,30);
     /// let (dm,_,_,_) = pts.medoid();
     /// assert_eq!(dm,4.812334638782327_f64);
@@ -322,7 +322,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// The sum of their distances from c will remain the same but the eccentricity of c will be much reduced.
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVec,functions::genvec};
+    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
     /// pub const EPS:f64 = 1e-7;
     /// let d = 6_usize;
     /// let pt = genvec(d,24,7,13); // random test data 5x20

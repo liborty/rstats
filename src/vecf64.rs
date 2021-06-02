@@ -23,7 +23,7 @@ impl Vecf64 for &[f64] {
     }
 
     // negated vector (components with opposite sign)
-    fn negv(self) -> f64 { self.smult(-1.0) }
+    fn negv(self) -> Vec<f64> { self.smult(-1.0) }
 
     /// Cosine of an angle between two vectors.
     /// # Example

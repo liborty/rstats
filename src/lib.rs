@@ -102,6 +102,8 @@ pub trait Vecf64 {
     fn cosine(self, _v: &[f64]) -> f64; 
     /// Vector subtraction
     fn vsub(self, v: &[f64]) -> Vec<f64>;
+    /// Vector negtion
+    fn negv(self) -> Vec<f64>;
     /// Vector addition
     fn vadd(self, v: &[f64]) -> Vec<f64>;
     /// Vector magnitude
