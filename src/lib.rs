@@ -144,10 +144,15 @@ pub trait Vecf64 {
     fn binsearch(self, v: f64) -> usize;
     /// Merges two ascending sorted vectors
     fn merge(self, v: &[f64]) -> Vec<f64>;
+    /// Merges two sort indices, returns simply concatenated Vec<f64> and new sort index into it
+    fn merge_immutable(self, idx1: &[usize], v2: &[f64], idx2: &[usize]) -> ( Vec<f64>,Vec<usize> );
+    /// merge indices of two already concatenated sorted vectors
+    fn merge_indices(self, idx1:&[usize], idx2:&[usize]) -> Vec<usize>;
     /// Sort vector in a standard way
     fn sortf(self) -> Vec<f64>;
     /// Sorted vector, is wrapper for mergesort below
     fn sortm(self, ascending:bool) -> Vec<f64>;
+
     /// Ranking with only n*log(n) complexity, using 'mergesort'
     fn mergerank(self) -> Vec<usize>;
     /// Immutable merge sort, makes a sort index

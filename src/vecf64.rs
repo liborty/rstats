@@ -317,6 +317,63 @@ impl Vecf64 for &[f64] {
         }
         resvec
     }
+ 
+    /// Merges two ascending sorted vectors' indices, returns concatenated Vec<f64> and new index into it.
+    /// Mostly just a wrapper for merge_indices()
+    fn merge_immutable(self, idx1: &[usize], v2: &[f64], idx2: &[usize]) -> ( Vec<f64>,Vec<usize> ) {
+        let resvec = [self,v2].concat(); // no sorting, just concatenation 
+        let residx = resvec.merge_indices(idx1,idx2);   
+        ( resvec, residx )
+    }
+
+    /// Merges indices of two already concatenated sorted vectors: 
+    /// self is untouched, only sort indices are merged.
+    /// Used by `mergesort` and `merge_immutable`. 
+    fn merge_indices(self, idx1:&[usize], idx2:&[usize]) -> Vec<usize> {
+        let l1 = idx1.len();
+        let l2 = idx2.len();
+        let mut residx:Vec<usize> = Vec::new(); 
+        let mut i1 = 0;  let mut i2 = 0;
+        let mut head1 = self[idx1[i1]]; let mut head2 = self[idx2[i2]];
+        loop {
+            if head1 < head2 { 
+                residx.push(idx1[i1]);
+                i1 += 1;  
+                if i1 == l1 { // idx1 is now fully processed
+                    for i in i2..l2 { residx.push(idx2[i]) } // copy out the rest of idx2
+                    break // and terminate
+                }
+                head1 = self[idx1[i1]]; // else move to the next value
+                continue
+            }
+            if head1 > head2 { 
+                residx.push(idx2[i2]); 
+                i2 += 1; 
+                if i2 == l2 { // idx2 is now processed
+                    for i in i1..l1 { residx.push(idx1[i]) } // copy out the rest of idx1
+                    break // and terminate
+                }                    
+                head2 = self[idx2[i2]]; 
+                continue
+            } 
+            // here the heads are equal, so consume both
+            residx.push(idx1[i1]); 
+            i1 += 1; 
+            if i1 == l1 { // idx1 is now fully processed
+                for i in i2..l2 { residx.push(idx2[i]) } // copy out the rest of idx2
+                break // and terminate
+            }
+            head1 = self[idx1[i1]];
+            residx.push(idx2[i2]); 
+            i2 += 1; 
+            if i2 == l2 { // idx2 is now processed
+                for i in i1..l1 { residx.push(idx1[i]) } // copy out the rest of idx1
+                break // and terminate
+            }                    
+            head2 = self[idx2[i2]];            
+       }
+        residx
+    }
     
     /// Immutable sort. Returns new sorted vector, just like 'sortf' above
     /// but using our indexing 'mergesort' below.
@@ -335,7 +392,7 @@ impl Vecf64 for &[f64] {
         indx.revindex()    
     }    
 
-    /// Recursive non-destructive merge sort. The data is read-only, it is not moved or mutated. 
+    /// Doubly recursive non-destructive merge sort. The data is read-only, it is not moved or mutated. 
     /// Returns vector of indices to self from i to i+n, such that the indexed values are in sort order.  
     /// Thus we are moving only the index (key) values instead of the actual values. 
     fn mergesort(self, i:usize, n:usize) -> Vec<usize> {
@@ -348,37 +405,8 @@ impl Vecf64 for &[f64] {
         let n2 = n - n1; // the remaining second half
         let sv1 = self.mergesort(i, n1); // recursively sort the first half
         let sv2 = self.mergesort(i+n1, n2); // recursively sort the second half 
-
-        // Now we will merge the two sorted indices into one
-        let mut merged:Vec<usize> = Vec::with_capacity(n); 
-        let mut k = 0_usize;   // subscript to the first sorted half
-        let mut l = 0_usize;   // subscript to the second sorted half
-        let mut firsthead;
-        let mut secondhead;
-        loop {
-            // accessing the data in self only indirectly trough the sort indices
-            firsthead = self[sv1[k]];
-            secondhead = self[sv2[l]];
-             
-            if firsthead < secondhead { // compare heads of the two sorted lists, pop the first
-                merged.push(sv1[k]); k += 1 }
-            else if firsthead > secondhead { // pop the second
-                merged.push(sv2[l]); l += 1 } 
-                else { // they are equal, so pop both, keeping their order
-                    merged.push(sv1[k]); k += 1;
-                    merged.push(sv2[l]); l += 1 }
-            if k == sv1.len() {   // first one is now empty, just copy the rest of the second 
-                while l < sv2.len() {  merged.push(sv2[l]); l += 1  };
-                break // either done pushing or both are empty
-            };
-            // second one is empty, first one is non-empty, just copy the rest of the first
-            if l == sv2.len() {   
-                while k < sv1.len() {  merged.push(sv1[k]); k += 1 };
-                break
-            }
-            // here both are still non-empty, so go round the merge loop again                      
-        }
-        return merged
+        // Now we will merge the two sorted indices into one      
+        self.merge_indices(&sv1,&sv2)
     }
 
     /// New sorted vector. Immutable sort.

@@ -120,7 +120,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Recent Releases
 
-* **Version 0.7.6**
+* **Version 0.7.6** Added `merge_immutable` and `merge_indices`. Simplified `mergesort`.
 
 * **Version 0.7.5** Renamed VecVec trait to VecVecf64 to make the naming consistent. Added `unindexu8`. Removed `wsortedeccs` and `wsortedcos` for being too application specific.
 

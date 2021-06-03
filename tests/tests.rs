@@ -57,7 +57,7 @@ fn vecf64() -> Result<()> {
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
    println!("{:?}",v2);
    println!("Rank:      {}",GV(v2.ranks().unwrap()));
-   println!("Sort index:{}",GV(v2.mergesort(0,v2.len()))); 
+   println!("Sort index:{}",GV(v2.mergesort(0,v2.len())));
    println!("R reversed:{}",GV(v2.mergerank().revindex()));    
    println!("Mergerank: {}",GV(v2.mergerank()));
    println!("Mrg.reverse sorted:{}",GV(v2.sortm(false)));
