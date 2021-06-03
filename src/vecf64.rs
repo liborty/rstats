@@ -322,7 +322,9 @@ impl Vecf64 for &[f64] {
     /// Mostly just a wrapper for merge_indices()
     fn merge_immutable(self, idx1: &[usize], v2: &[f64], idx2: &[usize]) -> ( Vec<f64>,Vec<usize> ) {
         let resvec = [self,v2].concat(); // no sorting, just concatenation 
-        let residx = resvec.merge_indices(idx1,idx2);   
+        let l = idx1.len();
+        let idx2shifted:Vec<usize> = idx2.iter().map(|x| l+x ).collect(); // shift up the second index
+        let residx = resvec.merge_indices(idx1,&idx2shifted);   
         ( resvec, residx )
     }
 
