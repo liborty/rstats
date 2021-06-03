@@ -56,6 +56,8 @@ fn vecf64() -> Result<()> {
    println!("\n{:?}",v1);
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
    println!("{:?}",v2);
+   let (v,vi) = v1.merge_immutable(&v1.mergesort(0,v1.len()), &v2, &v2.mergesort(0,v2.len()));
+   println!("Concatenated and Sorted:\n{}",GV(vi.unindex(true,&v))); 
    println!("Rank:      {}",GV(v2.ranks().unwrap()));
    println!("Sort index:{}",GV(v2.mergesort(0,v2.len())));
    println!("R reversed:{}",GV(v2.mergerank().revindex()));    
