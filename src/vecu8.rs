@@ -1,14 +1,17 @@
 use crate::{Vecu8,Vecf64,functions::emsg};
 
 impl Vecu8 for &[u8] {
+
     /// Scalar multiplication of a vector, creates new vec
     fn smult(self, s:f64) -> Vec<f64> {
         self.iter().map(|&x| s*(x as f64)).collect()
      }
+
      /// Scalar addition to a vector, creates new vec
      fn sadd(self, s:f64) -> Vec<f64> {
         self.iter().map(|&x| s+(x as f64)).collect()
      }
+
     /// Scalar product.   
     /// Must be of the same length - no error checking (for speed)
     fn dotp(self, v: &[f64]) -> f64 {
@@ -19,6 +22,7 @@ impl Vecu8 for &[u8] {
     fn dotpu8(self, v: &[u8]) -> u64 {
         self.iter().zip(v).map(|(&xi, &vi)| (xi as u64)*(vi as u64)).sum::<u64>()
     }
+
     /// Cosine between &[u8] and &[f64].
     fn cosine(self, v: &[f64]) -> f64 {
         let (mut sxy, mut sy2) = (0_f64, 0_f64);
@@ -50,6 +54,7 @@ impl Vecu8 for &[u8] {
          .sum();
      sxy / (sx2*sy2).sqrt()
     }
+
     /// Vector subtraction 
     fn vsub(self, v: &[f64]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) - vi).collect()
@@ -58,18 +63,26 @@ impl Vecu8 for &[u8] {
     fn vsubu8(self, v: &[u8]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) - (vi as f64)).collect()
     }
-    /// Vector addition ( converts results to f64, as they can exceed 255 )
-    fn vadd(self, v: &[u8]) -> Vec<f64> {
-        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) + (vi as f64)).collect()
+
+    /// Vector addition
+    fn vadd(self, v: &[f64]) -> Vec<f64> {
+    self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) + vi).collect()
     }
+    /// Vector addition ( converts results to f64, as they can exceed 255 )
+    fn vaddu8(self, v: &[u8]) -> Vec<f64> {
+        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64)+(vi as f64)).collect()
+    }
+
     /// Vector magnitude
     fn vmag(self) -> f64{
         self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>().sqrt()
     }
+
     /// Vector magnitude squared
     fn vmagsq(self) -> f64 {
         self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()
-    } 
+    }
+
     /// Euclidian distance between self &[u8] and v:&[f64].  
     fn vdist(self, v:&[f64]) -> f64 {
         self.iter()
@@ -86,6 +99,20 @@ impl Vecu8 for &[u8] {
             .map(|(&xi, &vi)| ((xi as f64)-(vi as f64)).powi(2))
             .sum::<f64>()
             .sqrt()
+    }
+    /// cityblock distance
+    fn cityblockd(self, v:&[f64]) -> f64 {
+        self.iter()
+        .zip(v)
+        .map(|(&xi, &vi)| (xi as f64 -vi).abs()) 
+        .sum::<f64>()      
+    }
+    /// cityblock distance
+    fn cityblockdu8(self, v:&[u8]) -> f64 {
+        self.iter()
+        .zip(v)
+        .map(|(&xi, &vi)| { let d = xi as f64 -vi as f64; if d<0_f64 {-d} else {d} } ) 
+        .sum::<f64>()      
     }
     ///Euclidian distance squared, the arguments are both of &[u8] type  
     fn vdistsq(self, v: &[u8]) -> u64 {

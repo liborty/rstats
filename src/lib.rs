@@ -113,7 +113,9 @@ pub trait Vecf64 {
     /// Euclidian distance between two points
     fn vdist(self, v: &[f64]) -> f64;
     /// vdist between two points squared
-    fn vdistsq(self, v: &[f64]) -> f64;   
+    fn vdistsq(self, v: &[f64]) -> f64;
+    /// cityblock distance
+    fn cityblockd(self, v:&[f64]) -> f64;   
     /// Unit vector
     fn vunit(self) -> Vec<f64>;
     /// Area of parallelogram between two vectors (magnitude of cross product)
@@ -178,7 +180,9 @@ pub trait Vecu8 {
     /// Vector subtraction
     fn vsubu8(self, v: &[u8]) -> Vec<f64>;
     /// Vector addition
-    fn vadd(self, v: &[u8]) -> Vec<f64>;
+    fn vadd(self, v: &[f64]) -> Vec<f64>;
+    /// Vector addition ( converts results to f64, as they can exceed 255 )
+    fn vaddu8(self, v: &[u8]) -> Vec<f64>;
     /// Vector magnitude
     fn vmag(self) -> f64;
     /// Vector magnitude squared (sum of squares)
@@ -189,6 +193,10 @@ pub trait Vecu8 {
     fn vdistu8(self, v:&[u8]) -> f64;
     /// Euclidian distance between byte vectors
     fn vdistsq(self, v: &[u8]) -> u64; 
+    /// cityblock distance
+    fn cityblockd(self, v:&[f64]) -> f64;
+    /// cityblock distance
+    fn cityblockdu8(self, v:&[u8]) -> f64;  
     /// Vector similarity S in the interval [0,1]: S = (1+cos(theta))/2
     fn vsim(self, v:&[f64]) -> f64;
     /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2

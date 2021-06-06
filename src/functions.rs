@@ -24,7 +24,7 @@ pub fn genvec(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<f64>> {
             "genvec given zero or wrong dimensions"
         ))
     }
-    // random numbers generating closure with captured seeds
+    // random numbers generating closure with captured seeds m_z m_w
     let mut m_z = s1 as u32;
     let mut m_w = s2 as u32;
     let mut rand = || {
@@ -55,7 +55,7 @@ pub fn genvecu8(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<u8>> {
             "genvecu8 given zero or wrong dimensions"
         ))
     }
-    // random numbers generating closure with captured seeds
+    // random numbers generating closure with captured seeds m_z m_w
     let mut m_z = s1 as u32;
     let mut m_w = s2 as u32;
     let mut rand = || {

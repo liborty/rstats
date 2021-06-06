@@ -120,7 +120,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Recent Releases
 
-* **Version 0.7.7** Fixed `merge_immutable` and added a test.
+* **Version 0.7.7** Fixed `merge_immutable` and added a test. Added `cityblockd` and `vaddu8`.
 
 * **Version 0.7.6** Added `merge_immutable` and `merge_indices`. Simplified `mergesort`.
 

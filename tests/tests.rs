@@ -9,13 +9,14 @@ use devtimer::DevTime;
 
 pub const EPS:f64 = 1e-7;
 #[test]
-fn entropy() -> Result<()> {
+fn u8() -> Result<()> {
    let v1 = vec![1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6]; 
    println!("\n{:?}",v1);
    println!("Entropy: {}",GI(v1.entropy()));
    let v2 = vec![1_u8,2,2,3,3,3,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2]; 
    println!("{:?}",v2);
-   // println!("|v2-v1|: {}",GI(v2.vdistu8(&v1)));
+   println!("|v2-v1|: {}",GI(v2.vdistu8(&v1)));
+   println!("Cityblockd: {}",GI(v2.cityblockdu8(&v1)));  
    println!("Entropy: {}",GI(v2.entropy()));
    println!("Joint E: {}",GI(v1.jointentropy(&v2)));
    println!("Dependence: {}\n",GI(v1.dependence(&v2)));
@@ -32,8 +33,8 @@ fn fstats() -> Result<()> {
    println!("Geometric mean:\t{}",GI(v1.gmean().unwrap()));
    println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
    println!("Magnitude:\t{}",GI(v1.vmag()));
-   println!("Arithmetic {}",v1.ameanstd().unwrap());
-   println!("Geometric  {}",v1.gmeanstd().unwrap());
+   println!("Arithmetic {}",GI(v1.ameanstd().unwrap()));
+   println!("Geometric  {}",GI(v1.gmeanstd().unwrap()));
    println!("Autocorrelation:{}",GI(v1.autocorr()));
    println!("{}\n",v1.median().unwrap());
    Ok(())
@@ -45,8 +46,8 @@ fn intstats() -> Result<()> {
    println!("Arithmetic mean:{}",GI(v1.amean().unwrap()));
    println!("Geometric mean:\t{}",GI(v1.gmean().unwrap()));
    println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
-   println!("Arithmetic {}",v1.ameanstd().unwrap());
-   println!("Geometric {}",v1.gmeanstd().unwrap());
+   println!("Arithmetic {}",GI(v1.ameanstd().unwrap()));
+   println!("Geometric {}",GI(v1.gmeanstd().unwrap()));
    println!("{}\n",v1.median().unwrap()); 
    Ok(())
 }
