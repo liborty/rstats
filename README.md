@@ -20,7 +20,7 @@ use rstats::{functions,Stats,Vecf64,Vecu8,VecVecf64,VecVecu8,Mutvectors,Indices}
 
 Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting, merging and searching.
 
-Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm. Also, the `comediance matrix`; a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the centroid. 
+Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm. Also, the `comediance matrix`; a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the centroid.
 
 *We propose that zero median vectors are always preferable to the commonly used zero mean vectors.*
 
@@ -127,6 +127,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 * `Comediance` is similar to covariance, except zero median vectors are used to compute it  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 0.7.9** Improved functions:GV and tests.
 
 * **Version 0.7.8** Added `covar` = covariance or comediance matrix computations. Some changes to this text (Readme.md).
 

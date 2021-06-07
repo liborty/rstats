@@ -24,8 +24,11 @@ fn u8() -> Result<()> {
    let n = 7_usize;
    println!("Testing on a random set of {} points in {} d space\n",GI(n),GI(d));
    let pt = genvecu8(d,n,5,7); // random test data 
-   println!("Covariances:\n{}",GV(pt.covar(&pt.acentroid())));
-   println!("Comediances:\n{}\n",GV(pt.covar(&pt.gmedian(EPS))));
+   let cov = pt.covar(&pt.acentroid());
+   let com = pt.covar(&pt.gmedian(EPS));
+   println!("Covariances:\n{}",GV(&cov));
+   println!("Comediances:\n{}",GV(&com));
+   println!("Cityblock Distance: {}\n",GI(cov.cityblockd(&com)));
    Ok(())
 }
 
@@ -34,7 +37,7 @@ fn fstats() -> Result<()> {
    let v0 = vec![1_u8,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
    let v1 = v0.vecu8asvecf64(); // testing the cast
    println!("\n{:?}",v1);
-   println!("Linear transform:\n{}",GV(v1.lintrans()));
+   println!("Linear transform:\n{}",GV(&v1.lintrans()));
    println!("Arithmetic mean:{}",GI(v1.amean().unwrap()));
    println!("Geometric mean:\t{}",GI(v1.gmean().unwrap()));
    println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
@@ -64,13 +67,13 @@ fn vecf64() -> Result<()> {
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
    println!("{:?}",v2);
    let (v,vi) = v1.merge_immutable(&v1.mergesort(0,v1.len()), &v2, &v2.mergesort(0,v2.len()));
-   println!("Concatenated and Sorted:\n{}",GV(vi.unindex(true,&v))); 
-   println!("Rank:      {}",GV(v2.ranks().unwrap()));
-   println!("Sort index:{}",GV(v2.mergesort(0,v2.len())));
-   println!("R reversed:{}",GV(v2.mergerank().revindex()));    
-   println!("Mergerank: {}",GV(v2.mergerank()));
-   println!("Mrg.reverse sorted:{}",GV(v2.sortm(false)));
-   println!("Sorted:    {}",GV(v2.sortf()));
+   println!("Concatenated and Sorted:\n{}",GV(&vi.unindex(true,&v))); 
+   println!("Rank:      {}",GV(&v2.ranks().unwrap()));
+   println!("Sort index:{}",GV(&v2.mergesort(0,v2.len())));
+   println!("R reversed:{}",GV(&v2.mergerank().revindex()));    
+   println!("Mergerank: {}",GV(&v2.mergerank()));
+   println!("Mrg.reverse sorted:{}",GV(&v2.sortm(false)));
+   println!("Sorted:    {}",GV(&v2.sortf()));
    println!("Pearson's Correlation:\t{}",GI(v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",GI(v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",GI(v1.spearmancorr(&v2)));  
@@ -79,8 +82,8 @@ fn vecf64() -> Result<()> {
         GI(v1.ranks().unwrap().cosine(&v2.ranks().unwrap())));        
    println!("Euclidian distance:\t{}",GI(v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",GI(v1.vsub(&v2).as_slice().vmag()));   
-   println!("Vector difference:\n{}",GV(v1.vsub(&v2))); 
-   println!("Vector addition:\n{}",GV(v1.vadd(&v2)));  
+   println!("Vector difference:\n{}",GV(&v1.vsub(&v2))); 
+   println!("Vector addition:\n{}",GV(&v1.vadd(&v2)));  
    println!("Scalar product:\t\t{}",GI(v1.dotp(&v2)));
    println!("Parallelogram area:\t{}",GI(v1.varea(&v2))); 
    println!("Similarity:\t\t{}",GI(v1.vsim(&v2)));
@@ -146,7 +149,7 @@ fn trend() -> Result<()> {
    let d = 7_usize;
    let pt1 = genvec(d,28,13,19); // random test data 
    let pt2 = genvec(d,38,23,31);
-   println!("\nTrend vector:\n{}\n",GV(pt1.trend(EPS,pt2)));
+   println!("\nTrend vector:\n{}\n",GV(&pt1.trend(EPS,pt2)));
    Ok(())
 }
 

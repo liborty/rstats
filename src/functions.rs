@@ -84,10 +84,10 @@ impl<T: fmt::Display> fmt::Display for GI<T> {
     }
 }
 
-/// GreenVec (GV) struct facilitates printing (in green) vectors
+/// GreenVec (GV) struct facilitates printing (in green) vector
 /// of any end type that has Display implemented.
-pub struct GV<T: fmt::Display>(pub Vec<T>);
-impl<T: fmt::Display> fmt::Display for GV<T> {
+pub struct GV<'a, T: fmt::Display>(pub &'a[T]);
+impl<'a, T: fmt::Display> fmt::Display for GV<'a,T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut s = String::from("\x1B[01;92m[");
         let n = self.0.len();
