@@ -256,6 +256,7 @@ pub trait VecVecu8 {
     fn wgmedian(self, ws:&[u8], eps: f64) -> Vec<f64>;
     /// Lower triangular part of a covariance matrix of a Vec of u8 vectors.
     fn covar(self, med:&[f64]) -> Vec<f64>; 
+    fn wcovar(self, ws:&[u8], m:&[f64]) -> Vec<f64>;
 }
 
 /// Methods applicable to vector of vectors of <f64>

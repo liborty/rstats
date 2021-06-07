@@ -1,4 +1,4 @@
-use crate::{Vecu8,VecVecu8,MutVectors,Vecf64};
+use crate::{Vecu8,VecVecu8,MutVectors,Vecf64,VecVecf64};
 
 impl VecVecu8 for &[Vec<u8>] {
     
@@ -119,5 +119,35 @@ impl VecVecu8 for &[Vec<u8>] {
         cov.mutsmult(1.0_f64/self.len()as f64);
         cov
     }  
-
+   
+    /// Flattened lower triangular part of a covariance matrix for weighted u8 vectors in self.
+    /// Since covariance matrix is symmetric (positive semi definite), 
+    /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
+    /// N.b. the indexing is always assumed to be in this order: row,column.
+    /// The items of the resulting lower triangular array c[i][j] are here flattened
+    /// into a single vector in this double loop order: left to right, top to bottom 
+    fn wcovar(self, ws:&[u8], m:&[f64]) -> Vec<f64> {
+        let n = self[0].len(); // dimension of the vector(s)
+        // let mut covs:Vec<Vec<f64>> = Vec::new();
+        let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array
+        let mut wsum = 0_f64;
+        for h in 0..self.len() { // adding up covars for all the points
+            let mut covsub = 0_usize; // subscript into the flattened array cov
+            // let mut cov:Vec<f64> = Vec::new();
+            let vm = self[h].vsub(&m);  // zero mean vector
+            wsum += ws[h] as f64;
+            for i in 0..n {
+                let thisc = vm[i]; // ith component
+                // its products up to and including the diagonal (itself)
+                for j in 0..i+1 { 
+                    cov[covsub] += (ws[h] as f64)*thisc*vm[j];
+                    covsub += 1
+                }
+            }
+            // covs.push(cov)
+        }
+        // now compute the mean and return
+        cov.mutsmult(1_f64/wsum); // s.gmedian(1e-7)
+        cov
+    }  
 }

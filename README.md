@@ -128,7 +128,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Appendix II: Recent Releases
 
-* **Version 0.7.9** Improved functions:GV and tests.
+* **Version 0.7.9** Improved functions:GV and tests. Added `wcovar` of weighted points.
 
 * **Version 0.7.8** Added `covar` = covariance or comediance matrix computations. Some changes to this text (Readme.md).
 
