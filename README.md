@@ -18,27 +18,17 @@ use rstats::{functions,Stats,Vecf64,Vecu8,VecVecf64,VecVecu8,Mutvectors,Indices}
 
 ## Introduction
 
-Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting and searching.
+Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting, merging and searching.
 
-Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm.
+Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm. Also, the `comediance matrix`; a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the centroid. 
 
-Going beyond one dimension, most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians may be easy to compute but they are a poor start to stable characterisation of multidimensional data.
+*We propose that zero median vectors are always preferable to the commonly used zero mean vectors.*
+
+Beyond one dimension, most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data and for a highly dimensional space they are not even any easier to compute.
 
 *Specifically, all such 1-d measures are sensitive to the choice of axis.*
 
 Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on the True Geometric Median, computed here by `gmedian`, are axis (rotation) independent from the first step.
-
-### Terminology for sets of points in n dimensions
-
-* `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of *squares* of distances to all member points. Thus it is susceptible to outliers. In other words, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, it is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if confusing) usage and always mean the actual Centre.
-
-* `Quasi Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here. The only good thing about it is that it is easy to compute.
-
-* `Medoid` is the member of the set with the least sum of distances to all other members.
-
-* `Outlier` is the member of the set with the greatest sum of distances to all other members.
-
-* `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all other members. This is the one we want. It is much less susceptible to outliers and it is rotation independent.
 
 ### Implementation
 
@@ -58,7 +48,9 @@ To run the tests, use single thread. It will be slower but will produce the resu
 cargo test --release -- --test-threads=1 --nocapture --color always 
 ```
 
-## Trait Stats
+## Suplied Traits
+
+### Stats
 
 One dimensional statistical measures implemented for `&[i64]` and `&[f64]`.
 
@@ -75,7 +67,7 @@ Included in this trait are:
 * linearly weighted means (useful for time dependent data analysis),
 * median and quartiles.
 
-## Trait Vecf64
+### Vecf64
 
 Vector algebra implemented on one or two `&[f64]` slices of any length (dimensionality):
 
@@ -85,17 +77,17 @@ Vector algebra implemented on one or two `&[f64]` slices of any length (dimensio
 
 This trait is sometimes unchecked (for speed), so some caution with data is advisable.
 
-## Trait Vecu8
+### Vecu8
 
 * Some vector algebra as above for vectors of u8 (bytes).
 * Frequency count of bytes by their values (Histogram or Probability Density Function).
 * Entropy measures in units of e (using natural logarithms).
 
-## Trait MutVectors
+### MutVectors
 
 Some of the above functions are for memory efficiency reasons reimplemented in this trait so that they mutate `self` in place, instead of creating a new Vec. Clearly, they can only be applied to a mutable variable. They are useful in vector iterative methods. Beware that they work by side-effect and do not return anything, so they can not be chained.
 
-## Trait VecVec
+### VecVec
 
 Relationships of one vector to a set of vectors (of `&[f64]` end types):
 
@@ -106,11 +98,11 @@ Relationships of one vector to a set of vectors (of `&[f64]` end types):
 
 Trait VecVec is entirely unchecked, so check your data upfront. This is the more sophisticated part of the library. The true geometric median is found iteratively.
 
-## Trait VecVecu8
+### VecVecu8
 
 Some of the above for vectors of vectors of bytes.
 
-## Trait Index
+### Index
 
 The functions of this trait are implemented for vectors of subscripts, i.e. `&[usize]`.
 
@@ -118,7 +110,25 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 * `revindex`(self) -> Vec\<usize\>; method for reversing an index, e.g. given a sort index, returns ranks and vice versa.
 * `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
 
-## Recent Releases
+## Appendix I: Terminology (and some new definitions) for sets of nD points
+
+* `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, it is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if somewhat confusing) usage: Centroid = Centre = Arithmetic Mean.
+
+* `Quasi Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here.
+
+* `Medoid` is the member of the set with the least sum of distances to all other members.
+
+* `Outlier` is the member of the set with the greatest sum of distances to all other members.
+
+* `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all members. This is the one we want. It is much less susceptible to outliers and is rotation independent.
+
+* `Zero median vector` is obtained by subtracting the geometric median. This is a proposed  alternative to the commonly used `zero mean vector`, obtained by subtracting the centroid.
+
+* `Comediance` is similar to covariance, except zero median vectors are used to compute it  instead of zero mean vectors.
+
+## Appendix II: Recent Releases
+
+* **Version 0.7.8** Added `covar` = covariance or comediance matrix computations. Some changes to this text (Readme.md).
 
 * **Version 0.7.7** Fixed `merge_immutable` and added a test. Added `cityblockd` and `vaddu8`.
 

@@ -60,7 +60,6 @@ impl VecVecf64 for &[Vec<f64>] {
     }
 
     /// For each member point, gives its sum of distances to all other points.
-    /// This is the efficient workhorse of distance based analysis.
     fn distsums(self) -> Vec<f64> {
         let n = self.len();
         let mut dists = vec![0_f64; n]; // distances accumulator for all points
@@ -416,6 +415,31 @@ impl VecVecf64 for &[Vec<f64>] {
             e1mag = e2mag             
         }       
     }
-        
 
+    /// Flattened lower triangular part of a covariance matrix for f64 vectors in self.
+    /// Since covariance matrix is symmetric (positive semi definite), 
+    /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
+    /// N.b. the indexing is always assumed to be in this order: row,column.
+    /// The items of the resulting lower triangular array c[i][j] are here flattened
+    /// into a single vector in this double loop order: left to right, top to bottom 
+    fn covar(self, m:&[f64]) -> Vec<f64> {
+        let n = self[0].len(); // dimension of the vector(s)
+        let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array
+  
+        for thisp in self { // adding up covars for all the points
+            let mut covsub = 0_usize; // subscript into the flattened array cov
+            let vm = thisp.vsub(&m);  // zero mean vector
+            for i in 0..n {
+                let thisc = vm[i]; // ith component
+                // its products up to and including the diagonal (itself)
+                for j in 0..i+1 { 
+                    cov[covsub] += thisc*vm[j];
+                    covsub += 1
+                }
+            }
+        }
+        // now compute the means and return
+        cov.mutsmult(1.0_f64/self.len()as f64);
+        cov
+    }  
 }

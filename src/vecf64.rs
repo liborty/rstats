@@ -429,4 +429,23 @@ impl Vecf64 for &[f64] {
         sorted.mutsortf();
         sorted      
     }
+
+    /// Flattened lower triangular part of a covariance matrix for a single f64 vector.
+    /// Since covariance matrix is symmetric (positive semi definite), 
+    /// the upper triangular part can be trivially added for all j>i by: c(j,i) = c(i,j).
+    /// N.b. the indexing is always assumed to be in this order: row,column.
+    /// The items of the resulting lower triangular array c[i][j] are pushed flat
+    /// into a single vector in this double loop order: left to right, top to bottom 
+    fn covone(self, m:&[f64]) -> Vec<f64> {
+        let n = self.len(); // dimension of the vector
+        let mut cov:Vec<f64> = Vec::new(); // flat lower triangular result array
+        let vm = self.vsub(&m); // zero mean vector
+        for i in 0..n {
+            let thisc = vm[i]; // take this component
+            // generate its products up to and including the diagonal (itself)
+            for j in 0..i+1 { cov.push(thisc*vm[j]) }
+        }
+        cov
+    }
+    
 }

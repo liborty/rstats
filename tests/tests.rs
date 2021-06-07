@@ -19,7 +19,13 @@ fn u8() -> Result<()> {
    println!("Cityblockd: {}",GI(v2.cityblockdu8(&v1)));  
    println!("Entropy: {}",GI(v2.entropy()));
    println!("Joint E: {}",GI(v1.jointentropy(&v2)));
-   println!("Dependence: {}\n",GI(v1.dependence(&v2)));
+   println!("Dependence: {}",GI(v1.dependence(&v2)));
+   let d = 5_usize;
+   let n = 7_usize;
+   println!("Testing on a random set of {} points in {} d space\n",GI(n),GI(d));
+   let pt = genvecu8(d,n,5,7); // random test data 
+   println!("Covariances:\n{}",GV(pt.covar(&pt.acentroid())));
+   println!("Comediances:\n{}\n",GV(pt.covar(&pt.gmedian(EPS))));
    Ok(())
 }
 

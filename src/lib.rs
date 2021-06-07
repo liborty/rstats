@@ -136,6 +136,8 @@ pub trait Vecf64 {
     fn kazutsugi(self) -> f64;
     /// Autocorrelation
     fn autocorr(self) -> f64;
+    /// Lower triangular part of a covariance matrix for a single f64 vector.
+    fn covone(self, m:&[f64]) -> Vec<f64>;
  
     /// Minimum, minimum's index, maximum, maximum's index.
     fn minmax(self) -> (f64, usize, f64, usize); 
@@ -203,6 +205,8 @@ pub trait Vecu8 {
     fn vdisim(self, v:&[f64]) -> f64;   
     /// Area proportional to the swept arc
     fn varc(self, v:&[f64]) -> f64; 
+    /// Lower triangular part of a covariance matrix for a single f64 vector.
+    fn covone(self, m:&[f64]) -> Vec<f64>;
 
     /// Probability density function (pdf) of bytes data
     fn pdf(self) -> Vec<f64>;
@@ -241,7 +245,7 @@ pub trait MutVectors {
 /// Some support for self argument of Vec<Vec<u8>> type (vector of vectors of bytes)
 pub trait VecVecu8 { 
     /// Centroid = euclidian mean of a set of points  
-    fn acentroid(self) -> Vec<f64>; 
+    fn acentroid(self) -> Vec<f64>;
     /// Eccentricity vector added to a non member point,
     fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
     /// Weighted eccentricity vector for a non member point
@@ -249,7 +253,9 @@ pub trait VecVecu8 {
     /// Weighted geometric median, sorted eccentricities magnitudes, cpdf of the weights
     fn gmedian(self, eps:f64) -> Vec<f64>; 
     /// The weighted geometric median
-    fn wgmedian(self, ws:&[u8], eps: f64) -> Vec<f64>; 
+    fn wgmedian(self, ws:&[u8], eps: f64) -> Vec<f64>;
+    /// Lower triangular part of a covariance matrix of a Vec of u8 vectors.
+    fn covar(self, med:&[f64]) -> Vec<f64>; 
 }
 
 /// Methods applicable to vector of vectors of <f64>
@@ -273,8 +279,7 @@ pub trait VecVecf64 {
     /// Individual distances from any point v (typically not in self) to all the points in self.    
     fn dists(self, v: &[f64]) -> Vec<f64>;
     /// Medoid and Outlier (by distance) of a set of points
-    fn medoid(self) -> (f64, usize, f64, usize);
- 
+    fn medoid(self) -> (f64, usize, f64, usize); 
     /// Eccentricity vectors from each point
     fn eccentricities(self) -> Vec<Vec<f64>>;
     /// Exact eccentricity vectors from all member points by first finding the Geometric Median.
@@ -305,7 +310,6 @@ pub trait VecVecf64 {
     fn emedoid(self, eps: f64) -> (f64, usize, f64, usize);
 
     /// Geometric medians of a set
-
     /// First iteration point for geometric medians
     fn firstpoint(self) -> Vec<f64>;
     /// Improved Weizsfeld's Algorithm for geometric median
@@ -314,6 +318,8 @@ pub trait VecVecf64 {
     fn gmedian(self, eps: f64) -> Vec<f64>; 
     /// The weighted geometric median
     fn wgmedian(self, ws: &[f64],eps: f64) -> Vec<f64>; 
+    /// Lower triangular part of a covariance matrix of a Vec of f64 vectors.
+    fn covar(self, med:&[f64]) -> Vec<f64>; 
 }
 
 /// Methods to manipulate indices of Vec<usize> type
