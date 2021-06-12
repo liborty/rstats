@@ -1,34 +1,10 @@
-/// generate random data for testing, plus some auxilliary pretty printing functions
+use crate::here;
 
-use std::fmt;
-
-/// macro here!() gives &str with the current file:line path::function for error messages
-#[macro_export]
-macro_rules! here {
-    () => {{
-        fn f() {}
-        fn type_name_of<T>(_: T) -> &'static str {
-            std::any::type_name::<T>()
-        }
-        let name = type_name_of(f);
-        // For function name only:
-        // let fnct = match &name[..name.len()-3].rfind(':') {
-        //    Some(pos) => &name[pos + 1..name.len() - 3],
-        //    None => &name[..name.len()-3],
-        // };
-        format!("{}:{} {}", file!(), line!(), &name[..name.len()-3])
-    }}
-}
-
-/// Sum of linear weights
+/// Sum of linear weights 1..n.
+/// Also the size of an upper or lower triangular array (including the diagonal)
 pub fn wsum(n: usize) -> f64 {
     (n * (n + 1)) as f64 / 2.
 }
-
-// helper function for formatting error messages
-//pub fn emsg(file: &'static str, line: u32, msg: &'static str) -> String {
-//    format!("{}:{} rstats {}", file, line, msg)
-//}
 
 /// Generates a vector of n vectors, each of length d, all filled with random numbers for testing.
 /// It needs two seeds s1 and s2. Same seeds will produce the same random sequence.  
@@ -81,29 +57,3 @@ pub fn genvecu8(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<u8>> {
 }
 
 
-/// GreenIt (GI) struct facilitates printing (in green) any
-/// singular type that has Display implemented.
-pub struct GI<T: fmt::Display>(pub T);
-impl<T: fmt::Display> fmt::Display for GI<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "\x1B[01;92m{}\x1B[0m", self.0.to_string())
-    }
-}
-
-/// GreenVec (GV) struct facilitates printing (in green) vector
-/// of any end type that has Display implemented.
-pub struct GV<'a, T: fmt::Display>(pub &'a[T]);
-impl<'a, T: fmt::Display> fmt::Display for GV<'a,T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut s = String::from("\x1B[01;92m[");
-        let n = self.0.len();
-        if n > 0 {
-            s.push_str(&self.0[0].to_string()); // first item
-            for i in 1..n {
-                s.push_str(", ");
-                s.push_str(&self.0[i].to_string());
-            }
-        }
-        write!(f, "{}]\x1B[0m", s)
-    }
-}

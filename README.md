@@ -45,10 +45,24 @@ Follow the documentation link. Then select a trait of interest to see the skelet
 To run the tests, use single thread. It will be slower but will produce the results in the right order:
 
 ```rust
-cargo test --release -- --test-threads=1 --nocapture --color always 
+cargo test --release -- --test-threads=1 --nocapture --color always
 ```
 
-## Suplied Traits
+## Macro, structs and functions
+
+* macro `here!()` for easy diagnostics
+
+* pub struct GI for printing in green any singular type that has display implemented
+
+* pub struct GV for printing in green any vector whose end type has display implemented
+
+* pub struct Med to hold median and quartiles
+
+* pub struct MStats to hold a mean and standard deviation
+
+* functions wsum, gennvec, genvecu8 (see documentation for the module `functions`).
+
+## Traits
 
 ### Stats
 
@@ -128,7 +142,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Appendix II: Recent Releases
 
-* **Version 0.7.9** Improved functions:GV and tests. added macro !here for better diagnostics. Added `wcovar` of weighted points.
+* **Version 0.7.9** Added `wcovar` of weighted points. Improved struct GV and tests. Replaced `emsg` with macro `here!()` for easier diagnostics. Moved all structs into lib.rs.
 
 * **Version 0.7.8** Added `covar` = covariance or comediance matrix computations. Some changes to this text (Readme.md).
 

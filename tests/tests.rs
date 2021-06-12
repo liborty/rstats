@@ -2,10 +2,11 @@
 #![allow(dead_code)]
 #[cfg(test)]
 
-use anyhow::{Result};
-use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8,Indices};
-use rstats::functions::{GI,GV,genvec,genvecu8};
 use devtimer::DevTime;
+use anyhow::{Result};
+
+use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8,Indices,GI,GV};
+use rstats::functions::{genvec,genvecu8};
 
 pub const EPS:f64 = 1e-7;
 #[test]

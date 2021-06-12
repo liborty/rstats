@@ -1,5 +1,5 @@
-use rstats::{VecVecf64,Vecf64};
-use rstats::functions::{GI,genvec};
+use rstats::{VecVecf64,Vecf64,GI};
+use rstats::functions::genvec;
 use devtimer::DevTime;
 
 fn main() {
