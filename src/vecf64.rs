@@ -1,4 +1,4 @@
-use crate::{MutVectors, Vecf64, Indices, functions::emsg};
+use crate::{MutVectors, Vecf64, Indices, here};
 
 impl Vecf64 for &[f64] {
 
@@ -284,7 +284,7 @@ impl Vecf64 for &[f64] {
     /// This then is the right index to use for looking up cummulative probability density functions. 
     fn binsearch(self, v: f64) -> usize {
         let n = self.len();
-        if n < 2 { emsg(file!(), line!(), "binsearch list is too short!"); }
+        if n < 2 { panic!("{} list is too short!",here!()) }
         if v < self[0] { return 0_usize }; // v is smaller than the first item
         let mut hi = n-1; // valid index of the last item
         if v > self[hi] { return n }; // indicates that v is greater than the last item

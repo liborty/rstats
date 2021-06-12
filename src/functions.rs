@@ -2,28 +2,40 @@
 
 use std::fmt;
 
+/// macro here!() gives &str with the current file:line path::function for error messages
+#[macro_export]
+macro_rules! here {
+    () => {{
+        fn f() {}
+        fn type_name_of<T>(_: T) -> &'static str {
+            std::any::type_name::<T>()
+        }
+        let name = type_name_of(f);
+        // For function name only:
+        // let fnct = match &name[..name.len()-3].rfind(':') {
+        //    Some(pos) => &name[pos + 1..name.len() - 3],
+        //    None => &name[..name.len()-3],
+        // };
+        format!("{}:{} {}", file!(), line!(), &name[..name.len()-3])
+    }}
+}
+
 /// Sum of linear weights
 pub fn wsum(n: usize) -> f64 {
     (n * (n + 1)) as f64 / 2.
 }
 
-/// helper function for formatting error messages
-pub fn emsg(file: &'static str, line: u32, msg: &'static str) -> String {
-    format!("{}:{} rstats {}", file, line, msg)
-}
+// helper function for formatting error messages
+//pub fn emsg(file: &'static str, line: u32, msg: &'static str) -> String {
+//    format!("{}:{} rstats {}", file, line, msg)
+//}
 
 /// Generates a vector of n vectors, each of length d, all filled with random numbers for testing.
 /// It needs two seeds s1 and s2. Same seeds will produce the same random sequence.  
 /// Uses local closure `rand` to generate random numbers (avoids dependencies).  
 /// Random numbers are in the open interval 0..1 with uniform distribution.  
 pub fn genvec(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<f64>> {
-    if n * d < 1 {
-        panic!("{}",emsg(
-            file!(),
-            line!(),
-            "genvec given zero or wrong dimensions"
-        ))
-    }
+    if n * d < 1 { panic!("{}\n\tzero or wrong dimensions",here!()) }
     // random numbers generating closure with captured seeds m_z m_w
     let mut m_z = s1 as u32;
     let mut m_w = s2 as u32;
@@ -48,13 +60,7 @@ pub fn genvec(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<f64>> {
 /// Uses local closure `rand` to generate random numbers (avoids dependencies).  
 /// Random numbers are in the closed interval 0..255 with uniform distribution.  
 pub fn genvecu8(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<u8>> {
-    if n * d < 1 {
-        panic!("{}",emsg(
-            file!(),
-            line!(),
-            "genvecu8 given zero or wrong dimensions"
-        ))
-    }
+    if n * d < 1 { panic!("{}\n\tzero or wrong dimensions",here!()) } 
     // random numbers generating closure with captured seeds m_z m_w
     let mut m_z = s1 as u32;
     let mut m_w = s2 as u32;

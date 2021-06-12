@@ -1,5 +1,4 @@
-use crate::functions::{emsg, wsum};
-use crate::{MStats, Med, Stats};
+use crate::{MStats, Med, Stats, functions::wsum, here};
 use anyhow::{ensure, Result};
 
 impl Stats for &[i64] {
@@ -12,7 +11,7 @@ impl Stats for &[i64] {
     /// ```
     fn amean(self) -> Result<f64> {
         let n = self.len();
-        ensure!(n > 0, emsg(file!(), line!(), "amean - sample is empty!"));
+        ensure!(n > 0, "{} sample is empty!", here!());
         Ok(self.iter().map(|&x| x as f64).sum::<f64>() / (n as f64))
     }
 
@@ -27,7 +26,7 @@ impl Stats for &[i64] {
     /// ```
     fn ameanstd(self) -> Result<MStats> {
         let n = self.len();
-        ensure!(n > 0, emsg(file!(), line!(), "ameanstd - sample is empty!"));
+        ensure!(n > 0, "{} sample is empty!", here!());
         let mut sx2 = 0_f64;
         let mean = self
             .iter()
@@ -55,7 +54,7 @@ impl Stats for &[i64] {
     /// ```
     fn awmean(self) -> Result<f64> {
         let n = self.len();
-        ensure!(n > 0, emsg(file!(), line!(), "awmean - sample is empty!"));
+        ensure!(n > 0, "{} sample is empty!", here!());
         let mut w = (n + 1) as f64; // descending linear weights
         Ok(self
             .iter()
@@ -80,10 +79,7 @@ impl Stats for &[i64] {
     /// ```
     fn awmeanstd(self) -> Result<MStats> {
         let n = self.len();
-        ensure!(
-            n > 0,
-            emsg(file!(), line!(), "awmeanstd - sample is empty!")
-        );
+        ensure!(n > 0, "{} sample is empty!", here!());
         let mut sx2 = 0_f64;
         let mut w = n as f64; // descending linear weights
         let mean = self
@@ -112,13 +108,10 @@ impl Stats for &[i64] {
     /// ```
     fn hmean(self) -> Result<f64> {
         let n = self.len();
-        ensure!(n > 0, emsg(file!(), line!(), "hmean - sample is empty!"));
+        ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
         for &x in self {
-            ensure!(
-                x != 0_i64,
-                emsg(file!(), line!(), "hmean does not accept zero valued data!")
-            );
+            ensure!(x!=0_i64,"{} does not accept zero valued data!",here!());
             sum += 1.0 / (x as f64)
         }
         Ok(n as f64 / sum)
@@ -135,14 +128,11 @@ impl Stats for &[i64] {
     /// ```
     fn hwmean(self) -> Result<f64> {
         let n = self.len();
-        ensure!(n > 0, emsg(file!(), line!(), "hwmean - sample is empty!"));
+        ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
         let mut w = n as f64;
         for &x in self {
-            ensure!(
-                x != 0_i64,
-                emsg(file!(), line!(), "hwmean does not accept zero valued data!")
-            );
+            ensure!(x!=0_i64,"{} does not accept zero valued data!",here!());
             sum += w / x as f64;
             w -= 1_f64;
         }
@@ -162,13 +152,10 @@ impl Stats for &[i64] {
     /// ```
     fn gmean(self) -> Result<f64> {
         let n = self.len();
-        ensure!(n > 0, emsg(file!(), line!(), "gmean - sample is empty!"));
+        ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
         for &x in self {
-            ensure!(
-                x != 0_i64,
-                emsg(file!(), line!(), "gmean does not accept zero valued data!")
-            );
+            ensure!(x!=0_i64,"{} does not accept zero valued data!",here!());
             sum += (x as f64).ln()
         }
         Ok((sum / (n as f64)).exp())
@@ -189,14 +176,11 @@ impl Stats for &[i64] {
     /// ```
     fn gwmean(self) -> Result<f64> {
         let n = self.len();
-        ensure!(n > 0, emsg(file!(), line!(), "gwmean - sample is empty!"));
+        ensure!(n > 0, "{} sample is empty!", here!());
         let mut w = n as f64; // descending weights
         let mut sum = 0_f64;
         for &x in self {
-            ensure!(
-                x != 0_i64,
-                emsg(file!(), line!(), "gwmean does not accept zero valued data!")
-            );
+            ensure!(x!=0_i64,"{} does not accept zero valued data!",here!());
             sum += w * (x as f64).ln();
             w -= 1_f64;
         }
@@ -216,18 +200,11 @@ impl Stats for &[i64] {
     /// ```
     fn gmeanstd(self) -> Result<MStats> {
         let n = self.len();
-        ensure!(n > 0, emsg(file!(), line!(), "gmeanstd - sample is empty!"));
+        ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
-            ensure!(
-                x != 0_i64,
-                emsg(
-                    file!(),
-                    line!(),
-                    "gmeanstd does not accept zero valued data!"
-                )
-            );
+            ensure!(x!=0_i64,"{} does not accept zero valued data!",here!());
             let lx = (x as f64).ln();
             sum += lx;
             sx2 += lx * lx
@@ -250,22 +227,12 @@ impl Stats for &[i64] {
     /// ```
     fn gwmeanstd(self) -> Result<MStats> {
         let n = self.len();
-        ensure!(
-            n > 0,
-            emsg(file!(), line!(), "gwmeanstd - sample is empty!")
-        );
+        ensure!(n > 0, "{} sample is empty!", here!());
         let mut w = n as f64; // descending weights
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
-            ensure!(
-                x != 0_i64,
-                emsg(
-                    file!(),
-                    line!(),
-                    "gwmeanstd does not accept zero valued data!"
-                )
-            );
+            ensure!(x!=0_i64,"{} does not accept zero valued data!",here!());
             let lnx = (x as f64).ln();
             sum += w * lnx;
             sx2 += w * lnx * lnx;

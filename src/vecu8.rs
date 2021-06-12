@@ -1,4 +1,4 @@
-use crate::{Vecu8,Vecf64,functions::emsg};
+use crate::{Vecu8,Vecf64,here};
 
 impl Vecu8 for &[u8] {
 
@@ -179,10 +179,7 @@ impl Vecu8 for &[u8] {
     /// those need hashing implementation.
     fn jointpdf(self, v:&[u8]) -> Vec<Vec<u32>> {  
         let n = self.len();
-        if v.len() != n {
-            panic!("{}",emsg(
-            file!(),line!(),"jointpdf argument vectors must be of equal length!"))
-        }
+        if v.len() != n { panic!("{} argument vectors must be of equal length!",here!()) }
         let mut jocc = vec![vec![0_u32; 256]; 256];
         for i in 0..n { jocc[self[i] as usize][v[i] as usize] += 1 };
         jocc
