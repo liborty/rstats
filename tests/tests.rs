@@ -64,9 +64,9 @@ fn intstats() -> Result<()> {
 #[test]
 fn vecf64() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
-   println!("\n{:?}",v1);
+   println!("\n{}",GV(&v1));
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
-   println!("{:?}",v2);
+   println!("{}",GV(&v2));
    let (v,vi) = v1.merge_immutable(&v1.mergesort(0,v1.len()), &v2, &v2.mergesort(0,v2.len()));
    println!("Concatenated and Sorted:\n{}",GV(&vi.unindex(true,&v))); 
    println!("Rank:      {}",GV(&v2.ranks().unwrap()));
@@ -90,6 +90,8 @@ fn vecf64() -> Result<()> {
    println!("Similarity:\t\t{}",GI(v1.vsim(&v2)));
    println!("Dissimilarity:\t\t{}\n",GI(v1.vdisim(&v2))); 
    // println!("Arc area:\t\t{}\n",GI(v1.varc(&v2)));
+   let sm = v1.symmatrix();
+   for i in 0..5 { eprintln!("{}",GV(&sm[i])) };  
    Ok(())
 }
 #[test]
@@ -132,7 +134,7 @@ fn vecvec() -> Result<()> {
    println!("Eccentricities\t{}",mu);  
    println!("Eccentricities\t{}",eccmed);
    let (_, seccs) = pt.sortedeccs(true,EPS); 
-   println!("Sorted eccs: {:?}\n", seccs);
+   println!("Sorted eccs: {}\n", GV(&seccs));
    let medcnt = seccs.binsearch(eccmed.median);
    println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
    let mut weights = Vec::new();

@@ -447,5 +447,24 @@ impl Vecf64 for &[f64] {
         }
         cov
     }
+
+    /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
+    /// as produced by covar, covone, wcovar
+    fn symmatrix(self) -> Vec<Vec<f64>> {
+        // solve quadratic equation to find the dimension of the square matrix
+        let n = (((8*self.len()+1) as f64).sqrt() as usize - 1)/2;
+        let mut mat = vec![vec![0_f64;n];n]; // create the square matrix 
+        let mut selfindex = 0;
+        for row in 0..n {     
+            for column in 0..row { // excludes the diagonal  
+                mat[row][column] = self[selfindex]; // just copy the value into the lower triangle
+                mat[column][row] = self[selfindex]; // and into transposed upper position 
+                selfindex += 1 // move to the next input value
+            } // this row of lower triangle finished
+            mat[row][row] = self[selfindex];  // now the diagonal element, no transpose
+            selfindex += 1 // move to the next input value
+        }
+        mat
+    }
     
 }

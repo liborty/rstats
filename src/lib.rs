@@ -182,6 +182,8 @@ pub trait Vecf64 {
     fn autocorr(self) -> f64;
     /// Lower triangular part of a covariance matrix for a single f64 vector.
     fn covone(self, m:&[f64]) -> Vec<f64>;
+    /// Reconstructs the full symmetric matrix from its lower diagonal compact form
+    fn symmatrix(self) -> Vec<Vec<f64>>;
  
     /// Minimum, minimum's index, maximum, maximum's index.
     fn minmax(self) -> (f64, usize, f64, usize); 
