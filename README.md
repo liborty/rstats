@@ -20,22 +20,21 @@ use rstats::{functions,Stats,Vecf64,Vecu8,VecVecf64,VecVecu8,Mutvectors,Indices}
 
 Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting, merging and searching.
 
-Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not to be found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm. Also, the `comediance matrix`; a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the centroid.
+Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm. Also, the `comediance matrix`; a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the centroid.
 
-*We propose that zero median vectors are always preferable to the commonly used zero mean vectors.*
+*Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-Beyond one dimension, most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data and for a highly dimensional space they are not even any easier to compute.
+Most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are not even any easier to compute.
 
 *Specifically, all such 1-d measures are sensitive to the choice of axis.*
 
-Such dependence has to be later removed by Principle Components Analysis or similar methods. In contradistinction to this, our methods based on the True Geometric Median, computed here by `gmedian`, are axis (rotation) independent from the first step.
+Our methods based on the True Geometric Median, computed here by `gmedian`, are axis (rotation) independent from the first step.
 
 ### Implementation
 
 Rstats is a lean minimalistic library that only depends on *anyhow* (for its simple error handling).
 
-The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. This division is necessary because generic vectors are problematic in Rust.
-
+The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. 
 End type f64 is most commonly used. Facilities for other end types are limited. For lots of data of other end types, it is always possible to clone to f64, see for example the included utility function `vecu8asvecf64`.
 
 ### Documentation
@@ -128,7 +127,9 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 * `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, it is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if somewhat confusing) usage: Centroid = Centre = Arithmetic Mean.
 
-* `Quasi Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here.
+* `Quasi\Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here.
+
+`Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points in a hemisphere in any direction. Potentially useful concept but not yet implemented here, as its advantages over GM are not clear.
 
 * `Medoid` is the member of the set with the least sum of distances to all other members.
 
@@ -141,6 +142,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 * `Comediance` is similar to covariance, except zero median vectors are used to compute it  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 0.7.10**
 
 * **Version 0.7.9** Added `wcovar` of weighted points. Improved struct GV and tests. Replaced `emsg` with macro `here!()` for easier diagnostics. Moved all structs into lib.rs.
 

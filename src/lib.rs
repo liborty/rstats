@@ -25,7 +25,7 @@ macro_rules! here {
         //    Some(pos) => &name[pos + 1..name.len() - 3],
         //    None => &name[..name.len()-3],
         // };
-        format!("{}:{} {}", file!(), line!(), &name[..name.len()-3])
+        format!("\n{}:{} {}", file!(), line!(), &name[..name.len()-3])
     }}
 }
 
