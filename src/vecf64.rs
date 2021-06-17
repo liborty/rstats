@@ -225,7 +225,7 @@ impl Vecf64 for &[f64] {
                 sx2 += x*x;
                 x*y 
             }).sum(); 
-        0.5+sxy/(7.5*sx2).sqrt()
+        0.5+sxy/(120.0*sx2).sqrt()
     }
 
     /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.
