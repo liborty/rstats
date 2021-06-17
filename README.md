@@ -120,7 +120,7 @@ Some of the above for vectors of vectors of bytes.
 The functions of this trait are implemented for vectors of subscripts, i.e. `&[usize]`.
 
 * `ucorrelation`(self, v: &[usize]) -> f64; Pearson's correlation coefficient of two slices, typically containing the ranks.  
-* `revindex`(self) -> Vec\<usize\>; method for reversing an index, e.g. given a sort index, returns ranks and vice versa.
+* `invindex`(self) -> Vec\<usize\>; method for inverting an index, e.g. given a sort index, returns ranks and vice versa.
 * `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
 
 ## Appendix I: Terminology (and some new definitions) for sets of nD points
@@ -129,7 +129,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 * `Quasi\Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here.
 
-`Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points in a hemisphere in any direction. Potentially useful concept but not yet implemented here, as its advantages over GM are not clear.
+* `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but not yet implemented here, as its advantages over GM are not clear.
 
 * `Medoid` is the member of the set with the least sum of distances to all other members.
 
@@ -143,7 +143,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Appendix II: Recent Releases
 
-* **Version 0.7.10** Added `symmatrix`.
+* **Version 0.7.10** Added `symmatrix` to reconstruct full symmetric matrix from its lower triangular part (for compatibility with crates which duplicate data). Renamed mergerank to plain `rank` and added boolean argument to facilitate ranking in ascending or descending order. Expanded vecf64() tests (see it for instructive example usage).
 
 * **Version 0.7.9** Added `wcovar` of weighted points. Improved struct GV and tests. Replaced `emsg` with macro `here!()` for easier diagnostics. Moved all structs into lib.rs.
 

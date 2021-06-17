@@ -204,7 +204,7 @@ pub trait Vecf64 {
     fn sortm(self, ascending:bool) -> Vec<f64>;
 
     /// Ranking with only n*log(n) complexity, using 'mergesort'
-    fn mergerank(self) -> Vec<usize>;
+    fn rank(self, ascending:bool) -> Vec<usize>;
     /// Immutable merge sort, makes a sort index
     fn mergesort(self, i:usize, n:usize) -> Vec<usize>;
 }
@@ -372,7 +372,7 @@ pub trait VecVecf64 {
 /// Methods to manipulate indices of Vec<usize> type
 pub trait Indices {
     /// Reverse index
-    fn revindex(self) -> Vec<usize>;
+    fn invindex(self) -> Vec<usize>;
     /// Collects f64 values from `v` as per indices in self.
     fn unindex(self, ascending:bool, v:&[f64]) -> Vec<f64>;
     /// Collects u8 from `v` as per indices in self.

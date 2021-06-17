@@ -67,24 +67,33 @@ fn vecf64() -> Result<()> {
    println!("\n{}",GV(&v1));
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
    println!("{}",GV(&v2));
+   println!("Sorted:       {}",GV(&v2.sortm(true)));
+   println!("Sorted:       {}",GV(&v2.mergesort(0,v2.len()).unindex(true,&v2))); 
+   println!("Sorted:       {}",GV(&v2.rank(false).invindex().unindex(false,&v2)));   
+   println!("Ranks:        {}",GV(&v2.rank(true))); 
+   println!("Ranks rev:    {}",GV(&v2.rank(true).iter().rev().collect::<Vec<&usize>>())); 
+   println!("Ranks desc:   {}",GV(&v2.rank(false))); // not the same as ranks reversed!!   
+   println!("Sort index:   {}",GV(&v2.mergesort(0,v2.len()))); 
+   println!("Ix from Ranks:{}",GV(&v2.rank(true).invindex()));
+   println!("Sort ix desc: {}",GV(&v2.rank(false).invindex()));
+   println!("Ranks from ix:{}",GV(&v2.rank(false).invindex().invindex()));
+   println!("Sorted rev:   {}",GV(&v2.sortm(false)));
+   println!("Sorted rev:   {}",GV(&v2.sortm(true).iter().rev().collect::<Vec<&f64>>()));
+   println!("Sorted rev:   {}",GV(&v2.mergesort(0,v2.len()).unindex(false,&v2)));   
+   println!("Sorted rev:   {}",GV(&v2.rank(false).invindex().unindex(true,&v2))); 
+
    let (v,vi) = v1.merge_immutable(&v1.mergesort(0,v1.len()), &v2, &v2.mergesort(0,v2.len()));
-   println!("Concatenated and Sorted:\n{}",GV(&vi.unindex(true,&v))); 
-   println!("Rank:      {}",GV(&v2.ranks().unwrap()));
-   println!("Sort index:{}",GV(&v2.mergesort(0,v2.len())));
-   println!("R reversed:{}",GV(&v2.mergerank().revindex()));    
-   println!("Mergerank: {}",GV(&v2.mergerank()));
-   println!("Mrg.reverse sorted:{}",GV(&v2.sortm(false)));
-   println!("Sorted:    {}",GV(&v2.sortf()));
+   println!("Concatenated and Sorted:\n{}\n",GV(&vi.unindex(true,&v))); 
+ 
    println!("Pearson's Correlation:\t{}",GI(v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",GI(v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",GI(v1.spearmancorr(&v2)));  
    println!("Cosine:\t\t\t{}",GI(v1.cosine(&v2))); 
-   println!("Cosine of ranks:\t{}",
-        GI(v1.ranks().unwrap().cosine(&v2.ranks().unwrap())));        
+   println!("Cosine of ranks:\t{}",GI(v1.ranks().unwrap().cosine(&v2.ranks().unwrap())));        
    println!("Euclidian distance:\t{}",GI(v1.vdist(&v2)));
-   println!("Difference magnitude:\t{}",GI(v1.vsub(&v2).as_slice().vmag()));   
-   println!("Vector difference:\n{}",GV(&v1.vsub(&v2))); 
-   println!("Vector addition:\n{}",GV(&v1.vadd(&v2)));  
+   println!("Difference magnitude:\t{}",GI(v1.vsub(&v2).vmag()));   
+   println!("Vector difference{}",GV(&v1.vsub(&v2))); 
+   println!("Vector sum:{}",GV(&v1.vadd(&v2)));  
    println!("Scalar product:\t\t{}",GI(v1.dotp(&v2)));
    println!("Parallelogram area:\t{}",GI(v1.varea(&v2))); 
    println!("Similarity:\t\t{}",GI(v1.vsim(&v2)));

@@ -197,8 +197,8 @@ impl Vecf64 for &[f64] {
     /// assert_eq!(v1.spearmancorr(&v2),-0.1076923076923077);
     /// ```
     fn spearmancorr(self, v: &[f64]) -> f64 {
-        let xvec = self.mergerank();
-        let yvec = v.mergerank();
+        let xvec = self.rank(true);
+        let yvec = v.rank(true);
         // It is just Pearson's correlation of ranks
         xvec.ucorrelation(&yvec)
     }
@@ -214,7 +214,7 @@ impl Vecf64 for &[f64] {
     /// assert_eq!(v1.kazutsugi(),0.3);
     /// ```
     fn kazutsugi(self) -> f64 {
-        let xvec = self.mergerank();
+        let xvec = self.rank(true);
         let yvec:Vec<f64> = vec![4.,3.,2.,1.,0.];
         let (mut sxy, mut sx2) = (0_f64,0_f64);
         const MY:f64 = 2.;  // y mean 
@@ -395,12 +395,23 @@ impl Vecf64 for &[f64] {
 
     /// Ranking of self by inverting the (merge) sort index.  
     /// Sort index is in sorted order, giving indices to the original data positions.
-    /// Ranking is in  original data order, giving their positions in the sort index.
-    /// Thus they are in an inverse relationship, easily converted by `.revindex()`
-    /// Very fast ranking of many f64 items, ranking `self` with only n*(log(n)+1) complexity.
-    fn mergerank(self) -> Vec<usize> {
-        let indx = self.mergesort(0,self.len());
-        indx.revindex()    
+    /// Ranking is in  original data order, giving their positions in the sorted order (sort index).
+    /// Thus they are in an inverse relationship, easily converted by `.invindex()`
+    /// Fast ranking of many f64 items, ranking `self` with only n*(log(n)+1) complexity.
+    fn rank(self, ascending:bool) -> Vec<usize> {
+        let n = self.len();
+        let sortindex = self.mergesort(0,n);
+        let mut rankvec:Vec<usize> = vec![0;n];
+        if ascending { 
+            for (i,&sortpos) in sortindex.iter().enumerate() {
+                rankvec[sortpos] = i
+            } 
+        } else { // rank in the order of descending values
+            for (i,&sortpos) in sortindex.iter().enumerate() {
+                    rankvec[sortpos] = n-i-1 
+            }
+        }
+        rankvec 
     }    
 
     /// Doubly recursive non-destructive merge sort. The data is read-only, it is not moved or mutated. 
