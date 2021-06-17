@@ -59,7 +59,7 @@ cargo test --release -- --test-threads=1 --nocapture --color always
 
 * pub struct MStats to hold a mean and standard deviation
 
-* functions wsum, gennvec, genvecu8 (see documentation for the module `functions`).
+* functions wsum, genvec, genvecu8 (see documentation for the module `functions`).
 
 ## Traits
 
@@ -143,6 +143,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Appendix II: Recent Releases
 
+* **Version 0.7.11**
+
 * **Version 0.7.10** Added `symmatrix` to reconstruct full symmetric matrix from its lower triangular part (for compatibility with crates which duplicate data). Renamed mergerank to plain `rank` and added boolean argument to facilitate ranking in ascending or descending order. Expanded vecf64() tests (see it for instructive example usage).
 
 * **Version 0.7.9** Added `wcovar` of weighted points. Improved struct GV and tests. Replaced `emsg` with macro `here!()` for easier diagnostics. Moved all structs into lib.rs.
@@ -161,6 +163,6 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 * **Version 0.7.2** Added weighted `wgmedian` and `wsortedeccs` to VecVecu8. Created new source file for VecVecu8 trait.
 
-* **Version 0.7.1** Ported the improved gmedian also to VecVecu8. Added to wsortedeccs outputs associated cummulative probability density function of the weights.
+* **Version 0.7.1** Ported the improved gmedian also to VecVecu8. 
 
 * **Version 0.7.0** Made gmedian slightly more accurate. Added Weighted Geometric Median and supporing functions. Added vecu8asvecf64 utility conversion.
