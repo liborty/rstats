@@ -203,30 +203,29 @@ impl Vecf64 for &[f64] {
         xvec.ucorrelation(&yvec)
     }
 
-    /// Spearman correlation of five distances
+    /// Cosine of five difference measures
     /// against Kazutsugi discrete outcomes [0.00,0.25,0.50,0.75,1.00], ranked as [4,3,2,1,0] 
-    /// (the order is swapped to penalise distances). 
-    /// The result is in the range [-1,1].
+    /// to give overall positive measure of similarity. 
+    /// Typically only relative ordering of results is of interest,
+    /// so we do not normalise the constant vector.
+    /// The result is in the range [0,1].
     /// # Example
     /// ```
     /// use rstats::Vecf64;
-    /// let v1:Vec<f64> = vec![4.,1.,2.,0.,3.];
-    /// assert_eq!(v1.kazutsugi(),0.3);
+    /// const XARR:&[f64] = &[4.,3.,2.,1.,0.];
+    /// assert_eq!(XARR.kazutsugi(),1.0);
     /// ```
     fn kazutsugi(self) -> f64 {
-        let xvec = self.rank(true);
-        let yvec:Vec<f64> = vec![4.,3.,2.,1.,0.];
-        let (mut sxy, mut sx2) = (0_f64,0_f64);
-        const MY:f64 = 2.;  // y mean 
-        const SY:f64 = 10.; // sum of yvec
-        const SY2:f64 = 30.; // sum of y^2
-        let sx:f64 = xvec.iter().zip(yvec).map(|(&ux,y)| {
-            let x = ux as f64;
-            sxy += x*y;
-            sx2 += x*x;
-            x }).sum();
-        let covar = (sxy - sx*MY) / ((SY2 - SY*MY)*(sx2-sx/5.*sx)).sqrt();
-        covar
+        let xvec = self.rank(true); 
+        const YARR:&[f64] = &[4.,3.,2.,1.,0.];
+        let mut sx2 = 0_f64; 
+        let sxy:f64 = xvec.iter().zip(YARR)
+            .map(|(&ux,y)| {
+                let x = ux as f64;
+                sx2 += x*x;
+                x*y 
+            }).sum(); 
+        0.5+sxy/(7.5*sx2).sqrt()
     }
 
     /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.
