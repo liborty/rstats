@@ -34,8 +34,7 @@ Our methods based on the True Geometric Median, computed here by `gmedian`, are 
 
 Rstats is a lean minimalistic library that only depends on *anyhow* (for its simple error handling).
 
-The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. 
-End type f64 is most commonly used. Facilities for other end types are limited. For lots of data of other end types, it is always possible to clone to f64, see for example the included utility function `vecu8asvecf64`.
+The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types.End type f64 is most commonly used. Facilities for other end types are limited. For lots of data of other end types, it is always possible to clone to f64, see for example the included utility function `vecu8asvecf64`.
 
 ### Documentation
 
@@ -143,7 +142,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Appendix II: Recent Releases
 
-* **Version 0.7.11**
+* **Version 0.7.11** Removed Kazutsugi (too specialised). Added `gcentroid` (geometric centroid). Further optimisations to `gmedian`.
 
 * **Version 0.7.10** Added `symmatrix` to reconstruct full symmetric matrix from its lower triangular part (for compatibility with crates which duplicate data). Renamed mergerank to plain `rank` and added boolean argument to facilitate ranking in ascending or descending order. Expanded vecf64() tests (see it for instructive example usage).
 
@@ -163,6 +162,6 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 * **Version 0.7.2** Added weighted `wgmedian` and `wsortedeccs` to VecVecu8. Created new source file for VecVecu8 trait.
 
-* **Version 0.7.1** Ported the improved gmedian also to VecVecu8. 
+* **Version 0.7.1** Ported the improved gmedian also to VecVecu8.
 
 * **Version 0.7.0** Made gmedian slightly more accurate. Added Weighted Geometric Median and supporing functions. Added vecu8asvecf64 utility conversion.

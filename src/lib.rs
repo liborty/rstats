@@ -162,6 +162,8 @@ pub trait Vecf64 {
     fn cityblockd(self, v:&[f64]) -> f64;   
     /// Unit vector
     fn vunit(self) -> Vec<f64>;
+    /// Unit vector of difference (done together for efficiency)
+    fn vsubunit(self, v: &[f64]) -> Vec<f64>;
     /// Area of parallelogram between two vectors (magnitude of cross product)
     fn varea(self, v:&[f64]) -> f64;
     /// Area proportional to the swept arc
@@ -176,8 +178,6 @@ pub trait Vecf64 {
     fn kendalcorr(self, _v: &[f64]) -> f64;
     /// Spearman's rho (rank differences) correlation
     fn spearmancorr(self, _v: &[f64]) -> f64;
-    /// Kazutsugi Spearman's corelation against just five distances (to outcomes classes)
-    fn kazutsugi(self) -> f64;
     /// Autocorrelation
     fn autocorr(self) -> f64;
     /// Lower triangular part of a covariance matrix for a single f64 vector.
@@ -310,6 +310,8 @@ pub trait VecVecf64 {
 
     /// Arithmetic Centroid = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
+    /// Geometric Centroid
+    fn gcentroid(self) -> Vec<f64>;
     /// Harmonic Centroid = harmonic mean of a set of points
     fn hcentroid(self) -> Vec<f64>; 
     /// Trend between two sets
@@ -345,6 +347,8 @@ pub trait VecVecf64 {
     fn eccmember(self, indx: usize) -> Vec<f64>;
     /// Next approx median point from this nonmember point
     fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
+    /// Error vector, i.e. unscaled eccentricity vector
+    fn errorv(self, p:&[f64]) -> Vec<f64>;
     /// Eccentricity vector for a non member point
     fn eccnonmember(self, p:&[f64]) -> Vec<f64>; 
     /// Weighted eccentricity vector for a non member point

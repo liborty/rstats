@@ -5,9 +5,8 @@ impl VecVecf64 for &[Vec<f64>] {
     /// # Example
     /// ```
     /// use rstats::{Vecf64,VecVecf64,functions::genvec};
-    /// let pts = genvec(15,15,255,30);
-    /// let centre = pts.acentroid();
-    /// let dist = pts.distsum(&centre);
+    /// let pts = genvec(15,15,255,30); 
+    /// let dist = pts.distsum(&pts.acentroid());
     /// assert_eq!(dist, 4.14556218326653_f64);
     /// ```
     fn acentroid(self) -> Vec<f64> {
@@ -17,6 +16,27 @@ impl VecVecf64 for &[Vec<f64>] {
         }
         centre.mutsmult(1.0 / self.len() as f64);
         centre
+    }
+
+    /// gcentroid = multidimensional geometric mean
+    /// # Example
+    /// ```
+    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
+    /// let pts = genvec(15,15,255,30);
+    /// let centre = pts.gcentroid();
+    /// let dist = pts.distsum(&centre);
+    /// assert_eq!(dist,4.897594485332543_f64);
+    /// ```
+    fn gcentroid(self) -> Vec<f64> {
+        let n = self.len() as f64; // number of points
+        let d = self[0].len(); // dimensions
+        let mut centre = vec![0_f64; d];
+        let mut lnvec = vec![0_f64; d];
+        for v in self { 
+            for i in 0..d { lnvec[i] = v[i].ln() }
+            centre.mutvadd(&lnvec)
+        }
+        centre.iter().map(|comp| (comp/n).exp()).collect()        
     }
 
     /// hcentroid =  multidimensional harmonic mean
@@ -271,6 +291,17 @@ impl VecVecf64 for &[Vec<f64>] {
         vsum
     }
 
+    /// Error vector for (usually non-member) point p, 
+    /// i.e. unscaled eccentricity vector.
+    /// The true geometric median would return zero vector.
+    fn errorv(self, p:&[f64]) -> Vec<f64> {
+        let mut vsum = vec![0_f64; p.len()];
+        for x in self {  vsum.mutvadd(&x.vsubunit(&p)) };
+        vsum.mutsmult(1_f64 / (self.len() as f64));
+        vsum
+    }
+
+
     /// Eccentricity vector for a non member point,
     /// while the true geometric median is as yet unknown.
     /// Returns the eccentricity vector.
@@ -341,17 +372,23 @@ impl VecVecf64 for &[Vec<f64>] {
     /// However, these problems are fixed in my new algorithm here.      
     /// There will eventually be a multithreaded version.
     fn nmedian(self, eps: f64) -> Vec<f64> {
-        let mut point = self.acentroid(); // start iterating 
+        let mut point = self.acentroid(); // start iterating from the Centre
         loop {
             let nextp = self.nxnonmember(&point);         
-            if nextp.vdist(&point) < eps { return nextp }; 
+            if nextp.vdist(&point) < eps { return nextp }; // termination
             point = nextp
         } 
     }
  
     /// Possible first iteration point for geometric medians.
-    /// Same as eccnonmember(origin), just saving the zero subtractions
-    /// when moving from the origin
+    /// Same as eccnonmember(origin), just saving the zero subtractions. 
+    /// # Example
+    /// ```
+    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
+    /// let pts = genvec(15,15,255,30); 
+    /// let dist = pts.distsum(&pts.firstpoint());
+    /// assert_eq!(dist,4.132376831171272_f64);
+    /// ```
     fn firstpoint(self) -> Vec<f64> {
         let mut rsum = 0_f64;
         let mut vsum = vec![0_f64; self[0].len()];
@@ -368,28 +405,33 @@ impl VecVecf64 for &[Vec<f64>] {
 
     /// Secant method with recovery from divergence
     /// for finding the geometric median
-    fn gmedian(self, eps: f64) -> Vec<f64> {
-        let mut p1 = self.acentroid();     
-        let mut p2 = self.nxnonmember(&p1); 
-        let mut e1mag = p2.vdist(&p1);    
-        loop {
-            // will not use this np as does nmedian, using secant instead
-            let mut np = self.nxnonmember(&p2); 
-            let e2 = np.vsub(&p2); // new vetor error, or eccentricity
-            let e2mag = e2.vmag(); 
-            if e2mag < eps  { return np };  
-            if e1mag > e2mag {  // eccentricity magnitude decreased, good, employ secant
-                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag-e2mag)));                   
+    fn gmedian(self, eps: f64) -> Vec<f64> {  
+        let mut p = self.acentroid();
+        let mut mag1 = p.vmag();
+        let mut pdif = mag1;  
+        loop {  
+            let mut np = self.nxnonmember(&p); 
+            let e = np.vsub(&p); // new vector error, or eccentricity  
+            // let e = self.errorv(&p);
+            let mag2 = e.vmag(); 
+            // if mag2 < eps  { return np }; 
+            // overwrite np with a better secant estimate  
+            np = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
+                p.vadd(&e.smult(pdif/(mag1-mag2)))                   
             }
             else { // recovery: probably overshot the minimum, shorten the jump 
-                   // e2 will already be pointing moreless back
-                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag+e2mag)));                    
-            } 
-            p1 = p2;        
-            p2 = np;  
-            e1mag = e2mag             
+                   // e will already be pointing moreless back
+                p.vadd(&e.smult(pdif/(mag1+mag2)))                    
+            };
+            pdif = np.vdist(&p);
+            if pdif < eps { return np };              
+            mag1 = mag2; 
+            p = np            
         }       
     }
+
+
+
 
     /// Secant method with recovery
     /// for finding the weighted geometric median

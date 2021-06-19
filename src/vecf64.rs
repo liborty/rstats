@@ -95,23 +95,25 @@ impl Vecf64 for &[f64] {
         self.iter().map(|&x| x.powi(2)).sum::<f64>()
     }
 
-    /// Unit vector - creates a new one
+    /// Unit vector
     fn vunit(self) -> Vec<f64> {
         self.smult(1. / self.iter().map(|x| x.powi(2)).sum::<f64>().sqrt())
     }
+
+    /// Unit vectors difference (done together for efficiency)
+    fn vsubunit(self, v: &[f64]) -> Vec<f64> {
+        let mut sumsq = 0_f64;
+        let dif = self.iter().zip(v).map(
+            |(&xi, &vi)| { let d = xi - vi; sumsq += d*d; d }
+        ).collect::<Vec<f64>>();
+        dif.smult(1_f64/sumsq.sqrt())
+    }    
 
     /// Area of a parallelogram between two vectors.
     /// Same as the magnitude of their cross product |a ^ b| = |a||b|sin(theta).
     /// Attains maximum `|a|.|b|` when the vectors are othogonal.
     fn varea(self, v:&[f64]) -> f64 {
         (self.vmagsq()*v.vmagsq() - self.dotp(v).powi(2)).sqrt()
-    }
-
-    /// Area proportional to the swept arc up to angle theta. 
-    /// Attains maximum of `2|a||b|` when the vectors have opposite orientations.
-    /// This is really |a||b|(1-cos(theta)) = 2|a||b|D
-    fn varc(self, v:&[f64]) -> f64 { 
-         (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
     }
 
     /// We define vector similarity S in the interval [0,1] as
@@ -122,7 +124,13 @@ impl Vecf64 for &[f64] {
     /// D = 1-S = (1-cos(theta))/2
     fn vdisim(self, v:&[f64]) -> f64 { (1.0-self.cosine(&v))/2.0 }
 
-    
+    /// Area proportional to the swept arc up to angle theta. 
+    /// Attains maximum of `2|a||b|` when the vectors have opposite orientations.
+    /// This is really |a||b|(1-cos(theta)) = 2|a||b|D
+    fn varc(self, v:&[f64]) -> f64 { 
+        (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
+   }
+ 
     /// Pearson's correlation coefficient of a sample of two f64 variables.
     /// # Example
     /// ```
@@ -201,31 +209,6 @@ impl Vecf64 for &[f64] {
         let yvec = v.rank(true);
         // It is just Pearson's correlation of ranks
         xvec.ucorrelation(&yvec)
-    }
-
-    /// Cosine of five difference measures
-    /// against Kazutsugi discrete outcomes [0.00,0.25,0.50,0.75,1.00], ranked as [4,3,2,1,0] 
-    /// to give overall positive measure of similarity. 
-    /// Typically only relative ordering of results is of interest,
-    /// so we do not normalise the constant vector.
-    /// The result is in the range [0,1].
-    /// # Example
-    /// ```
-    /// use rstats::Vecf64;
-    /// const XARR:&[f64] = &[4.,3.,2.,1.,0.];
-    /// assert_eq!(XARR.kazutsugi(),1.0);
-    /// ```
-    fn kazutsugi(self) -> f64 {
-        let xvec = self.rank(true); 
-        const YARR:&[f64] = &[4.,3.,2.,1.,0.];
-        let mut sx2 = 0_f64; 
-        let sxy:f64 = xvec.iter().zip(YARR)
-            .map(|(&ux,y)| {
-                let x = ux as f64;
-                sx2 += x*x;
-                x*y 
-            }).sum(); 
-        0.5+sxy/(120.0*sx2).sqrt()
     }
 
     /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.

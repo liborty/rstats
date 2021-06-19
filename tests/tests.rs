@@ -167,11 +167,11 @@ fn trend() -> Result<()> {
 
 #[test]
 fn geometric_medians() -> Result<()> {
-   const ITERATIONS:u32 = 20;
-   let n = 700_usize;
-   let d = 10_usize;
-   println!("timing {} medians of {} points each in {} dimensions",GI(ITERATIONS),GI(n),GI(d)); 
-   
+    const ITERATIONS:u32 = 20;
+    let n = 700_usize;
+    let d = 10_usize;
+    println!("timing {} medians of {} points each in {} dimensions",GI(ITERATIONS),GI(n),GI(d)); 
+ 
    let mut timer = DevTime::new_simple();
    let mut sumg = 0_f64;
    let mut sumtime = 0_u128; 
@@ -183,8 +183,8 @@ fn geometric_medians() -> Result<()> {
       sumtime += timer.time_in_nanos().unwrap();
       sumg += pts.distsum(&gm)    
    }
-
-   println!("Gmedian errors: {} ns:\t{}",GI(sumg),GI(sumtime));   
+   println!("Gmedian errors: {} ns:\t{}",GI(sumg),GI(sumtime)); 
+ 
    sumg = 0_f64;
    sumtime = 0_u128;
    timer = DevTime::new_simple();
