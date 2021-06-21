@@ -142,6 +142,8 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Appendix II: Recent Releases
 
+* **Version 0.7.12** 
+
 * **Version 0.7.11** Removed Kazutsugi (too specialised). Added `gcentroid` (geometric centroid). Further optimisations to `gmedian`.
 
 * **Version 0.7.10** Added `symmatrix` to reconstruct full symmetric matrix from its lower triangular part (for compatibility with crates which duplicate data). Renamed mergerank to plain `rank` and added boolean argument to facilitate ranking in ascending or descending order. Expanded vecf64() tests (see it for instructive example usage).

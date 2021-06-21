@@ -232,8 +232,7 @@ impl Vecf64 for &[f64] {
         (sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()
     }
  
-    /// Finds minimum, minimum's index, maximum, maximum's index of &[f64]
-    /// Here self is usually some data, rather than a vector
+    /// Finds minimum, minimum's first index, maximum, maximum's first index of &[f64] 
     fn minmax(self) -> (f64, usize, f64, usize) {
         let mut min = self[0]; // initialise to the first value
         let mut mini = 0;
