@@ -74,7 +74,7 @@ impl std::fmt::Display for Med {
     }
 }
 
-/// Mean and standard deviation (or std ratio for geometric mean).
+/// Mean and standard deviation (or std ratio for geometric mean)
 #[derive(Default)]
 pub struct MStats {
     pub mean: f64,
@@ -188,7 +188,10 @@ pub trait Vecf64 {
     fn minmax(self) -> (f64, usize, f64, usize); 
     /// Linear transformation to [0,1]
     fn lintrans(self) -> Vec<f64>;
+    /// Sort vector in a standard way
+    fn sortf(self) -> Vec<f64>;
 
+    /*
     /// Binary search for insert index I in sorted vector 
     fn binsearch(self, v: f64) -> usize;
     /// Merges two ascending sorted vectors
@@ -197,8 +200,7 @@ pub trait Vecf64 {
     fn merge_immutable(self, idx1: &[usize], v2: &[f64], idx2: &[usize]) -> ( Vec<f64>,Vec<usize> );
     /// merge indices of two already concatenated sorted vectors
     fn merge_indices(self, idx1:&[usize], idx2:&[usize]) -> Vec<usize>;
-    /// Sort vector in a standard way
-    fn sortf(self) -> Vec<f64>;
+
     /// Sorted vector, is wrapper for mergesort below
     fn sortm(self, ascending:bool) -> Vec<f64>;
 
@@ -206,6 +208,7 @@ pub trait Vecf64 {
     fn rank(self, ascending:bool) -> Vec<usize>;
     /// Immutable merge sort, makes a sort index
     fn mergesort(self, i:usize, n:usize) -> Vec<usize>;
+    */
 }
 
 /// Some support for Vec<u8> (vector of bytes)

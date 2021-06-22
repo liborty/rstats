@@ -4,6 +4,7 @@
 
 use devtimer::DevTime;
 use anyhow::{Result};
+use indxvec::{merge::*};
 
 use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8,GI,GV};
 use rstats::functions::{genvec,genvecu8};
@@ -126,7 +127,7 @@ fn vecvec() -> Result<()> {
    println!("Eccentricities\t{}",eccmed);
    let (_, seccs) = pt.sortedeccs(true,EPS); 
    println!("Sorted eccs: {}\n", GV(&seccs));
-   let medcnt = seccs.binsearch(eccmed.median);
+   let medcnt = binsearch(&seccs,eccmed.median);
    println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
    let mut weights = Vec::new();
    for i in 1..n+1 { weights.push(i as f64) }; // create test weights data

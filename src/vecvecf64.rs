@@ -1,5 +1,5 @@
 use crate::{Med, MStats, MutVectors, Stats, VecVecf64, Vecf64};
-use indxvec::{Indices};
+use indxvec::{merge::*,Indices};
 
 impl VecVecf64 for &[Vec<f64>] {
     /// acentroid = simple multidimensional arithmetic mean
@@ -189,7 +189,7 @@ impl VecVecf64 for &[Vec<f64>] {
         for v in self { // collect raw ecentricities magnitudes
             eccs.push(gm.vdist(&v)) 
         }
-        ( gm, eccs.sortm(ascending) )
+        ( gm, sortm(&eccs,ascending) )
     }
     
     /// Weighted geometric median, sorted eccentricities magnitudes,
@@ -203,7 +203,7 @@ impl VecVecf64 for &[Vec<f64>] {
         // Apply linear transform
         // eccs = eccs.lintrans();
         // create sort index of the eccs
-        let index = eccs.mergesort(0,self.len());
+        let index = sortidx(&eccs);
         // pick the associated points weights in the reverse order of the sorted eccs
         let mut weights = index.unindex(true,&ws);
         let mut sumw = 0_f64;
@@ -228,7 +228,7 @@ impl VecVecf64 for &[Vec<f64>] {
         // Apply linear transform
         // coses = coses.lintrans();
         // create sort index of the coses
-        let index = coses.mergesort(0,self.len());
+        let index = sortidx(&coses);
         // pick the associated points weights in the same order as the sorted coses
         let mut weights = index.unindex(true,&ws);
         let mut sumw = 0_f64;

@@ -32,8 +32,6 @@ Our methods based on the True Geometric Median, computed here by `gmedian`, are 
 
 ### Implementation
 
-Rstats is a lean minimalistic library that only depends on *anyhow* (for its simple error handling).
-
 The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types.End type f64 is most commonly used. Facilities for other end types are limited. For lots of data of other end types, it is always possible to clone to f64, see for example the included utility function `vecu8asvecf64`.
 
 ### Documentation
