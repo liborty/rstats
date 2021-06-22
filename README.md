@@ -142,7 +142,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Appendix II: Recent Releases
 
-* **Version 0.7.12** 
+* **Version 0.7.12** Split off Index trait and associated functions into a new crate `idxvec`.
 
 * **Version 0.7.11** Removed Kazutsugi (too specialised). Added `gcentroid` (geometric centroid). Further optimisations to `gmedian`.
 

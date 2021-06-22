@@ -1,4 +1,5 @@
-use crate::{MutVectors, Vecf64, Indices, here};
+use crate::{MutVectors, Vecf64, here};
+use indxvec::{Indices};
 
 impl Vecf64 for &[f64] {
 

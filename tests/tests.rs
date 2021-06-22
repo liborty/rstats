@@ -5,7 +5,7 @@
 use devtimer::DevTime;
 use anyhow::{Result};
 
-use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8,Indices,GI,GV};
+use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8,GI,GV};
 use rstats::functions::{genvec,genvecu8};
 
 pub const EPS:f64 = 1e-7;
@@ -66,25 +66,7 @@ fn vecf64() -> Result<()> {
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
    println!("\n{}",GV(&v1));
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
-   println!("{}",GV(&v2));
-   println!("Sorted:       {}",GV(&v2.sortm(true)));
-   println!("Sorted:       {}",GV(&v2.mergesort(0,v2.len()).unindex(true,&v2))); 
-   println!("Sorted:       {}",GV(&v2.rank(false).invindex().unindex(false,&v2)));   
-   println!("Ranks:        {}",GV(&v2.rank(true))); 
-   println!("Ranks rev:    {}",GV(&v2.rank(true).iter().rev().collect::<Vec<&usize>>())); 
-   println!("Ranks desc:   {}",GV(&v2.rank(false))); // not the same as ranks reversed!!   
-   println!("Sort index:   {}",GV(&v2.mergesort(0,v2.len()))); 
-   println!("Ix from Ranks:{}",GV(&v2.rank(true).invindex()));
-   println!("Sort ix desc: {}",GV(&v2.rank(false).invindex()));
-   println!("Ranks from ix:{}",GV(&v2.rank(false).invindex().invindex()));
-   println!("Sorted rev:   {}",GV(&v2.sortm(false)));
-   println!("Sorted rev:   {}",GV(&v2.sortm(true).iter().rev().collect::<Vec<&f64>>()));
-   println!("Sorted rev:   {}",GV(&v2.mergesort(0,v2.len()).unindex(false,&v2)));   
-   println!("Sorted rev:   {}",GV(&v2.rank(false).invindex().unindex(true,&v2))); 
-
-   let (v,vi) = v1.merge_immutable(&v1.mergesort(0,v1.len()), &v2, &v2.mergesort(0,v2.len()));
-   println!("Concatenated and Sorted:\n{}\n",GV(&vi.unindex(true,&v))); 
- 
+   println!("{}",GV(&v2)); 
    println!("Pearson's Correlation:\t{}",GI(v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",GI(v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",GI(v1.spearmancorr(&v2)));  

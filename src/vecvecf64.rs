@@ -1,4 +1,5 @@
-use crate::{Med, MStats, MutVectors, Stats, VecVecf64, Vecf64, Indices};
+use crate::{Med, MStats, MutVectors, Stats, VecVecf64, Vecf64};
+use indxvec::{Indices};
 
 impl VecVecf64 for &[Vec<f64>] {
     /// acentroid = simple multidimensional arithmetic mean

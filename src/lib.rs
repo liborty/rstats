@@ -1,7 +1,6 @@
 mod statsf64;
 mod statsi64;
 mod vecf64;
-mod indices;
 mod vecu8;
 mod vecvecu8;
 mod mutvec;
@@ -38,7 +37,7 @@ impl<T: std::fmt::Display> std::fmt::Display for GI<T> {
     }
 }
 
-/// GreenVec (GV) struct facilitates printing (in green) vector
+/// GreenVec (GV) wrapper struct facilitates printing (in green) vector
 /// of any end type that has Display implemented.
 pub struct GV<'a, T: std::fmt::Display>(pub &'a[T]);
 impl<'a, T: std::fmt::Display> std::fmt::Display for GV<'a,T> {
@@ -371,16 +370,4 @@ pub trait VecVecf64 {
     fn wgmedian(self, ws: &[f64],eps: f64) -> Vec<f64>; 
     /// Lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med:&[f64]) -> Vec<f64>; 
-}
-
-/// Methods to manipulate indices of Vec<usize> type
-pub trait Indices {
-    /// Reverse index
-    fn invindex(self) -> Vec<usize>;
-    /// Collects f64 values from `v` as per indices in self.
-    fn unindex(self, ascending:bool, v:&[f64]) -> Vec<f64>;
-    /// Collects u8 from `v` as per indices in self.
-    fn unindexu8(self, ascending:bool, v:&[u8]) -> Vec<u8>;
-    /// Pearson's correlation coefficient of two slices, typically the ranks.  
-    fn ucorrelation(self, v: &[usize]) -> f64;  
 }
