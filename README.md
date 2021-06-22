@@ -13,12 +13,12 @@ rstats = "^0.7"
 and import into your source file(s) any of these functions and/or traits that you want:
 
 ```rust
-use rstats::{functions,Stats,Vecf64,Vecu8,VecVecf64,VecVecu8,Mutvectors,Indices};
+use rstats::{GI,GV,here,functions,Stats,Vecf64,Vecu8,VecVecf64,VecVecu8,Mutvectors};
 ```
 
 ## Introduction
 
-Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. Other general tools included are efficient ranking, sorting, merging and searching.
+Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right. 
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm. Also, the `comediance matrix`; a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the centroid.
 
@@ -114,14 +114,6 @@ Trait VecVec is entirely unchecked, so check your data upfront. This is the more
 
 Some of the above for vectors of vectors of bytes.
 
-### Index
-
-The functions of this trait are implemented for vectors of subscripts, i.e. `&[usize]`.
-
-* `ucorrelation`(self, v: &[usize]) -> f64; Pearson's correlation coefficient of two slices, typically containing the ranks.  
-* `invindex`(self) -> Vec\<usize\>; method for inverting an index, e.g. given a sort index, returns ranks and vice versa.
-* `unindex`(self, v:&[f64]) -> Vec\<f64\>; collects values from v in the order given by self index.
-
 ## Appendix I: Terminology (and some new definitions) for sets of nD points
 
 * `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, it is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if somewhat confusing) usage: Centroid = Centre = Arithmetic Mean.
@@ -142,7 +134,7 @@ The functions of this trait are implemented for vectors of subscripts, i.e. `&[u
 
 ## Appendix II: Recent Releases
 
-* **Version 0.7.12** Split off Index trait and associated functions into a new crate `idxvec`.
+* **Version 0.7.12** Split off Index trait and associated functions into a new crate `indxvec`.
 
 * **Version 0.7.11** Removed Kazutsugi (too specialised). Added `gcentroid` (geometric centroid). Further optimisations to `gmedian`.
 
