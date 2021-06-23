@@ -18,6 +18,18 @@ impl VecVecf64 for &[Vec<f64>] {
         centre.mutsmult(1.0 / self.len() as f64);
         centre
     }
+    /// Weighted Centre
+    fn wacentroid(self,ws: &[f64]) -> Vec<f64> {
+        let mut centre = vec![0_f64; self[0].len()];
+        let mut wsum = 0_f64;
+        for i in 0..self.len() {
+            let w = ws[i];
+            wsum += w;
+            centre.mutvadd(&self[i].smult(w))
+        }
+        centre.mutsmult(1.0 / (wsum*self.len() as f64));
+        centre
+    }
 
     /// gcentroid = multidimensional geometric mean
     /// # Example
@@ -205,7 +217,7 @@ impl VecVecf64 for &[Vec<f64>] {
         // create sort index of the eccs
         let index = sortidx(&eccs);
         // pick the associated points weights in the reverse order of the sorted eccs
-        let mut weights = index.unindex(true,&ws);
+        let mut weights = index.unindex(&ws,true);
         let mut sumw = 0_f64;
         // accummulate the weights 
         for i in 0..weights.len() {
@@ -214,7 +226,7 @@ impl VecVecf64 for &[Vec<f64>] {
         }
         // divide by the sum to get cum. probabilities in [0,1]
         for i in 0..weights.len() { weights[i] /= sumw };
-        ( gm, index.unindex(true,&eccs), weights )
+        ( gm, index.unindex(&eccs, true), weights )
     }
 
     /// Sorted cosines magnitudes,
@@ -230,7 +242,7 @@ impl VecVecf64 for &[Vec<f64>] {
         // create sort index of the coses
         let index = sortidx(&coses);
         // pick the associated points weights in the same order as the sorted coses
-        let mut weights = index.unindex(true,&ws);
+        let mut weights = index.unindex(&ws,true);
         let mut sumw = 0_f64;
         // accummulate the weights to from cpdf
         for i in 0..weights.len() {
@@ -239,7 +251,7 @@ impl VecVecf64 for &[Vec<f64>] {
         }
         // divide by the sum to get cum. probabilities in [0,1]
         for i in 0..weights.len() { weights[i] /= sumw };
-        ( index.unindex(true,&coses), weights )
+        ( index.unindex(&coses,true), weights )
     }
 
     /// Vector `eccentricity` or measure of  
@@ -319,8 +331,7 @@ impl VecVecf64 for &[Vec<f64>] {
         for i in 0..self.len() { 
             let dvmag = self[i].vdist(&p);
             if !dvmag.is_normal() { continue } // zero distance, safe to ignore
-            let rec = 
-            ws[i]/dvmag; // ws[i] is weigth for this point self[i]
+            let rec = ws[i]/dvmag; // ws[i] is weigth for this point self[i]
             vsum.mutvadd(&self[i].smult(rec)); // add weighted vector
             recip += rec // add separately the reciprocals    
         }
@@ -431,34 +442,33 @@ impl VecVecf64 for &[Vec<f64>] {
         }       
     }
 
-
-
-
-    /// Secant method with recovery
+    /// Secant method with recovery from divergence
     /// for finding the weighted geometric median
-    fn wgmedian(self, ws: &[f64],  eps: f64) -> Vec<f64> {
-        let mut p1 = self.acentroid();     
-        let mut p2 = self.wnxnonmember(ws,&p1); 
-        let mut e1mag = p2.vdist(&p1);    
-        loop {
-            // will not use this np as does nmedian, using secant instead
-            let mut np = self.wnxnonmember(ws,&p2); 
-            let e2 = np.vsub(&p2); // new vector error, or eccentricity
-            let e2mag = e2.vmag(); 
-            if e2mag < eps  { return np };  
-            if e1mag > e2mag {  // eccentricity magnitude decreased, good, employ secant
-                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag-e2mag)));                   
+    fn wgmedian(self, ws: &[f64], eps: f64) -> Vec<f64> {  
+        let mut p = self.wacentroid(ws);
+        let mut mag1 = p.vmag();
+        let mut pdif = mag1;  
+        loop {  
+            let mut np = self.wnxnonmember(ws,&p); 
+            let e = np.vsub(&p); // new vector error, or eccentricity  
+            // let e = self.errorv(&p);
+            let mag2 = e.vmag(); 
+            // if mag2 < eps  { return np }; 
+            // overwrite np with a better secant estimate  
+            np = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
+                p.vadd(&e.smult(pdif/(mag1-mag2)))                   
             }
             else { // recovery: probably overshot the minimum, shorten the jump 
-                   // e2 will already be pointing moreless back
-                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag+e2mag)));                    
-            } 
-            p1 = p2;        
-            p2 = np;  
-            e1mag = e2mag             
+                   // e will already be pointing moreless back
+                p.vadd(&e.smult(pdif/(mag1+mag2)))                    
+            };
+            pdif = np.vdist(&p);
+            if pdif < eps { return np };              
+            mag1 = mag2; 
+            p = np            
         }       
     }
-
+    
     /// Flattened lower triangular part of a covariance matrix for f64 vectors in self.
     /// Since covariance matrix is symmetric (positive semi definite), 
     /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).

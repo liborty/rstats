@@ -294,6 +294,8 @@ pub trait MutVectors {
 pub trait VecVecu8 { 
     /// Centroid = euclidian mean of a set of points  
     fn acentroid(self) -> Vec<f64>;
+    /// Weighted Centre
+    fn wacentroid(self,ws: &[u8]) -> Vec<f64>;
     /// Eccentricity vector added to a non member point,
     fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
     /// Weighted eccentricity vector for a non member point
@@ -310,8 +312,10 @@ pub trait VecVecu8 {
 /// Methods applicable to vector of vectors of <f64>
 pub trait VecVecf64 {
 
-    /// Arithmetic Centroid = euclidian mean of a set of points
+    /// Arithmetic Centre = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
+    /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points
+    fn wacentroid(self,ws: &[f64]) -> Vec<f64>;
     /// Geometric Centroid
     fn gcentroid(self) -> Vec<f64>;
     /// Harmonic Centroid = harmonic mean of a set of points

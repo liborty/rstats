@@ -132,6 +132,8 @@ Some of the above for vectors of vectors of bytes.
 
 ## Appendix II: Recent Releases
 
+* **Version 0.7.13** Added weighted centroid `wacentroid`. Updated weighted geometric median `wgmedian`. Updated `gmedian` and `wgmedian` in `vecvecu8` to include the optimisations of v. 0.7.11. Ensured compatibility with the latest release of crate `indxvec`.
+
 * **Version 0.7.12** Split off Index trait and associated functions into a new crate `indxvec`.
 
 * **Version 0.7.11** Removed Kazutsugi (too specialised). Added `gcentroid` (geometric centroid). Further optimisations to `gmedian`.

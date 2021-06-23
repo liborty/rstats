@@ -11,6 +11,20 @@ impl VecVecu8 for &[Vec<u8>] {
     centre
     }
 
+    /// Weighted Centre
+    fn wacentroid(self,ws: &[u8]) -> Vec<f64> {
+        let mut centre = vec![0_f64; self[0].len()];
+        let mut wsum = 0_f64;
+        for i in 0..self.len() {
+            let w = ws[i] as f64;
+            wsum += w;
+            centre.mutvadd(&self[i].smult(w))
+        }
+    centre.mutsmult(1.0 / (wsum*self.len() as f64));
+    centre
+    }
+
+
     /// Eccentricity vector added to a non member point,
     /// while the true geometric median is as yet unknown. 
     /// This function is suitable for a single non-member point. 
@@ -45,51 +59,55 @@ impl VecVecu8 for &[Vec<u8>] {
 
     /// Secant method with recovery from divergence
     /// for finding the geometric median
-    fn gmedian(self, eps: f64) -> Vec<f64> {
-        let mut p1 = self.acentroid();     
-        let mut p2 = self.nxnonmember(&p1); 
-        let mut e1mag = p2.vdist(&p1);    
-        loop {
-            // will not use this np as does nmedian, using secant instead
-            let mut np = self.nxnonmember(&p2); 
-            let e2 = np.vsub(&p2); // new vetor error, or eccentricity
-            let e2mag = e2.vmag(); 
-            if e2mag < eps  { return np };  
-            if e1mag > e2mag {  // eccentricity magnitude decreased, good, employ secant
-                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag-e2mag)));                   
+    fn gmedian(self, eps: f64) -> Vec<f64> {  
+        let mut p = self.acentroid();
+        let mut mag1 = p.vmag();
+        let mut pdif = mag1;  
+        loop {  
+            let mut np = self.nxnonmember(&p); 
+            let e = np.vsub(&p); // new vector error, or eccentricity  
+            // let e = self.errorv(&p);
+            let mag2 = e.vmag(); 
+            // if mag2 < eps  { return np }; 
+            // overwrite np with a better secant estimate  
+            np = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
+                p.vadd(&e.smult(pdif/(mag1-mag2)))                   
             }
             else { // recovery: probably overshot the minimum, shorten the jump 
-                   // e2 will already be pointing moreless back
-                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag+e2mag)));                    
-            } 
-            p1 = p2;        
-            p2 = np;  
-            e1mag = e2mag             
+                   // e will already be pointing moreless back
+                p.vadd(&e.smult(pdif/(mag1+mag2)))                    
+            };
+            pdif = np.vdist(&p);
+            if pdif < eps { return np };              
+            mag1 = mag2; 
+            p = np            
         }       
     }
 
-    /// Secant method with recovery
+    /// Secant method with recovery from divergence
     /// for finding the weighted geometric median
-    fn wgmedian(self, ws: &[u8],  eps: f64) -> Vec<f64> {
-        let mut p1 = self.acentroid();     
-        let mut p2 = self.wnxnonmember(ws,&p1); 
-        let mut e1mag = p2.vdist(&p1);    
-        loop {
-            // will not use this np directly as does nmedian, using secant instead
-            let mut np = self.wnxnonmember(ws,&p2); 
-            let e2 = np.vsub(&p2); // new vector error, or eccentricity
-            let e2mag = e2.vmag(); 
-            if e2mag < eps  { return np };  
-            if e1mag > e2mag {  // eccentricity magnitude decreased, good, employ secant
-                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag-e2mag)));                   
+    fn wgmedian(self, ws: &[u8], eps: f64) -> Vec<f64> {  
+        let mut p = self.wacentroid(ws);
+        let mut mag1 = p.vmag();
+        let mut pdif = mag1;  
+        loop {  
+            let mut np = self.wnxnonmember(ws,&p); 
+            let e = np.vsub(&p); // new vector error, or eccentricity  
+            // let e = self.errorv(&p);
+            let mag2 = e.vmag(); 
+            // if mag2 < eps  { return np }; 
+            // overwrite np with a better secant estimate  
+            np = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
+                p.vadd(&e.smult(pdif/(mag1-mag2)))                   
             }
             else { // recovery: probably overshot the minimum, shorten the jump 
-                   // e2 will already be pointing moreless back
-                np = p2.vadd(&e2.smult(p1.vsub(&p2).vmag()/(e1mag+e2mag)));                    
-            } 
-            p1 = p2;        
-            p2 = np;  
-            e1mag = e2mag             
+                   // e will already be pointing moreless back
+                p.vadd(&e.smult(pdif/(mag1+mag2)))                    
+            };
+            pdif = np.vdist(&p);
+            if pdif < eps { return np };              
+            mag1 = mag2; 
+            p = np            
         }       
     }
     

@@ -140,47 +140,65 @@ fn vecvec() -> Result<()> {
 }
 
 #[test]
+/// Trend between two data sets in space of the same dimensions but 
+/// numbers of points can differ
 fn trend() -> Result<()> {
    let d = 7_usize;
-   let pt1 = genvec(d,28,13,19); // random test data 
-   let pt2 = genvec(d,38,23,31);
-   println!("\nTrend vector:\n{}\n",GV(&pt1.trend(EPS,pt2)));
+   let pts1 = genvec(d,28,13,19); // random test data 
+   let pts2 = genvec(d,38,23,31);
+   println!("\nTrend vector:\n{}\n",GV(&pts1.trend(EPS,pts2)));
    Ok(())
 }
 
 #[test]
 fn geometric_medians() -> Result<()> {
-    const ITERATIONS:u32 = 20;
+    const ITERATIONS:usize = 20;
     let n = 700_usize;
     let d = 10_usize;
-    println!("timing {} medians of {} points each in {} dimensions",GI(ITERATIONS),GI(n),GI(d)); 
+    println!("timing {} medians of {} points in {} dimensions",GI(ITERATIONS),GI(n),GI(d)); 
  
    let mut timer = DevTime::new_simple();
    let mut sumg = 0_f64;
    let mut sumtime = 0_u128; 
    for i in 1..ITERATIONS {
-      let pts = genvec(d,n,i,5*i);
+      let pts = genvec(d,n,i as u32,5*i as u32);
       timer.start();
       let gm = pts.gmedian(EPS);
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
       sumg += pts.distsum(&gm)    
    }
-   println!("Gmedian errors: {} ns:\t{}",GI(sumg),GI(sumtime)); 
+   // sumg /= (ITERATIONS*n*d) as f64;
+   println!("Gmedian all distances: {} ns:\t{}",GI(sumg),GI(sumtime)); 
  
    sumg = 0_f64;
    sumtime = 0_u128;
    timer = DevTime::new_simple();
  
    for i in 1..ITERATIONS {
-      let pts = genvec(d,n,i,5*i);
+      let pts = genvec(d,n,i as u32,5*i as u32);
       timer.start();
       let gm = pts.nmedian(EPS);
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
       sumg += pts.distsum(&gm)
-   }   
-   println!("Nmedian errors: {}  ns:\t{}",GI(sumg),GI(sumtime));  
-  
+   } 
+   // sumg /= (ITERATIONS*n*d) as f64;  
+   println!("Nmedian all distances: {} ns:\t{}",GI(sumg),GI(sumtime));   
+
+   sumg = 0_f64;
+   sumtime = 0_u128;
+   timer = DevTime::new_simple();
+ 
+   for i in 1..ITERATIONS {
+      let pts = genvec(d,n,i as u32,5*i as u32);
+      timer.start();
+      let gm = pts.acentroid();
+      timer.stop();
+      sumtime += timer.time_in_nanos().unwrap();
+      sumg += pts.distsum(&gm)
+   } 
+   // sumg /= (ITERATIONS*n*d) as f64;  
+   println!("Centroid all distncs:  {} ns:     {}",GI(sumg),GI(sumtime)); 
     Ok(())  
  }
