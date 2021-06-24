@@ -189,26 +189,7 @@ pub trait Vecf64 {
     /// Linear transformation to [0,1]
     fn lintrans(self) -> Vec<f64>;
     /// Sort vector in a standard way
-    fn sortf(self) -> Vec<f64>;
-
-    /*
-    /// Binary search for insert index I in sorted vector 
-    fn binsearch(self, v: f64) -> usize;
-    /// Merges two ascending sorted vectors
-    fn merge(self, v: &[f64]) -> Vec<f64>;
-    /// Merges two sort indices, returns simply concatenated Vec<f64> and new sort index into it
-    fn merge_immutable(self, idx1: &[usize], v2: &[f64], idx2: &[usize]) -> ( Vec<f64>,Vec<usize> );
-    /// merge indices of two already concatenated sorted vectors
-    fn merge_indices(self, idx1:&[usize], idx2:&[usize]) -> Vec<usize>;
-
-    /// Sorted vector, is wrapper for mergesort below
-    fn sortm(self, ascending:bool) -> Vec<f64>;
-
-    /// Ranking with only n*log(n) complexity, using 'mergesort'
-    fn rank(self, ascending:bool) -> Vec<usize>;
-    /// Immutable merge sort, makes a sort index
-    fn mergesort(self, i:usize, n:usize) -> Vec<usize>;
-    */
+    fn sortf(self) -> Vec<f64>; 
 }
 
 /// Some support for Vec<u8> (vector of bytes)
