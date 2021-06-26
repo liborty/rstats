@@ -356,6 +356,8 @@ pub trait VecVecf64 {
     fn gmedian(self, eps: f64) -> Vec<f64>; 
     /// The weighted geometric median
     fn wgmedian(self, ws: &[f64],eps: f64) -> Vec<f64>; 
-    /// Lower triangular part of a covariance matrix of a Vec of f64 vectors.
+    /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med:&[f64]) -> Vec<f64>; 
+    /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
+    fn wcovar(self, ws:&[f64], m:&[f64]) -> Vec<f64>;
 }
