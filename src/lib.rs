@@ -123,14 +123,6 @@ pub trait Stats {
     /// Median and quartiles
     fn median(self) -> Result<Med>
         where Self: std::marker::Sized { bail!("median not implemented for this type")}
-/*        
-    /// Creates vector of ranks for values in self
-    fn ranks(self) -> Result<Vec<f64>>
-        where Self: std::marker::Sized { bail!("ranks not implemented for this type")}
-    /// Creates vector of integer ranks for values in self
-    fn iranks(self) -> Result<Vec<i64>>
-        where Self: std::marker::Sized { bail!("iranks not implemented for this type")}    
-*/
 }
 
 /// Vector algebra on one or two vectors.
@@ -185,9 +177,6 @@ pub trait Vecf64 {
     fn covone(self, m:&[f64]) -> Vec<f64>;
     /// Reconstructs the full symmetric matrix from its lower diagonal compact form
     fn symmatrix(self) -> Vec<Vec<f64>>;
- 
-    // Minimum, minimum's index, maximum, maximum's index.
-    // fn minmax(self) -> (f64, usize, f64, usize); 
     /// Linear transformation to [0,1]
     fn lintrans(self) -> Vec<f64>;
     // Sort vector in a standard way
