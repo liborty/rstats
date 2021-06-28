@@ -1,5 +1,6 @@
 use crate::{MStats, Med, Stats, functions::wsum, here};
 use anyhow::{ensure, Result};
+pub use indxvec::merge::sortm;
 
 impl Stats for &[i64] {
     /// Arithmetic mean of an i64 slice
@@ -284,7 +285,7 @@ impl Stats for &[i64] {
         };
         Ok(result)       
     }    
-
+/*
     /// Returns vector of ranks, 
     /// ranked from the smallest number in self (rank 0) to the biggest (rank n-1).
     /// Equalities lead to fractional ranks (hence Vec<f64> output) and the range of rank values is reduced.
@@ -329,4 +330,5 @@ impl Stats for &[i64] {
         }
         Ok(rank)
     } 
+*/
 }

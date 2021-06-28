@@ -1,4 +1,4 @@
-use crate::{MutVectors, Vecf64};
+use crate::{Vecf64};
 use indxvec::{merge::*,Indices};
 
 impl Vecf64 for &[f64] {
@@ -232,7 +232,7 @@ impl Vecf64 for &[f64] {
         let nf = self.len() as f64;
         (sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()
     }
- 
+ /*
     /// Finds minimum, minimum's first index, maximum, maximum's first index of &[f64] 
     fn minmax(self) -> (f64, usize, f64, usize) {
         let mut min = self[0]; // initialise to the first value
@@ -251,13 +251,14 @@ impl Vecf64 for &[f64] {
         }
         (min, mini, max, maxi)
     }
+*/
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Vec<f64> {
-        let (min,_,max,_) = self.minmax();
+        let (min,_,max,_) = minmax(self);
         let range = max-min;
         self.iter().map(|&x|(x-min)/range).collect()        
     }
-
+/*
     /// New sorted vector. Immutable sort.
     /// Copies self and then sorts it in place, leaving self unchanged.
     /// Calls mutsortf and that calls the standard self.sort_unstable_by.
@@ -267,7 +268,7 @@ impl Vecf64 for &[f64] {
         sorted.mutsortf();
         sorted      
     }
-
+*/
     /// Flattened lower triangular part of a covariance matrix for a single f64 vector.
     /// Since covariance matrix is symmetric (positive semi definite), 
     /// the upper triangular part can be trivially added for all j>i by: c(j,i) = c(i,j).

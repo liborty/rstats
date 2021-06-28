@@ -1,5 +1,6 @@
-use crate::{MStats, Med, Stats, Vecf64, functions::wsum, here};
+use crate::{MStats, Med, Stats, functions::wsum, here};
 use anyhow::{ensure, Result};
+pub use indxvec::merge::sortm;
 
 impl Stats for &[f64] {
     /// Arithmetic mean of an f64 slice
@@ -257,7 +258,7 @@ impl Stats for &[f64] {
         let mid = gaps / 2;
         let quarter = gaps / 4;
         let threeq = 3 * gaps / 4;
-        let v = self.sortf();     
+        let v = sortm(self,true);     
         let mut result: Med = Default::default();
         result.median = if 2*mid < gaps { (v[mid] + v[mid + 1]) / 2.0 }
             else { v[mid] };
@@ -282,7 +283,7 @@ impl Stats for &[f64] {
         }
         Ok(result)       
     }    
-
+/*
     /// Returns vector of f64 ranks;
     /// ranked from the smallest number in self (rank 0) to the biggest (rank n-1).
     /// Equalities lead to fractional ranks, hence Vec<f64> output and the range of rank values is reduced.
@@ -329,4 +330,5 @@ impl Stats for &[f64] {
         }
         Ok(rank)
     }
+*/
 }

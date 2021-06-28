@@ -55,5 +55,3 @@ pub fn genvecu8(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<u8>> {
     } // fills the lot with random numbers
     return v;
 }
-
-

@@ -4,7 +4,7 @@
 
 use devtimer::DevTime;
 use anyhow::{Result};
-use indxvec::{merge::*};
+pub use indxvec::{Indices,merge::*};
 
 use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8,GI,GV};
 use rstats::functions::{genvec,genvecu8};
@@ -72,7 +72,8 @@ fn vecf64() -> Result<()> {
    println!("Kendall's Correlation:\t{}",GI(v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",GI(v1.spearmancorr(&v2)));  
    println!("Cosine:\t\t\t{}",GI(v1.cosine(&v2))); 
-   println!("Cosine of ranks:\t{}",GI(v1.ranks().unwrap().cosine(&v2.ranks().unwrap())));        
+   println!("Cosine of ranks:\t{}",
+        GI(&rank(&v1,true).indx_to_f64().cosine(&rank(&v2,true).indx_to_f64())));        
    println!("Euclidian distance:\t{}",GI(v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",GI(v1.vsub(&v2).vmag()));   
    println!("Vector difference{}",GV(&v1.vsub(&v2))); 

@@ -132,6 +132,8 @@ Some of the above for vectors of vectors of bytes.
 
 ## Appendix II: Recent Releases
 
+* **Version 0.7.16** Simplification & generalisation: changed `sortf`, `ranks`, `iranks`, to `sortm`,`rank` from `indxvec`. Made `minmax` into generic function and moved it to `indxvec::merge`.
+
 * **Version 0.7.15** Added `wcovar` also for `Vec<f64>`.
 
 * **Version 0.7.14** Added weighted centroid `wacentroid`. Updated weighted geometric median `wgmedian`. Updated `gmedian` and `wgmedian` in `vecvecu8` to include the optimisations of v. 0.7.11. Ensured compatibility with the latest release of crate `indxvec`.

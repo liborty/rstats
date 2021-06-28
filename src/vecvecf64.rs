@@ -1,5 +1,5 @@
 use crate::{Med, MStats, MutVectors, Stats, VecVecf64, Vecf64};
-use indxvec::{merge::*,Indices};
+pub use indxvec::{merge::*,Indices};
 
 impl VecVecf64 for &[Vec<f64>] {
     /// acentroid = simple multidimensional arithmetic mean
@@ -149,7 +149,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// assert_eq!(dm,4.812334638782327_f64);
     /// ```
     fn medoid(self) -> (f64, usize, f64, usize) {
-        self.distsums().minmax()
+        minmax(&self.distsums())
     }
 
     /// Finds approximate vectors from each member point towards the geometric median.
@@ -373,7 +373,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// assert_eq!(outei,20);  // index of e-outlier
     /// ```
     fn emedoid(self, eps: f64) -> (f64, usize, f64, usize) {
-        self.exacteccs(eps).mags().minmax()
+        minmax(&self.exacteccs(eps).mags())
     }
 
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
