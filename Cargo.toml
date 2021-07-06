@@ -22,12 +22,11 @@ include = [
 maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
-indxvec = "^0.1"
+indxvec = "^0.2"
 anyhow = "^1"
 
 [dev-dependencies]
 devtimer = "4"
-# criterion = "0.3"
 
 [[bench]]
 name = "mybenchmark"
