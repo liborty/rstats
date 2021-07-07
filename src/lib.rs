@@ -8,7 +8,7 @@ pub mod vecvecf64;
 pub mod functions;
 
 // reexporting to avoid duplication and for backwards compatibility
-pub use indxvec::{here,GI}; 
+pub use indxvec::{here,wi}; 
 /// simple error handling
 use anyhow::{Result,bail}; 
 
@@ -24,9 +24,9 @@ impl std::fmt::Display for Med {
         write!(
             f,
             "median:\n\tLower Q: {}\n\tMedian:  {}\n\tUpper Q: {}",
-            GI(self.lquartile),
-            GI(self.median),
-            GI(self.uquartile)
+            wi(&self.lquartile),
+            wi(&self.median),
+            wi(&self.uquartile)
         )
     }
 }
@@ -39,7 +39,7 @@ pub struct MStats {
 }
 impl std::fmt::Display for MStats {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "mean±std: {}±{}", GI(self.mean), GI(self.std))
+        write!(f, "mean±std: {}±{}", wi(&self.mean), wi(&self.std))
     }
 }
 

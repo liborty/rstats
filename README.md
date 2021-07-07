@@ -13,7 +13,7 @@ rstats = "^0.8"
 and import into your source file(s) any of these functions and/or traits that you want:
 
 ```rust
-use rstats::{GI,GV,here,functions,Stats,Vecf64,Vecu8,VecVecf64,VecVecu8,Mutvectors};
+use rstats::{functions,Stats,Vecf64,Vecu8,VecVecf64,VecVecu8,Mutvectors};
 ```
 
 ## Introduction
@@ -126,7 +126,7 @@ Some of the above for vectors of vectors of bytes.
 
 ## Appendix II: Recent Releases
 
-* **Version 0.8.0** Moved auxiliary macro `here` and structs `GI,GS` to crate `indxvec`.
+* **Version 0.8.0** Simplified, more stable version. Moved auxiliary macro `here` and functions `wv,wi` to crate `indxvec`. Tidied up the tests accordingly.
 
 * **Version 0.7.17** Updated Cargo.toml dependency to `indxvec = "^0.2"`.
 
