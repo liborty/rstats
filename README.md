@@ -7,7 +7,7 @@
 Insert into your Cargo.toml file [dependencies] section:
 
 ```rust
-rstats = "^0.7" 
+rstats = "^0.8" 
 ```
 
 and import into your source file(s) any of these functions and/or traits that you want:
@@ -45,12 +45,6 @@ cargo test --release -- --test-threads=1 --nocapture --color always
 ```
 
 ## Macro, structs and functions
-
-* macro `here!()` for easy diagnostics
-
-* pub struct GI for printing in green any singular type that has display implemented
-
-* pub struct GV for printing in green any vector whose end type has display implemented
 
 * pub struct Med to hold median and quartiles
 
@@ -131,6 +125,8 @@ Some of the above for vectors of vectors of bytes.
 * `Comediance` is similar to covariance, except zero median vectors are used to compute it  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 0.8.0** Moved auxiliary macro `here` and structs `GI,GS` to crate `indxvec`.
 
 * **Version 0.7.17** Updated Cargo.toml dependency to `indxvec = "^0.2"`.
 

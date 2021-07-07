@@ -3,10 +3,10 @@
 #[cfg(test)]
 
 use devtimer::DevTime;
-use anyhow::{Result};
-pub use indxvec::{Indices,merge::*};
+use anyhow::Result;
+use indxvec::{GS,GI,Indices,merge::*};
 
-use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8,GI,GV};
+use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8};
 use rstats::functions::{genvec,genvecu8};
 
 pub const EPS:f64 = 1e-7;
@@ -28,8 +28,8 @@ fn u8() -> Result<()> {
    let pt = genvecu8(d,n,5,7); // random test data 
    let cov = pt.covar(&pt.acentroid());
    let com = pt.covar(&pt.gmedian(EPS));
-   println!("Covariances:\n{}",GV(&cov));
-   println!("Comediances:\n{}",GV(&com));
+   println!("Covariances:\n{}",GS(&cov));
+   println!("Comediances:\n{}",GS(&com));
    println!("Cityblock Distance: {}\n",GI(cov.cityblockd(&com)));
    Ok(())
 }
@@ -39,7 +39,7 @@ fn fstats() -> Result<()> {
    let v0 = vec![1_u8,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
    let v1 = v0.vecu8asvecf64(); // testing the cast
    println!("\n{:?}",v1);
-   println!("Linear transform:\n{}",GV(&v1.lintrans()));
+   println!("Linear transform:\n{}",GS(&v1.lintrans()));
    println!("Arithmetic mean:{}",GI(v1.amean().unwrap()));
    println!("Geometric mean:\t{}",GI(v1.gmean().unwrap()));
    println!("Harmonic mean:\t{}",GI(v1.hmean().unwrap()));
@@ -65,9 +65,9 @@ fn intstats() -> Result<()> {
 #[test]
 fn vecf64() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
-   println!("\n{}",GV(&v1));
+   println!("\n{}",GS(&v1));
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
-   println!("{}",GV(&v2)); 
+   println!("{}",GS(&v2)); 
    println!("Pearson's Correlation:\t{}",GI(v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",GI(v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",GI(v1.spearmancorr(&v2)));  
@@ -76,15 +76,15 @@ fn vecf64() -> Result<()> {
         GI(&rank(&v1,true).indx_to_f64().cosine(&rank(&v2,true).indx_to_f64())));        
    println!("Euclidian distance:\t{}",GI(v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",GI(v1.vsub(&v2).vmag()));   
-   println!("Vector difference{}",GV(&v1.vsub(&v2))); 
-   println!("Vector sum:{}",GV(&v1.vadd(&v2)));  
+   println!("Vector difference{}",GS(&v1.vsub(&v2))); 
+   println!("Vector sum:{}",GS(&v1.vadd(&v2)));  
    println!("Scalar product:\t\t{}",GI(v1.dotp(&v2)));
    println!("Parallelogram area:\t{}",GI(v1.varea(&v2))); 
    println!("Similarity:\t\t{}",GI(v1.vsim(&v2)));
    println!("Dissimilarity:\t\t{}\n",GI(v1.vdisim(&v2))); 
    // println!("Arc area:\t\t{}\n",GI(v1.varc(&v2)));
    let sm = v1.symmatrix();
-   for i in 0..5 { eprintln!("{}",GV(&sm[i])) };  
+   for i in 0..5 { eprintln!("{}",GS(&sm[i])) };  
    Ok(())
 }
 #[test]
@@ -127,7 +127,7 @@ fn vecvec() -> Result<()> {
    println!("Eccentricities\t{}",mu);  
    println!("Eccentricities\t{}",eccmed);
    let (_, seccs) = pt.sortedeccs(true,EPS); 
-   println!("Sorted eccs: {}\n", GV(&seccs));
+   println!("Sorted eccs: {}\n", GS(&seccs));
    let medcnt = binsearch(&seccs,eccmed.median);
    println!("Items smaller or equal to median of eccs: {} last value: {}", GI(medcnt), GI(seccs[medcnt-1]));
    let mut weights = Vec::new();
@@ -136,7 +136,7 @@ fn vecvec() -> Result<()> {
 //   let medmed = vec![0.5_f64;n];
 //   let (se, cpdf) = 
 //    ptu8.wsortedcos( &medmed, &pt.wgmedian(&weights,EPS), &weights);
-//   println!("Sorted coses:\n{}\ncpdf:\n{}\n",GV(se),GV(cpdf));
+//   println!("Sorted coses:\n{}\ncpdf:\n{}\n",GS(se),GS(cpdf));
    Ok(())
 }
 
@@ -147,7 +147,7 @@ fn trend() -> Result<()> {
    let d = 7_usize;
    let pts1 = genvec(d,28,13,19); // random test data 
    let pts2 = genvec(d,38,23,31);
-   println!("\nTrend vector:\n{}\n",GV(&pts1.trend(EPS,pts2)));
+   println!("\nTrend vector:\n{}\n",GS(&pts1.trend(EPS,pts2)));
    Ok(())
 }
 
