@@ -1,4 +1,4 @@
-use rstats::{VecVecf64,Vecf64,GI};
+use rstats::{VecVecf64,Vecf64};
 use rstats::functions::genvec;
 use devtimer::DevTime;
 
@@ -24,7 +24,7 @@ fn main() {
       sumtime += cmplx.time_in_nanos("nmedian").unwrap();
       sumg += pts.eccnonmember(&g).vmag();  
    };
-   println!("\nSum of nmedian residual errors: {} time: {} ", GI(sumg), GI(sumtime));
+   println!("\nSum of nmedian residual errors: {} time: {} ", sumg, sumtime);
   
 /*
   // Or we can iterate through all timers
