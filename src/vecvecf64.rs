@@ -508,14 +508,14 @@ impl VecVecf64 for &[Vec<f64>] {
         let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array
         let mut wsum = 0_f64;
         for h in 0..self.len() { // adding up covars for all the points
+            let w = ws[h];
+            wsum += w;
             let mut covsub = 0_usize; // subscript into the flattened array cov 
-            let vm = self[h].vsub(&m);  // zero mean vector
-            wsum += ws[h] as f64;
+            let vm = self[h].vsub(&m);  // subtract zero mean/median vector   
             for i in 0..n { // cross multiply the components of one point
-                let thisc = vm[i]; // ith component
-                // its weighted products up to and including the diagonal (itself)
-                for j in 0..i+1 { 
-                    cov[covsub] += ws[h]*thisc*vm[j];
+                let thisc = vm[i]; // ith component of the zero mean vector               
+                for j in 0..i+1 {  // its weighted products up to and including the diagonal 
+                    cov[covsub] += w*thisc*vm[j];
                     covsub += 1
                 }
             } 

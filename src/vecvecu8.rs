@@ -145,20 +145,19 @@ impl VecVecu8 for &[Vec<u8>] {
     /// The items of the resulting lower triangular array c[i][j] are here flattened
     /// into a single vector in this double loop order: left to right, top to bottom 
     fn wcovar(self, ws:&[u8], m:&[f64]) -> Vec<f64> {
-        let n = self[0].len(); // dimension of the vector(s)
-        // let mut covs:Vec<Vec<f64>> = Vec::new();
+        let n = self[0].len(); // dimension of the vector(s)  
         let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array
         let mut wsum = 0_f64;
         for h in 0..self.len() { // adding up covars for all the points
-            let mut covsub = 0_usize; // subscript into the flattened array cov
-            // let mut cov:Vec<f64> = Vec::new();
-            let vm = self[h].vsub(&m);  // zero mean vector
-            wsum += ws[h] as f64;
+            let w = ws[h] as f64;
+            wsum += w;
+            let mut covsub = 0_usize; // subscript into the flattened array cov   
+            let vm = self[h].vsub(&m);  // obtain zero mean vector 
             for i in 0..n {
                 let thisc = vm[i]; // ith component
                 // its products up to and including the diagonal (itself)
                 for j in 0..i+1 { 
-                    cov[covsub] += (ws[h] as f64)*thisc*vm[j];
+                    cov[covsub] += w*thisc*vm[j];
                     covsub += 1
                 }
             }
