@@ -44,7 +44,7 @@ To run the tests, use single thread. It will be slower but will produce the resu
 cargo test --release -- --test-threads=1 --nocapture --color always
 ```
 
-## Macro, structs and functions
+## Structs and functions
 
 * pub struct Med to hold median and quartiles
 
@@ -75,9 +75,9 @@ Included in this trait are:
 
 Vector algebra implemented on one or two `&[f64]` slices of any length (dimensionality):
 
+* Vector algebra
 * Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
-* Finding minimum and maximum, linear transformation to [0,1].
-* Indirect merge sort, binary search.
+* Linear transformation to [0,1], etc.
 
 This trait is sometimes unchecked (for speed), so some caution with data is advisable.
 
@@ -98,7 +98,8 @@ Relationships of one vector to a set of vectors (of `&[f64]` end types):
 * sums of distances, eccentricity,
 * centroid, medoid, true geometric median,
 * transformation to zero (geometric) median data,
-* relationship between sets of multidimensional vectors: trend.
+* relationship between sets of multidimensional vectors: trend,
+* covariance and comediance matrices (weighted and unweighted).
 
 Trait VecVec is entirely unchecked, so check your data upfront. This is the more sophisticated part of the library. The true geometric median is found iteratively.
 

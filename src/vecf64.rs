@@ -232,26 +232,7 @@ impl Vecf64 for &[f64] {
         let nf = self.len() as f64;
         (sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()
     }
- /*
-    /// Finds minimum, minimum's first index, maximum, maximum's first index of &[f64] 
-    fn minmax(self) -> (f64, usize, f64, usize) {
-        let mut min = self[0]; // initialise to the first value
-        let mut mini = 0;
-        let mut max = self[0]; // initialised as min, allowing 'else' below
-        let mut maxi = 0;
-        for i in 1..self.len() {
-            let x = self[i];
-            if x < min {
-                min = x;
-                mini = i
-            } else if x > max {
-                max = x;
-                maxi = i
-            }
-        }
-        (min, mini, max, maxi)
-    }
-*/
+ 
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Vec<f64> {
         let (min,_,max,_) = minmax(self);
