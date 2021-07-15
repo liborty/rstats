@@ -1,5 +1,5 @@
+pub mod statsgen;
 pub mod statsf64;
-pub mod statsi64;
 pub mod vecf64;
 pub mod vecu8;
 pub mod vecvecu8;
@@ -11,6 +11,7 @@ pub mod functions;
 pub use indxvec::{here,wi}; 
 /// simple error handling
 use anyhow::{Result,bail}; 
+
 
 /// Median and quartiles
 #[derive(Default)]

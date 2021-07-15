@@ -127,6 +127,8 @@ Some of the above for vectors of vectors of bytes.
 
 ## Appendix II: Recent Releases
 
+* **Version 0.8.1** Replaced the entire `statsi64.rs` module with its generic equivalent `statsgen.rs`. This is a big improvement in generality, as its methods will now work on all primitive numeric types, not just f64 and i64 as previously. This change should be otherwise unnoticeable to the users.
+
 * **Version 0.8.0** Simplified, more stable version. Moved auxiliary macro `here` and functions `wv,wi` to crate `indxvec`. Tidied up the tests accordingly.
 
 * **Version 0.7.17** Updated Cargo.toml dependency to `indxvec = "^0.2"`.
