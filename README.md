@@ -7,7 +7,7 @@
 Insert in your `Cargo.toml` file under `[dependencies]`  
 `rstats = "^0.8"`
 
-and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, Stats, Vecf64, Vecu8, VecVecf64, VecVecu8, Mutvectors};`
+and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, GSlice, Stats, Vecf64, Vecu8, VecVecf64, VecVecu8, Mutvectors};`
 
 ## Introduction
 
