@@ -56,13 +56,12 @@ cargo test --release -- --test-threads=1 --nocapture --color always
 
 ### Stats
 
-One dimensional statistical measures implemented for `&[i64]` and `&[f64]`.
+One dimensional statistical measures implemented for all 'numeric' types.
 
-All these methods operate on one vector of data and take no arguments.
-For example, `s.amean()` returns the arithmetic mean of slice `s` of either type.
-This is the only attempt at genericity.  
-This trait is carefully checked and will report all kinds of errors, such as empty input.
-This means you have to call `.unwrap()` or something similar on its results.
+Its methods operate on one slice of generic data and take no arguments.
+For example, `s.amean()` returns the arithmetic mean of slice `s`. 
+These methods are checked and will report all kinds of errors, such as an empty input.
+This means you have to call `.unwrap()` or something similar on their  results.
 
 Included in this trait are:
 
