@@ -1,4 +1,5 @@
 pub mod statsgen;
+pub mod statsi64;
 pub mod statsf64;
 pub mod vecf64;
 pub mod vecu8;
@@ -7,11 +8,35 @@ pub mod mutvec;
 pub mod vecvecf64;
 pub mod functions;
 
+use std::ops::{Deref,DerefMut};
+
 // reexporting to avoid duplication and for backwards compatibility
 pub use indxvec::{here,wi}; 
 /// simple error handling
 use anyhow::{Result,bail}; 
 
+/// Just a dummy struct for handling generic slices
+pub struct GSlice<'a,T> ( pub &'a[T] ) where T:Copy;
+
+impl<'a,T> Deref for GSlice<'a,T> where T:Copy,  f64: From<T> {
+    type Target = &'a[T];
+    #[inline] 
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+impl<'a,T> DerefMut for GSlice<'a,T> where T:Copy,  f64: From<T>{ 
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+impl<'a,T> GSlice<'a,T> where T:Copy, f64: From<T> {
+            
+    /// Potentially useful recast of a whole slice
+    pub fn sliceasf64(self) -> Vec<f64> {
+        self.iter().map(| &x | f64::from(x)).collect()
+    }
+
+}
 
 /// Median and quartiles
 #[derive(Default)]
@@ -46,7 +71,7 @@ impl std::fmt::Display for MStats {
 
 /// Basic one dimensional (1-d) statistical measures and ranking.
 /// These methods operate on just one vector (of data) and take no arguments.
-pub trait Stats {
+pub trait Stats { 
 
     /// Arithmetic mean
     fn amean(self) -> Result<f64> 

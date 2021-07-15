@@ -1,50 +1,44 @@
-use crate::{GSlice, MStats, Med, Stats, functions::wsum, here};
+use crate::{MStats, Med, Stats, functions::wsum, here};
 use anyhow::{ensure, Result};
-use std::ops::*;
-
 pub use indxvec::merge::sortm;
 
-impl<'a,T> Stats for GSlice<'a,T> 
-    where T: Copy+PartialOrd
-        +Add::<Output = T>
-        +Mul::<Output = T>, 
-        f64: From<T> {  
-
+impl Stats for &[i64] {
     /// Arithmetic mean of an f64 slice
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().amean().unwrap(),7.5_f64);
     /// ```
     fn amean(self) -> Result<f64> {
-        let n = self.0.len();
+        let n = self.len();
         ensure!(n > 0, "{} sample is empty!",here!());
-        Ok(self.0.iter().map(|&x| f64::from(x)).sum::<f64>() / (n as f64))
+        Ok(self.iter().map(|&x| x as f64).sum::<f64>() / (n as f64))
     }
 
     /// Arithmetic mean and (population) standard deviation of an f64 slice
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// let res = v1.as_slice().ameanstd().unwrap();
     /// assert_eq!(res.mean,7.5_f64);
     /// assert_eq!(res.std,4.031128874149275_f64);
     /// ```
     fn ameanstd(self) -> Result<MStats> {
-        let n = self.0.len();
+        let n = self.len();
         ensure!(n > 0, "{} sample is empty!",here!());
         let mut sx2 = 0_f64;
-        let mean = self.0
+        let mean = self
             .iter()
             .map(|&x| {
-                sx2 += f64::from(x) * f64::from(x);
-                f64::from(x)
+                sx2 += x as f64 * x as f64;
+                x as f64
             })
-            .sum::<f64>() / (n as f64);
+            .sum::<f64>()
+            / (n as f64);
         Ok(MStats {
-            mean,
+            mean: mean,
             std: (sx2 / (n as f64) - mean.powi(2)).sqrt(),
         })
     }
@@ -55,7 +49,7 @@ impl<'a,T> Stats for GSlice<'a,T>
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().awmean().unwrap(),5.333333333333333_f64);
     /// ```
     fn awmean(self) -> Result<f64> {
@@ -65,8 +59,8 @@ impl<'a,T> Stats for GSlice<'a,T>
         Ok(self
             .iter()
             .map(|&x| {
-                iw -= 1.;
-                iw * f64::from(x)
+                iw -= 1_f64;
+                iw * x as f64
             })
             .sum::<f64>()
             / wsum(n))
@@ -78,7 +72,7 @@ impl<'a,T> Stats for GSlice<'a,T>
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// let res = v1.as_slice().awmeanstd().unwrap();
     /// assert_eq!(res.mean,5.333333333333333_f64);
     /// assert_eq!(res.std,3.39934634239519_f64);
@@ -91,8 +85,9 @@ impl<'a,T> Stats for GSlice<'a,T>
         let mean = self
             .iter()
             .map(|&x| {
-                let wx = w * f64::from(x);
-                sx2 += wx * f64::from(x);
+                let fx = x as f64;
+                let wx = w * fx;
+                sx2 += wx * fx;
                 w -= 1_f64;
                 wx
             })
@@ -108,15 +103,15 @@ impl<'a,T> Stats for GSlice<'a,T>
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14]; 
     /// assert_eq!(v1.as_slice().hmean().unwrap(),4.305622526633627_f64);
     /// ```
     fn hmean(self) -> Result<f64> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!", here!());        
         let mut sum = 0_f64;
-        for &x in *self {
-            let fx = f64::from(x);
+        for &x in self {
+            let fx =  x as f64;
             ensure!( fx.is_normal(),"{} does not accept zero valued data!",here!());         
             sum += 1.0 / fx
         }
@@ -128,7 +123,7 @@ impl<'a,T> Stats for GSlice<'a,T>
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().hwmean().unwrap(),3.019546395306663_f64);
     /// ```
     fn hwmean(self) -> Result<f64> {
@@ -136,8 +131,8 @@ impl<'a,T> Stats for GSlice<'a,T>
         ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
         let mut w = n as f64;
-        for &x in *self {
-            let fx = f64::from(x);
+        for &x in self {
+            let fx = x as f64;
             ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
             sum += w / fx;
             w -= 1_f64;
@@ -153,15 +148,15 @@ impl<'a,T> Stats for GSlice<'a,T>
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().gmean().unwrap(),6.045855171418503_f64);
     /// ```
     fn gmean(self) -> Result<f64> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
-        for &x in *self {
-            let fx = f64::from(x);
+        for &x in self {
+            let fx = x as f64;
             ensure!( fx.is_normal(),"{} does not accept zero valued data!",here!());        
             sum += fx.ln()
         }
@@ -178,7 +173,7 @@ impl<'a,T> Stats for GSlice<'a,T>
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// assert_eq!(v1.as_slice().gwmean().unwrap(),4.144953510241978_f64);
     /// ```
     fn gwmean(self) -> Result<f64> {
@@ -186,8 +181,8 @@ impl<'a,T> Stats for GSlice<'a,T>
         ensure!(n > 0, "{} sample is empty!", here!());
         let mut w = n as f64; // descending weights
         let mut sum = 0_f64;
-        for &x in *self {
-            let fx = f64::from(x);
+        for &x in self {
+            let fx = x as f64;
             ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
             sum += w * fx.ln();
             w -= 1_f64;
@@ -201,7 +196,7 @@ impl<'a,T> Stats for GSlice<'a,T>
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// let res = v1.as_slice().gmeanstd().unwrap();
     /// assert_eq!(res.mean,6.045855171418503_f64);
     /// assert_eq!(res.std,2.1084348239406303_f64);
@@ -211,8 +206,8 @@ impl<'a,T> Stats for GSlice<'a,T>
         ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
-        for &x in *self {
-            let fx = f64::from(x);
+        for &x in self {
+            let fx = x as f64;
             ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
             let lx = fx.ln();
             sum += lx;
@@ -229,7 +224,7 @@ impl<'a,T> Stats for GSlice<'a,T>
     /// # Example
     /// ```
     /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
     /// let res = v1.as_slice().gwmeanstd().unwrap();
     /// assert_eq!(res.mean,4.144953510241978_f64);
     /// assert_eq!(res.std,2.1572089236412597_f64);
@@ -240,8 +235,8 @@ impl<'a,T> Stats for GSlice<'a,T>
         let mut w = n as f64; // descending weights
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
-        for &x in *self {
-            let fx = f64::from(x);
+        for &x in self {
+            let fx = x as f64;
             ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
             let lnx = fx.ln();
             sum += w * lnx;
@@ -255,44 +250,44 @@ impl<'a,T> Stats for GSlice<'a,T>
         })
     }
 
-    /// Median of a &[T] slice
+    /// Median of an f64 slice
     /// # Example
     /// ```
-    /// use rstats::{GSlice,Stats};
-    /// let v1 = vec![1_u8,2,3,4,5,6,7,8,9,10,11,12,13,14];
-    /// let res = GSlice(&v1).median().unwrap();
+    /// use rstats::Stats;
+    /// let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14];
+    /// let res = v1.as_slice().median().unwrap();
     /// assert_eq!(res.median,7.5_f64);
     /// assert_eq!(res.lquartile,4.25_f64);
     /// assert_eq!(res.uquartile,10.75_f64);
     /// ```
     fn median(self) -> Result<Med> {
-        let gaps = self.0.len()-1;
+        let gaps = self.len()-1;
         let mid = gaps / 2;
         let quarter = gaps / 4;
         let threeq = 3 * gaps / 4;
-        let v = sortm(self.0,true);     
+        let v = sortm(self,true);     
         let mut result: Med = Default::default();
-        result.median = if 2*mid < gaps { (f64::from(v[mid]) + f64::from(v[mid + 1])) / 2.0 }
-            else { f64::from(v[mid]) };
+        result.median = if 2*mid < gaps { (v[mid] as f64 + v[mid + 1] as f64) / 2.0 }
+            else { v[mid] as f64 };
         match gaps % 4 {
         0 => {
-            result.lquartile = f64::from(v[quarter]);
-            result.uquartile = f64::from(v[threeq]);
+            result.lquartile = v[quarter] as f64;
+            result.uquartile = v[threeq] as f64;
             return Ok(result) },
         1 => {
-            result.lquartile = (3.*f64::from(v[quarter]) + f64::from(v[quarter+1])) / 4_f64;
-            result.uquartile = (f64::from(v[threeq]) + 3.*f64::from(v[threeq+1])) / 4_f64;
+            result.lquartile = (3.*v[quarter] as f64 + v[quarter+1] as f64) / 4.;
+            result.uquartile = (v[threeq] as f64 + 3.*v[threeq+1] as f64) / 4.;
             return Ok(result) },
         2 => {
-            result.lquartile = (f64::from(v[quarter]) + f64::from(v[quarter+1])) / 2.;
-            result.uquartile = (f64::from(v[threeq]) + f64::from(v[threeq+1])) / 2.;
+            result.lquartile = (v[quarter] as f64 +v[quarter+1]as f64) / 2.;
+            result.uquartile = (v[threeq] as f64 + v[threeq+1] as f64) / 2.;
             return Ok(result) },
         3 => {
-            result.lquartile = (f64::from(v[quarter]) + 3.*f64::from(v[quarter+1])) / 4.;
-            result.uquartile = (3.*f64::from(v[threeq]) + f64::from(v[threeq+1])) / 4.
+            result.lquartile = (v[quarter] as f64 + 3.*v[quarter+1] as f64) / 4.;
+            result.uquartile = (3.*v[threeq] as f64 + v[threeq+1] as f64) / 4.
             },
         _ => { }  
         }
         Ok(result)       
-    }   
+    } 
 }

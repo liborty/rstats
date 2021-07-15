@@ -6,7 +6,7 @@ use devtimer::DevTime;
 use anyhow::Result;
 use indxvec::{wv,wi,Indices,merge::*};
 
-use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8};
+use rstats::{GSlice,Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8};
 use rstats::functions::{genvec,genvecu8};
 
 pub const EPS:f64 = 1e-7;
@@ -36,9 +36,9 @@ fn u8() -> Result<()> {
 
 #[test]
 fn fstats() -> Result<()> { 
-   let v0 = vec![1_u8,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-   let v1 = v0.vecu8asvecf64(); // testing the cast
-   println!("\n{:?}",v1);
+   let v0 = vec![1_i16,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+   let v1 = GSlice(&v0).sliceasf64(); // testing the cast
+   println!("\n{}",wv(&v1));
    println!("Linear transform:\n{}",wv(&v1.lintrans()));
    println!("Arithmetic mean:{}",wi(&v1.amean().unwrap()));
    println!("Geometric mean:\t{}",wi(&v1.gmean().unwrap()));
@@ -50,16 +50,32 @@ fn fstats() -> Result<()> {
    println!("{}\n",v1.median().unwrap());
    Ok(())
 }
+
 #[test]
 fn intstats() -> Result<()> { 
-   let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-   println!("\n{:?}",v1);
+   let v1 = vec![1_i64,2,3,4,5,6,7,8,9,10,11,12,13,14,15]; 
+   println!("\n{}",wv(&v1));
+   // println!("Linear transform:\n{}",wv(&v1.lintrans()));
    println!("Arithmetic mean:{}",wi(&v1.amean().unwrap()));
    println!("Geometric mean:\t{}",wi(&v1.gmean().unwrap()));
    println!("Harmonic mean:\t{}",wi(&v1.hmean().unwrap()));
+   // println!("Magnitude:\t{}",wi(&v1.vmag()));
    println!("Arithmetic {}",wi(&v1.ameanstd().unwrap()));
-   println!("Geometric {}",wi(&v1.gmeanstd().unwrap()));
-   println!("{}\n",v1.median().unwrap()); 
+   println!("Geometric  {}",wi(&v1.gmeanstd().unwrap()));
+   // println!("Autocorrelation:{}",wi(&v1.autocorr()));
+   println!("{}\n",v1.median().unwrap());
+   Ok(())
+}
+#[test]
+fn genericstats() -> Result<()> { 
+   let v1 = vec![1_i32,2,3,4,5,6,7,8,9,10,11,12,13,14,15]; 
+   println!("\n{}",wv(&v1));
+   println!("Arithmetic mean:{}",wi(&GSlice(&v1).amean().unwrap()));
+   println!("Geometric mean:\t{}",wi(&GSlice(&v1).gmean().unwrap()));
+   println!("Harmonic mean:\t{}",wi(&GSlice(&v1).hmean().unwrap()));
+   println!("Arithmetic {}",wi(&GSlice(&v1).ameanstd().unwrap()));
+   println!("Geometric {}",wi(&GSlice(&v1).gmeanstd().unwrap()));
+   println!("{}\n",&GSlice(&v1).median().unwrap()); 
    Ok(())
 }
 #[test]

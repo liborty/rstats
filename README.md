@@ -4,17 +4,10 @@
 
 ## Usage
 
-Insert into your Cargo.toml file [dependencies] section:
+Insert in your `Cargo.toml` file under `[dependencies]`  
+`rstats = "^0.8"`
 
-```rust
-rstats = "^0.8" 
-```
-
-and import into your source file(s) any of these functions and/or traits that you want:
-
-```rust
-use rstats::{functions,Stats,Vecf64,Vecu8,VecVecf64,VecVecu8,Mutvectors};
-```
+and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, Stats, Vecf64, Vecu8, VecVecf64, VecVecu8, Mutvectors};`
 
 ## Introduction
 
@@ -38,19 +31,18 @@ The constituent parts of Rstats are Rust traits grouping together functions appl
 
 Follow the documentation link. Then select a trait of interest to see the skeletal comments on the prototype function declarations in lib.rs. To see more detailed comments, plus some examples from the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests.rs`.
 
-To run the tests, use single thread. It will be slower but will produce the results in the right order:
-
-```rust
-cargo test --release -- --test-threads=1 --nocapture --color always
-```
+To run the tests, use single thread. It will be slower but will produce the results in the right order:  
+`cargo test --release -- --test-threads=1 --nocapture --color always`
 
 ## Structs and functions
 
-* pub struct Med to hold median and quartiles
+* `pub struct GSlice` for implementing methods on a slice of generic end-types
 
-* pub struct MStats to hold a mean and standard deviation
+* `pub struct Med` to hold median and quartiles
 
-* functions wsum, genvec, genvecu8 (see documentation for the module `functions`).
+* `pub struct MStats` to hold a mean and standard deviation
+
+* functions: `wsum, genvec, genvecu8` (see documentation for the module `functions.rs`).
 
 ## Traits
 
@@ -59,7 +51,7 @@ cargo test --release -- --test-threads=1 --nocapture --color always
 One dimensional statistical measures implemented for all 'numeric' types.
 
 Its methods operate on one slice of generic data and take no arguments.
-For example, `s.amean()` returns the arithmetic mean of slice `s`. 
+For example, `s.amean()` returns the arithmetic mean of slice `s`.
 These methods are checked and will report all kinds of errors, such as an empty input.
 This means you have to call `.unwrap()` or something similar on their  results.
 
@@ -126,7 +118,7 @@ Some of the above for vectors of vectors of bytes.
 
 ## Appendix II: Recent Releases
 
-* **Version 0.8.1** Replaced the entire `statsi64.rs` module with its generic equivalent `statsgen.rs`. This is a big improvement in generality, as its methods will now work on all primitive numeric types, not just f64 and i64 as previously. This change should be otherwise unnoticeable to the users.
+* **Version 0.8.2** Added `statsgen.rs` (generic) module to add the capapility of applying the trait `Stats` to all numeric end types, as long as their slices are wrapped in `GSlice(&s)`. This is a step towards more generality, as `Stats` methods can now work on all primitive numeric types.  f64 and i64 remain as previously, so they should not be wrapped.
 
 * **Version 0.8.0** Simplified, more stable version. Moved auxiliary macro `here` and functions `wv,wi` to crate `indxvec`. Tidied up the tests accordingly.
 
