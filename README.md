@@ -7,7 +7,7 @@
 Insert in your `Cargo.toml` file under `[dependencies]`  
 `rstats = "^0.8"`
 
-and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, GSlice, Stats, Vecf64, Vecu8, VecVecf64, VecVecu8, Mutvectors};`
+and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, Stats, Vecf64, Vecu8, VecVecf64, VecVecu8, Mutvectors};`
 
 ## Introduction
 
@@ -29,14 +29,12 @@ The constituent parts of Rstats are Rust traits grouping together functions appl
 
 ### Documentation
 
-Follow the documentation link. Then select a trait of interest to see the skeletal comments on the prototype function declarations in lib.rs. To see more detailed comments, plus some examples from the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests.rs`.
+Follow the documentation link. Then select a trait of interest to see the skeletal comments on the prototype function declarations in lib.rs. To see more detailed comments, plus some examples from the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests/tests.rs`.
 
 To run the tests, use single thread. It will be slower but will produce the results in the right order:  
 `cargo test --release -- --test-threads=1 --nocapture --color always`
 
 ## Structs and functions
-
-* `pub struct GSlice` for implementing methods on a slice of generic end-types
 
 * `pub struct Med` to hold median and quartiles
 
@@ -51,7 +49,7 @@ To run the tests, use single thread. It will be slower but will produce the resu
 One dimensional statistical measures implemented for all 'numeric' types.
 
 Its methods operate on one slice of generic data and take no arguments.
-For example, `s.amean()` returns the arithmetic mean of slice `s`.
+For example, `s.amean()` returns the arithmetic mean of the data in slice `s`.
 These methods are checked and will report all kinds of errors, such as an empty input.
 This means you have to call `.unwrap()` or something similar on their  results.
 
@@ -118,40 +116,10 @@ Some of the above for vectors of vectors of bytes.
 
 ## Appendix II: Recent Releases
 
-* **Version 0.8.2** Added `statsgen.rs` (generic) module to add the capapility of applying the trait `Stats` to all numeric end types, as long as their slices are wrapped in `GSlice(&s)`. This is a step towards more generality, as `Stats` methods can now work on all primitive numeric types.  f64 and i64 remain as previously, so they should not be wrapped.
+* **Version 0.8.3** Simplification of generic `Stats`. `GSlice` is no longer needed. The only restriction remaining is the necessity to explicitly convert `&[i64] -> &[f64]`, using function `statsg::i64tof64(s: &[i64])`. All other end types are fine. This made possible the removal of two modules, `statsf64.rs` and `stasi64.rs`. They are now superceded by a single generic `statsg.rs`. This rationalisation work will continue with the remaining traits as well.
+
+* **Version 0.8.2** Added `statsgen.rs` (generic) module to add the capability of applying the trait `Stats` to all numeric end types, as long as their slices are wrapped in `GSlice(&s)`. This is a step towards more generality, as `Stats` methods can now work on all primitive numeric types.  f64 and i64 remain as previously, so they should not be wrapped.
 
 * **Version 0.8.0** Simplified, more stable version. Moved auxiliary macro `here` and functions `wv,wi` to crate `indxvec`. Tidied up the tests accordingly.
 
 * **Version 0.7.17** Updated Cargo.toml dependency to `indxvec = "^0.2"`.
-
-* **Version 0.7.16** Simplification & generalisation: changed `sortf`, `ranks`, `iranks`, to `sortm`,`rank` from `indxvec`. Made `minmax` into generic function and moved it to `indxvec::merge`.
-
-* **Version 0.7.15** Added `wcovar` also for `Vec<f64>`.
-
-* **Version 0.7.14** Added weighted centroid `wacentroid`. Updated weighted geometric median `wgmedian`. Updated `gmedian` and `wgmedian` in `vecvecu8` to include the optimisations of v. 0.7.11. Ensured compatibility with the latest release of crate `indxvec`.
-
-* **Version 0.7.12** Split off Index trait and associated functions into a new crate `indxvec`.
-
-* **Version 0.7.11** Removed Kazutsugi (too specialised). Added `gcentroid` (geometric centroid). Further optimisations to `gmedian`.
-
-* **Version 0.7.10** Added `symmatrix` to reconstruct full symmetric matrix from its lower triangular part (for compatibility with crates which duplicate data). Renamed mergerank to plain `rank` and added boolean argument to facilitate ranking in ascending or descending order. Expanded vecf64() tests (see it for instructive example usage).
-
-* **Version 0.7.9** Added `wcovar` of weighted points. Improved struct GV and tests. Replaced `emsg` with macro `here!()` for easier diagnostics. Moved all structs into lib.rs.
-
-* **Version 0.7.8** Added `covar` = covariance or comediance matrix computations. Some changes to this text (Readme.md).
-
-* **Version 0.7.7** Fixed `merge_immutable` and added a test. Added `cityblockd` and `vaddu8`.
-
-* **Version 0.7.6** Added `merge_immutable` and `merge_indices`. Simplified `mergesort`.
-
-* **Version 0.7.5** Renamed VecVec trait to VecVecf64 to make the naming consistent. Added `unindexu8`. Removed `wsortedeccs` and `wsortedcos` for being too application specific.
-
-* **Version 0.7.4** Added merge of two sorted &[f64]. Added `ascending` boolean flag to `unindex`, `sortm` and functions that call them, to facilitate easy sorting in ascending or descending order. Added `genvecu8` to `functions` to generate sets of random u8 vectors. Normalised cummulative probability density functions  to [0,1].
-
-* **Version 0.7.3** Replaced varc with vector similarity and dissimilarity in [0,1] in terms of their cosines. Similar to unstandardised Pearson's correlation.
-
-* **Version 0.7.2** Added weighted `wgmedian` and `wsortedeccs` to VecVecu8. Created new source file for VecVecu8 trait.
-
-* **Version 0.7.1** Ported the improved gmedian also to VecVecu8.
-
-* **Version 0.7.0** Made gmedian slightly more accurate. Added Weighted Geometric Median and supporing functions. Added vecu8asvecf64 utility conversion.

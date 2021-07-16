@@ -3,6 +3,11 @@ use anyhow::{ensure, Result};
 use std::ops::*;
 
 pub use indxvec::merge::sortm;
+          
+/// Potentially useful recast of a whole slice
+pub fn tof64<'a,T>(s: &'a [T]) -> Vec<f64> where T: Copy, f64: From<T> {
+    s.iter().map(| &x | f64::from(x)).collect()
+}
 
 impl<'a,T> Stats for GSlice<'a,T> 
     where T: Copy+PartialOrd

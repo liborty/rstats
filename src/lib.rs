@@ -1,6 +1,4 @@
-pub mod statsgen;
-pub mod statsi64;
-pub mod statsf64;
+pub mod statsg;
 pub mod vecf64;
 pub mod vecu8;
 pub mod vecvecu8;
@@ -8,35 +6,10 @@ pub mod mutvec;
 pub mod vecvecf64;
 pub mod functions;
 
-use std::ops::{Deref,DerefMut};
-
 // reexporting to avoid duplication and for backwards compatibility
-pub use indxvec::{here,wi}; 
+pub use indxvec::{here,wi,wv}; 
 /// simple error handling
 use anyhow::{Result,bail}; 
-
-/// Just a dummy struct for handling generic slices
-pub struct GSlice<'a,T> ( pub &'a[T] ) where T:Copy;
-
-impl<'a,T> Deref for GSlice<'a,T> where T:Copy,  f64: From<T> {
-    type Target = &'a[T];
-    #[inline] 
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-impl<'a,T> DerefMut for GSlice<'a,T> where T:Copy,  f64: From<T>{ 
-    #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-impl<'a,T> GSlice<'a,T> where T:Copy, f64: From<T> {
-            
-    /// Potentially useful recast of a whole slice
-    pub fn sliceasf64(self) -> Vec<f64> {
-        self.iter().map(| &x | f64::from(x)).collect()
-    }
-
-}
 
 /// Median and quartiles
 #[derive(Default)]
@@ -70,9 +43,12 @@ impl std::fmt::Display for MStats {
 }
 
 /// Basic one dimensional (1-d) statistical measures and ranking.
-/// These methods operate on just one vector (of data) and take no arguments.
+/// These methods operate on just one vector (of generic data) and take no arguments.
+/// There is just one limitation: data of end type `i64` has to be explicitly converted to `f64`.
+/// That is to raise awareness that, in this particular case, some precision may be lost. 
+/// Use the provided function `statsg::i64tof64(&s)` to convert the whole slice.
 pub trait Stats { 
-
+    
     /// Arithmetic mean
     fn amean(self) -> Result<f64> 
         where Self: std::marker::Sized { bail!("amean not implemented for this type")}
@@ -221,9 +197,6 @@ pub trait Vecu8 {
     fn jointentropy(self, v:&[u8]) -> f64;
     /// Statistical independence measure based on joint entropy
     fn dependence(self, v:&[u8]) -> f64; 
-
-    /// cast vector of u8s to vector of f64s
-    fn vecu8asvecf64(self) -> Vec<f64>;
 }
 
 /// Mutable vector operations.

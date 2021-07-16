@@ -206,8 +206,4 @@ impl Vecu8 for &[u8] {
     fn dependence(self, v:&[u8]) -> f64 {
         2.0 * (1.0 - self.jointentropy(v) / (self.entropy() + v.entropy()))
     }
-    /// Potentially useful clone-recast of &[u8] to &[f64] 
-    fn vecu8asvecf64 (self) -> Vec<f64> {
-        self.iter().map(| &x | x as f64).collect()
-    }
 }
