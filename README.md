@@ -25,7 +25,7 @@ Our methods based on the True Geometric Median, computed here by `gmedian`, are 
 
 ### Implementation
 
-The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types.End type f64 is most commonly used. Facilities for other end types are limited. For lots of data of other end types, it is always possible to clone to f64, see for example the included utility function `vecu8asvecf64`.
+The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. End type f64 is most commonly used. Facilities for other end types are limited. For lots of data of other end types, it is always possible to clone them to f64, see for example the included utility function `statsg::tof64()`.
 
 ### Documentation
 
