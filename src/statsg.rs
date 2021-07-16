@@ -1,8 +1,25 @@
-use crate::{MStats, Med, Stats, functions::wsum, here};
+use crate::{ MStats, Med, Stats, functions::wsum, here };
 use anyhow::{ensure, Result};
-pub use indxvec::merge::sortm;
+// use std::ops::*;
 
-impl Stats for &[f64] {
+pub use indxvec::merge::sortm;
+          
+/// Potentially useful recast of a whole slice
+pub fn tof64<'a,T>(s: &'a [T]) -> Vec<f64> where T: Copy, f64: From<T> {
+    s.iter().map(| &x | f64::from(x)).collect()
+}
+
+/// Necessary recast of a whole i64 slice to f64 
+pub fn i64tof64(s: &[i64]) -> Vec<f64> {
+    s.iter().map(| &x | x as f64).collect()
+}
+
+impl<'a,T> Stats for &[T] 
+    where T: Copy+PartialOrd,
+    //    +Add::<Output = T>
+    //    +Mul::<Output = T>,
+        f64: From<T> {  
+
     /// Arithmetic mean of an f64 slice
     /// # Example
     /// ```
@@ -13,7 +30,7 @@ impl Stats for &[f64] {
     fn amean(self) -> Result<f64> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!",here!());
-        Ok(self.iter().sum::<f64>() / (n as f64))
+        Ok(self.iter().map(|&x| f64::from(x)).sum::<f64>() / (n as f64))
     }
 
     /// Arithmetic mean and (population) standard deviation of an f64 slice
@@ -32,13 +49,12 @@ impl Stats for &[f64] {
         let mean = self
             .iter()
             .map(|&x| {
-                sx2 += x * x;
-                x
+                sx2 += f64::from(x) * f64::from(x);
+                f64::from(x)
             })
-            .sum::<f64>()
-            / (n as f64);
+            .sum::<f64>() / (n as f64);
         Ok(MStats {
-            mean: mean,
+            mean,
             std: (sx2 / (n as f64) - mean.powi(2)).sqrt(),
         })
     }
@@ -60,7 +76,7 @@ impl Stats for &[f64] {
             .iter()
             .map(|&x| {
                 iw -= 1.;
-                iw * x
+                iw * f64::from(x)
             })
             .sum::<f64>()
             / wsum(n))
@@ -85,8 +101,8 @@ impl Stats for &[f64] {
         let mean = self
             .iter()
             .map(|&x| {
-                let wx = w * x;
-                sx2 += wx * x;
+                let wx = w * f64::from(x);
+                sx2 += wx * f64::from(x);
                 w -= 1_f64;
                 wx
             })
@@ -110,8 +126,9 @@ impl Stats for &[f64] {
         ensure!(n > 0, "{} sample is empty!", here!());        
         let mut sum = 0_f64;
         for &x in self {
-            ensure!( x.is_normal(),"{} does not accept zero valued data!",here!());         
-            sum += 1.0 / x
+            let fx = f64::from(x);
+            ensure!( fx.is_normal(),"{} does not accept zero valued data!",here!());         
+            sum += 1.0 / fx
         }
         Ok(n as f64 / sum)
     }
@@ -130,8 +147,9 @@ impl Stats for &[f64] {
         let mut sum = 0_f64;
         let mut w = n as f64;
         for &x in self {
-            ensure!(x.is_normal(),"{} does not accept zero valued data!",here!());
-            sum += w / x;
+            let fx = f64::from(x);
+            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            sum += w / fx;
             w -= 1_f64;
         }
         Ok(wsum(n) / sum)
@@ -153,8 +171,9 @@ impl Stats for &[f64] {
         ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
         for &x in self {
-            ensure!( x.is_normal(),"{} does not accept zero valued data!",here!());        
-            sum += x.ln()
+            let fx = f64::from(x);
+            ensure!( fx.is_normal(),"{} does not accept zero valued data!",here!());        
+            sum += fx.ln()
         }
         Ok((sum / (n as f64)).exp())
     }
@@ -178,8 +197,9 @@ impl Stats for &[f64] {
         let mut w = n as f64; // descending weights
         let mut sum = 0_f64;
         for &x in self {
-            ensure!(x.is_normal(),"{} does not accept zero valued data!",here!());
-            sum += w * x.ln();
+            let fx = f64::from(x);
+            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            sum += w * fx.ln();
             w -= 1_f64;
         }
         Ok((sum / wsum(n)).exp())
@@ -202,8 +222,9 @@ impl Stats for &[f64] {
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
-            ensure!(x.is_normal(),"{} does not accept zero valued data!",here!());
-            let lx = x.ln();
+            let fx = f64::from(x);
+            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            let lx = fx.ln();
             sum += lx;
             sx2 += lx * lx
         }
@@ -230,8 +251,9 @@ impl Stats for &[f64] {
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
-            ensure!(x.is_normal(),"{} does not accept zero valued data!",here!());
-            let lnx = x.ln();
+            let fx = f64::from(x);
+            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            let lnx = fx.ln();
             sum += w * lnx;
             sx2 += w * lnx * lnx;
             w -= 1_f64;
@@ -243,12 +265,12 @@ impl Stats for &[f64] {
         })
     }
 
-    /// Median of an f64 slice
+    /// Median of a &[T] slice
     /// # Example
     /// ```
-    /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let res = v1.as_slice().median().unwrap();
+    /// use rstats::{Stats};
+    /// let v1 = vec![1_u8,2,3,4,5,6,7,8,9,10,11,12,13,14];
+    /// let res = &v1.median().unwrap();
     /// assert_eq!(res.median,7.5_f64);
     /// assert_eq!(res.lquartile,4.25_f64);
     /// assert_eq!(res.uquartile,10.75_f64);
@@ -260,54 +282,27 @@ impl Stats for &[f64] {
         let threeq = 3 * gaps / 4;
         let v = sortm(self,true);     
         let mut result: Med = Default::default();
-        result.median = if 2*mid < gaps { (v[mid] + v[mid + 1]) / 2.0 }
-            else { v[mid] };
+        result.median = if 2*mid < gaps { (f64::from(v[mid]) + f64::from(v[mid + 1])) / 2.0 }
+            else { f64::from(v[mid]) };
         match gaps % 4 {
         0 => {
-            result.lquartile = v[quarter];
-            result.uquartile = v[threeq];
+            result.lquartile = f64::from(v[quarter]);
+            result.uquartile = f64::from(v[threeq]);
             return Ok(result) },
         1 => {
-            result.lquartile = (3.*v[quarter] + v[quarter+1]) / 4.;
-            result.uquartile = (v[threeq] + 3.*v[threeq+1]) / 4.;
+            result.lquartile = (3.*f64::from(v[quarter]) + f64::from(v[quarter+1])) / 4_f64;
+            result.uquartile = (f64::from(v[threeq]) + 3.*f64::from(v[threeq+1])) / 4_f64;
             return Ok(result) },
         2 => {
-            result.lquartile = (v[quarter]+v[quarter+1]) / 2.;
-            result.uquartile = (v[threeq] + v[threeq+1]) / 2.;
+            result.lquartile = (f64::from(v[quarter]) + f64::from(v[quarter+1])) / 2.;
+            result.uquartile = (f64::from(v[threeq]) + f64::from(v[threeq+1])) / 2.;
             return Ok(result) },
         3 => {
-            result.lquartile = (v[quarter] + 3.*v[quarter+1]) / 4.;
-            result.uquartile = (3.*v[threeq] + v[threeq+1]) / 4.
+            result.lquartile = (f64::from(v[quarter]) + 3.*f64::from(v[quarter+1])) / 4.;
+            result.uquartile = (3.*f64::from(v[threeq]) + f64::from(v[threeq+1])) / 4.
             },
         _ => { }  
         }
         Ok(result)       
-    }    
-/*
-    /// Returns vector of f64 ranks;
-    /// ranked from the smallest number in self (rank 0) to the biggest (rank n-1).
-    /// Equalities lead to fractional ranks, hence Vec<f64> output and the range of rank values is reduced.
-    /// Has complexity n*(n-1)/2. Use `mergerank` for long lists.
-    fn ranks(self) -> Result<Vec<f64>> {
-        let n = self.len();
-        let mut rank = vec![0_f64; n];
-        // make all n*(n-1)/2 comparisons just once
-        for i in 1..n {
-            let x = self[i];
-            for j in 0..i {
-                if x > self[j] {
-                    rank[i] += 1_f64;
-                    continue;
-                };
-                if x < self[j] {
-                    rank[j] += 1_f64;
-                    continue;
-                };
-                rank[i] += 0.5;
-                rank[j] += 0.5;
-            }
-        }
-        Ok(rank)
-    }
-*/
+    }   
 }
