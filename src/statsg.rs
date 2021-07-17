@@ -1,24 +1,39 @@
-use crate::{ MStats, Med, Stats, functions::wsum, here };
+use crate::{ here,functions::wsum, MStats, Med, Stats };
 use anyhow::{ensure, Result};
-// use std::ops::*;
+// use std::ops::Sub;
 
-pub use indxvec::merge::sortm;
-          
-/// Potentially useful recast of a whole slice
-pub fn tof64<'a,T>(s: &'a [T]) -> Vec<f64> where T: Copy, f64: From<T> {
-    s.iter().map(| &x | f64::from(x)).collect()
-}
+pub use indxvec::merge::{sortm,minmax};          
 
-/// Necessary recast of a whole i64 slice to f64 
-pub fn i64tof64(s: &[i64]) -> Vec<f64> {
-    s.iter().map(| &x | x as f64).collect()
-}
-
-impl<'a,T> Stats for &[T] 
-    where T: Copy+PartialOrd,
-    //    +Add::<Output = T>
-    //    +Mul::<Output = T>,
+impl<T> Stats for &[T] 
+    where T: Copy+PartialOrd, // +Sub::<Output = T>,
         f64: From<T> {  
+
+    /// Vector magnitude
+    fn vmag(self) -> f64 {
+        self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>().sqrt()
+    }
+
+    /// Vector magnitude squared (sum of squares)
+    fn vmagsq(self) -> f64  {
+        self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>()
+    }
+
+    /// Vector with inverse magnitude
+    fn vinverse(self) -> Vec<f64> {
+        let sf = 1.0/self.vmagsq();
+        self.iter().map(|&x| sf*(f64::from(x))).collect()     
+    }
+
+    // negated vector (all components swap sign)
+    fn negv(self) -> Vec<f64> { 
+        self.iter().map(|&x| (-f64::from(x))).collect()
+    }
+
+    /// Unit vector
+    fn vunit(self) -> Vec<f64> {
+        let m = 1.0 / self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>().sqrt();
+        self.iter().map(|&x| m*(f64::from(x))).collect() 
+    }
 
     /// Arithmetic mean of an f64 slice
     /// # Example
@@ -304,5 +319,84 @@ impl<'a,T> Stats for &[T]
         _ => { }  
         }
         Ok(result)       
-    }   
+    } 
+
+    /// Probability density function of a sorted slice with repeats
+    fn pdf(self) -> Vec<f64> {     
+        let n = self.len();   
+        let mut res:Vec<f64> = vec![1.0;n];  
+        let mut rcount = 1_f64; // running count
+        let mut lastval = self[0]; // first item
+
+        for i in 1..n { // first pass to count same values 
+            if self[i] > lastval { lastval = self[i]; rcount = 1.0 } // new value                 
+            else { rcount += 1.0 } // same value
+            res[i] = rcount            
+        }
+        let nf = n as f64;
+        for i in (0..n).rev() {  // second reverse pass to propagate maxima
+            if self[i] < lastval { lastval = self[i]; rcount = res[i] }; // new value                
+            res[i] = rcount/nf // propagate maximum count from previous item           
+        } 
+        // let ressum = res.iter().sum::<f64>();
+        // eprintln!("Sum of probs: {}",ressum); 
+        res
+    } 
+
+    /// Information (entropy) (in nats)
+    fn entropy(self) -> f64 {
+        let pdfv = sortm(self,true).pdf();      
+        pdfv.iter().map( |&x| -x*(x.ln()) ).sum()                 
+    }
+
+    /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.
+    /// # Example
+    /// ```
+    /// use rstats::Stats;
+    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// assert_eq!(v1.autocorr(),0.9984603532054123_f64);
+    /// ```
+    fn autocorr(self) -> f64 {
+        let (mut sx, mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64, 0_f64);
+        let n = self.len();
+        if n < 2 { panic!("{} vector is too short",here!()) }
+        let mut x = f64::from(self[0]);    
+        for i in 1..n {
+            let y = f64::from(self[i]);
+            sx += x;
+            sy += y;
+            sxy += x * y;
+            sx2 += x * x;
+            sy2 += y * y;
+            x = y
+        }        
+        let nf = n as f64;
+        (sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()
+    }
+    /// Linear transform to interval [0,1]
+    fn lintrans(self) -> Vec<f64> {
+        let (min,_,max,_) = minmax(self);
+        let range = f64::from(max)-f64::from(min);
+        self.iter().map(|&x|(f64::from(x)-f64::from(min))/range).collect()        
+    }
+    /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
+    /// as produced by covar, covone, wcovar
+    fn symmatrix(self) -> Vec<Vec<f64>> {
+        // solve quadratic equation to find the dimension of the square matrix
+        let n = (((8*self.len()+1) as f64).sqrt() as usize - 1)/2;
+        let mut mat = vec![vec![0_f64;n];n]; // create the square matrix 
+        let mut selfindex = 0;
+        for row in 0..n {     
+            for column in 0..row { // excludes the diagonal 
+                let this = f64::from(self[selfindex]); 
+                mat[row][column] = this; // just copy the value into the lower triangle
+                mat[column][row] = this; // and into transposed upper position 
+                selfindex += 1 // move to the next input value
+            } // this row of lower triangle finished
+            mat[row][row] = f64::from(self[selfindex]);  // now the diagonal element, no transpose
+            selfindex += 1 // move to the next input value
+        }
+        mat
+    }    
+ 
 }

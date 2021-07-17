@@ -4,10 +4,8 @@
 
 ## Usage
 
-Insert in your `Cargo.toml` file under `[dependencies]`  
-`rstats = "^0.8"`
-
-and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, Stats, Vecf64, Vecu8, VecVecf64, VecVecu8, Mutvectors};`
+Insert in your `Cargo.toml` file under `[dependencies]` `rstats = "^0.8"`
+and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, Stats, Vecg, Vecu8, VecVecf64, VecVecu8, Mutvectors};`
 
 ## Introduction
 
@@ -25,7 +23,7 @@ Our methods based on the True Geometric Median, computed here by `gmedian`, are 
 
 ### Implementation
 
-The constituent parts of Rstats are Rust traits grouping together functions applicable to vectors of data of relevant end types. End type f64 is most commonly used. Facilities for other end types are limited. For lots of data of other end types, it is always possible to clone them to f64, see for example the included utility function `statsg::tof64()`.
+The constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector (`Stats`), two vectors (`Vecg`), or n vectors of data. End type f64 is most commonly used for the results. 
 
 ### Documentation
 
@@ -40,7 +38,7 @@ To run the tests, use single thread. It will be slower but will produce the resu
 
 * `pub struct MStats` to hold a mean and standard deviation
 
-* functions: `wsum, genvec, genvecu8` (see documentation for the module `functions.rs`).
+* functions: `tof64, i64tof64, wsum, genvec, genvecu8` (see documentation for the module `functions.rs`).
 
 ## Traits
 
@@ -50,29 +48,31 @@ One dimensional statistical measures implemented for all 'numeric' types.
 
 Its methods operate on one slice of generic data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of the data in slice `s`.
-These methods are checked and will report all kinds of errors, such as an empty input.
-This means you have to call `.unwrap()` or something similar on their  results.
+Some of these methods are checked and will report all kinds of errors, such as an empty input. This means you have to call `.unwrap()` or something similar on their  results.
 
 Included in this trait are:
 
 * means (arithmetic, geometric and harmonic),
 * standard deviations,
 * linearly weighted means (useful for time dependent data analysis),
-* median and quartiles.
+* median and quartiles,
+* autocorrelation, entropy
+* linear transformation to [0,1], 
+* other measures and vector algebra operators
 
-### Vecf64
+### Vecg
 
-Vector algebra implemented on one or two `&[f64]` slices of any length (dimensionality):
+Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimensionality):
 
-* Vector algebra
-* Autocorrelation, Pearson's, Spearman's and Kendall's correlations.
-* Linear transformation to [0,1], etc.
+* Vector additions, subtractions, products and other relationships and measures.
+* Pearson's, Spearman's and Kendall's correlations.
 
-This trait is sometimes unchecked (for speed), so some caution with data is advisable.
+
+This trait is unchecked (for speed), so some caution with data is advisable.
 
 ### Vecu8
 
-* Some vector algebra as above for vectors of u8 (bytes).
+* Some vector algebra as above that can be made more efficient when the end type happens to be u8 (bytes).
 * Frequency count of bytes by their values (Histogram or Probability Density Function).
 * Entropy measures in units of e (using natural logarithms).
 
@@ -115,6 +115,8 @@ Some of the above for vectors of vectors of bytes.
 * `Comediance` is similar to covariance, except zero median vectors are used to compute it  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 0.8.4** Significant reorganisation. `Vecf64` trait and its source module `vecf64.rs` have been replaced by `Vecg` generic trait and `vecg.rs` module respectively. Numerous methods have been sorted more carefully into `Stats` trait or `Vecg` trait, according to whether or not they take an argument. Some methods have been also moved out of `Vecu8` trait and generalised in the process. Methods remaining in `Vecu8` now all have names ending in `u8` for clarity and to avoid conflicts with their generic equivalents. Some bugs in entropy methods have been fixed.
 
 * **Version 0.8.3** Simplification of generic `Stats`. `GSlice` is no longer needed. The only restriction remaining is the necessity to explicitly convert `&[i64] -> &[f64]`, using function `statsg::i64tof64(s: &[i64])`. All other end types are fine. This made possible the removal of two modules, `statsf64.rs` and `stasi64.rs`. They are now superceded by a single generic `statsg.rs`. This rationalisation work will continue with the remaining traits as well.
 

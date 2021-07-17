@@ -1,4 +1,4 @@
-use crate::{Vecu8,VecVecu8,MutVectors,Vecf64};
+use crate::{Stats,VecVecu8,MutVectors,Vecg};
 
 impl VecVecu8 for &[Vec<u8>] {
     

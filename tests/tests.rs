@@ -6,9 +6,8 @@ use devtimer::DevTime;
 use anyhow::Result;
 use indxvec::{wv,wi,Indices,merge::*};
 
-use rstats::{Stats,MutVectors,Vecf64,VecVecf64,Vecu8,VecVecu8};
-use rstats::functions::{genvec,genvecu8};
-use rstats::statsg::{i64tof64,tof64};
+use rstats::{Stats,MutVectors,Vecg,VecVecf64,Vecu8,VecVecu8};
+use rstats::functions::{genvec,genvecu8,i64tof64,tof64};
 
 pub const EPS:f64 = 1e-7;
 #[test]
@@ -17,12 +16,17 @@ fn u8() -> Result<()> {
    println!("\n{}",wv(&v1));
    println!("Entropy: {}",wi(&v1.entropy()));
    let v2 = vec![1_u8,2,2,3,3,3,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2]; 
-   println!("{:?}",v2);
-   println!("|v2-v1|: {}",wi(&v2.vdistu8(&v1)));
-   println!("Cityblockd: {}",wi(&v2.cityblockdu8(&v1)));  
+   println!("{}",wv(&v2)); 
    println!("Entropy: {}",wi(&v2.entropy()));
+   println!("Entropy: {}",wi(&v2.entropyu8()));
+   println!("|v2-v1|: {}",wi(&v2.vdistu8(&v1)));
+   println!("Cityblockd: {}",wi(&v2.cityblockd(&v1)));   
+   println!("Cityblockd: {}",wi(&v2.cityblockdu8(&v1))); 
    println!("Joint E: {}",wi(&v1.jointentropy(&v2)));
+   println!("Joint E: {}",wi(&v1.jointentropyu8(&v2)));
    println!("Dependence: {}",wi(&v1.dependence(&v2)));
+   println!("Dependence: {}",wi(&v1.dependenceu8(&v2)));
+   println!("SpCorr:  {}",wi(&v1.spearmancorr(&v2)));
    let d = 5_usize;
    let n = 7_usize;
    println!("Testing on a random set of {} points in {} d space\n",wi(&n),wi(&d));
@@ -31,7 +35,7 @@ fn u8() -> Result<()> {
    let com = pt.covar(&pt.gmedian(EPS));
    println!("Covariances:\n{}",wv(&cov));
    println!("Comediances:\n{}",wv(&com));
-   println!("Cityblock Distance: {}\n",wi(&cov.cityblockd(&com)));
+   println!("Their Cityblock Distance: {}\n",wi(&cov.cityblockd(&com)));
    Ok(())
 }
 #[test]
@@ -45,7 +49,7 @@ fn fstats() -> Result<()> {
     println!("Magnitude:\t{}",wi(&v1.vmag()));
     println!("Arithmetic {}",wi(&v1.ameanstd().unwrap()));
     println!("Geometric  {}",wi(&v1.gmeanstd().unwrap()));
-    // println!("Autocorrelation:{}",wi(&v1.autocorr()));
+    println!("Autocorrelation:{}",wi(&v1.autocorr()));
     println!("{}\n",v1.median().unwrap());
     Ok(())
  }
@@ -60,7 +64,7 @@ fn ustats() -> Result<()> {
    println!("Magnitude:\t{}",wi(&v1.vmag()));
    println!("Arithmetic {}",wi(&v1.ameanstd().unwrap()));
    println!("Geometric  {}",wi(&v1.gmeanstd().unwrap()));
-   // println!("Autocorrelation:{}",wi(&v1.autocorr()));
+   println!("Autocorrelation:{}",wi(&v1.autocorr()));
    println!("{}\n",v1.median().unwrap());
    Ok(())
 }
@@ -78,7 +82,7 @@ fn intstats() -> Result<()> {
    // println!("Magnitude:\t{}",wi(&v1.vmag()));
    println!("Arithmetic {}",wi(&v1.ameanstd().unwrap()));
    println!("Geometric  {}",wi(&v1.gmeanstd().unwrap()));
-   // println!("Autocorrelation:{}",wi(&v1.autocorr()));
+   println!("Autocorrelation:{}",wi(&v1.autocorr()));
    println!("{}\n",v1.median().unwrap());
    Ok(())
 }
@@ -92,11 +96,12 @@ fn genericstats() -> Result<()> {
    println!("Harmonic mean:\t{}",wi(&v.hmean().unwrap()));
    println!("Arithmetic {}",wi(&v.ameanstd().unwrap()));
    println!("Geometric {}",wi(&v.gmeanstd().unwrap()));
+   println!("Autocorrelation:{}",wi(&v.autocorr()));
    println!("{}\n",&v.median().unwrap()); 
    Ok(())
 }
 #[test]
-fn vecf64() -> Result<()> { 
+fn vecg() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
    println!("\n{}",wv(&v1));
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
@@ -113,6 +118,7 @@ fn vecf64() -> Result<()> {
    println!("Vector sum:{}",wv(&v1.vadd(&v2)));  
    println!("Scalar product:\t\t{}",wi(&v1.dotp(&v2)));
    println!("Parallelogram area:\t{}",wi(&v1.varea(&v2))); 
+   println!("Dependence:\t\t{}",wi(&v1.dependence(&v2)));
    println!("Similarity:\t\t{}",wi(&v1.vsim(&v2)));
    println!("Dissimilarity:\t\t{}\n",wi(&v1.vdisim(&v2))); 
    // println!("Arc area:\t\t{}\n",wi(v1.varc(&v2)));

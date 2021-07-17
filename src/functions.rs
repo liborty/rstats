@@ -1,5 +1,15 @@
 use crate::here;
 
+/// Potentially useful recast of a whole slice
+pub fn tof64<'a,T>(s: &'a [T]) -> Vec<f64> where T: Copy, f64: From<T> {
+    s.iter().map(| &x | f64::from(x)).collect()
+}
+
+/// Necessary recast of a whole i64 slice to f64 
+pub fn i64tof64(s: &[i64]) -> Vec<f64> {
+    s.iter().map(| &x | x as f64).collect()
+}
+
 /// Sum of linear weights 1..n.
 /// Also the size of an upper or lower triangular array (including the diagonal)
 pub fn wsum(n: usize) -> f64 {

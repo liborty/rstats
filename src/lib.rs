@@ -1,5 +1,6 @@
 pub mod statsg;
-pub mod vecf64;
+pub mod vecg;
+// pub mod vecf64;
 pub mod vecu8;
 pub mod vecvecu8;
 pub mod mutvec;
@@ -42,12 +43,24 @@ impl std::fmt::Display for MStats {
     }
 }
 
-/// Basic one dimensional (1-d) statistical measures and ranking.
-/// These methods operate on just one vector (of generic data) and take no arguments.
+/// Statistical measures of a single variable (one generic vector of data) and 
+/// vector algebra applicable to a single (generic) vector. 
+/// Thus these methods take no arguments.
 /// There is just one limitation: data of end type `i64` has to be explicitly converted to `f64`.
 /// That is to raise awareness that, in this particular case, some precision may be lost. 
-/// Use the provided function `statsg::i64tof64(&s)` to convert the whole slice.
+/// Function `statsg::i64tof64(&s)` will convert the whole slice.
 pub trait Stats { 
+
+    /// Vector magnitude
+    fn vmag(self) -> f64;
+    /// Vector magnitude squared (sum of squares)
+    fn vmagsq(self) -> f64;
+    /// Vector with inverse magnitude
+    fn vinverse(self) -> Vec<f64>;
+    // negated vector (all components swap sign)
+    fn negv(self) -> Vec<f64>;
+    /// Unit vector
+    fn vunit(self) -> Vec<f64>;
     
     /// Arithmetic mean
     fn amean(self) -> Result<f64> 
@@ -82,122 +95,103 @@ pub trait Stats {
     /// Median and quartiles
     fn median(self) -> Result<Med>
         where Self: std::marker::Sized { bail!("median not implemented for this type")}
-}
-
-/// Vector algebra on one or two vectors.
-pub trait Vecf64 {
-    /// Scalar multiplication of a vector
-    fn smult(self, s: f64) -> Vec<f64>;
-    /// Scalar addition to vector
-    fn sadd(self, s: f64) -> Vec<f64>; 
-    /// Scalar product of two vectors
-    fn dotp(self, v: &[f64]) -> f64;
-    /// Inverse vecor of magnitude 1/|v|
-    fn vinverse(self) -> Vec<f64>;
-    /// Cosine = a.dotp(b)/(a.vmag*b.vmag)
-    fn cosine(self, _v: &[f64]) -> f64; 
-    /// Vector subtraction
-    fn vsub(self, v: &[f64]) -> Vec<f64>;
-    /// Vector negtion
-    fn negv(self) -> Vec<f64>;
-    /// Vector addition
-    fn vadd(self, v: &[f64]) -> Vec<f64>;
-    /// Vector magnitude
-    fn vmag(self) -> f64;
-    /// Vector magnitude squared
-    fn vmagsq(self) -> f64;
-    /// Euclidian distance between two points
-    fn vdist(self, v: &[f64]) -> f64;
-    /// vdist between two points squared
-    fn vdistsq(self, v: &[f64]) -> f64;
-    /// cityblock distance
-    fn cityblockd(self, v:&[f64]) -> f64;   
-    /// Unit vector
-    fn vunit(self) -> Vec<f64>;
-    /// Unit vector of difference (done together for efficiency)
-    fn vsubunit(self, v: &[f64]) -> Vec<f64>;
-    /// Area of parallelogram between two vectors (magnitude of cross product)
-    fn varea(self, v:&[f64]) -> f64;
-    /// Area proportional to the swept arc
-    fn varc(self, v:&[f64]) -> f64; 
-    /// Vector similarity in the interval [0,1]: (1+cos(theta))/2
-    fn vsim(self, v:&[f64]) -> f64;
-    /// Vector dissimilarity in the interval [0,1]: (1-cos(theta))/2
-    fn vdisim(self, v:&[f64]) -> f64; 
-    /// Correlation
-    fn correlation(self, _v: &[f64]) -> f64; 
-    /// Kendall's tau-b (rank order) correlation
-    fn kendalcorr(self, _v: &[f64]) -> f64;
-    /// Spearman's rho (rank differences) correlation
-    fn spearmancorr(self, _v: &[f64]) -> f64;
-    /// Autocorrelation
-    fn autocorr(self) -> f64;
-    /// Lower triangular part of a covariance matrix for a single f64 vector.
-    fn covone(self, m:&[f64]) -> Vec<f64>;
-    /// Reconstructs the full symmetric matrix from its lower diagonal compact form
-    fn symmatrix(self) -> Vec<Vec<f64>>;
-    /// Linear transformation to [0,1]
+    /// Probability density function of a sorted slice
+    fn pdf(self) -> Vec<f64>;
+    /// Information (entropy) in nats
+    fn entropy(self) -> f64;
+    /// (Auto)correlation coefficient of pairs of successive values of (time series) variable.
+    fn autocorr(self) -> f64; 
+    /// Linear transform to interval [0,1]
     fn lintrans(self) -> Vec<f64>;
-    // Sort vector in a standard way
-    // fn sortf(self) -> Vec<f64>; 
+    /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
+    /// produced by covar, covone, wcovar
+    fn symmatrix(self) -> Vec<Vec<f64>>;
+   }
+
+
+/// Vector Algebra on two vectors (represented here as generic slices).
+pub trait Vecg<T,U> {
+    /// Scalar multiplication of a vector
+    fn smult(self, s:U) -> Vec<f64>;
+    /// Scalar addition to vector
+    fn sadd(self, s:U) -> Vec<f64>;
+    /// Scalar product 
+    fn dotp(self, v:&[U]) -> f64;
+    /// Cosine of angle between two slices
+    fn cosine(self, v:&[U]) -> f64;
+    /// Vectors' difference
+    fn vsub(self, v:&[U]) -> Vec<f64>;
+    /// Vectors difference as unit vector (done together for efficiency)
+    fn vsubunit(self, v: &[U]) -> Vec<f64>; 
+    /// Vector addition
+    fn vadd(self, v:&[U]) -> Vec<f64>;  
+    /// Euclidian distance 
+    fn vdist(self, v:&[U]) -> f64;
+    /// Euclidian distance squared
+    fn vdistsq(self, v:&[U]) -> f64; 
+    /// cityblock distance
+    fn cityblockd(self, v:&[U]) -> f64;
+    /// Magnitude of the cross product |a x b| = |a||b|sin(theta).
+    /// Attains maximum `|a|.|b|` when the vectors are othogonal.
+    fn varea(self, v:&[U]) -> f64;
+    /// Area proportional to the swept arc
+     fn varc(self, v:&[U]) -> f64; 
+    /// Vector similarity S in the interval [0,1]: S = (1+cos(theta))/2
+    fn vsim(self, v:&[U]) -> f64;
+    /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2
+    fn vdisim(self, v:&[U]) -> f64;
+    /// Lower triangular part of a covariance matrix for a single f64 vector.
+    fn covone(self, m:&[U]) -> Vec<f64>;
+
+    /// Joint entropy of &[u8],&[u8] in nats 
+    fn jointentropy(self, v:&[U]) -> f64;
+    /// Statistical independence measure based on joint entropy
+    fn dependence(self, v:&[U]) -> f64; 
+
+    /// Pearson's correlation.  
+    fn correlation(self, v:&[U]) -> f64; 
+    /// Kendall Tau-B correlation. 
+    fn kendalcorr(self, v:&[U]) -> f64;
+    /// Spearman rho correlation.
+    fn spearmancorr(self, v:&[U]) -> f64;   
 }
 
-/// Some support for Vec<u8> (vector of bytes)
+
+/// Methods specialised to, or more efficient for, `&[u8]`
 pub trait Vecu8 {
-    /// Scalar multiplication of a vector
-    fn smult(self, s: f64) -> Vec<f64>;
-    /// Scalar addition to vector
-    fn sadd(self, s: f64) -> Vec<f64>;
-    /// Scalar product of u8 and f64 vectors
-    fn dotp(self, v: &[f64]) -> f64;
-    /// Scalar product of two u8 vectors -> u64
-     fn dotpu8(self, v: &[u8]) -> u64;
-    /// Cosine between u8 and f64 vectors
-    fn cosine(self, v: &[f64]) -> f64;
-    /// Cosine between two u8 vectors
-    fn cosineu8(self, v: &[u8]) -> f64;
-    /// Vector subtraction
-    fn vsub(self, v: &[f64]) -> Vec<f64>;
-    /// Vector subtraction
+    /// Scalar product of two (positive) u8 slices.   
+    /// Must be of the same length - no error checking (for speed)
+    fn dotpu8(self, v: &[u8]) -> u64; 
+    /// Cosine between two (positive) u8 slices.
+    fn cosineu8(self, v: &[u8]) -> f64; 
+    /// Vector subtraction (converts results to f64 as they can be negative)
     fn vsubu8(self, v: &[u8]) -> Vec<f64>;
-    /// Vector addition
-    fn vadd(self, v: &[f64]) -> Vec<f64>;
     /// Vector addition ( converts results to f64, as they can exceed 255 )
     fn vaddu8(self, v: &[u8]) -> Vec<f64>;
-    /// Vector magnitude
-    fn vmag(self) -> f64;
-    /// Vector magnitude squared (sum of squares)
-    fn vmagsq(self) -> f64;
-    /// Euclidian distance to &[f64]
-    fn vdist(self, v:&[f64]) -> f64;
-    /// Euclidian distance to &[u8]
-    fn vdistu8(self, v:&[u8]) -> f64;
-    /// Euclidian distance between byte vectors
-    fn vdistsq(self, v: &[u8]) -> u64; 
+    /// Euclidian distance between self &[u8] and v:&[u8].  
+    /// Faster than vsub followed by vmag, as both are done in one loop
+    fn vdistu8(self, v: &[u8]) -> f64; 
     /// cityblock distance
-    fn cityblockd(self, v:&[f64]) -> f64;
-    /// cityblock distance
-    fn cityblockdu8(self, v:&[u8]) -> f64;  
-    /// Vector similarity S in the interval [0,1]: S = (1+cos(theta))/2
-    fn vsim(self, v:&[f64]) -> f64;
-    /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2
-    fn vdisim(self, v:&[f64]) -> f64;   
-    /// Area proportional to the swept arc
-    fn varc(self, v:&[f64]) -> f64; 
-    /// Lower triangular part of a covariance matrix for a single f64 vector.
-    fn covone(self, m:&[f64]) -> Vec<f64>;
-
-    /// Probability density function (pdf) of bytes data
-    fn pdf(self) -> Vec<f64>;
-    /// Information (entropy) in nats of &[u8]
-    fn entropy(self) -> f64;
-    /// Counts of joint bytes values
-    fn jointpdf(self, v:&[u8]) -> Vec<Vec<u32>>;
-    /// Joint entropy of &[u8],&[u8] in nats 
-    fn jointentropy(self, v:&[u8]) -> f64;
-    /// Statistical independence measure based on joint entropy
-    fn dependence(self, v:&[u8]) -> f64; 
+    fn cityblockdu8(self, v:&[u8]) -> f64;
+    ///Euclidian distance squared, the arguments are both of &[u8] type  
+    fn vdistsqu8(self, v: &[u8]) -> u64; 
+    /// Probability density function of bytes data
+    fn pdfu8(self) -> Vec<f64>;
+    /// Information (entropy) of &[u8] (in nats)
+    fn entropyu8(self) -> f64;
+    /// Joint probability density function (here just co-occurence counts) 
+    /// of paired values in two vectors of bytes of the same length.
+    /// Needs n^2 x 32bits of memory. Do not use for very long vectors, 
+    /// those need hashing implementation.
+    fn jointpdfu8(self, v:&[u8]) -> Vec<Vec<u32>>;
+    /// Joint entropy of &[u8],&[u8] (in nats)
+    fn jointentropyu8(self, v:&[u8]) -> f64;
+    /// Dependence of two &[u8] variables, the range is [0,1],
+    /// i.e. it returns 0 iff they are statistically independent
+    /// and 1 when they are identical
+    fn dependenceu8(self, v:&[u8]) -> f64;
 }
+
 
 /// Mutable vector operations.
 /// Some of the vectors trait methods reimplemented here for efficiency, to mutate in-place
@@ -217,7 +211,7 @@ pub trait MutVectors {
     fn mutsortf(self) where Self: std::marker::Sized {} 
 }
 
-/// Some support for self argument of Vec<Vec<u8>> type (vector of vectors of bytes)
+/// Some support for self argument of `Vec<Vec<u8>>` type (vector of vectors of bytes)
 pub trait VecVecu8 { 
     /// Centroid = euclidian mean of a set of points  
     fn acentroid(self) -> Vec<f64>;
@@ -236,7 +230,7 @@ pub trait VecVecu8 {
     fn wcovar(self, ws:&[u8], m:&[f64]) -> Vec<f64>;
 }
 
-/// Methods applicable to vector of vectors of <f64>
+/// Methods applicable to vector of vectors of `<f64>`
 pub trait VecVecf64 {
 
     /// Arithmetic Centre = euclidian mean of a set of points

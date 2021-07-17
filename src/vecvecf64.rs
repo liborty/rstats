@@ -1,4 +1,4 @@
-use crate::{Med, MStats, MutVectors, Stats, VecVecf64, Vecf64};
+use crate::{Med, MStats, MutVectors, Stats, VecVecf64, Vecg};
 pub use indxvec::{merge::*,Indices};
 
 impl VecVecf64 for &[Vec<f64>] {

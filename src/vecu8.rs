@@ -1,43 +1,13 @@
-use crate::{Vecu8,Vecf64,here};
+use crate::{Vecu8,here};
 
 impl Vecu8 for &[u8] {
 
-    /// Scalar multiplication of a vector, creates new vec
-    fn smult(self, s:f64) -> Vec<f64> {
-        self.iter().map(|&x| s*(x as f64)).collect()
-     }
-
-     /// Scalar addition to a vector, creates new vec
-     fn sadd(self, s:f64) -> Vec<f64> {
-        self.iter().map(|&x| s+(x as f64)).collect()
-     }
-
-    /// Scalar product.   
-    /// Must be of the same length - no error checking (for speed)
-    fn dotp(self, v: &[f64]) -> f64 {
-        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64)*vi).sum::<f64>()
-    }
     /// Scalar product of two (positive) u8 slices.   
     /// Must be of the same length - no error checking (for speed)
     fn dotpu8(self, v: &[u8]) -> u64 {
         self.iter().zip(v).map(|(&xi, &vi)| (xi as u64)*(vi as u64)).sum::<u64>()
     }
 
-    /// Cosine between &[u8] and &[f64].
-    fn cosine(self, v: &[f64]) -> f64 {
-        let (mut sxy, mut sy2) = (0_f64, 0_f64);
-        let sx2: f64 = self
-            .iter()
-            .zip(v)
-            .map(|(&ux, &y)| {
-                let x  = ux as f64;             
-                sxy += x * y;
-                sy2 += y * y;
-                x*x
-            })
-            .sum();
-        sxy / (sx2*sy2).sqrt()
-       }
     /// Cosine between two (positive) u8 slices.
     fn cosineu8(self, v: &[u8]) -> f64 {
      let (mut sxy, mut sy2) = (0_f64, 0_f64);
@@ -54,43 +24,17 @@ impl Vecu8 for &[u8] {
          .sum();
      sxy / (sx2*sy2).sqrt()
     }
-
-    /// Vector subtraction 
-    fn vsub(self, v: &[f64]) -> Vec<f64> {
-        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) - vi).collect()
-    }
+ 
     /// Vector subtraction (converts results to f64 as they can be negative)
     fn vsubu8(self, v: &[u8]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) - (vi as f64)).collect()
     }
 
-    /// Vector addition
-    fn vadd(self, v: &[f64]) -> Vec<f64> {
-    self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) + vi).collect()
-    }
     /// Vector addition ( converts results to f64, as they can exceed 255 )
     fn vaddu8(self, v: &[u8]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| (xi as f64)+(vi as f64)).collect()
     }
 
-    /// Vector magnitude
-    fn vmag(self) -> f64{
-        self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>().sqrt()
-    }
-
-    /// Vector magnitude squared
-    fn vmagsq(self) -> f64 {
-        self.iter().map(|&x| (x as f64).powi(2)).sum::<f64>()
-    }
-
-    /// Euclidian distance between self &[u8] and v:&[f64].  
-    fn vdist(self, v:&[f64]) -> f64 {
-        self.iter()
-            .zip(v)
-            .map(|(&xi, &vi)| (((xi as f64) - vi).powi(2)))
-            .sum::<f64>()
-            .sqrt()
-    }    
     /// Euclidian distance between self &[u8] and v:&[u8].  
     /// Faster than vsub followed by vmag, as both are done in one loop
     fn vdistu8(self, v: &[u8]) -> f64 {
@@ -100,13 +44,7 @@ impl Vecu8 for &[u8] {
             .sum::<f64>()
             .sqrt()
     }
-    /// cityblock distance
-    fn cityblockd(self, v:&[f64]) -> f64 {
-        self.iter()
-        .zip(v)
-        .map(|(&xi, &vi)| (xi as f64 -vi).abs()) 
-        .sum::<f64>()      
-    }
+
     /// cityblock distance
     fn cityblockdu8(self, v:&[u8]) -> f64 {
         self.iter()
@@ -115,7 +53,7 @@ impl Vecu8 for &[u8] {
         .sum::<f64>()      
     }
     ///Euclidian distance squared, the arguments are both of &[u8] type  
-    fn vdistsq(self, v: &[u8]) -> u64 {
+    fn vdistsqu8(self, v: &[u8]) -> u64 {
         self.iter()
             .zip(v)
             .map(|(&xi, &vi)| {
@@ -124,52 +62,23 @@ impl Vecu8 for &[u8] {
                 (x - y).pow(2) as u64})           
             .sum::<u64>()
     }
-    /// Area of swept arc between self &[u8] and v:&[f64]
-    /// = |a||b|(1-cos(theta)) = 2|a||b|D
-    fn varc(self, v:&[f64]) -> f64 { 
-        (self.vmagsq()*v.vmagsq()).sqrt() - self.dotp(v)
-    } 
-    /// We define vector similarity S in the interval [0,1] as
-    /// S = (1+cos(theta))/2
-    fn vsim(self, v:&[f64]) -> f64 { (1.0+self.cosine(v))/2.0 }
-
-    /// We define vector dissimilarity D in the interval [0,1] as
-    /// D = 1-S = (1-cos(theta))/2
-    fn vdisim(self, v:&[f64]) -> f64 { (1.0-self.cosine(v))/2.0 }
-
-    /// Flattened lower triangular part of a covariance matrix for a single u8 vector.
-    /// Since covariance matrix is symmetric (positive semi definite), 
-    /// the upper triangular part can be trivially added for all j>i by: c(j,i) = c(i,j).
-    /// N.b. the indexing is always assumed to be in this order: row,column.
-    /// The items of the resulting lower triangular array c[i][j] are pushed flat
-    /// into a single vector in this double loop order: left to right, top to bottom 
-    fn covone(self, m:&[f64]) -> Vec<f64> {
-        let n = self.len(); // dimension of the vector
-        let mut cov:Vec<f64> = Vec::new(); // flat lower triangular result array
-        let vm = self.vsub(&m); // zero mean vector
-        for i in 0..n {
-            let thisc = vm[i]; // take this component
-            // generate its products up to and including the diagonal (itself)
-            for j in 0..i+1 { cov.push(thisc*vm[j]) }
-        }
-        cov
-    }  
-
+ 
     /// Probability density function of bytes data
-    fn pdf(self) -> Vec<f64> {  
+    fn pdfu8(self) -> Vec<f64> {  
         let nf = self.len() as f64;
         let mut pdfv = vec![0_f64;256];        
-        for &x in self { pdfv[x as usize] += 1_f64 };
-        for i in 0..255 {  pdfv[i] /= nf };
+        for &x in self { pdfv[x as usize] += 1_f64/nf };       
         pdfv
     }
+
     /// Information (entropy) of &[u8] (in nats)
-    fn entropy(self) -> f64 {
-        let pdfv = self.pdf();
+    fn entropyu8(self) -> f64 {
+        let pdfv = self.pdfu8();
         let mut entr = 0_f64;
-        for x in pdfv {
-            if x.is_normal() // ignore zero probabilities
-                { entr -= x*(x.ln()) }
+        for &x in self { 
+            let p = pdfv[x as usize];
+            if p.is_normal() // ignore zero probabilities
+                { entr -= p*(p.ln()) }
         };            
         entr           
     }
@@ -177,23 +86,27 @@ impl Vecu8 for &[u8] {
     /// of paired values in two vectors of bytes of the same length.
     /// Needs n^2 x 32bits of memory. Do not use for very long vectors, 
     /// those need hashing implementation.
-    fn jointpdf(self, v:&[u8]) -> Vec<Vec<u32>> {  
+    fn jointpdfu8(self, v:&[u8]) -> Vec<Vec<u32>> {  
         let n = self.len();
         if v.len() != n { panic!("{} argument vectors must be of equal length!",here!()) }
         let mut jocc = vec![vec![0_u32; 256]; 256];
-        for i in 0..n { jocc[self[i] as usize][v[i] as usize] += 1 };
+        for i in 0..n {
+            for j in 0..v.len() { jocc[self[i] as usize][v[j] as usize] += 1 }
+        }
         jocc
     }
     /// Joint entropy of &[u8],&[u8] (in nats)
-    fn jointentropy(self, v:&[u8]) -> f64 {
-        let nf = self.len() as f64;
-        let pdfv = self.jointpdf(v);
+    fn jointentropyu8(self, v:&[u8]) -> f64 {
+        let n = self.len();
+        let m = v.len();        
+        let jpdf = self.jointpdfu8(v);
         let mut entr = 0_f64;
-        for i in 0..255 {
-            for j in 0..255 {
-                let cx = pdfv[i][j];
+        for i in 0..n {
+            for j in 0..m {
+                let cx = jpdf[self[i] as usize][v[j] as usize];
                 if cx > 0 { // ignore zero counts
-                    let x = cx as f64 / nf;  // turn count into probability
+                    // turn counts into probabilities
+                    let x = (cx as f64) / ((n*m) as f64); 
                     entr -= x*(x.ln()) 
                 }
             }
@@ -203,7 +116,7 @@ impl Vecu8 for &[u8] {
     /// Dependence of two &[u8] variables, the range is [0,1],
     /// i.e. it returns 0 iff they are statistically independent
     /// and 1 when they are identical
-    fn dependence(self, v:&[u8]) -> f64 {
-        2.0 * (1.0 - self.jointentropy(v) / (self.entropy() + v.entropy()))
+    fn dependenceu8(self, v:&[u8]) -> f64 {     
+        2.0 - (self.entropyu8() + v.entropyu8())/self.jointentropyu8(v)
     }
 }
