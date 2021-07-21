@@ -11,6 +11,7 @@ impl<T,U> Vecg<T,U> for &[T]
         let sf = f64::from(s);
         self.iter().map(|&x| sf*(f64::from(x))).collect()
      }
+    /// scalar multiplication by f64
     fn smultf64(self, s:f64) -> Vec<f64> { 
         self.iter().map(|&x| s*(f64::from(x))).collect()
      }
@@ -66,6 +67,7 @@ impl<T,U> Vecg<T,U> for &[T]
     fn vadd(self, v:&[U]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)+f64::from(vi)).collect()
     }
+    /// Addition of `&[f64]` slice
     fn vaddf64(self, v:&[f64]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)+vi).collect()
     }
@@ -77,7 +79,7 @@ impl<T,U> Vecg<T,U> for &[T]
             .sum::<f64>()
             .sqrt()
     }
-    /// Euclidian distance   
+    /// Euclidian distance to `&[f64]`  
     fn vdistf64(self, v:&[f64]) -> f64 {
         self.iter()
             .zip(v)
