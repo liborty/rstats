@@ -197,7 +197,7 @@ pub trait MutVecf64 {
     fn mutvadd(self, _v: &[f64]); 
 }
 
-/// Methods specialised to, or more efficient for, `&[u8]`
+/// Methods specialised to, or more efficient for `&[u8]`
 pub trait Vecu8 {
     /// Scalar product of two (positive) u8 slices.   
     /// Must be of the same length - no error checking (for speed)
@@ -251,7 +251,7 @@ pub trait VecVecu8 {
     fn wcovar(self, ws:&[u8], m:&[f64]) -> Vec<f64>;
 }
 
-/// Methods applicable to vector of vectors of `<f64>`
+/// Methods applicable to vector of vectors of generic end type
 pub trait VecVec<T> {
 
     /// Arithmetic Centre = euclidian mean of a set of points
