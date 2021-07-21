@@ -192,6 +192,7 @@ pub trait MutVecg<U> {
     /// mutable vector addition
     fn mvadd(self, _v: &[U]);  
 }
+/// Vector mutating operations that take one argument of f64 end type.
 pub trait MutVecf64 {
     /// mutable multiplication by a scalar
     fn mutsmult(self, _s:f64); 
@@ -236,7 +237,7 @@ pub trait Vecu8 {
     fn dependenceu8(self, v:&[u8]) -> f64;
 }
 
-/// Some support for self argument of `Vec<Vec<u8>>` type (vector of vectors of bytes)
+/// A few specialised methods applicable to `Vec<Vec<u8>>` (vector of vectors of bytes).
 pub trait VecVecu8 { 
     /// Centroid = euclidian mean of a set of points  
     fn acentroid(self) -> Vec<f64>;
