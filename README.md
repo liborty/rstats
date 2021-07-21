@@ -5,7 +5,7 @@
 ## Usage
 
 Insert in your `Cargo.toml` file under `[dependencies]` `rstats = "^0.8"`
-and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, Stats, Vecg, Vecu8, VecVecf64, VecVecu8, Mutvectors};`
+and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, Stats, MutStats, Vecg, MutVecg, VecVec, VecVecu8};`
 
 ## Introduction
 
@@ -23,7 +23,7 @@ Our methods based on the True Geometric Median, computed here by `gmedian`, are 
 
 ### Implementation
 
-The constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector (`Stats`), two vectors (`Vecg`), or n vectors of data. End type f64 is most commonly used for the results. 
+The constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector (`Stats`), two vectors (`Vecg`), or n vectors of data. End type f64 is most commonly used for the results.
 
 ### Documentation
 
@@ -60,6 +60,13 @@ Included in this trait are:
 * linear transformation to [0,1], 
 * other measures and vector algebra operators
 
+### MutStats
+
+A few of the `Stats` methods are reimplemented under this trait
+(only for f64), so that they mutate `self` in-place.
+This is more efficient and convenient in some circumstances, such as in
+vector iterative methods.
+
 ### Vecg
 
 Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimensionality):
@@ -67,8 +74,16 @@ Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimen
 * Vector additions, subtractions, products and other relationships and measures.
 * Pearson's, Spearman's and Kendall's correlations.
 
-
 This trait is unchecked (for speed), so some caution with data is advisable.
+
+### MutVectors
+
+Mutable vector operations that take one generic argument.  
+A few of the essential `Vecg` methods are reimplemented here 
+to mutate `self` (only `&[f64]`) in-place. 
+This is for efficiency and convenience. For example, in
+vector iterative methods.
+Clearly, they can only be applied to a mutable variable. Beware that they work by side-effect and do not return anything, so they can not be chained.
 
 ### Vecu8
 
@@ -76,13 +91,9 @@ This trait is unchecked (for speed), so some caution with data is advisable.
 * Frequency count of bytes by their values (Histogram or Probability Density Function).
 * Entropy measures in units of e (using natural logarithms).
 
-### MutVectors
-
-Some of the above functions are for memory efficiency reasons reimplemented in this trait so that they mutate `self` in place, instead of creating a new Vec. Clearly, they can only be applied to a mutable variable. They are useful in vector iterative methods. Beware that they work by side-effect and do not return anything, so they can not be chained.
-
 ### VecVec
 
-Relationships of one vector to a set of vectors (of `&[f64]` end types):
+Relationships of one vector to a set of vectors:
 
 * sums of distances, eccentricity,
 * centroid, medoid, true geometric median,
@@ -102,21 +113,23 @@ Some of the above for vectors of vectors of bytes.
 
 * `Quasi\Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here.
 
-* `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but not yet implemented here, as its advantages over GM are not clear.
+* `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but not yet implemented here, as its advantages over `gm` are not clear.
 
 * `Medoid` is the member of the set with the least sum of distances to all other members.
 
 * `Outlier` is the member of the set with the greatest sum of distances to all other members.
 
-* `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all members. This is the one we want. It is much less susceptible to outliers and is rotation independent.
+* `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all members. This is the one we want. It is much less susceptible to outliers than centroid. In addition, unlike quasi median, `gm` is rotation independent.
 
 * `Zero median vector` is obtained by subtracting the geometric median. This is a proposed  alternative to the commonly used `zero mean vector`, obtained by subtracting the centroid.
 
-* `Comediance` is similar to covariance, except zero median vectors are used to compute it  instead of zero mean vectors.
+* `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
 
-* **Version 0.8.4** Significant reorganisation. `Vecf64` trait and its source module `vecf64.rs` have been replaced by `Vecg` generic trait and `vecg.rs` module respectively. Numerous methods have been sorted more carefully into `Stats` trait or `Vecg` trait, according to whether or not they take an argument. Some methods have been also moved out of `Vecu8` trait and generalised in the process. Methods remaining in `Vecu8` now all have names ending in `u8` for clarity and to avoid conflicts with their generic equivalents. Some bugs in entropy methods have been fixed.
+* **Version 0.8.5** Split `MutVectors` trait into `MutStats` (with no arguments) and `MutVecg` (with one generic argument). They are both still implemented only for f64 and will remain so. However, it is now possible, for example, to mutably subtract a slice of any end type. This allowed the deletion of `mutvaddu8` and `mutvsubu8` as special cases. Fixed some in-code tests that were not yet using the new `Vecg` trait. Trait `VecVecf64` generalised and renamed to `VecVec`.
+
+* **Version 0.8.4** Significant reorganisation. `Vecf64` trait and its source module `vecf64.rs` have been replaced by `Vecg` generic trait and `vecg.rs` module respectively. Numerous methods have been sorted more carefully into `Vecg` trait or `Stats` trait, according to whether or not they take an argument. Some methods have also been moved out of `Vecu8` trait and generalised in the process. Methods remaining in `Vecu8` now all have names ending in `u8` for clarity and to avoid confusion with their generic versions. Some bugs in entropy methods have been fixed.
 
 * **Version 0.8.3** Simplification of generic `Stats`. `GSlice` is no longer needed. The only restriction remaining is the necessity to explicitly convert `&[i64] -> &[f64]`, using function `statsg::i64tof64(s: &[i64])`. All other end types are fine. This made possible the removal of two modules, `statsf64.rs` and `stasi64.rs`. They are now superceded by a single generic `statsg.rs`. This rationalisation work will continue with the remaining traits as well.
 

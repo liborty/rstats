@@ -1,10 +1,10 @@
 pub mod statsg;
+pub mod mutstats;
 pub mod vecg;
-// pub mod vecf64;
 pub mod vecu8;
 pub mod vecvecu8;
 pub mod mutvec;
-pub mod vecvecf64;
+pub mod vecvec;
 pub mod functions;
 
 // reexporting to avoid duplication and for backwards compatibility
@@ -108,11 +108,27 @@ pub trait Stats {
     fn symmatrix(self) -> Vec<Vec<f64>>;
    }
 
+/// A few of the `Stats` methods are reimplemented here
+/// (only for f64), so that they mutate `self` in-place.
+/// This is more efficient and convenient in some circumstances.
+pub trait MutStats {
+    /// Invert the magnitude
+    fn minvert(self); 
+    // negate vector (all components swap sign)
+    fn mneg(self);
+    /// Make into a unit vector
+    fn munit(self);
+    /// Linearly transform to interval [0,1]
+    fn mlintrans(self);
+    /// Sort in place  
+    fn msortf(self); 
+}
 
 /// Vector Algebra on two vectors (represented here as generic slices).
-pub trait Vecg<T,U> {
+pub trait Vecg<_T,U> {
     /// Scalar multiplication of a vector
     fn smult(self, s:U) -> Vec<f64>;
+    fn smultf64(self, s:f64) -> Vec<f64>;
     /// Scalar addition to vector
     fn sadd(self, s:U) -> Vec<f64>;
     /// Scalar product 
@@ -121,12 +137,15 @@ pub trait Vecg<T,U> {
     fn cosine(self, v:&[U]) -> f64;
     /// Vectors' difference
     fn vsub(self, v:&[U]) -> Vec<f64>;
+    fn vsubf64(self, v:&[f64]) -> Vec<f64>;
     /// Vectors difference as unit vector (done together for efficiency)
     fn vsubunit(self, v: &[U]) -> Vec<f64>; 
     /// Vector addition
     fn vadd(self, v:&[U]) -> Vec<f64>;  
+    fn vaddf64(self, v:&[f64]) -> Vec<f64>; 
     /// Euclidian distance 
     fn vdist(self, v:&[U]) -> f64;
+    fn vdistf64(self, v:&[f64]) -> f64;
     /// Euclidian distance squared
     fn vdistsq(self, v:&[U]) -> f64; 
     /// cityblock distance
@@ -156,6 +175,27 @@ pub trait Vecg<T,U> {
     fn spearmancorr(self, v:&[U]) -> f64;   
 }
 
+/// Mutable vector operations that take one generic argument. 
+/// A few of the essential `Vecg` methods are reimplemented here 
+/// to mutate `self` in-place (only for f64). 
+/// This is for efficiency and convenience, for example, in
+/// vector iterative methods.
+pub trait MutVecg<U> {
+    /// mutable multiplication by a scalar
+    fn msmult(self, _s:U);  
+    /// mutable vector subtraction
+    fn mvsub(self, _v: &[U]); 
+    /// mutable vector addition
+    fn mvadd(self, _v: &[U]);  
+}
+pub trait MutVecf64 {
+    /// mutable multiplication by a scalar
+    fn mutsmult(self, _s:f64); 
+    /// mutable vector subtraction 
+    fn mutvsub(self, _v: &[f64]);
+    /// mutable vector addition
+    fn mutvadd(self, _v: &[f64]); 
+}
 
 /// Methods specialised to, or more efficient for, `&[u8]`
 pub trait Vecu8 {
@@ -192,25 +232,6 @@ pub trait Vecu8 {
     fn dependenceu8(self, v:&[u8]) -> f64;
 }
 
-
-/// Mutable vector operations.
-/// Some of the vectors trait methods reimplemented here for efficiency, to mutate in-place
-pub trait MutVectors {
-
-    /// mutable multiplication by a scalar
-    fn mutsmult(self, _s: f64) where Self: std::marker::Sized {}  
-    /// mutable vector subtraction
-    fn mutvsub(self, _v: &[f64]) where Self: std::marker::Sized {}
-    fn mutvsubu8(self, _v: &[u8]) where Self: std::marker::Sized {} 
-    /// mutable vector addition
-    fn mutvadd(self, _v: &[f64]) where Self: std::marker::Sized {}
-    fn mutvaddu8(self, _v: &[u8]) where Self: std::marker::Sized {}
-     /// mutably makes into a unit vector
-    fn mutvunit(self) where Self: std::marker::Sized {}
-    /// sort in place
-    fn mutsortf(self) where Self: std::marker::Sized {} 
-}
-
 /// Some support for self argument of `Vec<Vec<u8>>` type (vector of vectors of bytes)
 pub trait VecVecu8 { 
     /// Centroid = euclidian mean of a set of points  
@@ -231,29 +252,29 @@ pub trait VecVecu8 {
 }
 
 /// Methods applicable to vector of vectors of `<f64>`
-pub trait VecVecf64 {
+pub trait VecVec<T> {
 
     /// Arithmetic Centre = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
     /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points
-    fn wacentroid(self,ws: &[f64]) -> Vec<f64>;
+    fn wacentroid(self,ws: &[T]) -> Vec<f64>;
     /// Geometric Centroid
     fn gcentroid(self) -> Vec<f64>;
     /// Harmonic Centroid = harmonic mean of a set of points
     fn hcentroid(self) -> Vec<f64>; 
     /// Trend between two sets
-    fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64>;
+    fn trend(self, eps: f64, v: Vec<Vec<T>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
-    fn translate(self, m: &[f64]) -> Vec<Vec<f64>>;
+    fn translate(self, m: &[T]) -> Vec<Vec<f64>>;
 
     /// Sums of distances from each point to all other points.
      fn distsums(self) -> Vec<f64>;
     /// Fast sums of distances from each point to all other points 
     fn distsuminset(self, indx: usize) -> f64;
     /// Sum of distances from arbitrary point (v) to all the points in self   
-    fn distsum(self, v: &[f64]) -> f64;
+    fn distsum(self, v: &[T]) -> f64;
     /// Individual distances from any point v (typically not in self) to all the points in self.    
-    fn dists(self, v: &[f64]) -> Vec<f64>;
+    fn dists(self, v: &[T]) -> Vec<f64>;
     /// Medoid and Outlier (by distance) of a set of points
     fn medoid(self) -> (f64, usize, f64, usize); 
     /// Eccentricity vectors from each point
@@ -265,9 +286,9 @@ pub trait VecVecf64 {
     /// Returns ( gm, sorted eccentricities magnitudes )
     fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> );
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
-    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
+    fn wsortedeccs(self, ws: &[T], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Sorted cosines magnitudes and cpdf, needs central median
-    fn wsortedcos(self, medmed: &[f64], med: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ); 
+    fn wsortedcos(self, medmed: &[T], med: &[T], ws: &[T]) -> ( Vec<f64>,Vec<f64> ); 
     /// Next approx median point from this member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Ecentricity of a member point given by its indx
@@ -275,11 +296,11 @@ pub trait VecVecf64 {
     /// Next approx median point from this nonmember point
     fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
     /// Error vector, i.e. unscaled eccentricity vector
-    fn errorv(self, p:&[f64]) -> Vec<f64>;
+    fn errorv(self, p:&[T]) -> Vec<f64>;
     /// Eccentricity vector for a non member point
     fn eccnonmember(self, p:&[f64]) -> Vec<f64>; 
     /// Weighted eccentricity vector for a non member point
-    fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64>; 
+    fn wnxnonmember(self, ws:&[T], p:&[f64]) -> Vec<f64>; 
     /// magnitudes of a set of vectors
     fn mags(self) -> Vec<f64>; 
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
@@ -295,7 +316,7 @@ pub trait VecVecf64 {
     /// New secant algorithm for geometric median
     fn gmedian(self, eps: f64) -> Vec<f64>; 
     /// The weighted geometric median
-    fn wgmedian(self, ws: &[f64],eps: f64) -> Vec<f64>; 
+    fn wgmedian(self, ws: &[T],eps: f64) -> Vec<f64>; 
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med:&[f64]) -> Vec<f64>; 
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.

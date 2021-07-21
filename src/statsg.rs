@@ -97,7 +97,7 @@ impl<T> Stats for &[T]
             / wsum(n))
     }
 
-    /// Liearly weighted arithmetic mean and standard deviation of an f64 slice.    
+    /// Linearly weighted arithmetic mean and standard deviation of an f64 slice.    
     /// Linearly descending weights from n down to one.    
     /// Time dependent data should be in the stack order - the last being the oldest.
     /// # Example

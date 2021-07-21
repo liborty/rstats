@@ -1,13 +1,13 @@
-use crate::{Stats,VecVecu8,MutVectors,Vecg};
+use crate::{Stats,VecVecu8,MutVecg,MutVecf64,Vecg};
 
 impl VecVecu8 for &[Vec<u8>] {
     
     fn acentroid(self) -> Vec<f64> {
     let mut centre = vec![0_f64; self[0].len()];
     for v in self {
-        centre.mutvaddu8(&v)
+        centre.mvadd(v)
     }
-    centre.mutsmult(1.0 / (self.len() as f64));
+    centre.mutsmult(1_f64 / (self.len() as f64));
     centre
     }
 
@@ -18,9 +18,9 @@ impl VecVecu8 for &[Vec<u8>] {
         for i in 0..self.len() {
             let w = ws[i] as f64;
             wsum += w;
-            centre.mutvadd(&self[i].smult(w))
+            centre.mvadd(&self[i].smult(w))
         }
-    centre.mutsmult(1.0 / (wsum*self.len() as f64));
+    centre.msmult(1.0 / (wsum*self.len() as f64));
     centre
     }
 
@@ -35,10 +35,10 @@ impl VecVecu8 for &[Vec<u8>] {
             let dvmag = x.vdist(p);
             if !dvmag.is_normal() { continue } // zero distance, safe to ignore
             let rec = 1.0/dvmag;
-            vsum.mutvadd(&x.smult(rec)); // add vector
+            vsum.mvadd(&x.smult(rec)); // add vector
             recip += rec // add separately the reciprocals    
         }
-        vsum.mutsmult(1.0/recip);
+        vsum.msmult(1.0/recip);
         vsum
     }
 
@@ -50,10 +50,10 @@ impl VecVecu8 for &[Vec<u8>] {
             let dvmag = self[i].vdist(&p);
             if !dvmag.is_normal() { continue } // zero distance, safe to ignore
             let rec = ws[i] as f64/dvmag; // ws[i] is weigth for this point self[i]
-            vsum.mutvadd(&self[i].smult(rec)); // add weighted vector
+            vsum.mvadd(&self[i].smult(rec)); // add weighted vector
             recip += rec // add separately the reciprocals    
         }
-        vsum.mutsmult(1.0/recip);
+        vsum.msmult(1.0/recip);
         vsum
     } 
 
@@ -134,7 +134,7 @@ impl VecVecu8 for &[Vec<u8>] {
             }
         }
         // now compute the means and return
-        cov.mutsmult(1.0_f64/self.len()as f64);
+        cov.msmult(1.0_f64/self.len()as f64);
         cov
     }  
    
@@ -164,7 +164,7 @@ impl VecVecu8 for &[Vec<u8>] {
             // covs.push(cov)
         }
         // now compute the mean and return
-        cov.mutsmult(1_f64/wsum); // s.gmedian(1e-7)
+        cov.msmult(1_f64/wsum); // s.gmedian(1e-7)
         cov
     }  
 }

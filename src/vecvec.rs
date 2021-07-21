@@ -1,11 +1,12 @@
-use crate::{Med, MStats, MutVectors, Stats, VecVecf64, Vecg};
+use crate::{Med, MStats, MutVecg, MutVecf64, Stats, VecVec, Vecg};
 pub use indxvec::{merge::*,Indices};
 
-impl VecVecf64 for &[Vec<f64>] {
+impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd, 
+    f64: From<T>, T: From<f64> {
     /// acentroid = simple multidimensional arithmetic mean
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
+    /// use rstats::{Vecg,VecVec,functions::genvec};
     /// let pts = genvec(15,15,255,30); 
     /// let dist = pts.distsum(&pts.acentroid());
     /// assert_eq!(dist, 4.14556218326653_f64);
@@ -13,18 +14,18 @@ impl VecVecf64 for &[Vec<f64>] {
     fn acentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()];
         for v in self {
-            centre.mutvadd(&v)
+            centre.mvadd(&v)
         }
         centre.mutsmult(1.0 / self.len() as f64);
         centre
     }
     /// Weighted Centre
-    fn wacentroid(self,ws: &[f64]) -> Vec<f64> {
+    fn wacentroid(self,ws: &[T]) -> Vec<f64> where {
         let mut centre = vec![0_f64; self[0].len()];
         let mut wsum = 0_f64;
         for i in 0..self.len() {
             let w = ws[i];
-            wsum += w;
+            wsum += f64::from(w);
             centre.mutvadd(&self[i].smult(w))
         }
         centre.mutsmult(1.0 / (wsum*self.len() as f64));
@@ -34,7 +35,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// gcentroid = multidimensional geometric mean
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
+    /// use rstats::{Vecg,VecVec,functions::genvec};
     /// let pts = genvec(15,15,255,30);
     /// let centre = pts.gcentroid();
     /// let dist = pts.distsum(&centre);
@@ -46,7 +47,7 @@ impl VecVecf64 for &[Vec<f64>] {
         let mut centre = vec![0_f64; d];
         let mut lnvec = vec![0_f64; d];
         for v in self { 
-            for i in 0..d { lnvec[i] = v[i].ln() }
+            for i in 0..d { lnvec[i] = f64::from(v[i]).ln() }
             centre.mutvadd(&lnvec)
         }
         centre.iter().map(|comp| (comp/n).exp()).collect()        
@@ -55,7 +56,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// hcentroid =  multidimensional harmonic mean
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
+    /// use rstats::{Vecg,VecVec,functions::genvec};
     /// let pts = genvec(15,15,255,30);
     /// let centre = pts.hcentroid();
     /// let dist = pts.distsum(&centre);
@@ -73,10 +74,10 @@ impl VecVecf64 for &[Vec<f64>] {
     /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.
     /// This is a robust relationship between two unordered multidimensional sets.
     /// The two sets have to be in the same space but can have different numbers of points.
-    fn trend(self, eps: f64, v: Vec<Vec<f64>>) -> Vec<f64> {
-        let m1 = self.gmedian(eps);
-        let m2 = v.gmedian(eps);
-        m2.vsub(&m1)
+    fn trend(self, eps: f64, v: Vec<Vec<T>>) -> Vec<f64> {
+        let mut m1 = self.gmedian(eps);       
+        m1.mutvsub(&v.gmedian(eps));
+        m1
     }
 
     /// Translates the whole set by vector -m. Returns Vec of Vecs.
@@ -84,12 +85,8 @@ impl VecVecf64 for &[Vec<f64>] {
     /// The geometric median is invariant with respect to rotation,
     /// unlike the often misguidedly used mean (`acentroid` here), or the quasi median,
     /// both of which depend on the choice of axis.
-     fn translate(self, m: &[f64]) -> Vec<Vec<f64>> {
-        let mut result = Vec::new();
-        for point in self {
-            result.push(point.vsub(m))
-        }
-        result
+     fn translate(self, m: &[T]) -> Vec<Vec<f64>> {  
+        self.iter().map(|point| point.vsub(m)).collect()   
     }
 
     /// For each member point, gives its sum of distances to all other points.
@@ -125,13 +122,13 @@ impl VecVecf64 for &[Vec<f64>] {
     }
 
     /// Individual distances from any point v, typically not a member, to all the members of self.    
-    fn dists(self, v: &[f64]) -> Vec<f64> {
+    fn dists(self, v: &[T]) -> Vec<f64> {
         self.iter().map(|p| p.vdist(v)).collect()
     }
 
     /// The sum of distances from any single point v, typically not a member, to all the members of self.    
     /// Geometric Median is defined as the point which minimises this function.
-    fn distsum(self, v: &[f64]) -> f64 {
+    fn distsum(self, v: &[T]) -> f64 {
         self.iter().map(|p| p.vdist(v)).sum::<f64>()
     }
 
@@ -143,7 +140,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// (medoid_distance, medoid_index, outlier_distance, outlier_index).
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
+    /// use rstats::{Vecg,VecVec,functions::genvec};
     /// let pts = genvec(15,15,255,30);
     /// let (dm,_,_,_) = pts.medoid();
     /// assert_eq!(dm,4.812334638782327_f64);
@@ -168,16 +165,16 @@ impl VecVecf64 for &[Vec<f64>] {
                 let dvmag = self[j].vdist(&thisp);             
                 if !dvmag.is_normal() { continue }
                 let rec = 1.0/dvmag;
-                eccs[i].mutvadd(&self[j].smult(rec));
+                eccs[i].mutvadd(&self[j].smultf64(rec));
                 recips[i] += rec;
                 // mind the vector's opposite orientations w.r.t. to the two points!
-                eccs[j].mutvsub(&self[j].smult(rec)); 
+                eccs[j].mutvsub(&self[j].smultf64(rec)); 
                 recips[j] += rec;
             }
         }
         for i in 0..n { 
             eccs[i].mutsmult(1.0/recips[i]); 
-            eccs[i].mutvsub(&self[i]) 
+            eccs[i].mvsub(&self[i]) 
         }
         eccs
     }
@@ -206,7 +203,7 @@ impl VecVecf64 for &[Vec<f64>] {
     
     /// Weighted geometric median, sorted eccentricities magnitudes,
     /// associated cummulative probability density function in [0,1] of the weights.
-    fn wsortedeccs(self, ws: &[f64], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 
+    fn wsortedeccs(self, ws: &[T], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len()); 
         let gm = self.wgmedian(ws,eps);
         for v in self { // collect true ecentricities magnitudes
@@ -217,7 +214,7 @@ impl VecVecf64 for &[Vec<f64>] {
         // create sort index of the eccs
         let index = sortidx(&eccs);
         // pick the associated points weights in the reverse order of the sorted eccs
-        let mut weights = index.unindex(&ws,true);
+        let mut weights = index.unindexf64(&ws,true);
         let mut sumw = 0_f64;
         // accummulate the weights 
         for i in 0..weights.len() {
@@ -225,14 +222,14 @@ impl VecVecf64 for &[Vec<f64>] {
             weights[i] = sumw
         }
         // divide by the sum to get cum. probabilities in [0,1]
-        for i in 0..weights.len() { weights[i] /= sumw };
+        weights.iter_mut().for_each(|w| *w /= sumw );     
         ( gm, index.unindex(&eccs, true), weights )
     }
 
     /// Sorted cosines magnitudes,
     /// associated cummulative probability density function in [0,1] of the weights.
     /// Needs central median
-    fn wsortedcos(self, medmed: &[f64], zeromed: &[f64], ws: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
+    fn wsortedcos(self, medmed: &[T], zeromed: &[T], ws: &[T]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut coses = Vec::with_capacity(self.len());  
         for p in self { // collect coses      
             coses.push(p.vsub(&medmed).vsim(&zeromed)); 
@@ -242,7 +239,7 @@ impl VecVecf64 for &[Vec<f64>] {
         // create sort index of the coses
         let index = sortidx(&coses);
         // pick the associated points weights in the same order as the sorted coses
-        let mut weights = index.unindex(&ws,true);
+        let mut weights = index.unindexf64(&ws,true);
         let mut sumw = 0_f64;
         // accummulate the weights to from cpdf
         for i in 0..weights.len() {
@@ -250,7 +247,7 @@ impl VecVecf64 for &[Vec<f64>] {
             weights[i] = sumw
         }
         // divide by the sum to get cum. probabilities in [0,1]
-        for i in 0..weights.len() { weights[i] /= sumw };
+        weights.iter_mut().for_each(|w| *w /= sumw );     
         ( index.unindex(&coses,true), weights )
     }
 
@@ -269,7 +266,7 @@ impl VecVecf64 for &[Vec<f64>] {
             let dvmag = self[i].vdist(&thisp);
             if !dvmag.is_normal() { continue } // too close to this one
             let rec = 1.0/dvmag;
-            vsum.mutvadd(&self[i].smult(rec)); // add vector
+            vsum.mutvadd(&self[i].smultf64(rec)); // add vector
             recip += rec // add separately the reciprocals
         }
         vsum.mutsmult(1.0/recip);
@@ -294,10 +291,10 @@ impl VecVecf64 for &[Vec<f64>] {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for x in self { 
-            let dvmag = x.vdist(&p);
+            let dvmag = x.vdistf64(p);
             if !dvmag.is_normal() { continue } // zero distance, safe to ignore
             let rec = 1.0/dvmag;
-            vsum.mutvadd(&x.smult(rec)); // add vector
+            vsum.mutvadd(&x.smultf64(rec)); // add vector
             recip += rec // add separately the reciprocals    
         }
         vsum.mutsmult(1.0/recip);
@@ -307,13 +304,12 @@ impl VecVecf64 for &[Vec<f64>] {
     /// Error vector for (usually non-member) point p, 
     /// i.e. unscaled eccentricity vector.
     /// The true geometric median would return zero vector.
-    fn errorv(self, p:&[f64]) -> Vec<f64> {
+    fn errorv(self, p:&[T]) -> Vec<f64> {
         let mut vsum = vec![0_f64; p.len()];
         for x in self {  vsum.mutvadd(&x.vsubunit(&p)) };
         vsum.mutsmult(1_f64 / (self.len() as f64));
         vsum
     }
-
 
     /// Eccentricity vector for a non member point,
     /// while the true geometric median is as yet unknown.
@@ -321,18 +317,18 @@ impl VecVecf64 for &[Vec<f64>] {
     /// The true geometric median would return zero vector.
     /// This function is suitable for a single non-member point. 
     fn eccnonmember(self, p:&[f64]) -> Vec<f64> {
-        self.nxnonmember(p).vsub(&p)
+        self.nxnonmember(p).vsubf64(p)
     }
 
     /// Next approximate weighted median, from a non member point. 
-    fn wnxnonmember(self, ws:&[f64], p:&[f64]) -> Vec<f64> {
+    fn wnxnonmember(self, ws:&[T], p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for i in 0..self.len() { 
-            let dvmag = self[i].vdist(&p);
+            let dvmag = self[i].vdistf64(p);
             if !dvmag.is_normal() { continue } // zero distance, safe to ignore
-            let rec = ws[i]/dvmag; // ws[i] is weigth for this point self[i]
-            vsum.mutvadd(&self[i].smult(rec)); // add weighted vector
+            let rec = f64::from(ws[i])/dvmag; // ws[i] is weigth for this point self[i]
+            vsum.mutvadd(&self[i].smultf64(rec)); // add weighted vector
             recip += rec // add separately the reciprocals    
         }
         vsum.mutsmult(1.0/recip);
@@ -364,7 +360,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// The sum of their distances from c will remain the same but the eccentricity of c will be much reduced.
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
+    /// use rstats::{Vecg,VecVec,functions::genvec};
     /// pub const EPS:f64 = 1e-7;
     /// let d = 6_usize;
     /// let pt = genvec(d,24,7,13); // random test data 5x20
@@ -387,7 +383,7 @@ impl VecVecf64 for &[Vec<f64>] {
         let mut point = self.acentroid(); // start iterating from the Centre
         loop {
             let nextp = self.nxnonmember(&point);         
-            if nextp.vdist(&point) < eps { return nextp }; // termination
+            if nextp.vdistf64(&point) < eps { return nextp }; // termination
             point = nextp
         } 
     }
@@ -396,7 +392,7 @@ impl VecVecf64 for &[Vec<f64>] {
     /// Same as eccnonmember(origin), just saving the zero subtractions. 
     /// # Example
     /// ```
-    /// use rstats::{Vecf64,VecVecf64,functions::genvec};
+    /// use rstats::{Vecg,VecVec,functions::genvec};
     /// let pts = genvec(15,15,255,30); 
     /// let dist = pts.distsum(&pts.firstpoint());
     /// assert_eq!(dist,4.132376831171272_f64);
@@ -409,10 +405,10 @@ impl VecVecf64 for &[Vec<f64>] {
             if mag.is_normal() {  
                 let invmag = 1.0_f64/mag;
                 rsum += invmag;
-                vsum.mutvadd(&thisp.smult(invmag)) // accumulate unit vectors
+                vsum.mutvadd(&thisp.smultf64(invmag)) // accumulate unit vectors
             }
         }
-        vsum.smult(1.0/rsum) // scale by the sum of reciprocals
+        vsum.smultf64(1.0/rsum) // scale by the sum of reciprocals
     }
 
     /// Secant method with recovery from divergence
@@ -423,19 +419,19 @@ impl VecVecf64 for &[Vec<f64>] {
         let mut pdif = mag1;  
         loop {  
             let mut np = self.nxnonmember(&p); 
-            let e = np.vsub(&p); // new vector error, or eccentricity  
+            let e = np.vsubf64(&p); // new vector error, or eccentricity  
             // let e = self.errorv(&p);
             let mag2 = e.vmag(); 
             // if mag2 < eps  { return np }; 
             // overwrite np with a better secant estimate  
             np = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
-                p.vadd(&e.smult(pdif/(mag1-mag2)))                   
+                e.smultf64(pdif/(mag1-mag2)).vaddf64(&p)
             }
             else { // recovery: probably overshot the minimum, shorten the jump 
                    // e will already be pointing moreless back
-                p.vadd(&e.smult(pdif/(mag1+mag2)))                    
+                e.smultf64(pdif/(mag1+mag2)).vaddf64(&p)                    
             };
-            pdif = np.vdist(&p);
+            pdif = np.vdistf64(&p);
             if pdif < eps { return np };              
             mag1 = mag2; 
             p = np            
@@ -444,25 +440,25 @@ impl VecVecf64 for &[Vec<f64>] {
 
     /// Secant method with recovery from divergence
     /// for finding the weighted geometric median
-    fn wgmedian(self, ws: &[f64], eps: f64) -> Vec<f64> {  
+    fn wgmedian(self, ws: &[T], eps: f64) -> Vec<f64> {  
         let mut p = self.wacentroid(ws);
         let mut mag1 = p.vmag();
         let mut pdif = mag1;  
         loop {  
             let mut np = self.wnxnonmember(ws,&p); 
-            let e = np.vsub(&p); // new vector error, or eccentricity  
+            let e = np.vsubf64(&p); // new vector error, or eccentricity  
             // let e = self.errorv(&p);
             let mag2 = e.vmag(); 
             // if mag2 < eps  { return np }; 
             // overwrite np with a better secant estimate  
             np = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
-                p.vadd(&e.smult(pdif/(mag1-mag2)))                   
+                p.vaddf64(&e.smultf64(pdif/(mag1-mag2)))                   
             }
             else { // recovery: probably overshot the minimum, shorten the jump 
                    // e will already be pointing moreless back
-                p.vadd(&e.smult(pdif/(mag1+mag2)))                    
+                p.vaddf64(&e.smultf64(pdif/(mag1+mag2)))                    
             };
-            pdif = np.vdist(&p);
+            pdif = np.vdistf64(&p);
             if pdif < eps { return np };              
             mag1 = mag2; 
             p = np            
@@ -481,7 +477,7 @@ impl VecVecf64 for &[Vec<f64>] {
   
         for thisp in self { // adding up covars for all the points
             let mut covsub = 0_usize; // subscript into the flattened array cov
-            let vm = thisp.vsub(&m);  // zero mean vector
+            let vm = thisp.vsubf64(&m);  // zero mean vector
             for i in 0..n {
                 let thisc = vm[i]; // ith component
                 // its products up to and including the diagonal (itself)
@@ -511,7 +507,7 @@ impl VecVecf64 for &[Vec<f64>] {
             let w = ws[h];
             wsum += w;
             let mut covsub = 0_usize; // subscript into the flattened array cov 
-            let vm = self[h].vsub(&m);  // subtract zero mean/median vector   
+            let vm = self[h].vsubf64(&m);  // subtract zero mean/median vector   
             for i in 0..n { // cross multiply the components of one point
                 let thisc = vm[i]; // ith component of the zero mean vector               
                 for j in 0..i+1 {  // its weighted products up to and including the diagonal 

@@ -11,7 +11,9 @@ impl<T,U> Vecg<T,U> for &[T]
         let sf = f64::from(s);
         self.iter().map(|&x| sf*(f64::from(x))).collect()
      }
-
+    fn smultf64(self, s:f64) -> Vec<f64> { 
+        self.iter().map(|&x| s*(f64::from(x))).collect()
+     }
      /// Scalar addition to a vector, creates new vec
      fn sadd(self, s:U) -> Vec<f64> {
          let sf = f64::from(s);
@@ -46,6 +48,10 @@ impl<T,U> Vecg<T,U> for &[T]
     fn vsub(self, v:&[U]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)-f64::from(vi)).collect()
     }
+    /// Vector subtraction of `&[f64]`
+    fn vsubf64(self, v:&[f64]) -> Vec<f64> {
+        self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)-vi).collect()
+    }
 
     /// Vectors difference unitised (done together for efficiency)
     fn vsubunit(self, v: &[U]) -> Vec<f64> {
@@ -60,7 +66,9 @@ impl<T,U> Vecg<T,U> for &[T]
     fn vadd(self, v:&[U]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)+f64::from(vi)).collect()
     }
-
+    fn vaddf64(self, v:&[f64]) -> Vec<f64> {
+        self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)+vi).collect()
+    }
     /// Euclidian distance   
     fn vdist(self, v:&[U]) -> f64 {
         self.iter()
@@ -69,6 +77,15 @@ impl<T,U> Vecg<T,U> for &[T]
             .sum::<f64>()
             .sqrt()
     }
+    /// Euclidian distance   
+    fn vdistf64(self, v:&[f64]) -> f64 {
+        self.iter()
+            .zip(v)
+            .map(|(&xi, &vi)| (f64::from(xi)-f64::from(vi)).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+
 
     /// Euclidian distance squared  
     fn vdistsq(self, v:&[U]) -> f64 {
@@ -87,7 +104,7 @@ impl<T,U> Vecg<T,U> for &[T]
     }
 
     /// Magnitude of the cross product |a x b| = |a||b|sin(theta).
-    /// Attains maximum `|a|.|b|` when the vectors are othogonal.
+    /// Attains maximum `|a|.|b|` when the vectors are orthogonal.
     fn varea(self, v:&[U]) -> f64 {
         (self.vmagsq()*v.vmagsq() - self.dotp(v).powi(2)).sqrt()
     }

@@ -6,7 +6,7 @@ use devtimer::DevTime;
 use anyhow::Result;
 use indxvec::{wv,wi,Indices,merge::*};
 
-use rstats::{Stats,MutVectors,Vecg,VecVecf64,Vecu8,VecVecu8};
+use rstats::{Stats,MutVecg,Vecg,VecVec,Vecu8,VecVecu8};
 use rstats::functions::{genvec,genvecu8,i64tof64,tof64};
 
 pub const EPS:f64 = 1e-7;
