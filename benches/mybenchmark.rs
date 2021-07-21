@@ -1,4 +1,4 @@
-use rstats::{Stats,VecVecf64};
+use rstats::{Stats,VecVec};
 use rstats::functions::genvec;
 use devtimer::DevTime;
 
