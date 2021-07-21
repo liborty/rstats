@@ -128,6 +128,7 @@ pub trait MutStats {
 pub trait Vecg<_T,U> {
     /// Scalar multiplication of a vector
     fn smult(self, s:U) -> Vec<f64>;
+    /// Scalar multiplication by f64
     fn smultf64(self, s:f64) -> Vec<f64>;
     /// Scalar addition to vector
     fn sadd(self, s:U) -> Vec<f64>;
@@ -135,16 +136,19 @@ pub trait Vecg<_T,U> {
     fn dotp(self, v:&[U]) -> f64;
     /// Cosine of angle between two slices
     fn cosine(self, v:&[U]) -> f64;
-    /// Vectors' difference
+    /// Vectors' subtraction (difference)
     fn vsub(self, v:&[U]) -> Vec<f64>;
+    /// Vector subtraction of `&[f64]`
     fn vsubf64(self, v:&[f64]) -> Vec<f64>;
     /// Vectors difference as unit vector (done together for efficiency)
     fn vsubunit(self, v: &[U]) -> Vec<f64>; 
     /// Vector addition
-    fn vadd(self, v:&[U]) -> Vec<f64>;  
+    fn vadd(self, v:&[U]) -> Vec<f64>; 
+    /// Adding `&[f64]` 
     fn vaddf64(self, v:&[f64]) -> Vec<f64>; 
     /// Euclidian distance 
     fn vdist(self, v:&[U]) -> f64;
+    /// Euclidian distance to `&[f64]`
     fn vdistf64(self, v:&[f64]) -> f64;
     /// Euclidian distance squared
     fn vdistsq(self, v:&[U]) -> f64; 
