@@ -324,6 +324,10 @@ pub trait VecVec<T> {
     fn wgmedian(self, ws: &[T],eps: f64) -> Vec<f64>; 
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med:&[f64]) -> Vec<f64>; 
+    /// Flattened lower triangular part of a comediance matrix of a Vec of f64 vectors.
+    fn comed(self, m:&[f64], eps:f64) -> Vec<f64>;
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
     fn wcovar(self, ws:&[f64], m:&[f64]) -> Vec<f64>;
+    /// Flattened lower triangular part of a comediance matrix for weighted f64 vectors.
+    fn wcomed(self, ws:&[f64], m:&[f64], eps:f64) -> Vec<f64>;
 }

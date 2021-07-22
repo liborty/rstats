@@ -127,7 +127,7 @@ Some of the above for vectors of vectors of bytes.
 
 ## Appendix II: Recent Releases
 
-* **Version 0.8.6**
+* **Version 0.8.6** Added `comed` and `wcomed` methods to `VecVec` trait.
 
 * **Version 0.8.5** Split `MutVectors` trait into `MutStats` (with no arguments) and `MutVecg` (with one generic argument). They are both still implemented only for f64 and will remain so. However, it is now possible, for example, to mutably subtract a slice of any end type. This allowed the deletion of `mutvaddu8` and `mutvsubu8` as special cases. Fixed some in-code tests that were not yet using the new `Vecg` trait. Trait `VecVecf64` generalised and renamed to `VecVec`.
 

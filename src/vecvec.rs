@@ -192,7 +192,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
  
     /// GM and sorted eccentricities magnitudes.
     /// Describing a set of points `self` in n dimensions
-     fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> ) { 
+    fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len());       
         let gm = self.gmedian(eps);
         for v in self { // collect raw ecentricities magnitudes
@@ -473,8 +473,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
     /// into a single vector in this double loop order: left to right, top to bottom 
     fn covar(self, m:&[f64]) -> Vec<f64> {
         let n = self[0].len(); // dimension of the vector(s)
-        let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array
-  
+        let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array  
         for thisp in self { // adding up covars for all the points
             let mut covsub = 0_usize; // subscript into the flattened array cov
             let vm = thisp.vsubf64(&m);  // zero mean vector
@@ -490,6 +489,30 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
         // now compute the means and return
         cov.mutsmult(1.0_f64/self.len()as f64);
         cov
+    }
+
+    /// Flattened lower triangular part of a comediance matrix for f64 vectors in self.
+    /// Since comediance matrix is symmetric (positive semi definite), 
+    /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
+    /// N.b. the indexing is always assumed to be in this order: row,column.
+    /// The items of the resulting lower triangular array c[i][j] are here flattened
+    /// into a single vector in this double loop order: left to right, top to bottom. 
+    /// Instead of averaging these vectors over n points, their median is returned.
+    /// Warning: may run out of memory for large number of points and high dimensionality.
+    fn comed(self, m:&[f64], eps:f64) -> Vec<f64> { // m should be the median here
+        let d = self[0].len(); // dimension of the vector(s)
+        let mut coms:Vec<Vec<f64>> = Vec::with_capacity(self.len()); // vec of flat lower triangular results arrays  
+        for thisp in self { // saving comeds for all the points 
+            let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2);
+            let vm = thisp.vsubf64(&m);  // zero mediance vector
+            for i in 0..d {
+                let thisc = vm[i]; // ith component
+                // its products up to and including the diagonal (itself)
+                for j in 0..i+1 { com.push(thisc*vm[j]) }
+            }
+            coms.push(com)
+        } 
+        coms.gmedian(eps) // return the median of the comeds
     }
 
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors in self.
@@ -519,5 +542,28 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
         // now compute the means and return
         cov.mutsmult(1_f64/wsum); 
         cov
+    }   
+    /// Flattened lower triangular part of a comediance matrix for weighted f64 vectors in self.
+    /// Since comediance matrix is symmetric (positive semi definite), 
+    /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
+    /// N.b. the indexing is always assumed to be in this order: row,column.
+    /// The items of the resulting lower triangular array c[i][j] are here flattened
+    /// into a single vector in this double loop order: left to right, top to bottom.
+    /// Instead of averaging these vectors over n points, their median is returned.
+    /// Warning: may run out of memory for large number of points and high dimensionality. 
+    fn wcomed(self, ws:&[f64], m:&[f64], eps:f64) -> Vec<f64> {
+        let d = self[0].len(); // dimension of the vector(s)
+        let mut coms:Vec<Vec<f64>> = Vec::with_capacity(self.len());  
+        for h in 0..self.len() { // saving comeds for all the points
+            let w = ws[h];
+            let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2);  
+            let vm = self[h].vsubf64(&m);  // subtract zero median vector   
+            for i in 0..d { // cross multiply the components of one point              
+                for j in 0..i+1 {  // its weighted products up to and including the diagonal 
+                    com.push(w*vm[i]*vm[j])  }
+            }
+            coms.push(com) 
+        }
+        coms.wgmedian(ws, eps) // return the median of the comeds  
     }   
 }
