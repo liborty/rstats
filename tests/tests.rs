@@ -133,38 +133,34 @@ fn vecvec() -> Result<()> {
    println!("testing on a random set of {} points in {} dimensional space",wi(&n),wi(&d));
    let pt = genvec(d,n,5,17); // random test data 
     //  let ptu8 = genvecu8(d,n,5,17); // random u8 dataset 
-   let (med,medi,outd,outi) = pt.medoid();
-   let (mede,medei,oute,outei) = pt.emedoid(EPS);
+   let md = pt.medoid();
+   let me = pt.emedoid(EPS);
    let hcentroid = pt.hcentroid();
    let acentroid = pt.acentroid(); 
    let firstp = pt.firstpoint();
    let median = pt.gmedian(EPS);
-   let outlier = &pt[outi]; 
-   let eoutlier = &pt[outei];
+   let outlier = &pt[md.maxindex]; 
+   let eoutlier = &pt[me.maxindex];
    let zmed = pt.translate(&median); // zero median transformed data
   
-   println!("\nSum of Outlier distances:\t{} Index: {}",wi(&outd),wi(&outi));
-   println!("E-Outlier's distances:\t\t{}",wi(&pt.distsuminset(outei)));   
+   println!("\nMedoid and Outlier Distances\n\t{}",md ); 
+   println!("E-Outlier's distances:\t\t{}",wi(&pt.distsuminset(me.maxindex)));   
    println!("Outlier's distance to Median:\t{}",wi(&outlier.vdist(&median)));
-   println!("E-Outlier's distance to Median:\t{}",wi(&eoutlier.vdist(&median)));      
-   println!("Sum of Medoid's distances:\t{} Index: {}",wi(&med),wi(&medi));
+   println!("E-Outlier's distance to Median:\t{}",wi(&eoutlier.vdist(&median))); 
    println!("Sum of HCentroid's distances:\t{}",wi(&pt.distsum(&hcentroid)));
    println!("Sum of ACentroid's distances:\t{}",wi(&pt.distsum(&acentroid)));  
    println!("Sum of Median's distances:\t{}",wi(&pt.distsum(&median)));
    let dists = pt.distsums();
-   println!("Distances\t{}",dists.ameanstd().unwrap());
-   println!("Distances\t{}\n",dists.median().unwrap());
+   println!("Distances {}",dists.ameanstd().unwrap());
+   println!("Distances {}\n",dists.median().unwrap());
 
-   println!("Outlier's approx eccentricity:\t{}",wi(&pt.eccmember(outi).vmag()));
-   println!("E-Outlier's eccentricity:\t{} Index: {}",wi(&oute),wi(&outei));
-   println!("E-Medoid's eccentricity:\t{} Index: {}",wi(&mede),wi(&medei));
-   println!("Centroid's approx eccentricity:\t{}",wi(&pt.eccnonmember(&acentroid).vmag()));
+   let (eccst,eccmed,eccecc) = pt.eccinfo(EPS);
+   println!("Eccentricities info\n\t{}\n{}\n{}",eccecc,eccst,eccmed);  
+   println!("Centroid's approx eccentricity {}",wi(&pt.eccnonmember(&acentroid).vmag()));
    println!("Firstpoint's app eccentricity:\t{}",wi(&pt.eccnonmember(&firstp).vmag()));
    println!("Median's ecc (passed epsilon):\t{}",wi(&pt.eccnonmember(&median).vmag()));
-   println!("Median's error:\t{}",wi(&zmed.gmedian(EPS).vmag()));
-   let (mu,eccmed) = pt.moe(EPS);
-   println!("Eccentricities\t{}",mu);  
-   println!("Eccentricities\t{}",eccmed);
+   println!("Median's error:\t{}\n",wi(&zmed.gmedian(EPS).vmag()));
+
    let (_, seccs) = pt.sortedeccs(true,EPS); 
    println!("Sorted eccs: {}\n", wv(&seccs));
    let medcnt = binsearch(&seccs,eccmed.median);

@@ -1,4 +1,6 @@
-use crate::{Med, MStats, MutVecg, MutVecf64, Stats, VecVec, Vecg};
+use std::iter::FromIterator;
+
+use crate::{Med, MStats, MinMax, MutVecg, MutVecf64, Stats, VecVec, Vecg};
 pub use indxvec::{merge::*,Indices};
 
 impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd, 
@@ -142,11 +144,12 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
     /// ```
     /// use rstats::{Vecg,VecVec,functions::genvec};
     /// let pts = genvec(15,15,255,30);
-    /// let (dm,_,_,_) = pts.medoid();
-    /// assert_eq!(dm,4.812334638782327_f64);
+    /// let mm = pts.medoid();
+    /// assert_eq!(mm.min,4.812334638782327_f64);
     /// ```
-    fn medoid(self) -> (f64, usize, f64, usize) {
-        minmax(&self.distsums())
+    fn medoid(self) -> MinMax<T> where Vec<T>:FromIterator<f64> {    
+        let dists:Vec<T> = self.distsums().iter().map(|&d| d).collect();
+        minmax(&dists)
     }
 
     /// Finds approximate vectors from each member point towards the geometric median.
@@ -335,7 +338,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
         vsum
     } 
 
-    /// Magnitudes of all the vectors in self
+    /*  Magnitudes of all the vectors in self
     fn mags(self) -> Vec<f64> {
         let mut magsv = Vec::new();
         for v in self {
@@ -343,13 +346,15 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
         }
         magsv
     } 
+    */
 
-    /// Mean and Std (in MStats struct), Median and quartiles (in Med struct) 
+    /// Mean and Std (in MStats struct), Median and quartiles (in Med struct), Median and Outlier (in MinMax struct) 
     /// of scalar eccentricities of points in self.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
-    fn moe(self, eps: f64) -> (MStats, Med) {
-        let eccs = self.exacteccs(eps).mags();
-        (eccs.ameanstd().unwrap(),eccs.median().unwrap())
+    fn eccinfo(self, eps: f64) -> (MStats, Med, MinMax<T>) where Vec<T>:FromIterator<f64> {
+        let gm = self.gmedian(eps);
+        let eccs:Vec<T> = self.iter().map(|v| gm.vdist(&v)).collect();
+        (eccs.ameanstd().unwrap(),eccs.median().unwrap(),minmax(&eccs))
     }
 
     /// Eccentricity defined Medoid and Outlier.
@@ -364,13 +369,15 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
     /// pub const EPS:f64 = 1e-7;
     /// let d = 6_usize;
     /// let pt = genvec(d,24,7,13); // random test data 5x20
-    /// let (_medoideccentricity,medei,_outlierecccentricity,outei) = pt.emedoid(EPS);
-    /// assert_eq!(medei,10); // index of e-medoid
-    /// assert_eq!(outei,20);  // index of e-outlier
+    /// let mm = pt.emedoid(EPS);
+    /// assert_eq!(mm.minindex,10); // index of e-medoid
+    /// assert_eq!(mm.maxindex,20);  // index of e-outlier
     /// ```
-    fn emedoid(self, eps: f64) -> (f64, usize, f64, usize) {
-        minmax(&self.exacteccs(eps).mags())
-    }
+    fn emedoid(self, eps: f64) -> MinMax<T> where Vec<T>:FromIterator<f64> {
+    let gm = self.gmedian(eps);
+    let eccs:Vec<T> = self.iter().map(|v| gm.vdist(&v)).collect();
+    minmax(&eccs)
+}
 
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
     /// It has (provably) only vector iterative solutions.

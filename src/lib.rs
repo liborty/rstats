@@ -8,9 +8,10 @@ pub mod vecvec;
 pub mod functions;
 
 // reexporting to avoid duplication and for backwards compatibility
-pub use indxvec::{here,wi,wv}; 
+pub use indxvec::{MinMax,here,wi,wv}; 
 /// simple error handling
 use anyhow::{Result,bail}; 
+use core::iter::FromIterator;
 
 /// Median and quartiles
 #[derive(Default)]
@@ -281,7 +282,7 @@ pub trait VecVec<T> {
     /// Individual distances from any point v (typically not in self) to all the points in self.    
     fn dists(self, v: &[T]) -> Vec<f64>;
     /// Medoid and Outlier (by distance) of a set of points
-    fn medoid(self) -> (f64, usize, f64, usize); 
+    fn medoid(self) -> MinMax<T> where Vec<T>:FromIterator<f64>; 
     /// Eccentricity vectors from each point
     fn eccentricities(self) -> Vec<Vec<f64>>;
     /// Exact eccentricity vectors from all member points by first finding the Geometric Median.
@@ -307,11 +308,11 @@ pub trait VecVec<T> {
     /// Weighted eccentricity vector for a non member point
     fn wnxnonmember(self, ws:&[T], p:&[f64]) -> Vec<f64>; 
     /// magnitudes of a set of vectors
-    fn mags(self) -> Vec<f64>; 
+    // fn mags(self) -> Vec<f64>; 
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
-    fn moe(self, eps: f64) -> (MStats,Med);
+    fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<T>) where Vec<T>:FromIterator<f64>;
     /// Medoid and Outlier as defined by eccentricities.
-    fn emedoid(self, eps: f64) -> (f64, usize, f64, usize);
+    fn emedoid(self, eps: f64) -> MinMax<T> where Vec<T>:FromIterator<f64>;
 
     /// Geometric medians of a set
     /// First iteration point for geometric medians

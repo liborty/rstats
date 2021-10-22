@@ -375,9 +375,9 @@ impl<T> Stats for &[T]
     }
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Vec<f64> {
-        let (min,_,max,_) = minmax(self);
-        let range = f64::from(max)-f64::from(min);
-        self.iter().map(|&x|(f64::from(x)-f64::from(min))/range).collect()        
+        let mm = minmax(self);
+        let range = f64::from(mm.max)-f64::from(mm.min);
+        self.iter().map(|&x|(f64::from(x)-f64::from(mm.min))/range).collect()        
     }
     /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
     /// as produced by covar, covone, wcovar

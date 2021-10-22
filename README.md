@@ -57,7 +57,7 @@ Included in this trait are:
 * linearly weighted means (useful for time dependent data analysis),
 * median and quartiles,
 * autocorrelation, entropy
-* linear transformation to [0,1], 
+* linear transformation to [0,1],
 * other measures and vector algebra operators
 
 ### MutStats
@@ -79,8 +79,8 @@ This trait is unchecked (for speed), so some caution with data is advisable.
 ### MutVectors
 
 Mutable vector operations that take one generic argument.  
-A few of the essential `Vecg` methods are reimplemented here 
-to mutate `self` (only `&[f64]`) in-place. 
+A few of the essential `Vecg` methods are reimplemented here
+to mutate `self` (only `&[f64]`) in-place.
 This is for efficiency and convenience. For example, in
 vector iterative methods.
 Clearly, they can only be applied to a mutable variable. Beware that they work by side-effect and do not return anything, so they can not be chained.
@@ -126,6 +126,8 @@ Some of the above for vectors of vectors of bytes.
 * `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 0.8.7** Some simplification of reporting, using struct MinMax from crate `indxvec`.
 
 * **Version 0.8.6** Added `comed` and `wcomed` methods to `VecVec` trait.
 

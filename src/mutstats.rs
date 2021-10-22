@@ -23,9 +23,9 @@ impl MutStats for &mut [f64] {
 
     /// Linear transform to interval [0,1]
     fn mlintrans(self) {
-        let (min,_,max,_) = minmax(self);
-        let range = max-min;
-        for c in self.iter_mut() { *c = (*c-min)/range }        
+        let mm = minmax(self);
+        let range = mm.max-mm.min;
+        for c in self.iter_mut() { *c = (*c-mm.min)/range }        
     }
 
     /// Sorts a mutable slice in place.  
