@@ -1,4 +1,4 @@
-use crate::here;
+use crate::{here};
 
 /// Potentially useful recast of a whole slice
 pub fn tof64<'a,T>(s: &'a [T]) -> Vec<f64> where T: Copy, f64: From<T> {

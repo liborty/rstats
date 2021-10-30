@@ -28,6 +28,6 @@ anyhow = "^1"
 [dev-dependencies]
 devtimer = "4"
 
-[[bench]]
-name = "mybenchmark"
-harness = false
+#[[bench]]
+#name = "mybenchmark"
+#harness = false

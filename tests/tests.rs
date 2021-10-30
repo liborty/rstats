@@ -6,7 +6,7 @@ use devtimer::DevTime;
 use anyhow::Result;
 use indxvec::{wv,wi,Indices,merge::*};
 
-use rstats::{Stats,MutVecg,Vecg,VecVec,Vecu8,VecVecu8};
+use rstats::{Stats,MutVecg,Vecg,VecVec,VecVecg,Vecu8,VecVecu8};
 use rstats::functions::{genvec,genvecu8,i64tof64,tof64};
 
 pub const EPS:f64 = 1e-7;
@@ -133,7 +133,7 @@ fn vecvec() -> Result<()> {
    println!("testing on a random set of {} points in {} dimensional space",wi(&n),wi(&d));
    let pt = genvec(d,n,5,17); // random test data 
     //  let ptu8 = genvecu8(d,n,5,17); // random u8 dataset 
-   let md = pt.medoid();
+   let (dists,md) = pt.distsums();
    let me = pt.emedoid(EPS);
    let hcentroid = pt.hcentroid();
    let acentroid = pt.acentroid(); 
@@ -149,8 +149,7 @@ fn vecvec() -> Result<()> {
    println!("E-Outlier's distance to Median:\t{}",wi(&eoutlier.vdist(&median))); 
    println!("Sum of HCentroid's distances:\t{}",wi(&pt.distsum(&hcentroid)));
    println!("Sum of ACentroid's distances:\t{}",wi(&pt.distsum(&acentroid)));  
-   println!("Sum of Median's distances:\t{}",wi(&pt.distsum(&median)));
-   let dists = pt.distsums();
+   println!("Sum of Median's distances:\t{}",wi(&pt.distsum(&median))); 
    println!("Distances {}",dists.ameanstd().unwrap());
    println!("Distances {}\n",dists.median().unwrap());
 
