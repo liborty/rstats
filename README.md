@@ -5,13 +5,13 @@
 ## Usage
 
 Insert in your `Cargo.toml` file under `[dependencies]` `rstats = "^0.8"`
-and in your source file(s) `use rstats::` followed by any of these functions and/or traits that you need: `{functions, Stats, MutStats, Vecg, MutVecg, VecVec, Vecu8, VecVecu8};`
+and in your source file(s) `use rstats::` followed by any of these functions and traits that you need: `{functions, Stats, MutStats, Vecu8, Vecg, MutVecg, VecVec, VecVecg };`
 
 ## Introduction
 
-Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Data Analysis. It begins with statistical measures and vector algebra, which provide some basic self-contained tools for the more interesting algorithms but can also be used in their own right.
+Rstats is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Big Data Analysis. It begins with basic statistical measures and vector algebra, which provide self-contained tools for the multidimensional algorithms but can also be used in their own right.
 
-Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm. Also, the `comediance matrix`; a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the centroid.
+Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm. Also, the `comediance matrix`  as a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the usual centroid.
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
@@ -19,15 +19,15 @@ Most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Qu
 
 *Specifically, all such 1-d measures are sensitive to the choice of axis.*
 
-Our methods based on the True Geometric Median, computed here by `gmedian`, are axis (rotation) independent from the first step.
+Our methods based on the True Geometric Median (gm), computed here by `gmedian`, are axis (rotation) independent from the beginning.
 
 ### Implementation
 
-The constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector (`Stats`), two vectors (`Vecg`), or n vectors of data. End type f64 is most commonly used for the results.
+The main constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector (`Stats`), two vectors (`Vecg`), or n vectors of data (`VecVec` and `VecVecg`). End type f64 is most commonly used for the results.
 
 ### Documentation
 
-Follow the documentation link. Then select a trait of interest to see the skeletal comments on the prototype function declarations in lib.rs. To see more detailed comments, plus some examples from the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests/tests.rs`.
+Select a trait of interest to see the skeletal comments on the prototype function declarations in lib.rs. To see more detailed comments, plus some examples from the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests/tests.rs`.
 
 To run the tests, use single thread. It will be slower but will produce the results in the right order:  
 `cargo test --release -- --test-threads=1 --nocapture --color always`
@@ -37,6 +37,8 @@ To run the tests, use single thread. It will be slower but will produce the resu
 * `pub struct Med` to hold median and quartiles
 
 * `pub struct MStats` to hold a mean and standard deviation
+
+* `struct MinMax` imported from crate `indxvec` for min and max values and their indices.
 
 * functions: `tof64, i64tof64, wsum, genvec, genvecu8` (see documentation for the module `functions.rs`).
 
@@ -76,14 +78,17 @@ Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimen
 
 This trait is unchecked (for speed), so some caution with data is advisable.
 
-### MutVectors
+### MutVecg
 
 Mutable vector operations that take one generic argument.  
 A few of the essential `Vecg` methods are reimplemented here
-to mutate `self` (only `&[f64]`) in-place.
+to mutate `self:&mut[f64]` in-place.
 This is for efficiency and convenience. For example, in
-vector iterative methods.
-Clearly, they can only be applied to a mutable variable. Beware that they work by side-effect and do not return anything, so they can not be chained.
+vector iterative methods. Beware that these methods work by side-effect and do not return anything, so they can not be (functionally) chained.
+
+### MutVecf64
+
+As above but specifically for f64 arguments.
 
 ### Vecu8
 
@@ -103,9 +108,9 @@ Relationships of one vector to a set of vectors:
 
 Trait VecVec is entirely unchecked, so check your data upfront. This is the more sophisticated part of the library. The true geometric median is found iteratively.
 
-### VecVecu8
+### VecVecg
 
-Some of the above for vectors of vectors of bytes.
+Methods which take an additional generic numeric argument, such as a vector of weights.
 
 ## Appendix I: Terminology (and some new definitions) for sets of nD points
 
@@ -126,6 +131,8 @@ Some of the above for vectors of vectors of bytes.
 * `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 0.8.8** More generics: added `VecVecg` trait and removed `VecVecu8` as its functionality is now subsumed by this addition. Removed `benches/benchmark.rs` as it was not really needed. There are some timings in `tests/tests.rs`.
 
 * **Version 0.8.7** Some simplification of reporting, using struct MinMax from crate `indxvec`.
 

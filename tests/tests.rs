@@ -6,7 +6,7 @@ use devtimer::DevTime;
 use anyhow::Result;
 use indxvec::{wv,wi,Indices,merge::*};
 
-use rstats::{Stats,MutVecg,Vecg,VecVec,VecVecg,Vecu8,VecVecu8};
+use rstats::{Stats,MutVecg,Vecg,VecVec,VecVecg,Vecu8};
 use rstats::functions::{genvec,genvecu8,i64tof64,tof64};
 
 pub const EPS:f64 = 1e-7;
@@ -131,9 +131,9 @@ fn vecvec() -> Result<()> {
    let d = 10_usize;
    let n = 101_usize;
    println!("testing on a random set of {} points in {} dimensional space",wi(&n),wi(&d));
-   let pt = genvec(d,n,5,17); // random test data 
-    //  let ptu8 = genvecu8(d,n,5,17); // random u8 dataset 
-   let (dists,md) = pt.distsums();
+   let pt = genvecu8(d,n,5,17); // random u8 test data  
+   let dists = pt.distsums();
+   let md = minmax(&dists);
    let me = pt.emedoid(EPS);
    let hcentroid = pt.hcentroid();
    let acentroid = pt.acentroid(); 
@@ -179,8 +179,8 @@ fn vecvec() -> Result<()> {
 /// numbers of points can differ
 fn trend() -> Result<()> {
    let d = 7_usize;
-   let pts1 = genvec(d,28,13,19); // random test data 
-   let pts2 = genvec(d,38,23,31);
+   let pts1 = genvecu8(d,28,13,19); // random test data 
+   let pts2 = genvecu8(d,38,23,31);
    println!("\nTrend vector:\n{}\n",wv(&pts1.trend(EPS,pts2)));
    Ok(())
 }
@@ -196,7 +196,7 @@ fn geometric_medians() -> Result<()> {
    let mut sumg = 0_f64;
    let mut sumtime = 0_u128; 
    for i in 1..ITERATIONS {
-      let pts = genvec(d,n,i as u32,5*i as u32);
+      let pts = genvecu8(d,n,i as u32,5*i as u32);
       timer.start();
       let gm = pts.gmedian(EPS);
       timer.stop();
@@ -211,7 +211,7 @@ fn geometric_medians() -> Result<()> {
    timer = DevTime::new_simple();
  
    for i in 1..ITERATIONS {
-      let pts = genvec(d,n,i as u32,5*i as u32);
+      let pts = genvecu8(d,n,i as u32,5*i as u32);
       timer.start();
       let gm = pts.nmedian(EPS);
       timer.stop();
@@ -226,7 +226,7 @@ fn geometric_medians() -> Result<()> {
    timer = DevTime::new_simple();
  
    for i in 1..ITERATIONS {
-      let pts = genvec(d,n,i as u32,5*i as u32);
+      let pts = genvecu8(d,n,i as u32,5*i as u32);
       timer.start();
       let gm = pts.acentroid();
       timer.stop();

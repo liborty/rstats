@@ -2,9 +2,10 @@ pub mod statsg;
 pub mod mutstats;
 pub mod vecg;
 pub mod vecu8;
-pub mod vecvecu8;
+// pub mod vecvecu8;
 pub mod mutvec;
 pub mod vecvec;
+pub mod vecvecg;
 pub mod functions;
 
 // reexporting to avoid duplication and for backwards compatibility
@@ -267,12 +268,34 @@ pub trait VecVec<T> {
     /// Possible first iteration point for geometric medians
     fn firstpoint(self) -> Vec<f64>;
     /// Sums of distances from each point to all other points
-    fn distsums(self) -> (Vec<f64>,MinMax<f64>);
+    fn distsums(self) -> Vec<f64>;
+    /// Medoid distance, its index, outlier distance, its index
+    fn medout(self) -> MinMax<f64>; 
+    /// Fast sums of distances from each point to all other points 
+    fn distsuminset(self, indx: usize) -> f64;
     /// Next approx median point from this member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Next approx median point from this nonmember point
     fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
-    /// New secant algorithm for geometric median
+    /// Eccentricity vectors from each point
+    fn eccentricities(self) -> Vec<Vec<f64>>;
+    /// Exact eccentricity vectors from all member points by first finding the Geometric Median.
+    /// As well as being more accurate, it is usually faster than `eccentricities` above, 
+    /// especially for large numbers of points.
+    fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
+    /// Ecentricity of a member point given by its indx
+    fn eccmember(self, indx: usize) -> Vec<f64>;
+    /// Eccentricity vector for a non member point
+    fn eccnonmember(self, p:&[f64]) -> Vec<f64>; 
+    /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
+    fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
+    /// Medoid and Outlier as defined by eccentricities.
+    fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64>;
+    /// Returns ( gm, sorted eccentricities magnitudes )
+    fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> );
+    /// Improved Weizsfeld's Algorithm for geometric median
+    fn nmedian(self, eps: f64) -> Vec<f64>;
+    /// New secant algorithm for geometric median    
     fn gmedian(self, eps: f64) -> Vec<f64>; 
 }
 
@@ -284,51 +307,28 @@ pub trait VecVecg<T,U> {
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[U]) -> Vec<Vec<f64>>;
-
-    /// Fast sums of distances from each point to all other points 
-    fn distsuminset(self, indx: usize) -> f64;
     /// Sum of distances from arbitrary point (v) to all the points in self   
     fn distsum(self, v: &[U]) -> f64;
     /// Individual distances from any point v (typically not in self) to all the points in self.    
     fn dists(self, v: &[U]) -> Vec<f64>;
     /// Medoid and Outlier (by distance) of a set of points
     // fn medoid(self) -> MinMax<f64>; 
-    /// Eccentricity vectors from each point
-    fn eccentricities(self) -> Vec<Vec<f64>>;
-    /// Exact eccentricity vectors from all member points by first finding the Geometric Median.
-    /// As well as being more accurate, it is usually faster than `eccentricities` above, 
-    /// especially for large numbers of points.
-    fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
-    /// Returns ( gm, sorted eccentricities magnitudes )
-    fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> );
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
     fn wsortedeccs(self, ws: &[U], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Sorted cosines magnitudes and cpdf, needs central median
     fn wsortedcos(self, medmed: &[U], med: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> ); 
-    /// Ecentricity of a member point given by its indx
-    fn eccmember(self, indx: usize) -> Vec<f64>;
     /// Error vector, i.e. unscaled eccentricity vector
     fn errorv(self, p:&[U]) -> Vec<f64>;
-    /// Eccentricity vector for a non member point
-    fn eccnonmember(self, p:&[f64]) -> Vec<f64>; 
     /// Weighted eccentricity vector for a non member point
     fn wnxnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64>; 
-    /// magnitudes of a set of vectors
-    // fn mags(self) -> Vec<f64>; 
-    /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
-    fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<U>) where Vec<U>:FromIterator<f64>;
-    /// Medoid and Outlier as defined by eccentricities.
-    fn emedoid(self, eps: f64) -> MinMax<U> where Vec<U>:FromIterator<f64>;
-    /// Improved Weizsfeld's Algorithm for geometric median
-    fn nmedian(self, eps: f64) -> Vec<f64>;
     /// The weighted geometric median
-    fn wgmedian(self, ws: &[U],eps: f64) -> Vec<f64>; 
+    fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>; 
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
-    fn covar(self, med:&[f64]) -> Vec<f64>; 
+    fn covar(self, med:&[U]) -> Vec<f64>; 
     /// Flattened lower triangular part of a comediance matrix of a Vec of f64 vectors.
-    fn comed(self, m:&[f64], eps:f64) -> Vec<f64>;
+    fn comed(self, m:&[U], eps:f64) -> Vec<f64>;
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
-    fn wcovar(self, ws:&[f64], m:&[f64]) -> Vec<f64>;
+    fn wcovar(self, ws:&[U], m:&[f64]) -> Vec<f64>;
     /// Flattened lower triangular part of a comediance matrix for weighted f64 vectors.
-    fn wcomed(self, ws:&[f64], m:&[f64], eps:f64) -> Vec<f64>;
+    fn wcomed(self, ws:&[U], m:&[f64], eps:f64) -> Vec<f64>;
 }
