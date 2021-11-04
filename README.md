@@ -17,28 +17,28 @@ Our treatment of multidimensional sets of points is constructed from the first p
 
 Most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are not even any easier to compute.
 
-*Specifically, all such 1-d measures are sensitive to the choice of axis.*
+*Specifically, all such 1-d measures are sensitive to the choice of axis (are affected by rotation).*
 
-Our methods based on the True Geometric Median (gm), computed here by `gmedian`, are axis (rotation) independent from the beginning.
+In contrast, our methods, based on the true geometric median (gm), computed here by novel `gmedian` and `wgmedian`, are axis (rotation) independent.
 
 ### Implementation
 
-The main constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector (`Stats`), two vectors (`Vecg`), or n vectors of data (`VecVec` and `VecVecg`). End type f64 is most commonly used for the results.
+The main constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector of numbers (`Stats`), two vectors (`Vecg`), or n vectors (`VecVec` and `VecVecg`). End type f64 is most commonly used for the results, whereas the inputs to the generic methods can be vectors (or slices) of any numeric end types.
 
 ### Documentation
 
-Select a trait of interest to see the skeletal comments on the prototype function declarations in lib.rs. To see more detailed comments, plus some examples from the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests/tests.rs`.
+To see more detailed comments, plus some examples in the implementation files, scroll to the bottom of the trait and unclick [+] to the left of the `implementations` of the trait. To see the tests, consult `tests/tests.rs`. The tests also serve as simple usage examples.
 
-To run the tests, use single thread. It will be slower but will produce the results in the right order:  
+To run all the tests, use single thread in order to produce the results in the right order:  
 `cargo test --release -- --test-threads=1 --nocapture --color always`
 
-## Structs and functions
+## Structs and auxiliary functions
 
 * `pub struct Med` to hold median and quartiles
 
-* `pub struct MStats` to hold a mean and standard deviation
+* `pub struct MStats` to hold mean and standard deviation
 
-* `struct MinMax` imported from crate `indxvec` for min and max values and their indices.
+* `struct MinMax` imported from crate `indxvec` for min and max values of a vector and their indices. It is returned by function `minmax`, also from `indxvec`.
 
 * functions: `tof64, i64tof64, wsum, genvec, genvecu8` (see documentation for the module `functions.rs`).
 
@@ -46,7 +46,7 @@ To run the tests, use single thread. It will be slower but will produce the resu
 
 ### Stats
 
-One dimensional statistical measures implemented for all 'numeric' types.
+One dimensional statistical measures implemented for all numeric end types.
 
 Its methods operate on one slice of generic data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of the data in slice `s`.
@@ -78,39 +78,37 @@ Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimen
 
 This trait is unchecked (for speed), so some caution with data is advisable.
 
-### MutVecg
+### MutVecg & MutVecf64
 
-Mutable vector operations that take one generic argument.  
-A few of the essential `Vecg` methods are reimplemented here
-to mutate `self:&mut[f64]` in-place.
-This is for efficiency and convenience. For example, in
-vector iterative methods. Beware that these methods work by side-effect and do not return anything, so they can not be (functionally) chained.
+Mutable vector addition, subtraction and multiplication.  
+Mutate `self` in-place.
+This is for efficiency and convenience. Specifically, in
+vector iterative methods. `MutVecf64` is to be used in preference, when the end type of `self` is known to be `f64`. Beware that these methods work by side-effect and do not return anything, so they can not be functionally chained. 
 
-### MutVecf64
-
-As above but specifically for f64 arguments.
 
 ### Vecu8
 
-* Some vector algebra as above that can be made more efficient when the end type happens to be u8 (bytes).
+* Some vector algebra as above that can be more efficient when the end type happens to be u8 (bytes).
 * Frequency count of bytes by their values (Histogram or Probability Density Function).
 * Entropy measures in units of e (using natural logarithms).
 
 ### VecVec
 
-Relationships of one vector to a set of vectors:
+Relationships between n vectors:
 
 * sums of distances, eccentricity,
 * centroid, medoid, true geometric median,
 * transformation to zero (geometric) median data,
-* relationship between sets of multidimensional vectors: trend,
+* relationship between two sets of multidimensional vectors: trend,
 * covariance and comediance matrices (weighted and unweighted).
 
-Trait VecVec is entirely unchecked, so check your data upfront. This is the more sophisticated part of the library. The true geometric median is found iteratively.
+This is the main contribution of this library. The true geometric median is found iteratively using multidimensional secant method combined with improved Weiszfeld's algorithm. 
+
+Trait VecVec is entirely unchecked, so check your data upfront. 
 
 ### VecVecg
 
-Methods which take an additional generic numeric argument, such as a vector of weights.
+Methods which take an additional generic numeric argument, such as a vector of weights for computing the weighted geometric medians.
 
 ## Appendix I: Terminology (and some new definitions) for sets of nD points
 
@@ -147,5 +145,3 @@ Methods which take an additional generic numeric argument, such as a vector of w
 * **Version 0.8.2** Added `statsgen.rs` (generic) module to add the capability of applying the trait `Stats` to all numeric end types, as long as their slices are wrapped in `GSlice(&s)`. This is a step towards more generality, as `Stats` methods can now work on all primitive numeric types.  f64 and i64 remain as previously, so they should not be wrapped.
 
 * **Version 0.8.0** Simplified, more stable version. Moved auxiliary macro `here` and functions `wv,wi` to crate `indxvec`. Tidied up the tests accordingly.
-
-* **Version 0.7.17** Updated Cargo.toml dependency to `indxvec = "^0.2"`.
