@@ -83,8 +83,7 @@ This trait is unchecked (for speed), so some caution with data is advisable.
 Mutable vector addition, subtraction and multiplication.  
 Mutate `self` in-place.
 This is for efficiency and convenience. Specifically, in
-vector iterative methods. `MutVecf64` is to be used in preference, when the end type of `self` is known to be `f64`. Beware that these methods work by side-effect and do not return anything, so they can not be functionally chained. 
-
+vector iterative methods. `MutVecf64` is to be used in preference, when the end type of `self` is known to be `f64`. Beware that these methods work by side-effect and do not return anything, so they can not be functionally chained.
 
 ### Vecu8
 
@@ -94,21 +93,19 @@ vector iterative methods. `MutVecf64` is to be used in preference, when the end 
 
 ### VecVec
 
-Relationships between n vectors:
+Relationships between n vectors (nD). This is the original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm boosted by multidimensional secant method.
 
-* sums of distances, eccentricity,
-* centroid, medoid, true geometric median,
+* sums of distances, eccentricity measure for nD points,
+* centroid, medoid, outliers, true geometric median,
 * transformation to zero (geometric) median data,
 * relationship between two sets of multidimensional vectors: trend,
 * covariance and comediance matrices (weighted and unweighted).
 
-This is the main contribution of this library. The true geometric median is found iteratively using multidimensional secant method combined with improved Weiszfeld's algorithm. 
-
-Trait VecVec is entirely unchecked, so check your data upfront. 
+Trait VecVec is entirely unchecked, so check your data upfront.
 
 ### VecVecg
 
-Methods which take an additional generic numeric argument, such as a vector of weights for computing the weighted geometric medians.
+Methods which take an additional generic vector argument, such as a vector of weights for computing the weighted geometric medians.
 
 ## Appendix I: Terminology (and some new definitions) for sets of nD points
 
@@ -130,18 +127,10 @@ Methods which take an additional generic numeric argument, such as a vector of w
 
 ## Appendix II: Recent Releases
 
-* **Version 0.8.8** More generics: added `VecVecg` trait and removed `VecVecu8` as its functionality is now subsumed by this addition. Removed `benches/benchmark.rs` as it was not really needed. There are some timings in `tests/tests.rs`.
+* **Version 0.8.8** More generics: added `VecVecg` trait and removed `VecVecu8` as its functionality is now subsumed by this addition. Removed `benches/benchmark.rs` as it was not really needed. There are timings of the geometric medians computation in `tests/tests.rs`.
 
 * **Version 0.8.7** Some simplification of reporting, using struct MinMax from crate `indxvec`.
 
 * **Version 0.8.6** Added `comed` and `wcomed` methods to `VecVec` trait.
 
 * **Version 0.8.5** Split `MutVectors` trait into `MutStats` (with no arguments) and `MutVecg` (with one generic argument). They are both still implemented only for f64 and will remain so. However, it is now possible, for example, to mutably subtract a slice of any end type. This allowed the deletion of `mutvaddu8` and `mutvsubu8` as special cases. Fixed some in-code tests that were not yet using the new `Vecg` trait. Trait `VecVecf64` generalised and renamed to `VecVec`.
-
-* **Version 0.8.4** Significant reorganisation. `Vecf64` trait and its source module `vecf64.rs` have been replaced by `Vecg` generic trait and `vecg.rs` module respectively. Numerous methods have been sorted more carefully into `Vecg` trait or `Stats` trait, according to whether or not they take an argument. Some methods have also been moved out of `Vecu8` trait and generalised in the process. Methods remaining in `Vecu8` now all have names ending in `u8` for clarity and to avoid confusion with their generic versions. Some bugs in entropy methods have been fixed.
-
-* **Version 0.8.3** Simplification of generic `Stats`. `GSlice` is no longer needed. The only restriction remaining is the necessity to explicitly convert `&[i64] -> &[f64]`, using function `statsg::i64tof64(s: &[i64])`. All other end types are fine. This made possible the removal of two modules, `statsf64.rs` and `stasi64.rs`. They are now superceded by a single generic `statsg.rs`. This rationalisation work will continue with the remaining traits as well.
-
-* **Version 0.8.2** Added `statsgen.rs` (generic) module to add the capability of applying the trait `Stats` to all numeric end types, as long as their slices are wrapped in `GSlice(&s)`. This is a step towards more generality, as `Stats` methods can now work on all primitive numeric types.  f64 and i64 remain as previously, so they should not be wrapped.
-
-* **Version 0.8.0** Simplified, more stable version. Moved auxiliary macro `here` and functions `wv,wi` to crate `indxvec`. Tidied up the tests accordingly.
