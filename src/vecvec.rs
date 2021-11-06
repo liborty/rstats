@@ -16,9 +16,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
     /// ```
     fn acentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()];
-        for v in self {
-            centre.mvadd(&v)
-        }
+        for v in self { centre.mvadd(&v) }
         centre.mutsmult(1.0 / self.len() as f64);
         centre
     }

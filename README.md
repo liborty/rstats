@@ -127,6 +127,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 0.8.9** Minor improvements to `readme` and `vecvecg`.
+
 * **Version 0.8.8** More generics: added `VecVecg` trait and removed `VecVecu8` as its functionality is now subsumed by this addition. Removed `benches/benchmark.rs` as it was not really needed. There are timings of the geometric medians computation in `tests/tests.rs`.
 
 * **Version 0.8.7** Some simplification of reporting, using struct MinMax from crate `indxvec`.
