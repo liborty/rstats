@@ -8,7 +8,7 @@
 
 ## Usage
 
-Insert in your `Cargo.toml` file under `[dependencies]` `rstats = "^0.8"`
+Insert in your `Cargo.toml` file under `[dependencies]` `rstats = "^0.9"`
 and in your source file(s) `use rstats::` followed by any of these functions and traits that you need: `{functions, Stats, MutStats, Vecu8, Vecg, MutVecg, VecVec, VecVecg };`
 
 ## Introduction
@@ -77,7 +77,8 @@ vector iterative methods.
 
 Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimensionality):
 
-* Vector additions, subtractions, products and other relationships and measures.
+* Vector additions, subtractions and products (scalar, kronecker, outer),
+* Other relationships and measures,
 * Pearson's, Spearman's and Kendall's correlations.
 
 This trait is unchecked (for speed), so some caution with data is advisable.
@@ -130,6 +131,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 * `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 0.9.0** Added `kron` and `outer` products to `Vecg` trait for completeness. Added `printvv` utility to `functions` for pretty printing generic vectors of vectors.
 
 * **Version 0.8.9** Minor improvements to `readme` and `vecvecg`.
 

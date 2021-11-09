@@ -125,8 +125,8 @@ impl<T,U> Vecg<T,U> for &[T]
     /// D = 1-S = (1-cos(theta))/2
     fn vdisim(self, v:&[U]) -> f64 { (1.0-self.cosine(v))/2.0 }
 
-    /// Flattened lower triangular part of a comediance/covariance matrix. 
-    /// m s either mean or median vector. 
+    /// Flattened lower triangular part of a covariance matrix. 
+    /// m can be either mean or median vector. 
     /// Since covariance matrix is symmetric (positive semi definite), 
     /// the upper triangular part can be trivially added for all j>i by: c(j,i) = c(i,j).
     /// N.b. the indexing is always assumed to be in this order: row,column.
@@ -142,6 +142,24 @@ impl<T,U> Vecg<T,U> for &[T]
             for j in 0..i+1 { cov.push(thisc*vm[j]) }
         }
         cov
+    }
+
+    /// Kronecker product of two vectors.   
+    /// The indexing is always assumed to be in this order: row,column. 
+    fn kron(self, m:&[U]) -> Vec<f64> { 
+        let mut krn:Vec<f64> = Vec::new(); // result vector 
+        for &a in self {
+            for &b in m { krn.push(f64::from(a)*f64::from(b)) }
+        }
+        krn
+    }
+
+    /// Outer product of two vectors.   
+    /// The indexing is always assumed to be in this order: row,column. 
+    fn outer(self, m:&[U]) -> Vec<Vec<f64>> { 
+        let mut out:Vec<Vec<f64>> = Vec::new(); // result vector 
+        for &s in self { out.push(m.smult(s)) }      
+        out
     }
  
     /// Joint entropy 

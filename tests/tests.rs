@@ -7,7 +7,7 @@ use anyhow::Result;
 use indxvec::{wv,wi,Indices,merge::*};
 
 use rstats::{Stats,MutVecg,Vecg,VecVec,VecVecg,Vecu8};
-use rstats::functions::{genvec,genvecu8,i64tof64,tof64};
+use rstats::functions::{printvv,genvec,genvecu8,i64tof64,tof64};
 
 pub const EPS:f64 = 1e-7;
 #[test]
@@ -103,27 +103,27 @@ fn genericstats() -> Result<()> {
 #[test]
 fn vecg() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
-   println!("\n{}",wv(&v1));
+   println!("v1: {}",wv(&v1));
    let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
-   println!("{}",wv(&v2)); 
+   println!("v2: {}",wv(&v2)); 
    println!("Pearson's Correlation:\t{}",wi(&v1.correlation(&v2))); 
    println!("Kendall's Correlation:\t{}",wi(&v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",wi(&v1.spearmancorr(&v2)));  
    println!("Cosine:\t\t\t{}",wi(&v1.cosine(&v2))); 
    println!("Cosine of ranks:\t{}",
-        wi(&rank(&v1,true).indx_to_f64().cosine(&rank(&v2,true).indx_to_f64())));        
+      wi(&rank(&v1,true).indx_to_f64().cosine(&rank(&v2,true).indx_to_f64())));        
    println!("Euclidian distance:\t{}",wi(&v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",wi(&v1.vsub(&v2).vmag()));   
    println!("Vector difference{}",wv(&v1.vsub(&v2))); 
    println!("Vector sum:{}",wv(&v1.vadd(&v2)));  
    println!("Scalar product:\t\t{}",wi(&v1.dotp(&v2)));
-   println!("Parallelogram area:\t{}",wi(&v1.varea(&v2))); 
+   println!("Parallelogram area:\t{}",wi(&v1.varea(&v2)));
+   println!("Arc area:\t\t{}",wi(&v1.varc(&v2))); 
    println!("Dependence:\t\t{}",wi(&v1.dependence(&v2)));
    println!("Similarity:\t\t{}",wi(&v1.vsim(&v2)));
-   println!("Dissimilarity:\t\t{}\n",wi(&v1.vdisim(&v2))); 
-   // println!("Arc area:\t\t{}\n",wi(v1.varc(&v2)));
-   let sm = v1.symmatrix();
-   for i in 0..5 { eprintln!("{}",wv(&sm[i])) };  
+   println!("Dissimilarity:\t\t{}",wi(&v1.vdisim(&v2))); 
+   println!("[1,2,3].kron([4,5]): {}",wv(&[1,2,3].kron(&[4,5])));
+   println!("[1,2,3].outer([4,5,6,7]): "); printvv([1,2,3].outer(&[4,5,6,7]));
    Ok(())
 }
 #[test]

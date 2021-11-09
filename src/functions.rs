@@ -1,13 +1,19 @@
-use crate::{here};
+use crate::here;
+use indxvec::wv;
 
 /// Potentially useful recast of a whole slice
-pub fn tof64<'a,T>(s: &'a [T]) -> Vec<f64> where T: Copy, f64: From<T> {
+pub fn tof64<T>(s: &[T]) -> Vec<f64> where T: Copy, f64: From<T> {
     s.iter().map(| &x | f64::from(x)).collect()
 }
 
 /// Necessary recast of a whole i64 slice to f64 
 pub fn i64tof64(s: &[i64]) -> Vec<f64> {
     s.iter().map(| &x | x as f64).collect()
+}
+
+/// Print vector of vectors
+pub fn printvv<T>(s: Vec<Vec<T>>) where T:Copy+std::fmt::Display { 
+    for v in s { println!("{}",wv(&v)) }; 
 }
 
 /// Sum of linear weights 1..n.

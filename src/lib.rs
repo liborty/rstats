@@ -167,7 +167,10 @@ pub trait Vecg<_T,U> {
     fn vdisim(self, v:&[U]) -> f64;
     /// Lower triangular part of a covariance matrix for a single f64 vector.
     fn covone(self, m:&[U]) -> Vec<f64>;
-
+    /// Kronecker product of two vectors 
+    fn kron(self, m:&[U]) -> Vec<f64>; 
+    /// Outer product of two vectors 
+    fn outer(self, m:&[U]) -> Vec<Vec<f64>>; 
     /// Joint entropy of &[u8],&[u8] in nats 
     fn jointentropy(self, v:&[U]) -> f64;
     /// Statistical independence measure based on joint entropy
