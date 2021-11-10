@@ -4,10 +4,9 @@
 
 use devtimer::DevTime;
 use anyhow::Result;
-use indxvec::{wv,wi,Indices,merge::*};
-
+use indxvec::{Indices,merge::*};
 use rstats::{Stats,MutVecg,Vecg,VecVec,VecVecg,Vecu8};
-use rstats::functions::{printvv,genvec,genvecu8,i64tof64,tof64};
+use rstats::{wv,wi,printvv,genvec,genvecu8,i64tof64,tof64};
 
 pub const EPS:f64 = 1e-7;
 #[test]

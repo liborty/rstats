@@ -1,16 +1,20 @@
 # Rstats
 
-[<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github" height="25">](https://github.com/liborty/rstats)
-[<img alt="crates.io" src="https://img.shields.io/crates/v/rstats.svg?style=for-the-badge&color=green&logo=rust" height="25">](https://crates.io/crates/rstats)
-[<img alt="crates.io" src="https://img.shields.io/crates/d/rstats?logo=rust" height="25">](https://crates.io/crates/rstats)
-[<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-rstats-green?style=for-the-badge&labelColor=555555&logoColor=white&logo=data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxwYXRoIGZpbGw9IiNmNWY1ZjUiIGQ9Ik00ODguNiAyNTAuMkwzOTIgMjE0VjEwNS41YzAtMTUtOS4zLTI4LjQtMjMuNC0zMy43bC0xMDAtMzcuNWMtOC4xLTMuMS0xNy4xLTMuMS0yNS4zIDBsLTEwMCAzNy41Yy0xNC4xIDUuMy0yMy40IDE4LjctMjMuNCAzMy43VjIxNGwtOTYuNiAzNi4yQzkuMyAyNTUuNSAwIDI2OC45IDAgMjgzLjlWMzk0YzAgMTMuNiA3LjcgMjYuMSAxOS45IDMyLjJsMTAwIDUwYzEwLjEgNS4xIDIyLjEgNS4xIDMyLjIgMGwxMDMuOS01MiAxMDMuOSA1MmMxMC4xIDUuMSAyMi4xIDUuMSAzMi4yIDBsMTAwLTUwYzEyLjItNi4xIDE5LjktMTguNiAxOS45LTMyLjJWMjgzLjljMC0xNS05LjMtMjguNC0yMy40LTMzLjd6TTM1OCAyMTQuOGwtODUgMzEuOXYtNjguMmw4NS0zN3Y3My4zek0xNTQgMTA0LjFsMTAyLTM4LjIgMTAyIDM4LjJ2LjZsLTEwMiA0MS40LTEwMi00MS40di0uNnptODQgMjkxLjFsLTg1IDQyLjV2LTc5LjFsODUtMzguOHY3NS40em0wLTExMmwtMTAyIDQxLjQtMTAyLTQxLjR2LS42bDEwMi0zOC4yIDEwMiAzOC4ydi42em0yNDAgMTEybC04NSA0Mi41di03OS4xbDg1LTM4Ljh2NzUuNHptMC0xMTJsLTEwMiA0MS40LTEwMi00MS40di0uNmwxMDItMzguMiAxMDIgMzguMnYuNnoiPjwvcGF0aD48L3N2Zz4K" height="25">](https://docs.rs/rstats/)
-
+[<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github" height="20">](https://github.com/liborty/rstats)
+[<img alt="crates.io" src="https://img.shields.io/crates/v/rstats.svg?style=for-the-badge&color=green&logo=rust" height="20">](https://crates.io/crates/rstats)
+[<img alt="crates.io" src="https://img.shields.io/crates/d/rstats?logo=rust" height="20">](https://crates.io/crates/rstats)
+[<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-rstats-green?style=for-the-badge&labelColor=555555&logoColor=white&logo=data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxwYXRoIGZpbGw9IiNmNWY1ZjUiIGQ9Ik00ODguNiAyNTAuMkwzOTIgMjE0VjEwNS41YzAtMTUtOS4zLTI4LjQtMjMuNC0zMy43bC0xMDAtMzcuNWMtOC4xLTMuMS0xNy4xLTMuMS0yNS4zIDBsLTEwMCAzNy41Yy0xNC4xIDUuMy0yMy40IDE4LjctMjMuNCAzMy43VjIxNGwtOTYuNiAzNi4yQzkuMyAyNTUuNSAwIDI2OC45IDAgMjgzLjlWMzk0YzAgMTMuNiA3LjcgMjYuMSAxOS45IDMyLjJsMTAwIDUwYzEwLjEgNS4xIDIyLjEgNS4xIDMyLjIgMGwxMDMuOS01MiAxMDMuOSA1MmMxMC4xIDUuMSAyMi4xIDUuMSAzMi4yIDBsMTAwLTUwYzEyLjItNi4xIDE5LjktMTguNiAxOS45LTMyLjJWMjgzLjljMC0xNS05LjMtMjguNC0yMy40LTMzLjd6TTM1OCAyMTQuOGwtODUgMzEuOXYtNjguMmw4NS0zN3Y3My4zek0xNTQgMTA0LjFsMTAyLTM4LjIgMTAyIDM4LjJ2LjZsLTEwMiA0MS40LTEwMi00MS40di0uNnptODQgMjkxLjFsLTg1IDQyLjV2LTc5LjFsODUtMzguOHY3NS40em0wLTExMmwtMTAyIDQxLjQtMTAyLTQxLjR2LS42bDEwMi0zOC4yIDEwMiAzOC4ydi42em0yNDAgMTEybC04NSA0Mi41di03OS4xbDg1LTM4Ljh2NzUuNHptMC0xMTJsLTEwMiA0MS40LTEwMi00MS40di0uNmwxMDItMzguMiAxMDIgMzguMnYuNnoiPjwvcGF0aD48L3N2Zz4K" height="20">](https://docs.rs/rstats/)
 
 ## Usage
 
-Insert `rstats = "^0.9"` in the `Cargo.toml` file under `[dependencies]`.  
-Put any of the following (that you actually need) in your source files:  
-`use rstats::{functions,Stats,MutStats,Vecu8,Vecg,MutVecg,VecVec,VecVecg};`
+Insert `rstats = "^0.9"` in the `Cargo.toml` file under `[dependencies]`.
+
+Use any of the following structs that you need in your source files:  
+`use rstats::{MinMax,Med,Mstats};`  
+Use any of the following functions that you need in your source files:  
+`use rstats::{i64tof64,tof64,here,wi,wv,wsum,printvv,genvec,genvecu8};`  
+Use any of the following traits that you need in your source files:  
+`use rstats::{Stats,MutStats,Vecu8,Vecg,MutVecg,VecVec,VecVecg};`
 
 ## Introduction
 
@@ -33,20 +37,20 @@ The main constituent parts of Rstats are Rust traits grouping together methods a
 ### Documentation
 
 To see more detailed comments, plus some examples, see the source.  
-It is highly recommended to read and run `tests/tests.rs`, which shows examples of usage. 
+It is highly recommended to read and run `tests/tests.rs`, which shows examples of usage.
 
 To run all the tests, use single thread in order to produce the results in the right order:  
 `cargo test --release -- --test-threads=1 --nocapture --color always`
 
 ## Structs and auxiliary functions
 
-* `pub struct Med` to hold median and quartiles
+* `struct Med` to hold median and quartiles
 
-* `pub struct MStats` to hold mean and standard deviation
+* `struct MStats` to hold mean and standard deviation
 
-* `struct MinMax` imported from crate `indxvec` for min and max values of a vector and their indices. It is returned by function `minmax`, also from `indxvec`.
+* `struct MinMax` reexported from crate `indxvec` to hold min and max values of a vector and their indices. It is returned by function `indxvec::merge::minmax`.
 
-* functions: `printvv, tof64, i64tof64, wsum, genvec, genvecu8` (see documentation for the module `functions.rs`).
+* functions: `i64tof64,tof64,here,wsum,wi,wv,printvv,genvec,genvecu8`
 
 ## Traits
 
@@ -134,7 +138,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 0.9.0** Added `kron` and `outer` products to `Vecg` trait. Added `printvv` utility to `functions` for pretty printing generic vectors of vectors.
+* **Version 0.9.1** Made the auxiliary functions more visible by moving them to `lib.rs` (the top level of the crate).
+
+* **Version 0.9.0** Added `kron` and `outer` products to `Vecg` trait. Added `printvv` utility for pretty printing generic vectors of vectors.
 
 * **Version 0.8.9** Minor improvements to `readme` and `vecvecg`.
 
