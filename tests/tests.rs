@@ -8,7 +8,7 @@ use indxvec::{Indices,merge::*};
 use rstats::{Stats,MutVecg,Vecg,VecVec,VecVecg,Vecu8};
 use rstats::{wv,wi,printvv,genvec,genvecu8,i64tof64,tof64};
 
-pub const EPS:f64 = 1e-7;
+pub const EPS:f64 = 1e-10;
 #[test]
 fn u8() -> Result<()> {
    let v1 = vec![1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6]; 
@@ -90,11 +90,9 @@ fn intstats() -> Result<()> {
 fn genericstats() -> Result<()> { 
    let v = vec![1_i32,2,3,4,5,6,7,8,9,10,11,12,13,14,15]; 
    println!("\n{}",wv(&v)); 
-   println!("Arithmetic mean:{}",wi(&v.amean().unwrap()));
-   println!("Geometric mean:\t{}",wi(&v.gmean().unwrap()));
-   println!("Harmonic mean:\t{}",wi(&v.hmean().unwrap()));
-   println!("Arithmetic {}",wi(&v.ameanstd().unwrap()));
-   println!("Geometric {}",wi(&v.gmeanstd().unwrap()));
+   println!("Arithmetic\t{}",wi(&v.ameanstd().unwrap()));
+   println!("Geometric\t{}",wi(&v.gmeanstd().unwrap()));
+   println!("Harmonic\t{}",wi(&v.hmeanstd().unwrap()));
    println!("Autocorrelation:{}",wi(&v.autocorr()));
    println!("{}\n",&v.median().unwrap()); 
    Ok(())
@@ -127,44 +125,52 @@ fn vecg() -> Result<()> {
 }
 #[test]
 fn vecvec() -> Result<()> { 
-   let d = 10_usize;
-   let n = 101_usize;
+   let d = 13_usize;
+   let n = 108_usize;
    println!("testing on a random set of {} points in {} dimensional space",wi(&n),wi(&d));
-   let pt = genvecu8(d,n,5,17); // random u8 test data  
-   let dists = pt.distsums();
-   let md = minmax(&dists);
-   let me = pt.emedoid(EPS);
+   let mut weights = Vec::new();
+   for i in 1..n+1 { weights.push(i as f64) }; // create test weights data
+   let pt = genvecu8(d,n,5,17); // random u8 test data
+   let (eccstd,eccmed,eccecc) = pt.eccinfo(EPS);
+ 
+   // let me = pt.emedoid(EPS);
+   let medoid = &pt[eccecc.minindex];
+   let outlier = &pt[eccecc.maxindex];
    let hcentroid = pt.hcentroid();
+   let gcentroid = pt.gcentroid();
    let acentroid = pt.acentroid(); 
    let firstp = pt.firstpoint();
    let median = pt.gmedian(EPS);
-   let outlier = &pt[md.maxindex]; 
-   let eoutlier = &pt[me.maxindex];
-   let zmed = pt.translate(&median); // zero median transformed data
-  
-   println!("\nMedoid and Outlier Distances\n\t{}",md ); 
-   println!("E-Outlier's distances:\t\t{}",wi(&pt.distsuminset(me.maxindex)));   
-   println!("Outlier's distance to Median:\t{}",wi(&outlier.vdist(&median)));
-   println!("E-Outlier's distance to Median:\t{}",wi(&eoutlier.vdist(&median))); 
-   println!("Sum of HCentroid's distances:\t{}",wi(&pt.distsum(&hcentroid)));
-   println!("Sum of ACentroid's distances:\t{}",wi(&pt.distsum(&acentroid)));  
-   println!("Sum of Median's distances:\t{}",wi(&pt.distsum(&median))); 
-   println!("Distances {}",dists.ameanstd().unwrap());
-   println!("Distances {}\n",dists.median().unwrap());
+   // let outlier = &pt[md.maxindex]; 
+   // let eoutlier = &pt[me.maxindex];
+ 
+   let dists = pt.distsums();
+   let md = minmax(&dists);
+   println!("\nMedoid and Outlier Total Distances:\n{}",md ); 
+   println!("Total Distances {}",dists.ameanstd().unwrap());
+   println!("Total Distances {}\n",dists.median().unwrap());
+   println!("HCentroid's total distances:\t{}",wi(&pt.distsum(&hcentroid)));
+   println!("GCentroid's total distances:\t{}",wi(&pt.distsum(&gcentroid)));
+   println!("ACentroid's total distances:\t{}",wi(&pt.distsum(&acentroid)));
+   println!("Median's total distances:\t{}",wi(&pt.distsum(&median)));  
+   println!("Outlier's distance to Medoid:\t{}",wi(&outlier.vdist(&medoid)));      
+   println!("Outlier's radius to Median:\t{}",wi(&outlier.vdist(&median)));  
+   println!("Medoid's radius to Median:\t{}",wi(&medoid.vdist(&median)));
 
-   let (eccst,eccmed,eccecc) = pt.eccinfo(EPS);
-   println!("Eccentricities info\n\t{}\n{}\n{}",eccecc,eccst,eccmed);  
-   println!("Centroid's approx eccentricity {}",wi(&pt.eccnonmember(&acentroid).vmag()));
-   println!("Firstpoint's app eccentricity:\t{}",wi(&pt.eccnonmember(&firstp).vmag()));
-   println!("Median's ecc (passed epsilon):\t{}",wi(&pt.eccnonmember(&median).vmag()));
-   println!("Median's error:\t{}\n",wi(&zmed.gmedian(EPS).vmag()));
+   println!("\nMedoid and Outlier Eccentricities:\n{}\nEccentricities {}\nEccentricities {}",eccecc,eccstd,eccmed); 
+   println!("HCentroid's eccentricity:\t{}",wi(&hcentroid.vdist(&median)));
+   println!("GCentroid's eccentricity:\t{}",wi(&gcentroid.vdist(&median)));
+   println!("ACentroid's eccentricity:\t{}",wi(&acentroid.vdist(&median)));
+   println!("Firstpoint's eccentricity:\t{}",wi(&firstp.vdist(&median)));
+   println!("Median's ecc (error*{:e}):\t{}",EPS,wi(&(pt.eccnonmember(&median).vmag()/EPS)));
+   // let zmed = pt.translate(&median); // zero median transformed data
+   // println!("Median's error:\t{}\n",wi(&zmed.gmedian(EPS).vmag()));
 
-   let (_, seccs) = pt.sortedeccs(true,EPS); 
-   println!("Sorted eccs: {}\n", wv(&seccs));
-   let medcnt = binsearch(&seccs,eccmed.median);
-   println!("Items smaller or equal to median of eccs: {} last value: {}", wi(&medcnt), wi(&seccs[medcnt-1]));
-   let mut weights = Vec::new();
-   for i in 1..n+1 { weights.push(i as f64) }; // create test weights data
+   // let (_, seccs) = pt.sortedeccs(true,EPS); 
+   // !("Sorted eccs: {}\n", wv(&seccs));
+   // let medcnt = binsearch(&seccs,eccmed.median);
+   // println!("Items smaller or equal to median of eccs: {} last value: {}", wi(&medcnt), wi(&seccs[medcnt-1]));
+
 // create pretend median of medians
 //   let medmed = vec![0.5_f64;n];
 //   let (se, cpdf) = 
@@ -186,8 +192,8 @@ fn trend() -> Result<()> {
 
 #[test]
 fn geometric_medians() -> Result<()> {
-    const ITERATIONS:usize = 20;
-    let n = 700_usize;
+    const ITERATIONS:usize = 10;
+    let n = 7000_usize;
     let d = 10_usize;
     println!("timing {} medians of {} points in {} dimensions",wi(&ITERATIONS),wi(&n),wi(&d)); 
  
@@ -203,7 +209,7 @@ fn geometric_medians() -> Result<()> {
       sumg += pts.distsum(&gm)    
    }
    // sumg /= (ITERATIONS*n*d) as f64;
-   println!("Gmedian all distances: {} ns:\t{}",wi(&sumg),wi(&sumtime)); 
+   println!("Gmedian all distances: {}\tns: {:>11}",wi(&sumg),&sumtime); 
  
    sumg = 0_f64;
    sumtime = 0_u128;
@@ -218,7 +224,7 @@ fn geometric_medians() -> Result<()> {
       sumg += pts.distsum(&gm)
    } 
    // sumg /= (ITERATIONS*n*d) as f64;  
-   println!("Nmedian all distances: {} ns:\t{}",wi(&sumg),wi(&sumtime));   
+   println!("Nmedian all distances: {}\tns: {:>11}",wi(&sumg),sumtime);   
 
    sumg = 0_f64;
    sumtime = 0_u128;
@@ -233,6 +239,6 @@ fn geometric_medians() -> Result<()> {
       sumg += pts.distsum(&gm)
    } 
    // sumg /= (ITERATIONS*n*d) as f64;  
-   println!("Centroid all distncs:  {} ns:     {}",wi(&sumg),wi(&sumtime)); 
+   println!("Centroid all distncs:  {}\t\tns: {:>11}",wi(&sumg),sumtime); 
     Ok(())  
  }

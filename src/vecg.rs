@@ -2,8 +2,8 @@ use crate::{Stats,Vecg};
 pub use indxvec::{Indices,merge::{sortm,rank}};
 
 impl<T,U> Vecg<T,U> for &[T] 
-    where T: Copy+PartialOrd,
-          U: Copy+PartialOrd,
+    where T: Copy+PartialOrd+std::fmt::Display,
+          U: Copy+PartialOrd+std::fmt::Display,
           f64: From<T>, f64: From<U> {
 
     /// Scalar multiplication of a vector, creates new vec

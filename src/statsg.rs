@@ -1,11 +1,10 @@
-use crate::{ here,wsum, MStats, Med, Stats };
+use crate::{ here,wsum,wv,MStats,Med,Stats };
 use anyhow::{ensure, Result};
 // use std::ops::Sub;
-
 pub use indxvec::merge::{sortm,minmax};          
 
 impl<T> Stats for &[T] 
-    where T: Copy+PartialOrd, // +Sub::<Output = T>,
+    where T: Copy+PartialOrd+std::fmt::Display, // +Sub::<Output = T>,
         f64: From<T> {  
 
     /// Vector magnitude
@@ -18,10 +17,21 @@ impl<T> Stats for &[T]
         self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>()
     }
 
+    /// Vector with reciprocal components
+    fn vreciprocal(self) -> Result<Vec<f64>> {
+        for &component in self {
+           let c = f64::from(component); 
+           ensure!(c.is_normal(),
+            "{} reciprocal not allowed for zero components!\n{}\n",here!(),wv(&self)); 
+        }     
+        Ok( self.iter().map(|&x| 1.0/(f64::from(x))).collect() )     
+    }
+
     /// Vector with inverse magnitude
-    fn vinverse(self) -> Vec<f64> {
-        let sf = 1.0/self.vmagsq();
-        self.iter().map(|&x| sf*(f64::from(x))).collect()     
+    fn vinverse(self) -> Result<Vec<f64>> {
+        let mag = self.vmagsq();
+        ensure!(mag > 0.0,"{} zero vector can not be inverted!",here!());     
+        Ok( self.iter().map(|&x| f64::from(x)/mag).collect() )     
     }
 
     // negated vector (all components swap sign)
@@ -35,7 +45,7 @@ impl<T> Stats for &[T]
         self.iter().map(|&x| m*(f64::from(x))).collect() 
     }
 
-    /// Arithmetic mean of an f64 slice
+    /// Arithmetic mean 
     /// # Example
     /// ```
     /// use rstats::Stats;
@@ -48,7 +58,7 @@ impl<T> Stats for &[T]
         Ok(self.iter().map(|&x| f64::from(x)).sum::<f64>() / (n as f64))
     }
 
-    /// Arithmetic mean and (population) standard deviation of an f64 slice
+    /// Arithmetic mean and (population) standard deviation 
     /// # Example
     /// ```
     /// use rstats::Stats;
@@ -60,17 +70,19 @@ impl<T> Stats for &[T]
     fn ameanstd(self) -> Result<MStats> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!",here!());
+        let nf = n as f64;
         let mut sx2 = 0_f64;
         let mean = self
             .iter()
             .map(|&x| {
-                sx2 += f64::from(x) * f64::from(x);
-                f64::from(x)
+                let fx = f64::from(x);
+                sx2 += fx * fx;
+                fx
             })
-            .sum::<f64>() / (n as f64);
+            .sum::<f64>()/nf; 
         Ok(MStats {
             mean,
-            std: (sx2 / (n as f64) - mean.powi(2)).sqrt(),
+            std: (sx2/nf - mean.powf(2.)).sqrt()
         })
     }
 
@@ -116,8 +128,9 @@ impl<T> Stats for &[T]
         let mean = self
             .iter()
             .map(|&x| {
-                let wx = w * f64::from(x);
-                sx2 += wx * f64::from(x);
+                let fx = f64::from(x);
+                let wx = w * fx;
+                sx2 += wx * fx;
                 w -= 1_f64;
                 wx
             })
@@ -125,7 +138,7 @@ impl<T> Stats for &[T]
             / wsum(n);
         Ok(MStats {
             mean: mean,
-            std: (sx2 / wsum(n) - mean.powi(2)).sqrt(),
+            std: (sx2 / wsum(n) - mean.powf(2.)).sqrt(),
         })
     }
 
@@ -146,6 +159,36 @@ impl<T> Stats for &[T]
             sum += 1.0 / fx
         }
         Ok(n as f64 / sum)
+    }
+
+    /// Harmonic mean and experimental standard deviation 
+    /// std is based on reciprocal moments
+    /// # Example
+    /// ```
+    /// use rstats::Stats;
+    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let res = v1.as_slice().hmeanstd().unwrap();
+    /// assert_eq!(res.mean,4.305622526633627_f64);
+    /// assert_eq!(res.std,1.1996764516690959_f64);
+    /// ```
+    fn hmeanstd(self) -> Result<MStats> {
+        let n = self.len();
+        ensure!(n > 0, "{} sample is empty!",here!());
+        let nf = n as f64;
+        let mut sx2 = 0_f64;        
+        let rmean = self
+            .iter()
+            .map(|&x| {
+                let fx = f64::from(x);
+                if !fx.is_normal() { panic!("{} does not accept zero valued data!",here!()) };     
+                let rx = 1_f64/fx;  // work with reciprocals
+                sx2 += rx * rx;
+                rx   
+            }).sum::<f64>()/nf;    
+        Ok(MStats {
+            mean: 1.0/rmean,
+            std: ((sx2/nf-rmean.powf(2.))/(nf*rmean.powf(4.))).sqrt()
+        })
     }
     /// Linearly weighted harmonic mean of an f64 slice.    
     /// Linearly descending weights from n down to one.    

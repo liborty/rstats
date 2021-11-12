@@ -3,13 +3,13 @@ use std::iter::FromIterator;
 use crate::{Med, MStats, MinMax, MutVecg, MutVecf64, Stats, VecVec, Vecg};
 pub use indxvec::{merge::*,Indices};
 
-impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd, 
+impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display, 
     f64: From<T> {
 
     /// acentroid = simple multidimensional arithmetic mean
     /// # Example
     /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,functions::genvec};
+    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
     /// let pts = genvec(15,15,255,30); 
     /// let dist = pts.distsum(&pts.acentroid());
     /// assert_eq!(dist, 4.14556218326653_f64);
@@ -23,7 +23,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
         /// gcentroid = multidimensional geometric mean
     /// # Example
     /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,functions::genvec};
+    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
     /// let pts = genvec(15,15,255,30);
     /// let centre = pts.gcentroid();
     /// let dist = pts.distsum(&centre);
@@ -44,25 +44,24 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
     /// hcentroid =  multidimensional harmonic mean
     /// # Example
     /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,functions::genvec};
+    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
     /// let pts = genvec(15,15,255,30);
     /// let centre = pts.hcentroid();
     /// let dist = pts.distsum(&centre);
-    /// assert_eq!(dist, 5.623778191797538_f64);
+    /// assert_eq!(dist, 5.1272881071877014_f64);
     /// ```
     fn hcentroid(self) -> Vec<f64> {
-        let mut centre = vec![0_f64; self[0].len()];
-        // let t = self.translate(&self.acentroid());
+        let mut centre = vec![0_f64; self[0].len()]; 
         for v in self {
-            centre.mutvadd(&v.vinverse())
+            centre.mutvadd(&v.vinverse().unwrap())
         }
-        centre.vinverse()       
+        centre.smultf64(1.0/(self.len() as f64)).vinverse().unwrap()       
     }
     /// Possible first iteration point for geometric medians.
     /// Same as eccnonmember(origin), just saving the zero subtractions. 
     /// # Example
     /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,functions::genvec};
+    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
     /// let pts = genvec(15,15,255,30); 
     /// let dist = pts.distsum(&pts.firstpoint());
     /// assert_eq!(dist,4.132376831171272_f64);
@@ -120,7 +119,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
     /// Returns struct MinMax{min,minindex,max,maxindex}
     /// # Example
     /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,functions::genvec};
+    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
     /// let pts = genvec(15,15,255,30);
     /// let mm = pts.medout();
     /// assert_eq!(mm.min,4.812334638782327_f64);
@@ -170,7 +169,6 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
         eccs
     }
 
-
     /// Vector `eccentricity` or measure of  
     /// `not being the geometric median` for a member point.
     /// The true geometric median is as yet unknown.
@@ -211,15 +209,11 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
         ( gm, sortm(&eccs,ascending) )
     }    
 
-    /// Eccentricity defined Medoid and Outlier.
-    /// This can give different results to `medoid` above, defined by sums of distances,
-    /// especially for the outliers. See tests.rs.  
-    /// Consider some point c and some other points, bunched up at a distance r from c.
-    /// The sum of their distances will be nr. Now, spread those points around a circle of radius r from c.
-    /// The sum of their distances from c will remain the same but the eccentricity of c will be much reduced.
+    /// Eccentricities of Medoid and Outlier.  
+    /// Same as just the third element of a tuple returned by eccinfo
     /// # Example
     /// ```
-    /// use rstats::{Vecg,VecVec,functions::genvec};
+    /// use rstats::{Vecg,VecVec,genvec};
     /// pub const EPS:f64 = 1e-7;
     /// let d = 6_usize;
     /// let pt = genvec(d,24,7,13); // random test data 5x20
@@ -232,12 +226,8 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
     let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(&v)).collect();
     minmax(&eccs)
 } 
-
-    /// Vector `eccentricity` or measure of  
-    /// `not being the geometric median`, added to a given member point.
-    /// The true geometric median is as yet unknown.
-    /// The member point in question is specified by its index `indx`.
-    /// This function is suitable for a single member point. 
+    /// Next approximate gm computed from a member point  
+    /// specified by its index `indx` to self. 
     fn nxmember(self, indx: usize) -> Vec<f64> {
         let n = self.len();
         let mut vsum = vec![0_f64; self[0].len()];
@@ -255,9 +245,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd,
         vsum 
     }
 
-    /// Eccentricity vector added to a non member point,
-    /// while the true geometric median is as yet unknown. 
-    /// This function is suitable for a single non-member point. 
+    /// Next approximate gm computed from a non-member point p
     fn nxnonmember(self, p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;

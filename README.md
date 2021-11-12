@@ -138,9 +138,11 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 0.9.2** Fixed some tests broken by moved functions. Added harmonic standard deviation, harmonic centroid  and more tests.
+
 * **Version 0.9.1** Made the auxiliary functions more visible by moving them to `lib.rs` (the top level of the crate).
 
-* **Version 0.9.0** Added `kron` and `outer` products to `Vecg` trait. Added `printvv` utility for pretty printing generic vectors of vectors.
+* **Version 0.9.0** Added `kron` and `outer` products to `Vecg` trait.
 
 * **Version 0.8.9** Minor improvements to `readme` and `vecvecg`.
 

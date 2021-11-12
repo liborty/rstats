@@ -1,8 +1,8 @@
 use crate::{Stats,Vecg,MutVecf64,VecVecg,VecVec};
 pub use indxvec::{merge::*,Indices};
 
-impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd, 
-    f64: From<T>, U: Copy+PartialOrd,f64: From<U>  {
+impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display, 
+    f64: From<T>, U: Copy+PartialOrd+std::fmt::Display,f64: From<U>  {
 
     /// Weighted Centre
     fn wacentroid(self,ws: &[U]) -> Vec<f64> where {

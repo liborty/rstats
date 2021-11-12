@@ -5,10 +5,9 @@ pub mod vecu8;
 pub mod mutvec;
 pub mod vecvec;
 pub mod vecvecg;
-// pub mod functions;
 
 // reexporting to avoid duplication and for backwards compatibility
-pub use indxvec::{MinMax,here,wi,wv}; 
+pub use indxvec::{MinMax,here,wi,wv,printvv}; 
 /// simple error handling
 use anyhow::{Result,bail}; 
 use core::iter::FromIterator;
@@ -46,7 +45,7 @@ impl std::fmt::Display for MStats {
     }
 }
 
-// Functions //
+// Auxiliary Functions //
 
 /// Potentially useful recast of a whole slice
 pub fn tof64<T>(s: &[T]) -> Vec<f64> where T: Copy, f64: From<T> {
@@ -56,11 +55,6 @@ pub fn tof64<T>(s: &[T]) -> Vec<f64> where T: Copy, f64: From<T> {
 /// Necessary recast of a whole i64 slice to f64 
 pub fn i64tof64(s: &[i64]) -> Vec<f64> {
     s.iter().map(| &x | x as f64).collect()
-}
-
-/// Print vector of vectors
-pub fn printvv<T>(s: Vec<Vec<T>>) where T:Copy+std::fmt::Display { 
-    for v in s { println!("{}",wv(&v)) }; 
 }
 
 /// Sum of linear weights 1..n.
@@ -99,10 +93,10 @@ pub fn genvec(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<f64>> {
 /// Uses local closure `rand` to generate random numbers (avoids dependencies).  
 /// Random numbers are in the closed interval 0..255 with uniform distribution.  
 pub fn genvecu8(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<u8>> {
-    if n * d < 1 { panic!("{}\n\tzero or wrong dimensions",here!()) } 
+    if n * d < 1 { panic!("{}\n\tgenvecu8 given non positive dimensions",here!()) } 
     // random numbers generating closure with captured seeds m_z m_w
-    let mut m_z = s1 as u32;
-    let mut m_w = s2 as u32;
+    let mut m_z = s1;
+    let mut m_w = s2;
     let mut rand = || {
         m_z = 36969 * (m_z & 65535) + (m_z >> 16);
         m_w = 18000 * (m_w & 65535) + (m_w >> 16);
@@ -133,8 +127,10 @@ pub trait Stats {
     fn vmag(self) -> f64;
     /// Vector magnitude squared (sum of squares)
     fn vmagsq(self) -> f64;
-    /// Vector with inverse magnitude
-    fn vinverse(self) -> Vec<f64>;
+    /// vector with reciprocal components
+    fn vreciprocal(self) -> Result<Vec<f64>>;
+    /// vector with inverse magnitude 
+    fn vinverse(self) -> Result<Vec<f64>>;
     // negated vector (all components swap sign)
     fn negv(self) -> Vec<f64>;
     /// Unit vector
@@ -155,6 +151,8 @@ pub trait Stats {
     /// Harmonic mean
     fn hmean(self) -> Result<f64>
         where Self: std::marker::Sized { bail!("hmean not implemented for this type")}
+    /// Harmonic mean and experimental standard deviation 
+    fn hmeanstd(self) -> Result<MStats>;
     /// Weighted harmonic mean
     fn hwmean(self) -> Result<f64> 
         where Self: std::marker::Sized { bail!("hwmean not implemented for this type")}
@@ -352,29 +350,29 @@ pub trait VecVec<T> {
     fn medout(self) -> MinMax<f64>; 
     /// Fast sums of distances from each point to all other points 
     fn distsuminset(self, indx: usize) -> f64;
-    /// Next approx median point from this member point given by its indx
+    /// Next approx gm computed at a member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
-    /// Next approx median point from this nonmember point
+    /// Next approx gm computed at a nonmember point p
     fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
-    /// Eccentricity vectors from each point
+    /// Estimated ecentricity vector from a member point given by its indx to gm
+    fn eccmember(self, indx: usize) -> Vec<f64>;
+    /// Estimated eccentricity vector from a non member point
+    fn eccnonmember(self, p:&[f64]) -> Vec<f64>;
+    /// Estimated eccentricity vectors from each member point
     fn eccentricities(self) -> Vec<Vec<f64>>;
-    /// Exact eccentricity vectors from all member points by first finding the Geometric Median.
+    /// Exact eccentricity vectors from each member point by first finding the gm.
     /// As well as being more accurate, it is usually faster than `eccentricities` above, 
     /// especially for large numbers of points.
-    fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>;
-    /// Ecentricity of a member point given by its indx
-    fn eccmember(self, indx: usize) -> Vec<f64>;
-    /// Eccentricity vector for a non member point
-    fn eccnonmember(self, p:&[f64]) -> Vec<f64>; 
+    fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>; 
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
     fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
     /// Medoid and Outlier as defined by eccentricities.
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64>;
     /// Returns ( gm, sorted eccentricities magnitudes )
     fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> );
-    /// Improved Weizsfeld's Algorithm for geometric median
+    /// Improved Weizsfeld's Algorithm for geometric median, to accuracy eps
     fn nmedian(self, eps: f64) -> Vec<f64>;
-    /// New secant algorithm for geometric median    
+    /// New secant algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>; 
 }
 
@@ -398,9 +396,9 @@ pub trait VecVecg<T,U> {
     fn wsortedcos(self, medmed: &[U], med: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> ); 
     /// Error vector, i.e. unscaled eccentricity vector
     fn errorv(self, p:&[U]) -> Vec<f64>;
-    /// Weighted eccentricity vector for a non member point
+    /// Estimated weighted gm computed at a non member point
     fn wnxnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64>; 
-    /// The weighted geometric median
+    /// The weighted geometric median to accuracy eps (new secant algorithm)
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>; 
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med:&[U]) -> Vec<f64>; 
