@@ -138,6 +138,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 0.9.3** Added `hwmeanstd` - harmonic weighted mean and standard deviation. Tidied up readme badges and some tests. Simplified random number generation. Weights for the weighted means are now ascending (more intuitive).
+
 * **Version 0.9.2** Fixed some tests broken by moved functions. Added harmonic standard deviation, harmonic centroid  and more tests.
 
 * **Version 0.9.1** Made the auxiliary functions more visible by moving them to `lib.rs` (the top level of the crate).

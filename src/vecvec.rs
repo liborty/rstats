@@ -17,7 +17,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn acentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()];
         for v in self { centre.mvadd(&v) }
-        centre.mutsmult(1.0 / self.len() as f64);
+        centre.mutsmult(1.0 / (self.len() as f64));
         centre
     }
         /// gcentroid = multidimensional geometric mean
@@ -48,7 +48,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// let pts = genvec(15,15,255,30);
     /// let centre = pts.hcentroid();
     /// let dist = pts.distsum(&centre);
-    /// assert_eq!(dist, 5.1272881071877014_f64);
+    /// assert_eq!(dist,5.1272881071877014_f64);
     /// ```
     fn hcentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()]; 

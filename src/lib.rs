@@ -58,7 +58,8 @@ pub fn i64tof64(s: &[i64]) -> Vec<f64> {
 }
 
 /// Sum of linear weights 1..n.
-/// Also the size of an upper or lower triangular array (including the diagonal)
+/// Also the size of an upper or lower triangle 
+/// of a square array (including the diagonal)
 pub fn wsum(n: usize) -> f64 {
     (n * (n + 1)) as f64 / 2.
 }
@@ -67,15 +68,13 @@ pub fn wsum(n: usize) -> f64 {
 /// It needs two seeds s1 and s2. Same seeds will produce the same random sequence.  
 /// Uses local closure `rand` to generate random numbers (avoids dependencies).  
 /// Random numbers are in the open interval 0..1 with uniform distribution.  
-pub fn genvec(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<f64>> {
-    if n * d < 1 { panic!("{}\n\tzero or wrong dimensions",here!()) }
-    // random numbers generating closure with captured seeds m_z m_w
-    let mut m_z = s1 as u32;
-    let mut m_w = s2 as u32;
+pub fn genvec(d: usize, n: usize, mut s1: u32, mut s2: u32) -> Vec<Vec<f64>> {
+    if n * d < 1 { panic!("{}\n\tnon positive dimensions",here!()) }
+    // random numbers generating closure with captured seeds s1,s2 
     let mut rand = || {
-        m_z = 36969 * (m_z & 65535) + (m_z >> 16);
-        m_w = 18000 * (m_w & 65535) + (m_w >> 16);
-        (((m_z << 16) & m_w) as f64 + 1.0) * 2.328306435454494e-10
+        s1 = 36969 * (s1 & 65535) + (s1 >> 16);
+        s2 = 18000 * (s2 & 65535) + (s2 >> 16);
+        (((s1 << 16) & s2) as f64 + 1.0) * 2.328306435454494e-10
     };
     let mut v: Vec<Vec<f64>> = Vec::with_capacity(n);
     for _i in 0..n {
@@ -92,15 +91,13 @@ pub fn genvec(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<f64>> {
 /// It needs two seeds s1 and s2. Same seeds will produce the same random sequence.  
 /// Uses local closure `rand` to generate random numbers (avoids dependencies).  
 /// Random numbers are in the closed interval 0..255 with uniform distribution.  
-pub fn genvecu8(d: usize, n: usize, s1: u32, s2: u32) -> Vec<Vec<u8>> {
-    if n * d < 1 { panic!("{}\n\tgenvecu8 given non positive dimensions",here!()) } 
-    // random numbers generating closure with captured seeds m_z m_w
-    let mut m_z = s1;
-    let mut m_w = s2;
+pub fn genvecu8(d: usize, n: usize, mut s1: u32, mut s2: u32) -> Vec<Vec<u8>> {
+    if n * d < 1 { panic!("{}\n\tgenvecu8: non positive dimensions",here!()) } 
+    // random numbers generating closure with captured seeds s1,s2 
     let mut rand = || {
-        m_z = 36969 * (m_z & 65535) + (m_z >> 16);
-        m_w = 18000 * (m_w & 65535) + (m_w >> 16);
-        (256.0*(((m_z << 16) & m_w) as f32 + 1.0)*2.328306435454494e-10).floor() as u8
+        s1 = 36969 * (s1 & 65535) + (s1 >> 16);
+        s2 = 18000 * (s2 & 65535) + (s2 >> 16);
+        (256.0*(((s1 << 16) & s2) as f64 + 1.0)*2.328306435454494e-10).floor() as u8
     };
     let mut v: Vec<Vec<u8>> = Vec::with_capacity(n);
     for _i in 0..n {
@@ -152,10 +149,14 @@ pub trait Stats {
     fn hmean(self) -> Result<f64>
         where Self: std::marker::Sized { bail!("hmean not implemented for this type")}
     /// Harmonic mean and experimental standard deviation 
-    fn hmeanstd(self) -> Result<MStats>;
+    fn hmeanstd(self) -> Result<MStats>
+        where Self: std::marker::Sized { bail!("hmeanstd not implemented for this type")}
     /// Weighted harmonic mean
     fn hwmean(self) -> Result<f64> 
         where Self: std::marker::Sized { bail!("hwmean not implemented for this type")}
+    /// Weighted harmonic mean and standard deviation 
+    fn hwmeanstd(self) -> Result<MStats>
+        where Self: std::marker::Sized { bail!("hwgmeanstd not implemented for this type")}
     /// Geometric mean
     fn gmean(self) -> Result<f64>
         where Self: std::marker::Sized { bail!("gmean not implemented for this type")}

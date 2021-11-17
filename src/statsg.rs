@@ -87,22 +87,22 @@ impl<T> Stats for &[T]
     }
 
     /// Linearly weighted arithmetic mean of an f64 slice.     
-    /// Linearly descending weights from n down to one.    
-    /// Time dependent data should be in the stack order - the last being the oldest.
+    /// Linearly ascending weights from 1 to n.    
+    /// Time dependent data should be in the order of time increasing.
+    /// Then the most recent gets the most weight.
     /// # Example
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.as_slice().awmean().unwrap(),5.333333333333333_f64);
+    /// assert_eq!(v1.as_slice().awmean().unwrap(),9.666666666666666_f64);
     /// ```
     fn awmean(self) -> Result<f64> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!", here!());
-        let mut iw = (n + 1) as f64; // descending linear weights
-        Ok(self
-            .iter()
+        let mut iw = 0_f64; // descending linear weights
+        Ok(self.iter()
             .map(|&x| {
-                iw -= 1.;
+                iw += 1_f64;
                 iw * f64::from(x)
             })
             .sum::<f64>()
@@ -110,28 +110,28 @@ impl<T> Stats for &[T]
     }
 
     /// Linearly weighted arithmetic mean and standard deviation of an f64 slice.    
-    /// Linearly descending weights from n down to one.    
-    /// Time dependent data should be in the stack order - the last being the oldest.
+    /// Linearly ascending weights from 1 to n.    
+    /// Time dependent data should be in the order of time increasing.
     /// # Example
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.as_slice().awmeanstd().unwrap();
-    /// assert_eq!(res.mean,5.333333333333333_f64);
-    /// assert_eq!(res.std,3.39934634239519_f64);
+    /// assert_eq!(res.mean,9.666666666666666_f64);
+    /// assert_eq!(res.std,3.399346342395192_f64);
     /// ```
     fn awmeanstd(self) -> Result<MStats> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!", here!());        
         let mut sx2 = 0_f64;
-        let mut w = n as f64; // descending linear weights
+        let mut w = 0_f64; // descending linear weights
         let mean = self
             .iter()
             .map(|&x| {
                 let fx = f64::from(x);
+                w += 1_f64;
                 let wx = w * fx;
-                sx2 += wx * fx;
-                w -= 1_f64;
+                sx2 += wx * fx;            
                 wx
             })
             .sum::<f64>()
@@ -161,7 +161,7 @@ impl<T> Stats for &[T]
         Ok(n as f64 / sum)
     }
 
-    /// Harmonic mean and experimental standard deviation 
+    /// Harmonic mean and standard deviation 
     /// std is based on reciprocal moments
     /// # Example
     /// ```
@@ -191,33 +191,66 @@ impl<T> Stats for &[T]
         })
     }
     /// Linearly weighted harmonic mean of an f64 slice.    
-    /// Linearly descending weights from n down to one.    
-    /// Time dependent data should be in the stack order - the last being the oldest.
+    /// Linearly ascending weights from 1 to n.    
+    /// Time dependent data should be ordered by increasing time.
     /// # Example
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.as_slice().hwmean().unwrap(),3.019546395306663_f64);
+    /// assert_eq!(v1.as_slice().hwmean().unwrap(),7.5_f64);
     /// ```
     fn hwmean(self) -> Result<f64> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
-        let mut w = n as f64;
+        let mut w = 0_f64;
         for &x in self {
             let fx = f64::from(x);
             ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            w += 1_f64;
             sum += w / fx;
-            w -= 1_f64;
+
         }
         Ok(wsum(n) / sum)
+    }
+
+    /// Weighted harmonic mean and standard deviation 
+    /// std is based on reciprocal moments
+    /// # Example
+    /// ```
+    /// use rstats::Stats;
+    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let res = v1.as_slice().hmeanstd().unwrap();
+    /// assert_eq!(res.mean,4.305622526633627_f64);
+    /// assert_eq!(res.std,1.1996764516690959_f64);
+    /// ```
+    fn hwmeanstd(self) -> Result<MStats> {
+        let n = self.len();
+        ensure!(n > 0, "{} sample is empty!",here!());
+        let nf = wsum(n);
+        let mut sx2 = 0_f64;
+        let mut w = 0_f64;        
+        let sx = self
+            .iter()
+            .map(|&x| {
+                w += 1_f64;
+                let fx = f64::from(x);
+                if !fx.is_normal() { panic!("{} does not accept zero valued data!",here!()) };     
+                let rx = w/fx;  // work with reciprocals
+                sx2 += w/(fx*fx); 
+                rx   
+            }).sum::<f64>()/nf;  
+        Ok(MStats {
+            mean: 1.0/sx,
+             std: ((sx2/nf-sx.powf(2.))/(nf*sx.powf(4.))).sqrt() 
+        })
     }
 
     /// Geometric mean of an i64 slice.  
     /// The geometric mean is just an exponential of an arithmetic mean
     /// of log data (natural logarithms of the data items).  
     /// The geometric mean is less sensitive to outliers near maximal value.  
-    /// Zero valued data is not allowed.
+    /// Zero valued data is not allowed!
     /// # Example
     /// ```
     /// use rstats::Stats;
@@ -234,33 +267,6 @@ impl<T> Stats for &[T]
             sum += fx.ln()
         }
         Ok((sum / (n as f64)).exp())
-    }
-
-    /// Linearly weighted geometric mean of an i64 slice.  
-    /// Descending weights from n down to one.    
-    /// Time dependent data should be in the stack order - the last being the oldest.  
-    /// The geometric mean is just an exponential of an arithmetic mean
-    /// of log data (natural logarithms of the data items).  
-    /// The geometric mean is less sensitive to outliers near maximal value.  
-    /// Zero data is not allowed - would at best only produce zero result.
-    /// # Example
-    /// ```
-    /// use rstats::Stats;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.as_slice().gwmean().unwrap(),4.144953510241978_f64);
-    /// ```
-    fn gwmean(self) -> Result<f64> {
-        let n = self.len();
-        ensure!(n > 0, "{} sample is empty!", here!());
-        let mut w = n as f64; // descending weights
-        let mut sum = 0_f64;
-        for &x in self {
-            let fx = f64::from(x);
-            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
-            sum += w * fx.ln();
-            w -= 1_f64;
-        }
-        Ok((sum / wsum(n)).exp())
     }
 
     /// Geometric mean and std ratio of an f64 slice.  
@@ -293,28 +299,56 @@ impl<T> Stats for &[T]
         })
     }
 
+    /// Linearly weighted geometric mean of an i64 slice.  
+    /// Ascending weights from 1 down to n.    
+    /// Time dependent data should be in time increasing order.  
+    /// The geometric mean is an exponential of an arithmetic mean
+    /// of log data (natural logarithms of the data items).  
+    /// The geometric mean is less sensitive to outliers near maximal value.  
+    /// Zero valued data is not allowed!
+    /// # Example
+    /// ```
+    /// use rstats::Stats;
+    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// assert_eq!(v1.as_slice().gwmean().unwrap(),8.8185222496341_f64);
+    /// ```
+    fn gwmean(self) -> Result<f64> {
+        let n = self.len();
+        ensure!(n > 0, "{} sample is empty!", here!());
+        let mut w = 0_f64; // ascending weights
+        let mut sum = 0_f64;
+        for &x in self {
+            let fx = f64::from(x);
+            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            w += 1_f64;
+            sum += w * fx.ln();
+
+        }
+        Ok((sum/wsum(n)).exp())
+    }
+
     /// Linearly weighted version of gmeanstd.
     /// # Example
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.as_slice().gwmeanstd().unwrap();
-    /// assert_eq!(res.mean,4.144953510241978_f64);
-    /// assert_eq!(res.std,2.1572089236412597_f64);
+    /// assert_eq!(res.mean,8.8185222496341_f64);
+    /// assert_eq!(res.std,1.626825493266009_f64);
     /// ```
     fn gwmeanstd(self) -> Result<MStats> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!", here!()); 
-        let mut w = n as f64; // descending weights
+        let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
             let fx = f64::from(x);
             ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
             let lnx = fx.ln();
+            w += 1_f64;
             sum += w * lnx;
-            sx2 += w * lnx * lnx;
-            w -= 1_f64;
+            sx2 += w * lnx * lnx; 
         }
         sum /= wsum(n);
         Ok(MStats {

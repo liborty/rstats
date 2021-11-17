@@ -25,10 +25,10 @@ fn u8() -> Result<()> {
    println!("Joint E: {}",wi(&v1.jointentropyu8(&v2)));
    println!("Dependence: {}",wi(&v1.dependence(&v2)));
    println!("Dependence: {}",wi(&v1.dependenceu8(&v2)));
-   println!("SpCorr:  {}",wi(&v1.spearmancorr(&v2)));
+   println!("SpearCorr:  {}",wi(&v1.spearmancorr(&v2)));
    let d = 5_usize;
    let n = 7_usize;
-   println!("Testing on a random set of {} points in {} d space\n",wi(&n),wi(&d));
+   println!("Testing on a random set of {} points in {} d space:",wi(&n),wi(&d));
    let pt = genvecu8(d,n,5,7); // random test data 
    let cov = pt.covar(&pt.acentroid());
    let com = pt.covar(&pt.gmedian(EPS));
@@ -48,6 +48,7 @@ fn fstats() -> Result<()> {
     println!("Magnitude:\t{}",wi(&v1.vmag()));
     println!("Arithmetic {}",wi(&v1.ameanstd().unwrap()));
     println!("Geometric  {}",wi(&v1.gmeanstd().unwrap()));
+    println!("Harmonic   {}",wi(&v1.hmeanstd().unwrap()));
     println!("Autocorrelation:{}",wi(&v1.autocorr()));
     println!("{}\n",v1.median().unwrap());
     Ok(())
@@ -63,6 +64,7 @@ fn ustats() -> Result<()> {
    println!("Magnitude:\t{}",wi(&v1.vmag()));
    println!("Arithmetic {}",wi(&v1.ameanstd().unwrap()));
    println!("Geometric  {}",wi(&v1.gmeanstd().unwrap()));
+   println!("Harmonic   {}",wi(&v1.hmeanstd().unwrap()));
    println!("Autocorrelation:{}",wi(&v1.autocorr()));
    println!("{}\n",v1.median().unwrap());
    Ok(())
@@ -93,6 +95,9 @@ fn genericstats() -> Result<()> {
    println!("Arithmetic\t{}",wi(&v.ameanstd().unwrap()));
    println!("Geometric\t{}",wi(&v.gmeanstd().unwrap()));
    println!("Harmonic\t{}",wi(&v.hmeanstd().unwrap()));
+   println!("Weighted Arit.\t{}",wi(&v.awmeanstd().unwrap()));
+   println!("Weighted Geom.\t{}",wi(&v.gwmeanstd().unwrap()));
+   println!("Weighted Harm.\t{}",wi(&v.hwmeanstd().unwrap()));
    println!("Autocorrelation:{}",wi(&v.autocorr()));
    println!("{}\n",&v.median().unwrap()); 
    Ok(())
@@ -111,16 +116,16 @@ fn vecg() -> Result<()> {
       wi(&rank(&v1,true).indx_to_f64().cosine(&rank(&v2,true).indx_to_f64())));        
    println!("Euclidian distance:\t{}",wi(&v1.vdist(&v2)));
    println!("Difference magnitude:\t{}",wi(&v1.vsub(&v2).vmag()));   
-   println!("Vector difference{}",wv(&v1.vsub(&v2))); 
-   println!("Vector sum:{}",wv(&v1.vadd(&v2)));  
+   println!("Vector difference: {}",wv(&v1.vsub(&v2))); 
+   println!("Vector sum: {}",wv(&v1.vadd(&v2)));  
    println!("Scalar product:\t\t{}",wi(&v1.dotp(&v2)));
    println!("Parallelogram area:\t{}",wi(&v1.varea(&v2)));
    println!("Arc area:\t\t{}",wi(&v1.varc(&v2))); 
    println!("Dependence:\t\t{}",wi(&v1.dependence(&v2)));
    println!("Similarity:\t\t{}",wi(&v1.vsim(&v2)));
    println!("Dissimilarity:\t\t{}",wi(&v1.vdisim(&v2))); 
-   println!("[1,2,3].kron([4,5]): {}",wv(&[1,2,3].kron(&[4,5])));
-   println!("[1,2,3].outer([4,5,6,7]): "); printvv([1,2,3].outer(&[4,5,6,7]));
+   println!("[1,2,3].kron(&[4,5]):\t{}", wv(&[1,2,3].kron(&[4,5])));
+   println!("[1,2,3].outer(&[4,5,6,7]): "); printvv([1,2,3].outer(&[4,5,6,7]));
    Ok(())
 }
 #[test]
@@ -162,7 +167,7 @@ fn vecvec() -> Result<()> {
    println!("GCentroid's eccentricity:\t{}",wi(&gcentroid.vdist(&median)));
    println!("ACentroid's eccentricity:\t{}",wi(&acentroid.vdist(&median)));
    println!("Firstpoint's eccentricity:\t{}",wi(&firstp.vdist(&median)));
-   println!("Median's ecc (error*{:e}):\t{}",EPS,wi(&(pt.eccnonmember(&median).vmag()/EPS)));
+   println!("Median's ecc error *{:e}:\t{}",EPS,wi(&(pt.eccnonmember(&median).vmag()/EPS)));
    // let zmed = pt.translate(&median); // zero median transformed data
    // println!("Median's error:\t{}\n",wi(&zmed.gmedian(EPS).vmag()));
 
@@ -184,8 +189,8 @@ fn vecvec() -> Result<()> {
 /// numbers of points can differ
 fn trend() -> Result<()> {
    let d = 7_usize;
-   let pts1 = genvecu8(d,28,13,19); // random test data 
-   let pts2 = genvecu8(d,38,23,31);
+   let pts1 = genvec(d,28,13,19); // random test data 
+   let pts2 = genvec(d,38,23,31);
    println!("\nTrend vector:\n{}\n",wv(&pts1.trend(EPS,pts2)));
    Ok(())
 }
@@ -193,8 +198,8 @@ fn trend() -> Result<()> {
 #[test]
 fn geometric_medians() -> Result<()> {
     const ITERATIONS:usize = 10;
-    let n = 7000_usize;
-    let d = 10_usize;
+    let n = 10_usize;
+    let d = 1000_usize;
     println!("timing {} medians of {} points in {} dimensions",wi(&ITERATIONS),wi(&n),wi(&d)); 
  
    let mut timer = DevTime::new_simple();
@@ -209,7 +214,7 @@ fn geometric_medians() -> Result<()> {
       sumg += pts.distsum(&gm)    
    }
    // sumg /= (ITERATIONS*n*d) as f64;
-   println!("Gmedian all distances: {}\tns: {:>11}",wi(&sumg),&sumtime); 
+   println!("Gmedian all distances: {}\t\tns: {:>11}",wi(&sumg),&sumtime); 
  
    sumg = 0_f64;
    sumtime = 0_u128;
@@ -239,6 +244,6 @@ fn geometric_medians() -> Result<()> {
       sumg += pts.distsum(&gm)
    } 
    // sumg /= (ITERATIONS*n*d) as f64;  
-   println!("Centroid all distncs:  {}\t\tns: {:>11}",wi(&sumg),sumtime); 
+   println!("Centroid all distncs:  {}\tns: {:>11}",wi(&sumg),sumtime); 
     Ok(())  
  }
