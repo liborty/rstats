@@ -8,8 +8,8 @@ readme = "README.md"
 homepage = "https://github.com/liborty/rstats"
 repository = "https://github.com/liborty/rstats"
 license = "Apache-2.0"
-keywords = ["statistics","vector-algebra","geometric-median","machine-learning","multidimensional"]
-categories = ["science","mathematics","algorithms","visualization","concurrency"]
+keywords = ["machine-learning","statistics","vector-algebra","geometric-median","multidimensional"]
+categories = ["science","mathematics","algorithms","visualization","robotics"]
 include = [
     "src/*.rs",
     "tests/*.rs",
