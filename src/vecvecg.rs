@@ -1,4 +1,4 @@
-use crate::{Stats,Vecg,MutVecf64,VecVecg,VecVec};
+use crate::{Vecg,Vecf64,MutVecf64,VecVecg,VecVec};
 pub use indxvec::{merge::*,Indices};
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display, 
@@ -8,12 +8,12 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn wacentroid(self,ws: &[U]) -> Vec<f64> where {
         let mut centre = vec![0_f64; self[0].len()];
         let mut wsum = 0_f64;
-        self.iter().zip(ws).for_each(|(s,w)|
-        {   let wf = f64::from(*w);
-            wsum += wf;
-            centre.mutvadd(&s.smult(wf))
+        self.iter().zip(ws).for_each(|(s,&w)|
+        { 
+            wsum += f64::from(w);
+            centre.mutvaddf64(&s.smult(w))
         });
-        centre.mutsmult(1.0 / wsum);
+        centre.mutsmultf64(1.0 / wsum);
         centre
     }
 
@@ -22,7 +22,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// The two sets have to be in the same space but can have different numbers of points.
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Vec<f64> {
         let mut m1 = self.gmedian(eps);       
-        m1.mutvsub(&v.gmedian(eps));
+        m1.mutvsubf64(&v.gmedian(eps));
         m1
     }
 
@@ -91,12 +91,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     }
 
     /// Error vector for (usually non-member) point p, 
-    /// i.e. unscaled eccentricity vector.
-    /// The true geometric median would return zero vector.
+    /// i.e. unscaled eccentricity vector = sum of unit vectors
+    /// The true geometric median would return zero vector here.
     fn errorv(self, p:&[U]) -> Vec<f64> {
         let mut vsum = vec![0_f64; p.len()];
-        for x in self {  vsum.mutvadd(&x.vsubunit(&p)) };
-        vsum.mutsmult(1_f64 / (self.len() as f64));
+        self.iter().for_each(|x| vsum.mutvaddf64(&x.vsubunit(&p)) );
+        // for x in self {  vsum.mutvaddf64(&x.vsubunit(&p)) };
+        // vsum.mutsmultf64(1_f64 / (self.len() as f64));
+        vsum.mutsmultf64(1.0/(self.len() as f64));
         vsum
     }
 
@@ -108,40 +110,25 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             let dvmag = self[i].vdist(p);
             if !dvmag.is_normal() { continue } // zero distance, safe to ignore
             let rec = f64::from(ws[i])/dvmag; // ws[i] is weigth for this point self[i]
-            vsum.mutvadd(&self[i].smult(rec)); // add weighted vector
+            vsum.mutvaddf64(&self[i].smult(rec)); // add weighted vector
             recip += rec // add separately the reciprocals    
         }
-        vsum.mutsmult(1.0/recip);
+        vsum.mutsmultf64(1.0/recip);
         vsum
     } 
 
     /// Secant method with recovery from divergence
     /// for finding the weighted geometric median
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64> {  
-        let mut p = self.wacentroid(ws);
-        let mut mag1 = p.vmag();
-        let mut pdif = mag1;  
-        loop {  
-            let mut np = self.wnxnonmember(ws,&p); 
-            let e = np.vsub(&p); // new vector error, or eccentricity  
-            // let e = self.errorv(&p);
-            let mag2 = e.vmag(); 
-            // if mag2 < eps  { return np }; 
-            // overwrite np with a better secant estimate  
-            np = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
-                p.vadd(&e.smult(pdif/(mag1-mag2)))                   
-            }
-            else { // recovery: probably overshot the minimum, shorten the jump 
-                   // e will already be pointing moreless back
-                p.vadd(&e.smult(pdif/(mag1+mag2)))                    
-            };
-            pdif = np.vdist(&p);
-            if pdif < eps { return np };              
-            mag1 = mag2; 
-            p = np            
-        }       
+        let eps2 = eps.powi(2);
+        let mut point = self.wacentroid(ws); // start iterating from the Centre
+        loop { // vector iteration till accuracy eps is reached
+            let nextp = self.wnxnonmember(ws,&point);          
+            if nextp.vdistsqf64(&point) < eps2 { return nextp }; // termination
+            point = nextp
+        } 
     }
-    
+
     /// Flattened lower triangular part of a covariance matrix for f64 vectors in self.
     /// Since covariance matrix is symmetric (positive semi definite), 
     /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
@@ -164,7 +151,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             }
         }
         // now compute the means and return
-        cov.mutsmult(1.0_f64/self.len()as f64);
+        cov.mutsmultf64(1.0_f64/self.len()as f64);
         cov
     }
 
@@ -217,7 +204,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             } 
         }
         // now compute the means and return
-        cov.mutsmult(1_f64/wsum); 
+        cov.mutsmultf64(1_f64/wsum); 
         cov
     }   
     /// Flattened lower triangular part of a comediance matrix for weighted f64 vectors in self.

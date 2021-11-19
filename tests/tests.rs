@@ -128,6 +128,18 @@ fn vecg() -> Result<()> {
    println!("[1,2,3].outer(&[4,5,6,7]): "); printvv([1,2,3].outer(&[4,5,6,7]));
    Ok(())
 }
+
+#[test]
+/// Trend between two data sets in space of the same dimensions but 
+/// numbers of points can differ
+fn trend() -> Result<()> {
+   let d = 7_usize;
+   let pts1 = genvec(d,28,13,19); // random test data 
+   let pts2 = genvec(d,38,23,31);
+   println!("\nTrend vector:\n{}\n",wv(&pts1.trend(EPS,pts2)));
+   Ok(())
+}
+
 #[test]
 fn vecvec() -> Result<()> { 
    let d = 13_usize;
@@ -167,7 +179,7 @@ fn vecvec() -> Result<()> {
    println!("GCentroid's eccentricity:\t{}",wi(&gcentroid.vdist(&median)));
    println!("ACentroid's eccentricity:\t{}",wi(&acentroid.vdist(&median)));
    println!("Firstpoint's eccentricity:\t{}",wi(&firstp.vdist(&median)));
-   println!("Median's ecc error *{:e}:\t{}",EPS,wi(&(pt.eccnonmember(&median).vmag()/EPS)));
+   println!("Median's ecc error/{:e}:\t{}",EPS,wi(&(pt.eccnonmember(&median).vmag()/EPS)));
    // let zmed = pt.translate(&median); // zero median transformed data
    // println!("Median's error:\t{}\n",wi(&zmed.gmedian(EPS).vmag()));
 
@@ -185,51 +197,28 @@ fn vecvec() -> Result<()> {
 }
 
 #[test]
-/// Trend between two data sets in space of the same dimensions but 
-/// numbers of points can differ
-fn trend() -> Result<()> {
-   let d = 7_usize;
-   let pts1 = genvec(d,28,13,19); // random test data 
-   let pts2 = genvec(d,38,23,31);
-   println!("\nTrend vector:\n{}\n",wv(&pts1.trend(EPS,pts2)));
-   Ok(())
-}
-
-#[test]
 fn geometric_medians() -> Result<()> {
     const ITERATIONS:usize = 10;
-    let n = 10_usize;
+    let n = 100_usize;
     let d = 1000_usize;
     println!("timing {} medians of {} points in {} dimensions",wi(&ITERATIONS),wi(&n),wi(&d)); 
- 
-   let mut timer = DevTime::new_simple();
+  
    let mut sumg = 0_f64;
-   let mut sumtime = 0_u128; 
+   let mut sumtime = 0_u128;
+   let mut timer = DevTime::new_simple();
+ 
    for i in 1..ITERATIONS {
       let pts = genvecu8(d,n,i as u32,5*i as u32);
       timer.start();
       let gm = pts.gmedian(EPS);
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
-      sumg += pts.distsum(&gm)    
+      // sumg += pts.distsum(&gm)
+      sumg += pts.errorv(&gm).vmag();    
    }
    // sumg /= (ITERATIONS*n*d) as f64;
-   println!("Gmedian all distances: {}\t\tns: {:>11}",wi(&sumg),&sumtime); 
- 
-   sumg = 0_f64;
-   sumtime = 0_u128;
-   timer = DevTime::new_simple();
- 
-   for i in 1..ITERATIONS {
-      let pts = genvecu8(d,n,i as u32,5*i as u32);
-      timer.start();
-      let gm = pts.nmedian(EPS);
-      timer.stop();
-      sumtime += timer.time_in_nanos().unwrap();
-      sumg += pts.distsum(&gm)
-   } 
-   // sumg /= (ITERATIONS*n*d) as f64;  
-   println!("Nmedian all distances: {}\tns: {:>11}",wi(&sumg),sumtime);   
+   println!("Gmedian err/eps: {}\tns: {:>12}",wi(&(sumg/EPS)),&sumtime); 
+
 
    sumg = 0_f64;
    sumtime = 0_u128;
@@ -241,9 +230,10 @@ fn geometric_medians() -> Result<()> {
       let gm = pts.acentroid();
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
-      sumg += pts.distsum(&gm)
+      // sumg += pts.distsum(&gm)
+      sumg += pts.errorv(&gm).vmag(); 
    } 
    // sumg /= (ITERATIONS*n*d) as f64;  
-   println!("Centroid all distncs:  {}\tns: {:>11}",wi(&sumg),sumtime); 
+   println!("Acentroid errs: {}\tns: {:>12}",wi(&(sumg/EPS)),sumtime); 
     Ok(())  
  }

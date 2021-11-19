@@ -1,9 +1,9 @@
 use std::iter::FromIterator;
 
-use crate::{Med, MStats, MinMax, MutVecg, MutVecf64, Stats, VecVec, Vecg};
+use crate::{Med, MStats, MinMax, MutVecg, MutVecf64, Stats, Vecg, Vecf64, VecVec};
 pub use indxvec::{merge::*,Indices};
 
-impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display, 
+impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     f64: From<T> {
 
     /// acentroid = simple multidimensional arithmetic mean
@@ -16,11 +16,11 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// ```
     fn acentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()];
-        for v in self { centre.mvadd(&v) }
-        centre.mutsmult(1.0 / (self.len() as f64));
+        for v in self { centre.mutvadd(&v) }
+        centre.mutsmultf64(1.0 / (self.len() as f64));
         centre
     }
-        /// gcentroid = multidimensional geometric mean
+    /// gcentroid = multidimensional geometric mean
     /// # Example
     /// ```
     /// use rstats::{Vecg,VecVec,VecVecg,genvec};
@@ -36,7 +36,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut lnvec = vec![0_f64; d];
         for v in self { 
             for i in 0..d { lnvec[i] = f64::from(v[i]).ln() }
-            centre.mutvadd(&lnvec)
+            centre.mutvaddf64(&lnvec)
         }
         centre.iter().map(|comp| (comp/n).exp()).collect()        
     }
@@ -53,31 +53,9 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn hcentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()]; 
         for v in self {
-            centre.mutvadd(&v.vinverse().unwrap())
+            centre.mutvaddf64(&v.vinverse().unwrap())
         }
         centre.smultf64(1.0/(self.len() as f64)).vinverse().unwrap()       
-    }
-    /// Possible first iteration point for geometric medians.
-    /// Same as eccnonmember(origin), just saving the zero subtractions. 
-    /// # Example
-    /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
-    /// let pts = genvec(15,15,255,30); 
-    /// let dist = pts.distsum(&pts.firstpoint());
-    /// assert_eq!(dist,4.132376831171272_f64);
-    /// ```
-    fn firstpoint(self) -> Vec<f64> {
-        let mut rsum = 0_f64;
-        let mut vsum = vec![0_f64; self[0].len()];
-        for thisp in self {
-            let mag = thisp.vmag();
-            if mag.is_normal() {  
-                let invmag = 1.0_f64/mag;
-                rsum += invmag;
-                vsum.mutvadd(&thisp.smultf64(invmag)) // accumulate unit vectors
-            }
-        }
-        vsum.smultf64(1.0/rsum) // scale by the sum of reciprocals
     }
 
     /// For each member point, gives its sum of distances to all other points and their MinMax
@@ -143,17 +121,17 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
                 // calculate each unit vector between any pair of points just once
                 let dvmag = self[j].vdist(&thisp);             
                 if !dvmag.is_normal() { continue }
-                let rec = 1.0/dvmag;
-                eccs[i].mutvadd(&self[j].smultf64(rec));
+                let rec = 1.0_f64/dvmag;
+                eccs[i].mutvaddf64(&self[j].smultf64(rec));
                 recips[i] += rec;
                 // mind the vector's opposite orientations w.r.t. to the two points!
-                eccs[j].mutvsub(&self[j].smultf64(rec)); 
+                eccs[j].mutvsubf64(&self[j].smultf64(rec)); 
                 recips[j] += rec;
             }
         }
         for i in 0..n { 
-            eccs[i].mutsmult(1.0/recips[i]); 
-            eccs[i].mvsub(&self[i]) 
+            eccs[i].mutsmultf64(1.0/recips[i]); 
+            eccs[i].mutvsub(&self[i]) 
         }
         eccs
     }
@@ -226,22 +204,61 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(&v)).collect();
     minmax(&eccs)
 } 
+    /// Error vector for (usually non-member) point p, 
+    /// i.e. unscaled eccentricity vector = sum of unit vectors
+    /// The true geometric median would return zero vector here.
+    fn errorvf64(self, p:&[f64]) -> Vec<f64> {
+        let mut vsum = vec![0_f64; p.len()];
+        self.iter().for_each(|x| vsum.mutvaddf64(&x.vsubunitf64(p)) );
+        // for x in self {  vsum.mutvaddf64(&x.vsubunit(&p)) };
+        // vsum.mutsmultf64(1_f64 / (self.len() as f64));
+        vsum.mutsmultf64(1.0/(self.len() as f64));
+        vsum
+    }
+
+    /// Initial (first) point for geometric medians.
+    /// Same as eccnonmember('origin') but saving the subtractions of zeroes. 
+    /// # Example
+    /// ```
+    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
+    /// let pts = genvec(15,15,255,30); 
+    /// let dist = pts.distsum(&pts.firstpoint());
+    /// assert_eq!(dist,4.132376831171272_f64);
+    /// ```
+    fn firstpoint(self) -> Vec<f64> {
+        let mut rsum = 0_f64;
+        let mut vsum = vec![0_f64; self[0].len()];
+        for p in self {
+            let mag = p.vmag();
+            if mag.is_normal() {  // skip if p is at the origin
+                let rec = 1.0_f64/mag;
+                // the sum of reciprocals of magnitudes for the final scaling  
+                rsum += rec;
+                // so not using simply .unitv 
+                vsum.mutvaddf64(&p.smultf64(rec)) // add all unit vectors
+            }
+        }
+        vsum.mutsmultf64(1.0/rsum); // scale by the sum of reciprocals
+        vsum
+    }    
+    
     /// Next approximate gm computed from a member point  
     /// specified by its index `indx` to self. 
     fn nxmember(self, indx: usize) -> Vec<f64> {
         let n = self.len();
         let mut vsum = vec![0_f64; self[0].len()];
-        let thisp = &self[indx];
+        let p = &self[indx];
         let mut recip = 0_f64;
         for i in 0..n {
             if i == indx { continue  }; // exclude this point
-            let dvmag = self[i].vdist(&thisp);
-            if !dvmag.is_normal() { continue } // too close to this one
-            let rec = 1.0/dvmag;
-            vsum.mutvadd(&self[i].smultf64(rec)); // add vector
+            let pi = &self[i];
+            let mag = p.vdist(pi);
+            if !mag.is_normal() { continue } // too close to this one
+            let rec = 1.0_f64/mag;
+            vsum.mutvaddf64(&pi.smultf64(rec)); // add vector
             recip += rec // add separately the reciprocals
         }
-        vsum.mutsmult(1.0/recip);
+        vsum.mutsmultf64(1.0/recip);
         vsum 
     }
 
@@ -250,13 +267,13 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for x in self { 
-            let dvmag = x.vdistf64(p);
-            if !dvmag.is_normal() { continue } // zero distance, safe to ignore
-            let rec = 1.0/dvmag;
-            vsum.mutvadd(&x.smultf64(rec)); // add vector
+            let mag = x.vdistf64(p);
+            if !mag.is_normal() { continue } // zero distance, safe to ignore
+            let rec = 1.0_f64/mag;
+            vsum.mutvaddf64(&x.smultf64(rec)); // add vector
             recip += rec // add separately the reciprocals    
         }
-        vsum.mutsmult(1.0/recip);
+        vsum.mutsmultf64(1.0/recip);
         vsum
     }
 
@@ -267,40 +284,40 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// Especially, when the points are dense in the close proximity of the gm, or gm coincides with one of them.  
     /// However, these problems are fixed in my new algorithm here.      
     /// There will eventually be a multithreaded version.
-    fn nmedian(self, eps: f64) -> Vec<f64> {
+    fn gmedian(self, eps: f64) -> Vec<f64> {
+        let eps2 = eps.powi(2);
         let mut point = self.acentroid(); // start iterating from the Centre
-        loop {
-            let nextp = self.nxnonmember(&point);         
-            if nextp.vdistf64(&point) < eps { return nextp }; // termination
+        loop { // vector iteration till accuracy eps is reached
+            let nextp = self.nxnonmember(&point);          
+            if nextp.vdistsqf64(&point) < eps2 { return nextp }; // termination
             point = nextp
         } 
     }
 
+ /*   
     /// Secant method with recovery from divergence
-    /// for finding the geometric median
+    /// for finding the geometric median.
+    /// Initialised with first two points: the origin and the acentroid.
     fn gmedian(self, eps: f64) -> Vec<f64> {  
-        let mut p = self.acentroid();
-        let mut mag1 = p.vmag();
-        let mut pdif = mag1;  
+        let mut p1 = self.acentroid();
+        let mut mag1 = p1.vmag();
+        let mut pdist = mag1;  
         loop {  
-            let mut np = self.nxnonmember(&p); 
-            let e = np.vsubf64(&p); // new vector error, or eccentricity  
-            // let e = self.errorv(&p);
+            let e = self.nxnonmember(&p1).vsubf64(&p1); // new vector error, or eccentricity   
             let mag2 = e.vmag(); 
-            // if mag2 < eps  { return np }; 
-            // overwrite np with a better secant estimate  
-            np = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
-                e.smultf64(pdif/(mag1-mag2)).vaddf64(&p)
+            // p2 is a better secant estimate  
+            let p2 = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
+                p1.vaddf64(&e.smultf64(pdist/(mag1-mag2)))
             }
             else { // recovery: probably overshot the minimum, shorten the jump 
                    // e will already be pointing moreless back
-                e.smultf64(pdif/(mag1+mag2)).vaddf64(&p)                    
+                p1.vaddf64(&e.smultf64(pdist/(mag1+mag2)))                    
             };
-            pdif = np.vdistf64(&p);
-            if pdif < eps { return np };              
+            pdist = p2.vdistf64(&p1);
+            if pdist < eps { return p2 };              
             mag1 = mag2; 
-            p = np            
+            p1 = p2            
         }       
     }
-
-    }
+*/
+}

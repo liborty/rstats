@@ -89,6 +89,10 @@ Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimen
 
 This trait is unchecked (for speed), so some caution with data is advisable.
 
+### Vecf64
+
+A handful of primitive methods as in `Vecg` but operating on argument of known type `f64` or `&[f64]`.
+
 ### MutVecg & MutVecf64
 
 Mutable vector addition, subtraction and multiplication.  
@@ -104,7 +108,7 @@ vector iterative methods. `MutVecf64` is to be used in preference, when the end 
 
 ### VecVec
 
-Relationships between n vectors (nD). This is the original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm boosted by multidimensional secant method.
+Relationships between n vectors (nD). This is the original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm.
 
 * sums of distances, eccentricity measure for nD points,
 * centroid, medoid, outliers, true geometric median,
@@ -137,6 +141,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 * `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 0.9.4** Organisation improvements. Added trait `Vecf64` and moved into it relevant methods from `Vecg`. Added a few functions to MutVecf64 trait. Simplified `gmedian`.
 
 * **Version 0.9.3** Added `hwmeanstd` - harmonic weighted mean and standard deviation. Tidied up readme badges and some tests. Simplified random number generation. Weights for the weighted means are now ascending (more intuitive).
 

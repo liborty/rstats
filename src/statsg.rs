@@ -82,7 +82,7 @@ impl<T> Stats for &[T]
             .sum::<f64>()/nf; 
         Ok(MStats {
             mean,
-            std: (sx2/nf - mean.powf(2.)).sqrt()
+            std: (sx2/nf - mean.powi(2)).sqrt()
         })
     }
 
@@ -138,7 +138,7 @@ impl<T> Stats for &[T]
             / wsum(n);
         Ok(MStats {
             mean: mean,
-            std: (sx2 / wsum(n) - mean.powf(2.)).sqrt(),
+            std: (sx2 / wsum(n) - mean.powi(2)).sqrt(),
         })
     }
 
@@ -187,7 +187,7 @@ impl<T> Stats for &[T]
             }).sum::<f64>()/nf;    
         Ok(MStats {
             mean: 1.0/rmean,
-            std: ((sx2/nf-rmean.powf(2.))/(nf*rmean.powf(4.))).sqrt()
+            std: ((sx2/nf-rmean.powi(2))/(nf*rmean.powi(4))).sqrt()
         })
     }
     /// Linearly weighted harmonic mean of an f64 slice.    
@@ -242,7 +242,7 @@ impl<T> Stats for &[T]
             }).sum::<f64>()/nf;  
         Ok(MStats {
             mean: 1.0/sx,
-             std: ((sx2/nf-sx.powf(2.))/(nf*sx.powf(4.))).sqrt() 
+             std: ((sx2/nf-sx.powi(2))/(nf*sx.powi(4))).sqrt() 
         })
     }
 

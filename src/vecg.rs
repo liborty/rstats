@@ -1,24 +1,21 @@
-use crate::{Stats,Vecg};
+use crate::{Stats,Vecg,Vecf64};
 pub use indxvec::{Indices,merge::{sortm,rank}};
 
 impl<T,U> Vecg<T,U> for &[T] 
     where T: Copy+PartialOrd+std::fmt::Display,
-          U: Copy+PartialOrd+std::fmt::Display,
-          f64: From<T>, f64: From<U> {
+        U: Copy+PartialOrd+std::fmt::Display,
+        f64: From<T>, f64: From<U> {
 
-    /// Scalar multiplication of a vector, creates new vec
-    fn smult(self, s:U) -> Vec<f64> {
-        let sf = f64::from(s);
-        self.iter().map(|&x| sf*(f64::from(x))).collect()
-     }
-    /// scalar multiplication by f64
-    fn smultf64(self, s:f64) -> Vec<f64> { 
-        self.iter().map(|&x| s*(f64::from(x))).collect()
-     }
      /// Scalar addition to a vector, creates new vec
      fn sadd(self, s:U) -> Vec<f64> {
-         let sf = f64::from(s);
+        let sf = f64::from(s);
         self.iter().map(|&x| sf+(f64::from(x))).collect()
+     }
+
+    /// Scalar addition to a vector, creates new vec
+     fn smult(self, s:U) -> Vec<f64> {
+        let sf = f64::from(s);
+        self.iter().map(|&x| sf*(f64::from(x))).collect()
      }
 
     /// Scalar product.   
@@ -49,10 +46,6 @@ impl<T,U> Vecg<T,U> for &[T]
     fn vsub(self, v:&[U]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)-f64::from(vi)).collect()
     }
-    /// Vector subtraction of `&[f64]`
-    fn vsubf64(self, v:&[f64]) -> Vec<f64> {
-        self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)-vi).collect()
-    }
 
     /// Vectors difference unitised (done together for efficiency)
     fn vsubunit(self, v: &[U]) -> Vec<f64> {
@@ -67,10 +60,7 @@ impl<T,U> Vecg<T,U> for &[T]
     fn vadd(self, v:&[U]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)+f64::from(vi)).collect()
     }
-    /// Addition of `&[f64]` slice
-    fn vaddf64(self, v:&[f64]) -> Vec<f64> {
-        self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)+vi).collect()
-    }
+
     /// Euclidian distance   
     fn vdist(self, v:&[U]) -> f64 {
         self.iter()
@@ -79,15 +69,6 @@ impl<T,U> Vecg<T,U> for &[T]
             .sum::<f64>()
             .sqrt()
     }
-    /// Euclidian distance to `&[f64]`  
-    fn vdistf64(self, v:&[f64]) -> f64 {
-        self.iter()
-            .zip(v)
-            .map(|(&xi, &vi)| (f64::from(xi)-f64::from(vi)).powi(2))
-            .sum::<f64>()
-            .sqrt()
-    }
-
 
     /// Euclidian distance squared  
     fn vdistsq(self, v:&[U]) -> f64 {
@@ -96,7 +77,7 @@ impl<T,U> Vecg<T,U> for &[T]
             .map(|(&xi, &vi)| (f64::from(xi)-f64::from(vi)).powi(2))
             .sum::<f64>()
     }
-    
+
     /// cityblock distance
     fn cityblockd(self, v:&[U]) -> f64 {
         self.iter()
@@ -261,5 +242,51 @@ impl<T,U> Vecg<T,U> for &[T]
         let yvec = rank(&v,true); // rank from crate idxvec::merge
         // It is just Pearson's correlation of ranks
         xvec.ucorrelation(&yvec) // using Indices trait from idxvec
+    }
+}
+
+impl<T> Vecf64<T> for &[T] 
+    where T: Copy+PartialOrd+std::fmt::Display,         
+        f64: From<T>, f64: From<T> {
+
+    /// scalar multiplication by f64
+    fn smultf64(self, s:f64) -> Vec<f64> { 
+        self.iter().map(|&x| s*(f64::from(x))).collect()
+     }
+
+    /// Vector subtraction of `&[f64]`
+    fn vsubf64(self, v:&[f64]) -> Vec<f64> {
+        self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)-vi).collect()
+    }
+
+    /// Vectors difference unitised (done together for efficiency)
+    fn vsubunitf64(self, v:&[f64]) -> Vec<f64> {
+        let mut sumsq = 0_f64;
+        let dif = self.iter().zip(v).map(
+            |(&xi, &vi)| { let d = f64::from(xi) - vi; sumsq += d*d; d }
+        ).collect::<Vec<f64>>();
+        dif.smultf64(1_f64/sumsq.sqrt())
+    }
+
+    /// Addition of `&[f64]` slice
+    fn vaddf64(self, v:&[f64]) -> Vec<f64> {
+        self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)+vi).collect()
+    }
+
+        /// Euclidian distance to `&[f64]`  
+    fn vdistf64(self, v:&[f64]) -> f64 {
+        self.iter()
+            .zip(v)
+            .map(|(&xi, &vi)| (f64::from(xi)-vi).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+
+    /// Euclidian distance to `&[f64]` squared  
+    fn vdistsqf64(self, v:&[f64]) -> f64 {
+        self.iter()
+            .zip(v)
+            .map(|(&xi, &vi)| (f64::from(xi)-vi).powi(2))
+            .sum::<f64>()
     }
 }

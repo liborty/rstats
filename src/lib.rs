@@ -202,34 +202,26 @@ pub trait MutStats {
 }
 
 /// Vector Algebra on two vectors (represented here as generic slices).
-pub trait Vecg<_T,U> {
-    /// Scalar multiplication of a vector
-    fn smult(self, s:U) -> Vec<f64>;
-    /// Scalar multiplication by f64
-    fn smultf64(self, s:f64) -> Vec<f64>;
+pub trait Vecg<T,U> { 
     /// Scalar addition to vector
     fn sadd(self, s:U) -> Vec<f64>;
+    /// Scalar multiplication of vector, creates new vec
+     fn smult(self, s:U) -> Vec<f64>;
     /// Scalar product 
     fn dotp(self, v:&[U]) -> f64;
     /// Cosine of angle between two slices
     fn cosine(self, v:&[U]) -> f64;
     /// Vectors' subtraction (difference)
     fn vsub(self, v:&[U]) -> Vec<f64>;
-    /// Vector subtraction of `&[f64]`
-    fn vsubf64(self, v:&[f64]) -> Vec<f64>;
     /// Vectors difference as unit vector (done together for efficiency)
     fn vsubunit(self, v: &[U]) -> Vec<f64>; 
     /// Vector addition
     fn vadd(self, v:&[U]) -> Vec<f64>; 
-    /// Adding `&[f64]` 
-    fn vaddf64(self, v:&[f64]) -> Vec<f64>; 
     /// Euclidian distance 
     fn vdist(self, v:&[U]) -> f64;
-    /// Euclidian distance to `&[f64]`
-    fn vdistf64(self, v:&[f64]) -> f64;
     /// Euclidian distance squared
     fn vdistsq(self, v:&[U]) -> f64; 
-    /// cityblock distance
+     /// cityblock distance
     fn cityblockd(self, v:&[U]) -> f64;
     /// Magnitude of the cross product |a x b| = |a||b|sin(theta).
     /// Attains maximum `|a|.|b|` when the vectors are othogonal.
@@ -250,13 +242,27 @@ pub trait Vecg<_T,U> {
     fn jointentropy(self, v:&[U]) -> f64;
     /// Statistical independence measure based on joint entropy
     fn dependence(self, v:&[U]) -> f64; 
-
     /// Pearson's correlation.  
     fn correlation(self, v:&[U]) -> f64; 
     /// Kendall Tau-B correlation. 
     fn kendalcorr(self, v:&[U]) -> f64;
     /// Spearman rho correlation.
     fn spearmancorr(self, v:&[U]) -> f64;   
+}
+
+pub trait Vecf64<_T> {
+    /// Scalar multiplication by f64
+    fn smultf64(self, s:f64) -> Vec<f64>;
+    /// Vector subtraction of `&[f64]`
+    fn vsubf64(self, v:&[f64]) -> Vec<f64>;
+    /// Vectors difference unitised (done together for efficiency)
+    fn vsubunitf64(self, v: &[f64]) -> Vec<f64>;
+    /// Euclidian distance to `&[f64]`
+    fn vdistf64(self, v:&[f64]) -> f64;
+    /// Adding `&[f64]` 
+    fn vaddf64(self, v:&[f64]) -> Vec<f64>;
+    /// Euclidian distance to `&[f64]` squared  
+    fn vdistsqf64(self, v:&[f64]) -> f64;
 }
 
 /// Mutable vector operations that take one generic argument. 
@@ -266,20 +272,21 @@ pub trait Vecg<_T,U> {
 /// vector iterative methods.
 pub trait MutVecg<U> {
     /// mutable multiplication by a scalar
-    fn msmult(self, _s:U);  
+    fn mutsmult(self, _s:U);  
     /// mutable vector subtraction
-    fn mvsub(self, _v: &[U]); 
+    fn mutvsub(self, _v: &[U]); 
     /// mutable vector addition
-    fn mvadd(self, _v: &[U]);  
+    fn mutvadd(self, _v: &[U]);  
 }
+
 /// Vector mutating operations that take one argument of f64 end type.
 pub trait MutVecf64 {
     /// mutable multiplication by a scalar
-    fn mutsmult(self, _s:f64); 
+    fn mutsmultf64(self, _s:f64); 
     /// mutable vector subtraction 
-    fn mutvsub(self, _v: &[f64]);
+    fn mutvsubf64(self, _v:&[f64]);
     /// mutable vector addition
-    fn mutvadd(self, _v: &[f64]); 
+    fn mutvaddf64(self, _v:&[f64]); 
 }
 
 /// Methods specialised to, or more efficient for `&[u8]`
@@ -371,9 +378,11 @@ pub trait VecVec<T> {
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64>;
     /// Returns ( gm, sorted eccentricities magnitudes )
     fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> );
+    /// Error vector for (usually non-member) point p
+    fn errorvf64(self, p:&[f64]) -> Vec<f64>;
     /// Improved Weizsfeld's Algorithm for geometric median, to accuracy eps
-    fn nmedian(self, eps: f64) -> Vec<f64>;
-    /// New secant algorithm for geometric median, to accuracy eps    
+    // fn nmedian(self, eps: f64) -> Vec<f64>;
+    /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>; 
 }
 
