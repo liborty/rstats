@@ -9,7 +9,7 @@ homepage = "https://github.com/liborty/rstats"
 repository = "https://github.com/liborty/rstats"
 license = "Apache-2.0"
 keywords = ["machine-learning","statistics","vector-algebra","geometric-median","multidimensional"]
-categories = ["science","mathematics","algorithms","visualization","robotics"]
+categories = ["science","mathematics","algorithms","visualization","rust-patterns"]
 include = [
     "src/*.rs",
     "tests/*.rs",
