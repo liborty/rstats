@@ -202,6 +202,7 @@ pub trait MutStats {
 }
 
 /// Vector Algebra on two vectors (represented here as generic slices).
+/// Also included are scalar operations on the `self` vector.
 pub trait Vecg<T,U> { 
     /// Scalar addition to vector
     fn sadd(self, s:U) -> Vec<f64>;
@@ -249,7 +250,8 @@ pub trait Vecg<T,U> {
     /// Spearman rho correlation.
     fn spearmancorr(self, v:&[U]) -> f64;   
 }
-
+/// Vector algebra: methods operaing on one vector of generic end type
+/// and the second argument, which is a scalar or vector of f64 end type.
 pub trait Vecf64<_T> {
     /// Scalar multiplication by f64
     fn smultf64(self, s:f64) -> Vec<f64>;
@@ -343,6 +345,8 @@ pub trait VecVecu8 {
     fn wcovar(self, ws:&[u8], m:&[f64]) -> Vec<f64>;
 }
 
+/// Methods applicable to a single argument: a vector of vectors of generic end type.
+/// Operations on a set of multidimensional vectors.
 pub trait VecVec<T> {
     /// Arithmetic Centre = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
@@ -386,7 +390,8 @@ pub trait VecVec<T> {
     fn gmedian(self, eps: f64) -> Vec<f64>; 
 }
 
-/// Methods applicable to vector of vectors of generic end type
+/// Methods applicable to vector of vectors of generic end type and one argument
+/// of a similar kind.
 pub trait VecVecg<T,U> { 
     /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points
     fn wacentroid(self,ws: &[U]) -> Vec<f64>;
