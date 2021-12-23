@@ -381,13 +381,13 @@ pub trait VecVec<T> {
     /// Medoid and Outlier as defined by eccentricities.
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64>;
     /// Returns ( gm, sorted eccentricities magnitudes )
-    fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> );
-    /// Error vector for (usually non-member) point p
-    fn errorvf64(self, p:&[f64]) -> Vec<f64>;
+    fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> ); 
     /// Improved Weizsfeld's Algorithm for geometric median, to accuracy eps
     // fn nmedian(self, eps: f64) -> Vec<f64>;
     /// New algorithm for geometric median, to accuracy eps    
-    fn gmedian(self, eps: f64) -> Vec<f64>; 
+    fn gmedian(self, eps: f64) -> Vec<f64>;
+    /// Secant method geometric median
+    fn smedian(self, eps: f64) -> Vec<f64>;   
 }
 
 /// Methods applicable to vector of vectors of generic end type and one argument
@@ -409,12 +409,14 @@ pub trait VecVecg<T,U> {
     fn wsortedeccs(self, ws: &[U], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
     /// Sorted cosines magnitudes and cpdf, needs central median
     fn wsortedcos(self, medmed: &[U], med: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> ); 
-    /// Error vector, i.e. unscaled eccentricity vector
-    fn errorv(self, p:&[U]) -> Vec<f64>;
     /// Estimated weighted gm computed at a non member point
     fn wnxnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64>; 
-    /// The weighted geometric median to accuracy eps (new secant algorithm)
+    /// Estimated weighted eccentricity for a non-member point 
+    fn weccnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64>;
+    /// The weighted geometric median to accuracy eps 
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>; 
+    /// The weighted geometric median to accuracy eps
+    fn wsmedian(self, ws: &[U], eps: f64) -> Vec<f64>; 
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med:&[U]) -> Vec<f64>; 
     /// Flattened lower triangular part of a comediance matrix of a Vec of f64 vectors.

@@ -272,8 +272,8 @@ impl<T> Vecf64<T> for &[T]
     fn vaddf64(self, v:&[f64]) -> Vec<f64> {
         self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)+vi).collect()
     }
-
-        /// Euclidian distance to `&[f64]`  
+  
+    /// Euclidian distance to `&[f64]`  
     fn vdistf64(self, v:&[f64]) -> f64 {
         self.iter()
             .zip(v)

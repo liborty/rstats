@@ -142,7 +142,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 0.9.4** Organisation improvements. Added trait `Vecf64` and moved into it relevant methods from `Vecg`. Added a few functions to MutVecf64 trait. Simplified `gmedian`.
+* **Version 0.9.5** Improved `smedian`, it is now almost twice as accurate as `gmedian` but about 20% slower. The choice is yours. Also added a weighted version of it: `wsmedian` and `weccnonmember` that it relies on.
+
+* **Version 0.9.4** Organisation improvements. Added trait `Vecf64` and moved into it relevant methods from `Vecg`. Added a few functions to MutVecf64 trait. Simplified `gmedian`. 
 
 * **Version 0.9.3** Added `hwmeanstd` - harmonic weighted mean and standard deviation. Tidied up readme badges and some tests. Simplified random number generation. Weights for the weighted means are now ascending (more intuitive).
 
@@ -151,11 +153,3 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 0.9.1** Made the auxiliary functions more visible by moving them to `lib.rs` (the top level of the crate).
 
 * **Version 0.9.0** Added `kron` and `outer` products to `Vecg` trait.
-
-* **Version 0.8.9** Minor improvements to `readme` and `vecvecg`.
-
-* **Version 0.8.8** More generics: added `VecVecg` trait and removed `VecVecu8` as its functionality is now subsumed by this addition. Removed `benches/benchmark.rs` as it was not really needed. There are timings of the geometric medians computation in `tests/tests.rs`.
-
-* **Version 0.8.7** Some simplification of reporting, using struct MinMax from crate `indxvec`.
-
-* **Version 0.8.6** Added `comed` and `wcomed` methods to `VecVec` trait.

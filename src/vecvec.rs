@@ -90,6 +90,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         sum
     } 
 
+    /// Medoid and Outlier (Medout)
     /// Medoid is the member point (point belonging to the set of points `self`), 
     /// which has the least sum of distances to all other points.
     /// Outlier is the point with the greatest sum of distances.
@@ -147,25 +148,48 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         eccs
     }
 
-    /// Vector `eccentricity` or measure of  
-    /// `not being the geometric median` for a member point.
+    /// Estimated (computed) eccentricity vector for a member point.
+    /// It points towards the geometric median. 
     /// The true geometric median is as yet unknown.
-    /// The true geometric median would return zero.
+    /// The true geometric median would return zero vector.
     /// The member point in question is specified by its index `indx`.
     /// This function is suitable for a single member point. 
-    /// When eccentricities of all the points are needed, use `exacteccs` above.
+    /// When eccentricities of all the points are wanted, use `exacteccs` above.
     fn eccmember(self, indx: usize) -> Vec<f64> {
-        self.nxmember(indx).vsub(&self[indx])
+        let n = self.len();
+        let p = &self[indx];
+        let mut vsum = vec![0_f64; p.len()];
+        let mut recsum = 0_f64;
+        for i in 0..n {
+            if i == indx { continue  }; // exclude this point
+            let vdif = self[i].vsub(p);
+            let magsq = vdif.iter().map(|&c|c.powi(2)).sum::<f64>();  
+            if !magsq.is_normal() { continue } // too close to this one
+            let rmag = 1_f64 / (magsq).sqrt();
+            vsum.mutvaddf64(&vdif.smultf64(rmag)); // unit vector
+            recsum += rmag;
+        } 
+        vsum.smultf64(1_f64/recsum)
     }
-
-    /// Eccentricity vector for a non member point,
-    /// while the true geometric median is as yet unknown.
+    
+    /// Estimated (computed) eccentricity vector for a non member point. 
+    /// The true geometric median is as yet unknown.
     /// Returns the eccentricity vector.
     /// The true geometric median would return zero vector.
     /// This function is suitable for a single non-member point. 
     fn eccnonmember(self, p:&[f64]) -> Vec<f64> {
-        self.nxnonmember(p).vsubf64(p)
-    }
+         let mut vsum = vec![0_f64; p.len()];
+        let mut recsum = 0_f64;
+        for x in self {
+            let vdif = x.vsubf64(p);
+            let magsq = vdif.iter().map(|&c|c.powi(2)).sum::<f64>();
+            if !magsq.is_normal() { continue } // too close to this one
+            let rmag = 1_f64 /(magsq).sqrt();
+            vsum.mutvaddf64(&vdif.smultf64(rmag)); // unit vector
+            recsum += rmag;
+        } 
+        vsum.smultf64(1_f64/recsum)
+   }
 
     /// Mean and Std (in MStats struct), Median and quartiles (in Med struct), Median and Outlier (in MinMax struct) 
     /// of scalar eccentricities of points in self.
@@ -204,17 +228,6 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(&v)).collect();
     minmax(&eccs)
 } 
-    /// Error vector for (usually non-member) point p, 
-    /// i.e. unscaled eccentricity vector = sum of unit vectors
-    /// The true geometric median would return zero vector here.
-    fn errorvf64(self, p:&[f64]) -> Vec<f64> {
-        let mut vsum = vec![0_f64; p.len()];
-        self.iter().for_each(|x| vsum.mutvaddf64(&x.vsubunitf64(p)) );
-        // for x in self {  vsum.mutvaddf64(&x.vsubunit(&p)) };
-        // vsum.mutsmultf64(1_f64 / (self.len() as f64));
-        vsum.mutsmultf64(1.0/(self.len() as f64));
-        vsum
-    }
 
     /// Initial (first) point for geometric medians.
     /// Same as eccnonmember('origin') but saving the subtractions of zeroes. 
@@ -267,9 +280,9 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for x in self { 
-            let mag = x.vdistf64(p);
-            if !mag.is_normal() { continue } // zero distance, safe to ignore
-            let rec = 1.0_f64/mag;
+            let magsq = x.vdistsqf64(p);
+            if !magsq.is_normal() { continue } // zero distance, safe to ignore
+            let rec = 1.0_f64/(magsq).sqrt();
             vsum.mutvaddf64(&x.smultf64(rec)); // add vector
             recip += rec // add separately the reciprocals    
         }
@@ -290,22 +303,36 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         loop { // vector iteration till accuracy eps is reached
             let nextp = self.nxnonmember(&point);          
             if nextp.vdistsqf64(&point) < eps2 { return nextp }; // termination
-            point = nextp
+            point = nextp;
         } 
     }
 
- /*   
+    fn smedian(self, eps: f64) -> Vec<f64> { 
+        let eps2 = eps.powi(2);
+        let mut point = self.acentroid(); // start iterating from the Centre
+        loop { // vector iteration till accuracy eps is reached
+            let e = self.eccnonmember(&point); 
+            point.mutvaddf64(&e);         
+            if e.iter().map(|&c|c.powi(2)).sum::<f64>() < eps2 { return point }; // termination
+        } 
+    }
+/*
     /// Secant method with recovery from divergence
     /// for finding the geometric median.
     /// Initialised with first two points: the origin and the acentroid.
-    fn gmedian(self, eps: f64) -> Vec<f64> {  
+    fn smedian(self, eps: f64) -> Vec<f64> {  
+        let eps2 = eps.powi(2);
         let mut p1 = self.acentroid();
         let mut mag1 = p1.vmag();
-        let mut pdist = mag1;  
-        loop {  
+        let mut pdist = mag1; // distance of centroid from the origin 
+        loop { 
+           /*  let mut e = vec![0_f64; d]; // eccentricity vector
+            for p in self { // computed as sum of unit vectors from p1 to all points
+                e.mutvaddf64(&p1.vsub(&p).vunit());
+            }  */                                
             let e = self.nxnonmember(&p1).vsubf64(&p1); // new vector error, or eccentricity   
             let mag2 = e.vmag(); 
-            // p2 is a better secant estimate  
+            // p2 is the new point estimate  
             let p2 = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
                 p1.vaddf64(&e.smultf64(pdist/(mag1-mag2)))
             }
@@ -313,10 +340,11 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
                    // e will already be pointing moreless back
                 p1.vaddf64(&e.smultf64(pdist/(mag1+mag2)))                    
             };
-            pdist = p2.vdistf64(&p1);
-            if pdist < eps { return p2 };              
+            pdist = p2.vdistsqf64(&p1);
+            if pdist < eps2 { return p2 }; 
+            pdist = pdist.sqrt();             
             mag1 = mag2; 
-            p1 = p2            
+            p1 = p2;            
         }       
     }
 */

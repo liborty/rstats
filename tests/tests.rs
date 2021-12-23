@@ -214,12 +214,27 @@ fn geometric_medians() -> Result<()> {
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
       // sumg += pts.distsum(&gm)
-      sumg += pts.errorv(&gm).vmag();    
+      sumg += pts.eccnonmember(&gm).vmag();    
    }
    // sumg /= (ITERATIONS*n*d) as f64;
    println!("Gmedian err/eps: {}\tns: {:>12}",wi(&(sumg/EPS)),&sumtime); 
 
-
+   sumg = 0_f64;
+   sumtime = 0_u128;
+   timer = DevTime::new_simple();
+ 
+   for i in 1..ITERATIONS {
+      let pts = genvecu8(d,n,i as u32,5*i as u32);
+      timer.start();
+      let gm = pts.smedian(EPS);
+      timer.stop();
+      sumtime += timer.time_in_nanos().unwrap();
+      // sumg += pts.distsum(&gm)
+      sumg += pts.eccnonmember(&gm).vmag();    
+   }
+   // sumg /= (ITERATIONS*n*d) as f64;
+   println!("Smedian err/eps: {}\tns: {:>12}",wi(&(sumg/EPS)),&sumtime); 
+   
    sumg = 0_f64;
    sumtime = 0_u128;
    timer = DevTime::new_simple();
@@ -231,7 +246,7 @@ fn geometric_medians() -> Result<()> {
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
       // sumg += pts.distsum(&gm)
-      sumg += pts.errorv(&gm).vmag(); 
+      sumg += pts.eccnonmember(&gm).vmag(); 
    } 
    // sumg /= (ITERATIONS*n*d) as f64;  
    println!("Acentroid errs: {}\tns: {:>12}",wi(&(sumg/EPS)),sumtime); 

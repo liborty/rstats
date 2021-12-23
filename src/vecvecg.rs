@@ -90,32 +90,40 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         ( index.unindex(&coses,true), weights )
     }
 
-    /// Error vector for (usually non-member) point p, 
-    /// i.e. unscaled eccentricity vector = sum of unit vectors
-    /// The true geometric median would return zero vector here.
-    fn errorv(self, p:&[U]) -> Vec<f64> {
-        let mut vsum = vec![0_f64; p.len()];
-        self.iter().for_each(|x| vsum.mutvaddf64(&x.vsubunit(&p)) );
-        // for x in self {  vsum.mutvaddf64(&x.vsubunit(&p)) };
-        // vsum.mutsmultf64(1_f64 / (self.len() as f64));
-        vsum.mutsmultf64(1.0/(self.len() as f64));
-        vsum
-    }
-
     /// Next approximate weighted median, from a non member point. 
     fn wnxnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for i in 0..self.len() { 
-            let dvmag = self[i].vdist(p);
-            if !dvmag.is_normal() { continue } // zero distance, safe to ignore
-            let rec = f64::from(ws[i])/dvmag; // ws[i] is weigth for this point self[i]
+            let magsq = self[i].vdistsqf64(p);
+            if !magsq.is_normal() { continue } // zero distance, safe to ignore
+            let rec = f64::from(ws[i])/(magsq).sqrt(); // ws[i] is weigth for this point self[i]
             vsum.mutvaddf64(&self[i].smult(rec)); // add weighted vector
             recip += rec // add separately the reciprocals    
         }
-        vsum.mutsmultf64(1.0/recip);
+        vsum.mutsmultf64(1_f64/recip);
         vsum
-    } 
+    }
+    
+    /// Estimated (computed) eccentricity vector for a non member point. 
+    /// The true geometric median is as yet unknown.
+    /// Returns the weighted eccentricity vector.
+    /// The true geometric median would return zero vector.
+    /// This function is suitable for a single non-member point. 
+    fn weccnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64> {
+        let mut vsum = vec![0_f64; p.len()];
+        let mut recsum = 0_f64;
+        for i in 0..self.len() {
+            let vdif = self[i].vsubf64(&p);
+            let magsq = vdif.iter().map(|&c|c.powi(2)).sum::<f64>();
+            if !magsq.is_normal() { continue } // too close to this one
+            let rmag = f64::from(ws[i]) / magsq.sqrt();
+            vsum.mutvaddf64(&vdif.smultf64(rmag)); // unit vector
+            recsum += rmag;
+        } 
+        vsum.smultf64(1_f64/recsum)
+    }
+
 
     /// Secant method with recovery from divergence
     /// for finding the weighted geometric median
@@ -126,6 +134,16 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             let nextp = self.wnxnonmember(ws,&point);          
             if nextp.vdistsqf64(&point) < eps2 { return nextp }; // termination
             point = nextp
+        } 
+    }
+
+    fn wsmedian(self, ws: &[U], eps: f64) -> Vec<f64> { 
+        let eps2 = eps.powi(2);
+        let mut point = self.wacentroid(ws); // start iterating from the Centre
+        loop { // vector iteration till accuracy eps is reached
+            let e = self.weccnonmember(ws,&point); 
+            point.mutvaddf64(&e);         
+            if e.iter().map(|&c|c.powi(2)).sum::<f64>() < eps2 { return point }; // termination
         } 
     }
 
