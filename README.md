@@ -7,7 +7,7 @@
 
 ## Usage
 
-Insert `rstats = "^0.9"` in the `Cargo.toml` file under `[dependencies]`.
+Insert `rstats = "^1"` in the `Cargo.toml` file under `[dependencies]`.
 
 Use any of the following structs that you need in your source files:  
 `use rstats::{MinMax,Med,Mstats};`  
@@ -32,7 +32,7 @@ In contrast, analyses based on the true geometric median (gm), computed here by 
 
 ### Implementation
 
-The main constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector (of numbers) - `Stats`, two vectors - `Vecg`, or n vectors - `VecVec` and `VecVecg`. End type `f64` is most commonly used for the results, whereas the inputs to the generic methods can be vectors (or slices) of any numeric end types.
+The main constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector (of numbers) - `Stats`, two vectors - `Vecg`, n vectors - `VecVec` or n vectors and another generic argument - `VecVecg`. End type `f64` is most commonly used for the results, whereas inputs to the generic methods can be vectors (or slices) of any numeric end types.
 
 ### Documentation
 
@@ -142,9 +142,11 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 0.9.5** Improved `smedian`, it is now almost twice as accurate as `gmedian` but about 20% slower. The choice is yours. Also added a weighted version of it: `wsmedian` and `weccnonmember` that it relies on.
+* **Version 1.0.0** Rstats reaches stability (of sorts)! Some code simplifications: `smedian` and `wsmedian` are now just slightly more accurate than `gmedian` and `wgmedian` respectively, otherwise their performance is very similar. Sometimes a bit slower, at other times, especially on 'difficult' data, they can be a bit faster.
 
-* **Version 0.9.4** Organisation improvements. Added trait `Vecf64` and moved into it relevant methods from `Vecg`. Added a few functions to MutVecf64 trait. Simplified `gmedian`. 
+* **Version 0.9.5** Improved `smedian`. Also added a weighted version of it: `wsmedian`.
+
+* **Version 0.9.4** Organisation improvements. Added trait `Vecf64` and moved into it relevant methods from `Vecg`. Added a few functions to MutVecf64 trait. Simplified `gmedian`.
 
 * **Version 0.9.3** Added `hwmeanstd` - harmonic weighted mean and standard deviation. Tidied up readme badges and some tests. Simplified random number generation. Weights for the weighted means are now ascending (more intuitive).
 

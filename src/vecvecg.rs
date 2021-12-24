@@ -111,19 +111,8 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// The true geometric median would return zero vector.
     /// This function is suitable for a single non-member point. 
     fn weccnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64> {
-        let mut vsum = vec![0_f64; p.len()];
-        let mut recsum = 0_f64;
-        for i in 0..self.len() {
-            let vdif = self[i].vsubf64(&p);
-            let magsq = vdif.iter().map(|&c|c.powi(2)).sum::<f64>();
-            if !magsq.is_normal() { continue } // too close to this one
-            let rmag = f64::from(ws[i]) / magsq.sqrt();
-            vsum.mutvaddf64(&vdif.smultf64(rmag)); // unit vector
-            recsum += rmag;
-        } 
-        vsum.smultf64(1_f64/recsum)
+       self.wnxnonmember(ws,p).vsubf64(p)
     }
-
 
     /// Secant method with recovery from divergence
     /// for finding the weighted geometric median
@@ -137,14 +126,20 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         } 
     }
 
-    fn wsmedian(self, ws: &[U], eps: f64) -> Vec<f64> { 
+    /// Secant recovery from divergence
+    /// for finding the weighted geometric median.
+    fn wsmedian(self, ws: &[U], eps: f64) -> Vec<f64> {  
         let eps2 = eps.powi(2);
-        let mut point = self.wacentroid(ws); // start iterating from the Centre
-        loop { // vector iteration till accuracy eps is reached
-            let e = self.weccnonmember(ws,&point); 
-            point.mutvaddf64(&e);         
-            if e.iter().map(|&c|c.powi(2)).sum::<f64>() < eps2 { return point }; // termination
-        } 
+        let mut p1 = self.wacentroid(ws);
+        let mut mag1:f64 = p1.iter().map(|c| c.powi(2)).sum();
+        loop {  
+            let p2 = self.wnxnonmember(ws,&p1);                                       
+            let e = p2.vsubf64(&p1); // new vector error, or eccentricity   
+            let mag2:f64 = e.iter().map(|c| c.powi(2)).sum();
+            if mag2 < eps2 { return p2 }; // termination
+            p1.mutvaddf64(&e.smultf64(mag1/(mag1+mag2)));
+            mag1 = mag2;
+        };     
     }
 
     /// Flattened lower triangular part of a covariance matrix for f64 vectors in self.

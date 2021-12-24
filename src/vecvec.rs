@@ -156,20 +156,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// This function is suitable for a single member point. 
     /// When eccentricities of all the points are wanted, use `exacteccs` above.
     fn eccmember(self, indx: usize) -> Vec<f64> {
-        let n = self.len();
-        let p = &self[indx];
-        let mut vsum = vec![0_f64; p.len()];
-        let mut recsum = 0_f64;
-        for i in 0..n {
-            if i == indx { continue  }; // exclude this point
-            let vdif = self[i].vsub(p);
-            let magsq = vdif.iter().map(|&c|c.powi(2)).sum::<f64>();  
-            if !magsq.is_normal() { continue } // too close to this one
-            let rmag = 1_f64 / (magsq).sqrt();
-            vsum.mutvaddf64(&vdif.smultf64(rmag)); // unit vector
-            recsum += rmag;
-        } 
-        vsum.smultf64(1_f64/recsum)
+        self.nxmember(indx).vsub(&self[indx])
     }
     
     /// Estimated (computed) eccentricity vector for a non member point. 
@@ -178,18 +165,8 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// The true geometric median would return zero vector.
     /// This function is suitable for a single non-member point. 
     fn eccnonmember(self, p:&[f64]) -> Vec<f64> {
-         let mut vsum = vec![0_f64; p.len()];
-        let mut recsum = 0_f64;
-        for x in self {
-            let vdif = x.vsubf64(p);
-            let magsq = vdif.iter().map(|&c|c.powi(2)).sum::<f64>();
-            if !magsq.is_normal() { continue } // too close to this one
-            let rmag = 1_f64 /(magsq).sqrt();
-            vsum.mutvaddf64(&vdif.smultf64(rmag)); // unit vector
-            recsum += rmag;
-        } 
-        vsum.smultf64(1_f64/recsum)
-   }
+        self.nxnonmember(p).vsubf64(p)
+    }
 
     /// Mean and Std (in MStats struct), Median and quartiles (in Med struct), Median and Outlier (in MinMax struct) 
     /// of scalar eccentricities of points in self.
@@ -307,45 +284,21 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         } 
     }
 
-    fn smedian(self, eps: f64) -> Vec<f64> { 
-        let eps2 = eps.powi(2);
-        let mut point = self.acentroid(); // start iterating from the Centre
-        loop { // vector iteration till accuracy eps is reached
-            let e = self.eccnonmember(&point); 
-            point.mutvaddf64(&e);         
-            if e.iter().map(|&c|c.powi(2)).sum::<f64>() < eps2 { return point }; // termination
-        } 
-    }
-/*
-    /// Secant method with recovery from divergence
+    /// Secant recovery from divergence
     /// for finding the geometric median.
     /// Initialised with first two points: the origin and the acentroid.
     fn smedian(self, eps: f64) -> Vec<f64> {  
         let eps2 = eps.powi(2);
         let mut p1 = self.acentroid();
-        let mut mag1 = p1.vmag();
-        let mut pdist = mag1; // distance of centroid from the origin 
-        loop { 
-           /*  let mut e = vec![0_f64; d]; // eccentricity vector
-            for p in self { // computed as sum of unit vectors from p1 to all points
-                e.mutvaddf64(&p1.vsub(&p).vunit());
-            }  */                                
-            let e = self.nxnonmember(&p1).vsubf64(&p1); // new vector error, or eccentricity   
-            let mag2 = e.vmag(); 
-            // p2 is the new point estimate  
-            let p2 = if mag1 > mag2 {  // eccentricity magnitude decreased, good, employ secant
-                p1.vaddf64(&e.smultf64(pdist/(mag1-mag2)))
-            }
-            else { // recovery: probably overshot the minimum, shorten the jump 
-                   // e will already be pointing moreless back
-                p1.vaddf64(&e.smultf64(pdist/(mag1+mag2)))                    
-            };
-            pdist = p2.vdistsqf64(&p1);
-            if pdist < eps2 { return p2 }; 
-            pdist = pdist.sqrt();             
-            mag1 = mag2; 
-            p1 = p2;            
-        }       
+        let mut mag1:f64 = p1.iter().map(|c| c.powi(2)).sum();
+        loop {  
+            let p2 = self.nxnonmember(&p1);                                       
+            let e = p2.vsubf64(&p1); // new vector error, or eccentricity   
+            let mag2:f64 = e.iter().map(|c| c.powi(2)).sum();
+            if mag2 < eps2 { return p2 }; // termination
+            p1.mutvaddf64(&e.smultf64(mag1/(mag1+mag2)));
+            mag1 = mag2;
+        };     
     }
-*/
+
 }
