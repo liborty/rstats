@@ -286,7 +286,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// Secant recovery from divergence
     /// for finding the geometric median.
-    /// Initialised with first two points: the origin and the acentroid.
+    /// Initialised with acentroid.
     fn smedian(self, eps: f64) -> Vec<f64> {  
         let eps2 = eps.powi(2);
         let mut p1 = self.acentroid();
@@ -296,9 +296,32 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             let e = p2.vsubf64(&p1); // new vector error, or eccentricity   
             let mag2:f64 = e.iter().map(|c| c.powi(2)).sum();
             if mag2 < eps2 { return p2 }; // termination
-            p1.mutvaddf64(&e.smultf64(mag1/(mag1+mag2)));
+            p1.mutvaddf64(&e.smultf64(mag1/(mag1-mag2)));
             mag1 = mag2;
         };     
     }
 
+    /// Same a smedian but returns also the number of iterations
+    /// # Example
+    /// ```
+    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
+    /// let pts = genvec(25,25,255,30); 
+    /// let (gm,iterations) = pts.ismedian(1e-10);  
+    /// assert_eq!(iterations,11);
+    /// ```
+    fn ismedian(self, eps: f64) -> ( Vec<f64>, usize ) {  
+        let eps2 = eps.powi(2);
+        let mut p1 = self.acentroid();
+        let mut mag1:f64 = p1.iter().map(|c| c.powi(2)).sum();
+        let mut iterations = 2_usize;
+        loop {  
+            let p2 = self.nxnonmember(&p1);                                       
+            let e = p2.vsubf64(&p1); // new vector error, or eccentricity   
+            let mag2:f64 = e.iter().map(|c| c.powi(2)).sum();
+            if mag2 < eps2 { return (p2,iterations) }; // termination
+            p1.mutvaddf64(&e.smultf64(mag1/(mag1-mag2))); 
+            mag1 = mag2;
+            iterations +=1;
+        };     
+    }
 }

@@ -387,7 +387,9 @@ pub trait VecVec<T> {
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Secant method geometric median
-    fn smedian(self, eps: f64) -> Vec<f64>;   
+    fn smedian(self, eps: f64) -> Vec<f64>; 
+    /// Same a smedian but returns also the number of iterations 
+    fn ismedian(self, eps: f64) -> (Vec<f64>,usize);   
 }
 
 /// Methods applicable to vector of vectors of generic end type and one argument

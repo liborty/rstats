@@ -137,7 +137,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             let e = p2.vsubf64(&p1); // new vector error, or eccentricity   
             let mag2:f64 = e.iter().map(|c| c.powi(2)).sum();
             if mag2 < eps2 { return p2 }; // termination
-            p1.mutvaddf64(&e.smultf64(mag1/(mag1+mag2)));
+            p1.mutvaddf64(&e.smultf64(mag1/(mag1-mag2)));
             mag1 = mag2;
         };     
     }

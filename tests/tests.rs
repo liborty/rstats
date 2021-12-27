@@ -197,6 +197,7 @@ fn vecvec() -> Result<()> {
 }
 
 #[test]
+
 fn geometric_medians() -> Result<()> {
     const ITERATIONS:usize = 10;
     let n = 100_usize;
