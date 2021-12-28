@@ -410,7 +410,7 @@ pub trait VecVecg<T,U> {
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
     fn wsortedeccs(self,ws:&[U],gm:&[f64]) -> (Vec<f64>,Vec<f64>); 
     /// Sorted cosines magnitudes and cpdf, needs central median
-    fn wsortedcos(self, medmed: &[U], med: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> ); 
+    fn wsortedcos(self,medmed:&[U],unitzmed:&[U],ws:&[U]) -> (Vec<f64>,Vec<f64>); 
     /// Estimated weighted gm computed at a non member point
     fn wnxnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64>; 
     /// Estimated weighted eccentricity for a non-member point 

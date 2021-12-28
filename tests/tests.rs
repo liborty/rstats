@@ -192,11 +192,11 @@ fn vecvec() -> Result<()> {
    println!("Inner half of points:    {} max radius: {}", wi(&medcnt), wi(&seccs[medcnt-1]));   
    let uqcnt = binsearch(&seccs,eccmed.uquartile);
    println!("Inner three quarters:    {} max radius: {}", wi(&uqcnt), wi(&seccs[uqcnt-1]));
-// create pretend median of medians
-//   let medmed = vec![0.5_f64;n];
-//   let (se, cpdf) = 
-//    ptu8.wsortedcos( &medmed, &pt.wgmedian(&weights,EPS), &weights);
-//   println!("Sorted coses:\n{}\ncpdf:\n{}\n",wv(se),wv(cpdf));
+   // create pretend median of medians
+   // let medmed = vec![0.5_f64;n];
+   // let (se, cpdf) = 
+   //  pt.wsortedcos(&medmed,&medmed.vunit(), &weights);
+   //  println!("Sorted coses:\n{}\ncpdf:\n{}\n",wv(&se),wv(&cpdf));
    Ok(())
 }
 
