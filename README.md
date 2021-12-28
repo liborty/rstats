@@ -142,7 +142,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.1** `sortedeccs` and ` wsortedeccs` now take gm as an argument for more efficient repeated use.
+* **Version 1.0.1** Minor change: `sortedeccs` and `wsortedeccs` now take gm as an argument for more efficient repeated use. Vecvec test improved.
 
 * **Version 1.0.0** Rstats reaches stability (of sorts)! Some code simplifications: `smedian` and `wsmedian` are now just slightly more accurate than `gmedian` and `wgmedian` respectively, otherwise their performance is very similar. Sometimes a bit slower, at other times, especially on 'difficult' data, they can be a bit faster.
 
