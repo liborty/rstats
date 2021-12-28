@@ -179,13 +179,11 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
      
     /// GM and sorted eccentricities magnitudes.
     /// Describing a set of points `self` in n dimensions
-    fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> ) { 
-        let mut eccs = Vec::with_capacity(self.len());       
-        let gm = self.gmedian(eps);
-        for v in self { // collect raw ecentricities magnitudes
-            eccs.push(gm.vdist(&v)) 
-        }
-        ( gm, sortm(&eccs,ascending) )
+    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64> { 
+        let mut eccs = Vec::with_capacity(self.len()); 
+        // collect raw ecentricities magnitudes
+        for v in self { eccs.push(v.vdistf64(&gm)) }
+        sortm(&eccs,ascending)
     }    
 
     /// Eccentricities of Medoid and Outlier.  

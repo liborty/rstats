@@ -380,8 +380,8 @@ pub trait VecVec<T> {
     fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
     /// Medoid and Outlier as defined by eccentricities.
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64>;
-    /// Returns ( gm, sorted eccentricities magnitudes )
-    fn sortedeccs(self, ascending:bool, eps:f64) -> ( Vec<f64>,Vec<f64> ); 
+    /// Returns sorted eccentricities magnitudes
+    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64>; 
     /// Improved Weizsfeld's Algorithm for geometric median, to accuracy eps
     // fn nmedian(self, eps: f64) -> Vec<f64>;
     /// New algorithm for geometric median, to accuracy eps    
@@ -408,7 +408,7 @@ pub trait VecVecg<T,U> {
     /// Medoid and Outlier (by distance) of a set of points
     // fn medoid(self) -> MinMax<f64>; 
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
-    fn wsortedeccs(self, ws: &[U], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ); 
+    fn wsortedeccs(self,ws:&[U],gm:&[f64]) -> (Vec<f64>,Vec<f64>); 
     /// Sorted cosines magnitudes and cpdf, needs central median
     fn wsortedcos(self, medmed: &[U], med: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> ); 
     /// Estimated weighted gm computed at a non member point

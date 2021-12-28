@@ -48,14 +48,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// Sorted eccentricities magnitudes, w.r.t. weighted geometric median.
     /// associated cummulative probability density function in [0,1] of the weights.
-    fn wsortedeccs(self, ws: &[U], eps:f64) -> ( Vec<f64>,Vec<f64>,Vec<f64> ) { 
+    fn wsortedeccs(self, ws: &[U], gm: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len()); 
-        let gm = self.wgmedian(ws,eps);
-        for v in self { // collect true ecentricities magnitudes
-            eccs.push(gm.vdist(&v)) 
-        }
-        // Apply linear transform
-        // eccs = eccs.lintrans();
+        // collect true eccentricities magnitudes
+        for v in self { eccs.push(v.vdistf64(&gm)) }
         // create sort index of the eccs
         let index = sortidx(&eccs);
         // pick the associated points weights in the order of the sorted eccs
@@ -65,25 +61,23 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         weights.iter_mut().for_each(|w|{ sumw += *w; *w = sumw });     
         // divide by the final sum to get cummulative probabilities in [0,1]
         weights.iter_mut().for_each(|w| *w /= sumw );     
-        ( gm, index.unindex(&eccs, true), weights )
+        ( index.unindex(&eccs, true), weights )
     }
 
     /// Sorted cosines magnitudes,
     /// associated cummulative probability density function in [0,1] of the weights.
     /// Needs central median
-    fn wsortedcos(self, medmed: &[U], zeromed: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> ) { 
+    fn wsortedcos(self, medmed: &[U], unitzmed: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut coses = Vec::with_capacity(self.len());  
         for p in self { // collect coses      
-            coses.push(p.vsub(&medmed).vsim(&zeromed)); 
-        }
-        // Apply linear transform
-        // coses = coses.lintrans();
+            coses.push(p.vsubunit(&medmed).dotp(&unitzmed)); 
+        } 
         // create sort index of the coses
         let index = sortidx(&coses);
         // pick the associated points weights in the same order as the sorted coses
         let mut weights = index.unindexf64(&ws,true);
         let mut sumw = 0_f64;
-        // accummulate the weights to from cpdf
+        // accummulate the weights to form cpdf
         weights.iter_mut().for_each(|w|{ sumw += *w; *w = sumw });
         // divide by the sum to get cum. probabilities in [0,1]
         weights.iter_mut().for_each(|w| *w /= sumw );     

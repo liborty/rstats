@@ -157,7 +157,7 @@ fn vecvec() -> Result<()> {
    let gcentroid = pt.gcentroid();
    let acentroid = pt.acentroid(); 
    let firstp = pt.firstpoint();
-   let median = pt.gmedian(EPS);
+   let median = pt.smedian(EPS);
    // let outlier = &pt[md.maxindex]; 
    // let eoutlier = &pt[me.maxindex];
  
@@ -171,23 +171,27 @@ fn vecvec() -> Result<()> {
    println!("ACentroid's total distances:\t{}",wi(&pt.distsum(&acentroid)));
    println!("Median's total distances:\t{}",wi(&pt.distsum(&median)));  
    println!("Outlier's distance to Medoid:\t{}",wi(&outlier.vdist(&medoid)));      
-   println!("Outlier's radius to Median:\t{}",wi(&outlier.vdist(&median)));  
-   println!("Medoid's radius to Median:\t{}",wi(&medoid.vdist(&median)));
+   println!("Outlier's radius (from Median):\t{}",wi(&outlier.vdist(&median)));  
+   println!("Medoid's radius (from Median):\t{}",wi(&medoid.vdist(&median)));
 
-   println!("\nMedoid and Outlier Eccentricities:\n{}\nEccentricities {}\nEccentricities {}",eccecc,eccstd,eccmed); 
-   println!("HCentroid's eccentricity:\t{}",wi(&hcentroid.vdist(&median)));
-   println!("GCentroid's eccentricity:\t{}",wi(&gcentroid.vdist(&median)));
-   println!("ACentroid's eccentricity:\t{}",wi(&acentroid.vdist(&median)));
-   println!("Firstpoint's eccentricity:\t{}",wi(&firstp.vdist(&median)));
-   println!("Median's ecc error/{:e}:\t{}",EPS,wi(&(pt.eccnonmember(&median).vmag()/EPS)));
+   println!("\nMedoid and outlier radii (eccentricities):\n{}
+   \nRadii {}\nRadii {}",eccecc,eccstd,eccmed); 
+   println!("HCentroid's radius: {}",wi(&hcentroid.vdist(&median)));
+   println!("GCentroid's radius: {}",wi(&gcentroid.vdist(&median)));
+   println!("ACentroid's radius:  {}",wi(&acentroid.vdist(&median)));
+   println!("Firstpoint's radius: {}",wi(&firstp.vdist(&median)));
+   println!("Median's error*{:e}: {}",1_f64/EPS,wi(&(pt.eccnonmember(&median).vmag()/EPS)));
    // let zmed = pt.translate(&median); // zero median transformed data
    // println!("Median's error:\t{}\n",wi(&zmed.gmedian(EPS).vmag()));
 
-   // let (_, seccs) = pt.sortedeccs(true,EPS); 
-   // !("Sorted eccs: {}\n", wv(&seccs));
-   // let medcnt = binsearch(&seccs,eccmed.median);
-   // println!("Items smaller or equal to median of eccs: {} last value: {}", wi(&medcnt), wi(&seccs[medcnt-1]));
-
+   let seccs = pt.sortedeccs(true,&median); 
+   // println!("\nSorted eccs: {}\n", wv(&seccs));
+   let lqcnt = binsearch(&seccs,eccmed.lquartile);
+   println!("Inner quarter of points: {} max radius: {}", wi(&lqcnt), wi(&seccs[lqcnt-1]));
+   let medcnt = binsearch(&seccs,eccmed.median);
+   println!("Inner half of points:    {} max radius: {}", wi(&medcnt), wi(&seccs[medcnt-1]));   
+   let uqcnt = binsearch(&seccs,eccmed.uquartile);
+   println!("Inner three quarters:    {} max radius: {}", wi(&uqcnt), wi(&seccs[uqcnt-1]));
 // create pretend median of medians
 //   let medmed = vec![0.5_f64;n];
 //   let (se, cpdf) = 
