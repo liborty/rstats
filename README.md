@@ -7,14 +7,19 @@
 
 ## Usage
 
-Insert `rstats = "^1"` in the `Cargo.toml` file under `[dependencies]`.
+Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 
-Use any of the following structs that you need in your source files:  
+Use in source files any of the following structs, as needed:  
 `use rstats::{MinMax,Med,Mstats};`  
-Use any of the following functions that you need in your source files:  
+and any of the following helper functions:  
 `use rstats::{i64tof64,tof64,here,wi,wv,wsum,printvv,genvec,genvecu8};`  
-Use any of the following traits that you need in your source files:  
-`use rstats::{Stats,MutStats,Vecu8,Vecg,MutVecg,VecVec,VecVecg};`
+and any of the following traits:  
+`use rstats::{Stats,MutStats,Vecu8,Vecf64,Vecg,MutVecg,VecVec,VecVecg};`
+
+It is highly recommended to read and run `tests/tests.rs`, which shows examples of usage.
+
+To run all the tests, use single thread in order to produce the results in the right order:  
+`cargo test --release -- --test-threads=1 --nocapture --color always`
 
 ## Introduction
 
@@ -32,15 +37,11 @@ In contrast, analyses based on the true geometric median (gm), computed here by 
 
 ### Implementation
 
-The main constituent parts of Rstats are Rust traits grouping together methods applicable to a single vector (of numbers) - `Stats`, two vectors - `Vecg`, n vectors - `VecVec` or n vectors and another generic argument - `VecVecg`. End type `f64` is most commonly used for the results, whereas inputs to the generic methods can be vectors (or slices) of any numeric end types.
+The main constituent parts of Rstats are Rust traits, grouping together methods applicable to a single vector (of numbers) - `Stats`, two vectors - `Vecg`, n vectors - `VecVec` or n vectors and another generic argument - `VecVecg`. End type `f64` is most commonly used for the results, whereas inputs to the generic methods can be vectors (or slices) of any numeric end types.
 
 ### Documentation
 
 To see more detailed comments, plus some examples, see the source.  
-It is highly recommended to read and run `tests/tests.rs`, which shows examples of usage.
-
-To run all the tests, use single thread in order to produce the results in the right order:  
-`cargo test --release -- --test-threads=1 --nocapture --color always`
 
 ## Structs and auxiliary functions
 
@@ -52,9 +53,7 @@ To run all the tests, use single thread in order to produce the results in the r
 
 * functions: `i64tof64,tof64,here,wsum,wi,wv,printvv,genvec,genvecu8`
 
-## Traits
-
-### Stats
+## Trait Stats
 
 One dimensional statistical measures implemented for all numeric end types.
 
@@ -72,14 +71,14 @@ Included in this trait are:
 * linear transformation to [0,1],
 * other measures and vector algebra operators
 
-### MutStats
+## Trait MutStats
 
 A few of the `Stats` methods are reimplemented under this trait
 (only for f64), so that they mutate `self` in-place.
 This is more efficient and convenient in some circumstances, such as in
 vector iterative methods.
 
-### Vecg
+## Trait Vecg
 
 Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimensionality):
 
@@ -89,36 +88,38 @@ Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimen
 
 This trait is unchecked (for speed), so some caution with data is advisable.
 
-### Vecf64
+## Trait Vecf64
 
-A handful of primitive methods as in `Vecg` but operating on argument of known type `f64` or `&[f64]`.
+A handful of primitive methods as in `Vecg` but operating on an argument of known end type `f64` or `&[f64]`.
 
-### MutVecg & MutVecf64
+## Traits MutVecg & MutVecf64
 
 Mutable vector addition, subtraction and multiplication.  
 Mutate `self` in-place.
 This is for efficiency and convenience. Specifically, in
-vector iterative methods. `MutVecf64` is to be used in preference, when the end type of `self` is known to be `f64`. Beware that these methods work by side-effect and do not return anything, so they can not be functionally chained.
+vector iterative methods. 
 
-### Vecu8
+`MutVecf64` is to be used in preference, when the end type of `self` is known to be `f64`. Beware that these methods work by side-effect and do not return anything, so they can not be functionally chained.
+
+## Trait Vecu8
 
 * Some vector algebra as above that can be more efficient when the end type happens to be u8 (bytes).
 * Frequency count of bytes by their values (Histogram or Probability Density Function).
 * Entropy measures in units of e (using natural logarithms).
 
-### VecVec
+## Trait VecVec
 
-Relationships between n vectors (nD). This is the original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm.
+Relationships between n vectors (in d dimensions). This is the original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm.
 
-* sums of distances, eccentricity measure for nD points,
+* sums of distances, eccentricity (radius) measure,
 * centroid, medoid, outliers, true geometric median,
 * transformation to zero (geometric) median data,
-* relationship between two sets of multidimensional vectors: trend,
+* trend between two sets of multidimensional vectors,
 * covariance and comediance matrices (weighted and unweighted).
 
 Trait VecVec is entirely unchecked, so check your data upfront.
 
-### VecVecg
+## Trait VecVecg
 
 Methods which take an additional generic vector argument, such as a vector of weights for computing the weighted geometric medians.
 
@@ -141,6 +142,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 * `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 1.0.2** Updated the dependency `indxvec` to version 1. A few minor changes to this document.
 
 * **Version 1.0.1** Minor change: `sortedeccs` and `wsortedeccs` now take gm as an argument for more efficient repeated use. Vecvec test improved.
 
