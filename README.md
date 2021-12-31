@@ -29,11 +29,11 @@ Our treatment of multidimensional sets of points is constructed from the first p
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-Most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are not even any easier to compute.
+Most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are not even any quicker to compute.
 
 *Specifically, all 1-d measures are sensitive to the choice of axis and thus are affected by rotation.*
 
-In contrast, analyses based on the true geometric median (gm), computed here by the novel methods `gmedian` and `wgmedian`, are axis (rotation) independent.
+In contrast, analyses based on the true geometric median (gm)  are axis (rotation) independent. They are computed here by the novel methods `smedian` and `gmedian` and their weighted versions `wsmedian` and `wgmedian`.
 
 ### Implementation
 
@@ -51,7 +51,7 @@ To see more detailed comments, plus some examples, see the source.
 
 * `struct MinMax` reexported from crate `indxvec` to hold min and max values of a vector and their indices. It is returned by function `indxvec::merge::minmax`.
 
-* functions: `i64tof64,tof64,here,wsum,wi,wv,printvv,genvec,genvecu8`
+* auxiliary functions: `i64tof64, tof64, here, wsum, wi, wv, printvv, genvec, genvecu8`.
 
 ## Trait Stats
 
@@ -109,7 +109,7 @@ vector iterative methods.
 
 ## Trait VecVec
 
-Relationships between n vectors (in d dimensions). This is the original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm.
+Relationships between n vectors (in d dimensions). This is the original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm boosted by a secant method. These measures solve Weiszfeld's convergence problems in the vicinity of existing set points.
 
 * sums of distances, eccentricity (radius) measure,
 * centroid, medoid, outliers, true geometric median,
