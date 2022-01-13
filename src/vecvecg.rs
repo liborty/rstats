@@ -217,17 +217,19 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// Warning: may run out of memory for large number of points and high dimensionality. 
     fn wcomed(self, ws:&[U], m:&[f64], eps:f64) -> Vec<f64> {
         let d = self[0].len(); // dimension of the vector(s)
-        let mut coms:Vec<Vec<f64>> = Vec::with_capacity(self.len());  
-        for h in 0..self.len() { // saving comeds for all the points
-            let w = f64::from(ws[h]);
+        let mut coms:Vec<Vec<f64>> = Vec::with_capacity(self.len()); 
+        self.iter().zip(ws).for_each(|(selfh,&wsh)| { // adding up covars for all the points
+            let w = f64::from(wsh);     
             let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2);  
-            let vm = self[h].vsub(m);  // subtract zero median vector   
+            let vm = selfh.vsub(m);  // subtract zero median vector 
+
             for i in 0..d { // cross multiply the components of one point              
                 for j in 0..i+1 {  // its weighted products up to and including the diagonal 
-                    com.push(w*vm[i]*vm[j])  }
+                    com.push(w*vm[i]*vm[j]) 
+                }
             }
             coms.push(com) 
-        }
+        });
         coms.wgmedian(ws, eps) // return the median of the comeds  
     }   
 }

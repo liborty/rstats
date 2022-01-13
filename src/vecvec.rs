@@ -30,15 +30,15 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// assert_eq!(dist,4.897594485332543_f64);
     /// ```
     fn gcentroid(self) -> Vec<f64> {
-        let n = self.len() as f64; // number of points
+        let nf = self.len() as f64; // number of points
         let d = self[0].len(); // dimensions
         let mut centre = vec![0_f64; d];
         let mut lnvec = vec![0_f64; d];
         for v in self { 
-            for i in 0..d { lnvec[i] = f64::from(v[i]).ln() }
+            v.iter().zip(&mut lnvec).for_each(|(&vi,lni)| *lni = f64::from(vi).ln() );
             centre.mutvaddf64(&lnvec)
         }
-        centre.iter().map(|comp| (comp/n).exp()).collect()        
+        centre.iter().map(|comp| (comp/nf).exp()).collect()        
     }
 
     /// hcentroid =  multidimensional harmonic mean
@@ -52,9 +52,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// ```
     fn hcentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()]; 
-        for v in self {
-            centre.mutvaddf64(&v.vinverse().unwrap())
-        }
+        for v in self { centre.mutvaddf64(&v.vinverse().unwrap()) }
         centre.smultf64(1.0/(self.len() as f64)).vinverse().unwrap()       
     }
 
