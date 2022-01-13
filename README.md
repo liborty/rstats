@@ -59,7 +59,7 @@ One dimensional statistical measures implemented for all numeric end types.
 
 Its methods operate on one slice of generic data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of the data in slice `s`.
-Some of these methods are checked and will report all kinds of errors, such as an empty input. This means you have to call `.unwrap()` or something similar on their  results.
+Some of these methods are checked and will report all kinds of errors, such as an empty input. This means you have to call `.unwrap()` or something better on their results.
 
 Included in this trait are:
 
@@ -67,6 +67,7 @@ Included in this trait are:
 * standard deviations,
 * linearly weighted means (useful for time dependent data analysis),
 * median and quartiles,
+* probability density function (pdf)
 * autocorrelation, entropy
 * linear transformation to [0,1],
 * other measures and vector algebra operators
@@ -83,14 +84,15 @@ vector iterative methods.
 Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimensionality):
 
 * Vector additions, subtractions and products (scalar, kronecker, outer),
-* Other relationships and measures,
-* Pearson's, Spearman's and Kendall's correlations.
+* Other relationships and measures of difference,
+* Pearson's, Spearman's and Kendall's correlations,
+* Joint pdf, joint entropy, statistical dependence
 
 This trait is unchecked (for speed), so some caution with data is advisable.
 
 ## Trait Vecf64
 
-A handful of primitive methods as in `Vecg` but operating on an argument of known end type `f64` or `&[f64]`.
+A handful of methods from `Vecg`, specialised to an argument of known end type `f64` or `&[f64]`.
 
 ## Traits MutVecg & MutVecf64
 
@@ -103,18 +105,21 @@ vector iterative methods.
 
 ## Trait Vecu8
 
-* Some vector algebra as above that can be more efficient when the end type happens to be u8 (bytes).
-* Frequency count of bytes by their values (Histogram or Probability Density Function).
-* Entropy measures in units of e (using natural logarithms).
+Some vector algebra as above that can be more efficient when the end type happens to be u8 (bytes). They have u8 appended to their names to avoid confusion with Vecg methods.
+
+* Relationships between two vectors (of bytes)
+* Frequency count of bytes by their values (histogram, pdf, jointpdf)
+* Entropy, jointentropy, dependence (different algorithms to those in Vecg)
 
 ## Trait VecVec
 
-Relationships between n vectors (in d dimensions). This is the original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm boosted by a secant method. These measures solve Weiszfeld's convergence problems in the vicinity of existing set points.
+Relationships between n vectors (in d dimensions). This is the main original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`, optionally boosted by a secant method `gsmedian`. These algorithms both solve Weiszfeld's convergence and stability problems in the neighbourhood of existing set points.
 
 * sums of distances, eccentricity (radius) measure,
 * centroid, medoid, outliers, true geometric median,
-* transformation to zero (geometric) median data,
-* trend between two sets of multidimensional vectors,
+* characterisations of sets of multidimensional points (of d random variables): means, stds, medians 
+* transformation to zero geometric median data,
+* multivariate trend (regression) between two sets of nd points,
 * covariance and comediance matrices (weighted and unweighted).
 
 Trait VecVec is entirely unchecked, so check your data upfront.
