@@ -67,56 +67,49 @@ impl Vecu8 for &[u8] {
     fn pdfu8(self) -> Vec<f64> {  
         let nf = self.len() as f64;
         let mut pdfv = vec![0_f64;256];        
-        for &x in self { pdfv[x as usize] += 1_f64/nf };       
+        for &x in self { pdfv[x as usize] += 1_f64 };
+        pdfv.iter_mut().for_each(|p| if *p > 0.0 { *p /= nf });
         pdfv
     }
 
     /// Information (entropy) of &[u8] (in nats)
     fn entropyu8(self) -> f64 {
         let pdfv = self.pdfu8();
-        let mut entr = 0_f64;
-        for &x in self { 
-            let p = pdfv[x as usize];
-            if p.is_normal() // ignore zero probabilities
-                { entr -= p*(p.ln()) }
-        };            
-        entr           
+        pdfv.iter().map(|&p|if p > 0.0 {-p*(p.ln())} else {0.0}).sum::<f64>()    
     }
+
     /// Joint probability density function (here just co-occurence counts) 
-    /// of paired values in two vectors of bytes of the same length.
-    /// Needs n^2 x 32bits of memory. Do not use for very long vectors, 
-    /// those need hashing implementation.
+    /// of successive pairs of values from two vectors of bytes 
+    /// of the same lenghts n. Needs 4*(n^2) bytes of heap memory.
+    /// which will be sparse except for very long input vectors. 
     fn jointpdfu8(self, v:&[u8]) -> Vec<Vec<u32>> {  
         let n = self.len();
-        if v.len() != n { panic!("{} argument vectors must be of equal length!",here!()) }
-        let mut jocc = vec![vec![0_u32; 256]; 256];
-        for i in 0..n {
-            for j in 0..v.len() { jocc[self[i] as usize][v[j] as usize] += 1 }
-        }
-        jocc
+        if v.len() != n { panic!("{} argument vectors must be of equal length!",here!()) }    
+        let mut res:Vec<Vec<u32>> = vec![vec![0_u32;256];256]; 
+        for i in 0..n { res[self[i]as usize][v[i] as usize] += 1; } 
+        res
     }
+
     /// Joint entropy of &[u8],&[u8] (in nats)
     fn jointentropyu8(self, v:&[u8]) -> f64 {
-        let n = self.len();
-        let m = v.len();        
-        let jpdf = self.jointpdfu8(v);
-        let mut entr = 0_f64;
-        for i in 0..n {
-            for j in 0..m {
-                let cx = jpdf[self[i] as usize][v[j] as usize];
-                if cx > 0 { // ignore zero counts
-                    // turn counts into probabilities
-                    let x = (cx as f64) / ((n*m) as f64); 
-                    entr -= x*(x.ln()) 
-                }
+        let n = self.len(); 
+        let nf = n as f64;
+        let jpdf = self.jointpdfu8(v); 
+        let mut entropy = 0_f64;
+        for v in jpdf {
+            for c in v {  
+                if c > 0_u32 {
+                    let p = (c as f64)/nf; 
+                    entropy -= p*(p.ln()); }
             }
-        };            
-        entr           
+        } 
+        entropy              
     }
+
     /// Dependence of two &[u8] variables, the range is [0,1],
     /// i.e. it returns 0 iff they are statistically independent
     /// and 1 when they are identical
     fn dependenceu8(self, v:&[u8]) -> f64 {     
-        2.0 - (self.entropyu8() + v.entropyu8())/self.jointentropyu8(v)
+        1.0 - self.jointentropyu8(v)/(self.entropyu8() + v.entropyu8())
     }
 }

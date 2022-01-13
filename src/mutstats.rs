@@ -6,7 +6,7 @@ impl MutStats for &mut [f64] {
 
     /// Vector with inverse magnitude
     fn minvert(self) {
-        let recmag2 = 1.0/self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>();
+        let recmag2 = 1.0/self.iter().map(|&x| x.powi(2)).sum::<f64>();
         for c in self.iter_mut() { *c *= recmag2 }    
     }
 

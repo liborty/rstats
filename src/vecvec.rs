@@ -16,7 +16,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// ```
     fn acentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()];
-        for v in self { centre.mutvadd(&v) }
+        for v in self { centre.mutvadd(v) }
         centre.mutsmultf64(1.0 / (self.len() as f64));
         centre
     }
@@ -67,7 +67,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             let thisp = &self[i];
             for j in 0..i {
                 let thatp = &self[j];
-                let d = thisp.vdist(&thatp); // calculate each distance relation just once
+                let d = thisp.vdist(thatp); // calculate each distance relation just once
                 dists[i] += d;
                 dists[j] += d; // but add it to both points
             }
@@ -77,17 +77,10 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// The sum of distances from one member point, given by its `indx`, to all the other points in self.
     /// For all the points, use more efficient `distsums`.    
-    fn distsuminset(self, indx: usize) -> f64 {
-        let n = self.len();
-        let mut sum = 0_f64;
+    fn distsuminset(self, indx: usize) -> f64 { 
         let thisp = &self[indx];
-        for i in 0..n {
-            if i == indx {
-                continue;
-            };
-            sum += self[i].vdist(&thisp)
-        }
-        sum
+        self.iter().enumerate().map(|(i,thatp)|
+            if i == indx { 0.0 } else {thisp.vdist(thatp)}).sum()
     } 
 
     /// Medoid and Outlier (Medout)
@@ -120,7 +113,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             let thisp = &self[i];
             for j in 0..i { 
                 // calculate each unit vector between any pair of points just once
-                let dvmag = self[j].vdist(&thisp);             
+                let dvmag = self[j].vdist(thisp);             
                 if !dvmag.is_normal() { continue }
                 let rec = 1.0_f64/dvmag;
                 eccs[i].mutvaddf64(&self[j].smultf64(rec));
@@ -143,7 +136,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut eccs = Vec::with_capacity(self.len()); // Vectors for the results
         let gm:Vec<f64> = self.gmedian(eps);
         for v in self {
-            eccs.push(gm.vsub(&v))
+            eccs.push(gm.vsub(v))
         }
         eccs
     }
@@ -173,7 +166,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
     fn eccinfo(self, eps: f64) -> (MStats, Med, MinMax<f64>) where Vec<f64>:FromIterator<f64> {
         let gm:Vec<f64> = self.gmedian(eps);
-        let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(&v)).collect();
+        let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
         (eccs.ameanstd().unwrap(),eccs.median().unwrap(),minmax(&eccs))
     }
      
@@ -182,7 +175,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64> { 
         let mut eccs = Vec::with_capacity(self.len()); 
         // collect raw ecentricities magnitudes
-        for v in self { eccs.push(v.vdistf64(&gm)) }
+        for v in self { eccs.push(v.vdistf64(gm)) }
         sortm(&eccs,ascending)
     }    
 
@@ -200,7 +193,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// ```
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64> {
     let gm:Vec<f64> = self.gmedian(eps);
-    let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(&v)).collect();
+    let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
     minmax(&eccs)
 } 
 
@@ -233,19 +226,19 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// Next approximate gm computed from a member point  
     /// specified by its index `indx` to self. 
     fn nxmember(self, indx: usize) -> Vec<f64> {
-        let n = self.len();
         let mut vsum = vec![0_f64; self[0].len()];
         let p = &self[indx];
         let mut recip = 0_f64;
-        for i in 0..n {
-            if i == indx { continue  }; // exclude this point
-            let pi = &self[i];
-            let mag = p.vdist(pi);
-            if !mag.is_normal() { continue } // too close to this one
-            let rec = 1.0_f64/mag;
-            vsum.mutvaddf64(&pi.smultf64(rec)); // add vector
-            recip += rec // add separately the reciprocals
-        }
+        self.iter().enumerate().for_each(|(i,thatp)| {
+            if i != indx {  // not point p
+                let mag = p.vdist(thatp);
+                if mag.is_normal() {  // not too close to p
+                    let rec = 1.0_f64/mag;
+                    vsum.mutvaddf64(&thatp.smultf64(rec)); // add vector
+                    recip += rec // add separately the reciprocals
+                }
+            }
+        });
         vsum.mutsmultf64(1.0/recip);
         vsum 
     }

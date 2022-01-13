@@ -22,7 +22,7 @@ impl<T> Stats for &[T]
         for &component in self {
            let c = f64::from(component); 
            ensure!(c.is_normal(),
-            "{} reciprocal not allowed for zero components!\n{}\n",here!(),wv(&self)); 
+            "{} reciprocal not allowed for zero components!\n{}\n",here!(),wv(self)); 
         }     
         Ok( self.iter().map(|&x| 1.0/(f64::from(x))).collect() )     
     }
@@ -136,10 +136,7 @@ impl<T> Stats for &[T]
             })
             .sum::<f64>()
             / wsum(n);
-        Ok(MStats {
-            mean: mean,
-            std: (sx2 / wsum(n) - mean.powi(2)).sqrt(),
-        })
+        Ok(MStats { mean,std:(sx2 / wsum(n) - mean.powi(2)).sqrt()})
     }
 
     /// Harmonic mean of an f64 slice.
@@ -373,9 +370,9 @@ impl<T> Stats for &[T]
         let quarter = gaps / 4;
         let threeq = 3 * gaps / 4;
         let v = sortm(self,true);     
-        let mut result: Med = Default::default();
-        result.median = if 2*mid < gaps { (f64::from(v[mid]) + f64::from(v[mid + 1])) / 2.0 }
-            else { f64::from(v[mid]) };
+        let mut result = Med { median: 
+            if 2*mid < gaps { (f64::from(v[mid]) + f64::from(v[mid + 1])) / 2.0 }
+            else { f64::from(v[mid]) }, ..Default::default() };
         match gaps % 4 {
         0 => {
             result.lquartile = f64::from(v[quarter]);
@@ -398,32 +395,28 @@ impl<T> Stats for &[T]
         Ok(result)       
     } 
 
-    /// Probability density function of a sorted slice with repeats
+    /// Probability density function of a sorted slice with repeats. 
+    /// Repeats are counted and removed
     fn pdf(self) -> Vec<f64> {     
-        let n = self.len();   
-        let mut res:Vec<f64> = vec![1.0;n];  
-        let mut rcount = 1_f64; // running count
-        let mut lastval = self[0]; // first item
+        let nf = self.len() as f64;   
+        let mut res:Vec<f64> = Vec::new();  
+        let mut count = 1_usize; // running count
+        let mut lastval = self[0];
 
-        for i in 1..n { // first pass to count same values 
-            if self[i] > lastval { lastval = self[i]; rcount = 1.0 } // new value                 
-            else { rcount += 1.0 } // same value
-            res[i] = rcount            
-        }
-        let nf = n as f64;
-        for i in (0..n).rev() {  // second reverse pass to propagate maxima
-            if self[i] < lastval { lastval = self[i]; rcount = res[i] }; // new value                
-            res[i] = rcount/nf // propagate maximum count from previous item           
-        } 
-        // let ressum = res.iter().sum::<f64>();
-        // eprintln!("Sum of probs: {}",ressum); 
+        self.iter().skip(1).for_each(|&s| (
+            if s > lastval { // new value encountered
+                res.push((count as f64)/nf); // save previous probability
+                lastval = s; // new value
+                count = 1_usize; // reset counter
+            } else { count += 1; }));
+        res.push((count as f64)/nf);  // flush the rest!
         res
     } 
 
     /// Information (entropy) (in nats)
     fn entropy(self) -> f64 {
         let pdfv = sortm(self,true).pdf();      
-        pdfv.iter().map( |&x| -x*(x.ln()) ).sum()                 
+        pdfv.iter().map(|&x| -x*(x.ln()) ).sum()                 
     }
 
     /// (Auto)correlation coefficient of pairs of successive values of (time series) f64 variable.
@@ -438,15 +431,15 @@ impl<T> Stats for &[T]
         let n = self.len();
         if n < 2 { panic!("{} vector is too short",here!()) }
         let mut x = f64::from(self[0]);    
-        for i in 1..n {
-            let y = f64::from(self[i]);
+        self.iter().skip(1).for_each(|&si| {
+            let y = f64::from(si);
             sx += x;
             sy += y;
             sxy += x * y;
             sx2 += x * x;
             sy2 += y * y;
             x = y
-        }        
+        });        
         let nf = n as f64;
         (sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()
     }

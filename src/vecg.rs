@@ -1,4 +1,4 @@
-use crate::{Stats,Vecg,Vecf64};
+use crate::{here,Stats,Vecg,Vecf64};
 pub use indxvec::{Indices,merge::{sortm,rank}};
 
 impl<T,U> Vecg<T,U> for &[T] 
@@ -113,15 +113,12 @@ impl<T,U> Vecg<T,U> for &[T]
     /// N.b. the indexing is always assumed to be in this order: row,column.
     /// The items of the resulting lower triangular array c[i][j] are pushed flat
     /// into a single vector in this double loop order: left to right, top to bottom 
-    fn covone(self, m:&[U]) -> Vec<f64> {
-        let n = self.len(); // dimension of the vector
+    fn covone(self, m:&[U]) -> Vec<f64> { 
         let mut cov:Vec<f64> = Vec::new(); // flat lower triangular result array
-        let vm = self.vsub(&m); // zero mean vector
-        for i in 0..n {
-            let thisc = vm[i]; // take this component
+        let vm = self.vsub(m); // zero mean vector
+        vm.iter().enumerate().for_each(|(i,&thisc)|
             // generate its products up to and including the diagonal (itself)
-            for j in 0..i+1 { cov.push(thisc*vm[j]) }
-        }
+            vm.iter().take(i+1).for_each(|&component| cov.push(thisc*component)) );
         cov
     }
 
@@ -142,28 +139,46 @@ impl<T,U> Vecg<T,U> for &[T]
         for &s in self { out.push(m.smult(s)) }      
         out
     }
- 
-    /// Joint entropy 
-    fn jointentropy(self, v:&[U]) -> f64 {      
-        let pdfs = sortm(self,true).pdf();
-        let pdfv = sortm(v,true).pdf();
-        let mut entr = 0_f64;
-        for i in 0..pdfs.len() {
-            for j in 0..pdfv.len() {
-                let p = pdfs[i]*pdfv[j]; 
-                entr -= p*(p.ln()) 
-            }
-        }                
-        entr           
+
+    /// Joint probability density function of two pairwise matched slices 
+    fn jointpdf(self,v:&[U]) -> Vec<f64> {     
+        let n = self.len();
+        if v.len() != n { panic!("{} argument vectors must be of equal length!",here!()) }; 
+        let nf = n as f64;              
+        let mut res:Vec<f64> = Vec::new();
+        // collect successive pairs, upgrading all end types to common f64
+        let mut spairs:Vec<Vec<f64>> = self.iter().zip(v.iter()).map(|(&si,&vi)|
+            vec![f64::from(si),f64::from(vi)]).collect(); 
+        // sort them to group all same pairs together for counting    
+        spairs.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap()); 
+        let mut count = 1_usize; // running count
+        let mut lastindex = 0;
+
+        for i in 1..n {
+            if spairs[i] > spairs[lastindex] { // new pair encountered
+                res.push((count as f64)/nf); // save previous probability
+                lastindex = i; // current index becomes the new one
+                count = 1_usize; // reset counter
+            } else { count += 1; };
+        }
+        res.push((count as f64)/nf);  // flush the rest!
+        res
+    } 
+
+    /// Joint entropy of two sets of the same length
+    fn jointentropy(self, v:&[U]) -> f64 {
+        let jpdf = self.jointpdf(v);
+        jpdf.iter().map(|&x| -x*(x.ln()) ).sum() 
     }
+
     /// Dependence of &[T] &[U] variables.
     /// i.e. `dependence` returns 0 iff they are statistically independent
     /// and 1 when they are identical
     fn dependence(self, v:&[U]) -> f64 {   
-        2.0 - (self.entropy() + v.entropy())/self.jointentropy(v) 
+        1.0 - self.jointentropy(v)/(self.entropy() + v.entropy()) 
     }         
 
-    /// Pearson's correlation. 
+    /// Pearson's (most common) correlation. 
     /// # Example
     /// ```
     /// use rstats::Vecg;
@@ -238,9 +253,9 @@ impl<T,U> Vecg<T,U> for &[T]
     /// assert_eq!(v1.spearmancorr(&v2),-0.1076923076923077);
     /// ```
     fn spearmancorr(self, v: &[U]) -> f64 {
-        let xvec = rank(&self,true);
-        let yvec = rank(&v,true); // rank from crate idxvec::merge
-        // It is just Pearson's correlation of ranks
+        let xvec = rank(self,true);
+        let yvec = rank(v,true); // rank from crate idxvec::merge
+        // It is just Pearson's correlation of usize ranks
         xvec.ucorrelation(&yvec) // using Indices trait from idxvec
     }
 }

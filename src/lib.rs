@@ -84,7 +84,7 @@ pub fn genvec(d: usize, n: usize, mut s1: u32, mut s2: u32) -> Vec<Vec<f64>> {
         }
         v.push(pt)
     } // fills the lot with random numbers
-    return v;
+    v
 }
 
 /// Generates a vector of n vectors, each of length d, all filled with random numbers for testing.
@@ -107,7 +107,7 @@ pub fn genvecu8(d: usize, n: usize, mut s1: u32, mut s2: u32) -> Vec<Vec<u8>> {
         }
         v.push(pt)
     } // fills the lot with random numbers
-    return v;
+    v
 }
 
 // Traits
@@ -239,9 +239,11 @@ pub trait Vecg<T,U> {
     fn kron(self, m:&[U]) -> Vec<f64>; 
     /// Outer product of two vectors 
     fn outer(self, m:&[U]) -> Vec<Vec<f64>>; 
-    /// Joint entropy of &[u8],&[u8] in nats 
+    /// Joint probability density function 
+    fn jointpdf(self,v:&[U]) -> Vec<f64>;     
+    /// Joint entropy of &[T],&[U] in nats (units of e)
     fn jointentropy(self, v:&[U]) -> f64;
-    /// Statistical independence measure based on joint entropy
+    /// Statistical dependence based on joint entropy
     fn dependence(self, v:&[U]) -> f64; 
     /// Pearson's correlation.  
     fn correlation(self, v:&[U]) -> f64; 
@@ -315,8 +317,7 @@ pub trait Vecu8 {
     fn entropyu8(self) -> f64;
     /// Joint probability density function (here just co-occurence counts) 
     /// of paired values in two vectors of bytes of the same length.
-    /// Needs n^2 x 32bits of memory. Do not use for very long vectors, 
-    /// those need hashing implementation.
+    /// Needs n^2 x 32bits of memory. 
     fn jointpdfu8(self, v:&[u8]) -> Vec<Vec<u32>>;
     /// Joint entropy of &[u8],&[u8] (in nats)
     fn jointentropyu8(self, v:&[u8]) -> f64;

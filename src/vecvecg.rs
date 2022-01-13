@@ -51,11 +51,11 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn wsortedeccs(self, ws: &[U], gm: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len()); 
         // collect true eccentricities magnitudes
-        for v in self { eccs.push(v.vdistf64(&gm)) }
+        for v in self { eccs.push(v.vdistf64(gm)) }
         // create sort index of the eccs
         let index = sortidx(&eccs);
         // pick the associated points weights in the order of the sorted eccs
-        let mut weights = index.unindexf64(&ws,true);
+        let mut weights = index.unindexf64(ws,true);
         let mut sumw = 0_f64;
         // accummulate the weights
         weights.iter_mut().for_each(|w|{ sumw += *w; *w = sumw });     
@@ -70,12 +70,12 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn wsortedcos(self, medmed: &[U], unitzmed: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut coses = Vec::with_capacity(self.len());  
         for p in self { // collect coses      
-            coses.push(p.vsubunit(&medmed).dotp(&unitzmed)); 
+            coses.push(p.vsubunit(medmed).dotp(unitzmed)); 
         } 
         // create sort index of the coses
         let index = sortidx(&coses);
         // pick the associated points weights in the same order as the sorted coses
-        let mut weights = index.unindexf64(&ws,true);
+        let mut weights = index.unindexf64(ws,true);
         let mut sumw = 0_f64;
         // accummulate the weights to form cpdf
         weights.iter_mut().for_each(|w|{ sumw += *w; *w = sumw });
@@ -147,18 +147,16 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array  
         for thisp in self { // adding up covars for all the points
             let mut covsub = 0_usize; // subscript into the flattened array cov
-            let vm = thisp.vsub(&m);  // zero mean vector
-            for i in 0..n {
-                let thisc = vm[i]; // ith component
+            let vm = thisp.vsub(m);  // zero mean vector
+            vm.iter().enumerate().for_each(|(i,thisc)| 
                 // its products up to and including the diagonal (itself)
-                for j in 0..i+1 { 
-                    cov[covsub] += thisc*vm[j];
-                    covsub += 1
-                }
-            }
-        }
+                vm.iter().take(i+1).for_each(|vmj| { 
+                    cov[covsub] += thisc*vmj;
+                    covsub += 1;
+                }));
+            } 
         // now compute the means and return
-        cov.mutsmultf64(1.0_f64/self.len()as f64);
+        cov.mutsmultf64(1.0_f64/(self.len()as f64));
         cov
     }
 
@@ -175,13 +173,11 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut coms:Vec<Vec<f64>> = Vec::with_capacity(self.len()); // vec of flat lower triangular results arrays  
         for thisp in self { // saving comeds for all the points 
             let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2);
-            let vm = thisp.vsub(&m);  // zero mediance vector
-            for i in 0..d {
-                let thisc = vm[i]; // ith component
+            let vm = thisp.vsub(m);  // zero mediance vector
+            vm.iter().enumerate().for_each(|(i,thisc)|  
                 // its products up to and including the diagonal (itself)
-                for j in 0..i+1 { com.push(thisc*vm[j]) }
-            }
-            coms.push(com)
+                vm.iter().take(i+1).for_each(|vmj| com.push(thisc*vmj)));
+            coms.push(com); 
         } 
         coms.gmedian(eps) // return the median of the comeds
     }
@@ -197,19 +193,16 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         // let mut covs:Vec<Vec<f64>> = Vec::new();
         let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array
         let mut wsum = 0_f64;
-        for h in 0..self.len() { // adding up covars for all the points
-            let w = f64::from(ws[h]);
-            wsum += w;
+        self.iter().zip(ws).for_each(|(selfh,&wsh)| { // adding up covars for all the points
+            let w = f64::from(wsh); wsum += w;
             let mut covsub = 0_usize; // subscript into the flattened array cov 
-            let vm = self[h].vsub(&m);  // subtract zero mean/median vector   
-            for i in 0..n { // cross multiply the components of one point
-                let thisc = vm[i]; // ith component of the zero mean vector               
-                for j in 0..i+1 {  // its weighted products up to and including the diagonal 
-                    cov[covsub] += w*thisc*vm[j];
-                    covsub += 1
-                }
-            } 
-        }
+            let vm = selfh.vsub(m);  // subtract zero mean/median vector  
+            vm.iter().enumerate().for_each(|(i,&thisc)|            
+                vm.iter().take(i+1).for_each(|&vmj| {  // its weighted products up to and including the diagonal 
+                    cov[covsub] += w*thisc*vmj;
+                    covsub += 1;
+                }));
+        });
         // now compute the means and return
         cov.mutsmultf64(1_f64/wsum); 
         cov
@@ -228,7 +221,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         for h in 0..self.len() { // saving comeds for all the points
             let w = f64::from(ws[h]);
             let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2);  
-            let vm = self[h].vsub(&m);  // subtract zero median vector   
+            let vm = self[h].vsub(m);  // subtract zero median vector   
             for i in 0..d { // cross multiply the components of one point              
                 for j in 0..i+1 {  // its weighted products up to and including the diagonal 
                     com.push(w*vm[i]*vm[j])  }

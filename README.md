@@ -143,6 +143,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.0.3** Better implementations of joint probability and joint entropy. Code style and testing improvements.
+
 * **Version 1.0.2** Updated the dependency `indxvec` to version 1. A few minor changes to this document.
 
 * **Version 1.0.1** Minor change: `sortedeccs` and `wsortedeccs` now take gm as an argument for more efficient repeated use. Vecvec test improved.
