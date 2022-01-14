@@ -1,10 +1,61 @@
 use std::iter::FromIterator;
 
 use crate::{Med, MStats, MinMax, MutVecg, MutVecf64, Stats, Vecg, Vecf64, VecVec};
-pub use indxvec::{merge::*,Indices};
+pub use indxvec::{here,merge::*,Indices};
 
 impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     f64: From<T> {
+
+    /// Transpose vec of vecs like a matrix
+    fn transpose(self) -> Vec<Vec<T>> {
+        let n = self.len();
+        let d = self[0].len();
+        let mut transp:Vec<Vec<T>> = Vec::with_capacity(d);
+        for i in 0..d { 
+            let mut column = Vec::with_capacity(n);
+            for v in self {
+                column.push(v[i]);
+            }
+            transp.push(column); // column becomes row
+        }
+        transp   
+    }
+
+    /// Joint probability density function of n matched slices of the same length
+    fn jointpdfn(self) -> Vec<f64> {     
+        let d = self[0].len(); // their common dimensionality (length)
+        for v in self.iter().skip(1) {
+            if v.len() != d { panic!("{} all vectors must be of equal length!",here!()) }; 
+        }
+        let mut res:Vec<f64> = Vec::with_capacity(d);
+        let mut tuples = self.transpose();
+        let df = d as f64; // for turning counts to probabilities
+        // lexical sort to group together occurrences of identical tuples
+        tuples.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap()); 
+        let mut count = 1_usize; // running count
+        let mut lastindex = 0; // initial index of the last unique tuple
+        tuples.iter().enumerate().skip(1).for_each(|(i,ti)|
+            if ti > &tuples[lastindex] { // new tuple ti (Vec<T>) encountered
+                res.push((count as f64)/df); // save frequency count as probability
+                lastindex = i; // current index becomes the new one
+                count = 1_usize; // reset counter
+            } else { count += 1; } );        
+        res.push((count as f64)/df);  // flush the rest!
+        res
+    } 
+
+    /// Joint entropy of vectors of the same length
+    fn jointentropyn(self) -> f64 {
+        let jpdf = self.jointpdfn();
+        jpdf.iter().map(|&x| -x*(x.ln()) ).sum() 
+    }
+
+    /// Dependence (component wise) of a set of vectors.
+    /// i.e. `dependencen` returns 0 iff they are statistically independent
+    fn dependencen(self) -> f64 { 
+        let individuales:f64 = self.iter().map(|v| v.entropy()).sum();
+        1.0 - self.jointentropyn()/individuales 
+    } 
 
     /// acentroid = simple multidimensional arithmetic mean
     /// # Example
@@ -60,16 +111,13 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn distsums(self) -> Vec<f64> {
         let n = self.len();
         let mut dists = vec![0_f64; n]; // distances accumulator for all points
-                                        // examine all unique pairings (lower triangular part of symmetric flat matrix)
-        for i in 1..n {
-            let thisp = &self[i];
-            for j in 0..i {
-                let thatp = &self[j];
+        // examine all unique pairings (lower triangular part of symmetric flat matrix)
+        self.iter().enumerate().for_each(|(i,thisp)| 
+            self.iter().take(i).enumerate().for_each(|(j,thatp)| {
                 let d = thisp.vdist(thatp); // calculate each distance relation just once
                 dists[i] += d;
-                dists[j] += d; // but add it to both points
-            }
-        }     
+                dists[j] += d; // but add it to both points' sums
+            }));
         dists
     } 
 
@@ -99,7 +147,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     }
 
     /// Finds approximate vectors from each member point towards the geometric median.
-    /// Twice as fast as doing them individually, using symmetry.
+    /// Twice as fast using symmetry, as doing them individually.
     fn eccentricities(self) -> Vec<Vec<f64>> {
         let n = self.len();
         // allocate vectors for the results
@@ -118,7 +166,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
                 recips[i] += rec;
                 // mind the vector's opposite orientations w.r.t. to the two points!
                 eccs[j].mutvsubf64(&self[j].smultf64(rec)); 
-                recips[j] += rec;
+                recips[j] += rec; // but scalar distances are the same
             }
         }
         for i in 0..n { 

@@ -80,13 +80,13 @@ impl Vecu8 for &[u8] {
 
     /// Joint probability density function (here just co-occurence counts) 
     /// of successive pairs of values from two vectors of bytes 
-    /// of the same lenghts n. Needs 4*(n^2) bytes of heap memory.
-    /// which will be sparse except for very long input vectors. 
+    /// of the same lenghts n. Needs 4*256^2=262144 bytes of heap memory, 
+    /// which will be sparse except for long input vectors. 
     fn jointpdfu8(self, v:&[u8]) -> Vec<Vec<u32>> {  
         let n = self.len();
         if v.len() != n { panic!("{} argument vectors must be of equal length!",here!()) }    
         let mut res:Vec<Vec<u32>> = vec![vec![0_u32;256];256]; 
-        for i in 0..n { res[self[i]as usize][v[i] as usize] += 1; } 
+        self.iter().zip(v).for_each(|(&si,&vi)| res[si as usize][vi as usize] += 1 ); 
         res
     }
 
@@ -94,21 +94,36 @@ impl Vecu8 for &[u8] {
     fn jointentropyu8(self, v:&[u8]) -> f64 {
         let n = self.len(); 
         let nf = n as f64;
-        let jpdf = self.jointpdfu8(v); 
         let mut entropy = 0_f64;
+        // for short vecs, it is quicker to iterate through args
+        if n < 65000 { 
+            let mut jpdf = self.jointpdfu8(v); 
+            self.iter().zip(v).for_each(|(&si,&vi)| {
+              let c = jpdf[si as usize][vi as usize];
+              if c > 0 {
+                let p = (c as f64)/nf;                   
+                entropy -= p*(p.ln()); 
+                // prevent this pair's count being counted again
+                jpdf[si as usize][vi as usize] = 0;  
+              }
+            });
+            return entropy; // return value 
+        } 
+        // for long vecs, iterate through the counts array
+        let jpdf = self.jointpdfu8(v); 
         for v in jpdf {
             for c in v {  
                 if c > 0_u32 {
                     let p = (c as f64)/nf; 
-                    entropy -= p*(p.ln()); }
+                    entropy -= p*(p.ln()); 
+                }
             }
         } 
         entropy              
     }
 
-    /// Dependence of two &[u8] variables, the range is [0,1],
-    /// i.e. it returns 0 iff they are statistically independent
-    /// and 1 when they are identical
+    /// Dependence in the range [0,1] of two &[u8] variables
+    /// e.g. 0 is returned iff they are statistically pairwise independent
     fn dependenceu8(self, v:&[u8]) -> f64 {     
         1.0 - self.jointentropyu8(v)/(self.entropyu8() + v.entropyu8())
     }

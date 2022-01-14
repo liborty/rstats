@@ -23,9 +23,11 @@ To run all the tests, use single thread in order to produce the results in the r
 
 ## Introduction
 
-`Rstats` is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Big Data Analysis. It begins with basic statistical measures and vector algebra, which provide self-contained tools for the multidimensional algorithms but can also be used in their own right.
+`Rstats` is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Big Data Analysis. It uses non analytical statistics: the 'random variables' are vectors (samples) of concrete data. When probabilities densities are used, they are always computed from the data, not by assuming some distributions. 
 
-Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here. Specifically, the new multidimensional (geometric) median algorithm. Also, the `comediance matrix`  as a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the usual centroid (mean vector).
+This crate begins with basic statistical measures and vector algebra, which provide self-contained tools for the multidimensional algorithms but can also be used in their own right.
+
+Our treatment of multidimensional sets of points (vectors) is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here. Specifically, the new simple multidimensional (geometric) median algorithm. Also, the `comediance matrix`  as a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the usual centroid (mean vector).
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
@@ -37,11 +39,13 @@ In contrast, analyses based on the true geometric median (gm)  are axis (rotatio
 
 ### Implementation
 
-The main constituent parts of Rstats are Rust traits, grouping together methods applicable to a single vector (of numbers) - `Stats`, two vectors - `Vecg`, n vectors - `VecVec` or n vectors and another generic argument - `VecVecg`. End type `f64` is most commonly used for the results, whereas inputs to the generic methods can be vectors (or slices) of any numeric end types.
+The main constituent parts of Rstats are its traits. The selection of traits (to import) is primarily determined by the types of objects to be handled. These are mostly vectors of arbitrary length (dimensionality). The main traits are implementing methods applicable to a single vector (of numbers) - `Stats`, methods (of vector algebra) for two vectors - `Vecg`, methods for n vectors - `VecVec`, and methods for n vectors with another generic argument - `VecVecg`.
+
+In other words, the traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'. However, the vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end types `f64` and `u8` and some that take mutable self. End type `f64` is most commonly used for the results. 
 
 ### Documentation
 
-To see more detailed comments, plus some examples, see the source.  
+For more detailed comments, plus some examples, see the source. You may have to unclick the 'implementations on foreign types' somewhere near the bottom of the page in the rust docs to get to it.
 
 ## Structs and auxiliary functions
 
@@ -49,7 +53,7 @@ To see more detailed comments, plus some examples, see the source.
 
 * `struct MStats` to hold mean and standard deviation
 
-* `struct MinMax` reexported from crate `indxvec` to hold min and max values of a vector and their indices. It is returned by function `indxvec::merge::minmax`.
+* `struct MinMax` re exported from crate `indxvec` to hold min and max values of a vector and their indices. It is returned by function `indxvec::merge::minmax`.
 
 * auxiliary functions: `i64tof64, tof64, here, wsum, wi, wv, printvv, genvec, genvecu8`.
 
@@ -147,6 +151,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 * `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 1.0.4** Added joint pdf, joint entropy and dependence for a set of n vectors.
 
 * **Version 1.0.3** Better implementations of joint probability and joint entropy. Code style and testing improvements.
 

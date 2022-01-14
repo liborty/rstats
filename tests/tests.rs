@@ -128,7 +128,9 @@ fn vecg() -> Result<()> {
    println!("Cos Similarity [0,1]:\t{}",wi(&v1.vsim(&v2)));
    println!("Cos Dissimilarity:\t{}",wi(&v1.vdisim(&v2))); 
    println!("[1,2,3].kron(&[4,5]):\t{}", wv(&[1,2,3].kron(&[4,5])));
-   println!("[1,2,3].outer(&[4,5,6,7]): "); printvv([1,2,3].outer(&[4,5,6,7]));
+   let outerp = [1,2,3].outer(&[4,5,6,7]);
+   println!("[1,2,3].outer(&[4,5,6,7]): "); printvv(outerp);
+   // println!("Transposed: "); printvv([1,2,3].outer(&[4,5,6,7]).transpose()); 
    Ok(())
 }
 
@@ -145,12 +147,13 @@ fn trend() -> Result<()> {
 
 #[test]
 fn vecvec() -> Result<()> { 
-   let d = 13_usize;
-   let n = 108_usize;
+   let d = 55_usize;
+   let n = 99_usize;
    println!("testing on a random set of {} points in {} dimensional space",wi(&n),wi(&d));
    let mut weights = Vec::new();
    for i in 1..n+1 { weights.push(i as f64) }; // create test weights data
    let pt = genvecu8(d,n,5,17); // random u8 test data
+   println!("\nStatistical component wise dependence: {}",wi(&pt.dependencen()) );  
    let (eccstd,eccmed,eccecc) = pt.eccinfo(EPS); 
    // let me = pt.emedoid(EPS);
    let medoid = &pt[eccecc.minindex];

@@ -153,14 +153,12 @@ impl<T,U> Vecg<T,U> for &[T]
         spairs.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap()); 
         let mut count = 1_usize; // running count
         let mut lastindex = 0;
-
-        for i in 1..n {
-            if spairs[i] > spairs[lastindex] { // new pair encountered
+        spairs.iter().enumerate().skip(1).for_each(|(i,si)| 
+            if si > &spairs[lastindex] { // new pair encountered
                 res.push((count as f64)/nf); // save previous probability
                 lastindex = i; // current index becomes the new one
                 count = 1_usize; // reset counter
-            } else { count += 1; };
-        }
+            } else { count += 1; }); 
         res.push((count as f64)/nf);  // flush the rest!
         res
     } 
@@ -172,8 +170,8 @@ impl<T,U> Vecg<T,U> for &[T]
     }
 
     /// Dependence of &[T] &[U] variables.
-    /// i.e. `dependence` returns 0 iff they are statistically independent
-    /// and 1 when they are identical
+    /// e.g. `dependence` returns 0 iff they are statistically 
+    /// component wise independent
     fn dependence(self, v:&[U]) -> f64 {   
         1.0 - self.jointentropy(v)/(self.entropy() + v.entropy()) 
     }         

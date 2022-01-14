@@ -402,7 +402,6 @@ impl<T> Stats for &[T]
         let mut res:Vec<f64> = Vec::new();  
         let mut count = 1_usize; // running count
         let mut lastval = self[0];
-
         self.iter().skip(1).for_each(|&s| (
             if s > lastval { // new value encountered
                 res.push((count as f64)/nf); // save previous probability
@@ -449,23 +448,25 @@ impl<T> Stats for &[T]
         let range = f64::from(mm.max)-f64::from(mm.min);
         self.iter().map(|&x|(f64::from(x)-f64::from(mm.min))/range).collect()        
     }
+
     /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
     /// as produced by covar, covone, wcovar
     fn symmatrix(self) -> Vec<Vec<f64>> {
-        // solve quadratic equation to find the dimension of the square matrix
-        let n = (((8*self.len()+1) as f64).sqrt() as usize - 1)/2;
-        let mut mat = vec![vec![0_f64;n];n]; // create the square matrix 
-        let mut selfindex = 0;
-        for row in 0..n {     
-            for column in 0..row { // excludes the diagonal 
-                let this = f64::from(self[selfindex]); 
-                mat[row][column] = this; // just copy the value into the lower triangle
-                mat[column][row] = this; // and into transposed upper position 
-                selfindex += 1 // move to the next input value
-            } // this row of lower triangle finished
-            mat[row][row] = f64::from(self[selfindex]);  // now the diagonal element, no transpose
-            selfindex += 1 // move to the next input value
+
+         fn trseqtosubs(s:usize) -> (usize,usize) { 
+            // solution of quadratic equation to find the dimension of the full square matrix
+            let row = ((((8*s+1) as f64).sqrt() - 1.)/2.) as usize; // cast truncates, like .floor()
+            let column = s - row*(row+1)/2; // subtracting previous triangular number
+            (row,column)
         }
+
+        let (n,_) = trseqtosubs(self.len());
+        let mut mat = vec![vec![0_f64;n];n]; // create the square matrix 
+        self.iter().enumerate().for_each(|(i,&s)| {
+            let (row,column) = trseqtosubs(i);
+            if row < column { mat[column][row] = f64::from(s) as f64; }; // symmetrical reflection
+            // also set values in lower triangular region, including the diagonal
+            mat[row][column] = f64::from(s); } ); 
         mat
     }    
  

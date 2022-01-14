@@ -243,7 +243,7 @@ pub trait Vecg<T,U> {
     fn jointpdf(self,v:&[U]) -> Vec<f64>;     
     /// Joint entropy of &[T],&[U] in nats (units of e)
     fn jointentropy(self, v:&[U]) -> f64;
-    /// Statistical dependence based on joint entropy
+    /// Statistical pairwise dependence in the range [0,1] based on joint entropy
     fn dependence(self, v:&[U]) -> f64; 
     /// Pearson's correlation.  
     fn correlation(self, v:&[U]) -> f64; 
@@ -321,9 +321,7 @@ pub trait Vecu8 {
     fn jointpdfu8(self, v:&[u8]) -> Vec<Vec<u32>>;
     /// Joint entropy of &[u8],&[u8] (in nats)
     fn jointentropyu8(self, v:&[u8]) -> f64;
-    /// Dependence of two &[u8] variables, the range is [0,1],
-    /// i.e. it returns 0 iff they are statistically independent
-    /// and 1 when they are identical
+    /// Dependence in the range [0,1] of two &[u8] variables 
     fn dependenceu8(self, v:&[u8]) -> f64;
 }
 
@@ -349,6 +347,14 @@ pub trait VecVecu8 {
 /// Methods applicable to a single argument: a vector of vectors of generic end type.
 /// Operations on a set of multidimensional vectors.
 pub trait VecVec<T> {
+    /// Transpose vec of vecs like a classical array
+    fn transpose(self) -> Vec<Vec<T>>;
+    /// Joint probability density function of n matched slices of the same length
+    fn jointpdfn(self) -> Vec<f64>;
+    /// Joint entropy between a set of vectors of the same length
+    fn jointentropyn(self) -> f64;
+    /// Dependence of a set of vectors 
+    fn dependencen(self) -> f64;      
     /// Arithmetic Centre = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
     /// Geometric Centroid
