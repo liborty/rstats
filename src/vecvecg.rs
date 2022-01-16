@@ -1,4 +1,4 @@
-use crate::{Vecg,Vecf64,MutVecf64,VecVecg,VecVec};
+use crate::{here,Med,Stats,Vecg,Vecf64,MutVecf64,VecVecg,VecVec};
 pub use indxvec::{merge::*,Indices};
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display, 
@@ -33,6 +33,25 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// both of which depend on the choice of axis.
      fn translate(self, m: &[U]) -> Vec<Vec<f64>> {  
         self.iter().map(|point| point.vsub(m)).collect()   
+    }
+
+    /// Dependencies of m on each vector in self
+    /// m is typically a vector of outcomes.
+    fn dependencies(self, m: &[U]) -> Vec<f64> {  
+        let entropym = m.entropy();
+        self.iter().map(|s| entropym + s.entropy() - s.jointentropy(m)).collect::<Vec<f64>>()
+    }
+
+    /// (Median) correlations of m with each vector in self
+    fn correlations(self, m: &[U]) -> Vec<f64> {
+        let Med{median:mm,..} = m.median() // ignore quartile fields
+            .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
+        let unitzerom =  m.sadd(-mm).vunit();
+        self.iter().map(|s|{ 
+            let Med{median:ms,..} = s.median()            
+                .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
+            s.sadd(-ms).vunit().dotp(&unitzerom)
+        }).collect::<Vec<f64>>()
     }
 
     /// Individual distances from any point v, typically not a member, to all the members of self.    

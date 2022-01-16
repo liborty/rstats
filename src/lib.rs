@@ -172,6 +172,9 @@ pub trait Stats {
     /// Median and quartiles
     fn median(self) -> Result<Med>
         where Self: std::marker::Sized { bail!("median not implemented for this type")}
+    /// Zero median data, obtained by subtracting the median
+    fn zeromedian(self) -> Result<Vec<f64>>
+        where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
     /// Probability density function of a sorted slice
     fn pdf(self) -> Vec<f64>;
     /// Information (entropy) in nats
@@ -246,7 +249,9 @@ pub trait Vecg<T,U> {
     /// Statistical pairwise dependence in the range [0,1] based on joint entropy
     fn dependence(self, v:&[U]) -> f64; 
     /// Pearson's correlation.  
-    fn correlation(self, v:&[U]) -> f64; 
+    fn correlation(self, v:&[U]) -> f64;
+    /// Median based correlation
+    fn mediancorr(self, v: &[U]) -> f64;
     /// Kendall Tau-B correlation. 
     fn kendalcorr(self, v:&[U]) -> f64;
     /// Spearman rho correlation.
@@ -408,7 +413,11 @@ pub trait VecVecg<T,U> {
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[U]) -> Vec<Vec<f64>>;
-    /// Sum of distances from arbitrary point (v) to all the points in self   
+    /// Dependencies of vector m on each vector in self
+    fn dependencies(self, m: &[U]) -> Vec<f64>;
+    /// (Median) correlations of m with each vector in self
+    fn correlations(self, m: &[U]) -> Vec<f64>;
+    /// Sum of distances from arbitrary point (v) to all the points in self      
     fn distsum(self, v: &[U]) -> f64;
     /// Individual distances from any point v (typically not in self) to all the points in self.    
     fn dists(self, v: &[U]) -> Vec<f64>;

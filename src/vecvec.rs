@@ -54,7 +54,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// i.e. `dependencen` returns 0 iff they are statistically independent
     fn dependencen(self) -> f64 { 
         let individuales:f64 = self.iter().map(|v| v.entropy()).sum();
-        1.0 - self.jointentropyn()/individuales 
+        individuales - self.jointentropyn() 
     } 
 
     /// acentroid = simple multidimensional arithmetic mean

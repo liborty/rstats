@@ -147,7 +147,7 @@ impl<T,U> Vecg<T,U> for &[T]
         let nf = n as f64;              
         let mut res:Vec<f64> = Vec::new();
         // collect successive pairs, upgrading all end types to common f64
-        let mut spairs:Vec<Vec<f64>> = self.iter().zip(v.iter()).map(|(&si,&vi)|
+        let mut spairs:Vec<Vec<f64>> = self.iter().zip(v).map(|(&si,&vi)|
             vec![f64::from(si),f64::from(vi)]).collect(); 
         // sort them to group all same pairs together for counting    
         spairs.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap()); 
@@ -173,8 +173,25 @@ impl<T,U> Vecg<T,U> for &[T]
     /// e.g. `dependence` returns 0 iff they are statistically 
     /// component wise independent
     fn dependence(self, v:&[U]) -> f64 {   
-        1.0 - self.jointentropy(v)/(self.entropy() + v.entropy()) 
-    }         
+        self.entropy() + v.entropy() - self.jointentropy(v)
+    }
+    /// We define median based correlation as cosine of an angle between two
+    /// zero median vectors (analogously to Pearson's zero mean vectors) 
+    /// # Example
+    /// ```
+    /// use rstats::Vecg;
+    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
+    /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
+    /// assert_eq!(v1.correlation(&v2),-0.1076923076923077);
+    /// ```
+    fn mediancorr(self, v: &[U]) -> f64 {
+        // let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
+        let zeroself = self.zeromedian()
+            .unwrap_or_else(|_| panic!("{} failed to find the median",here!()));
+        let zerov = v.zeromedian()
+            .unwrap_or_else(|_| panic!("{} failed to find the median",here!()));
+        zeroself.cosine(&zerov)
+    }        
 
     /// Pearson's (most common) correlation. 
     /// # Example

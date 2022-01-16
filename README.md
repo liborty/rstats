@@ -23,7 +23,7 @@ To run all the tests, use single thread in order to produce the results in the r
 
 ## Introduction
 
-`Rstats` is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Big Data Analysis. It uses non analytical statistics: the 'random variables' are vectors (samples) of concrete data. When probabilities densities are used, they are always computed from the data, not by assuming some distributions. 
+`Rstats` is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Big Data Analysis. It uses `non analytical statistics`, where the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the data, not from some assumed distributions.
 
 This crate begins with basic statistical measures and vector algebra, which provide self-contained tools for the multidimensional algorithms but can also be used in their own right.
 
@@ -35,13 +35,13 @@ Most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Qu
 
 *Specifically, all 1-d measures are sensitive to the choice of axis and thus are affected by rotation.*
 
-In contrast, analyses based on the true geometric median (gm)  are axis (rotation) independent. They are computed here by the novel methods `smedian` and `gmedian` and their weighted versions `wsmedian` and `wgmedian`.
+In contrast, analyses based on the true geometric median (gm) are axis (rotation) independent. They are computed here by the novel methods `smedian` and `gmedian` and their weighted versions `wsmedian` and `wgmedian`.
 
 ### Implementation
 
 The main constituent parts of Rstats are its traits. The selection of traits (to import) is primarily determined by the types of objects to be handled. These are mostly vectors of arbitrary length (dimensionality). The main traits are implementing methods applicable to a single vector (of numbers) - `Stats`, methods (of vector algebra) for two vectors - `Vecg`, methods for n vectors - `VecVec`, and methods for n vectors with another generic argument - `VecVecg`.
 
-In other words, the traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'. However, the vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end types `f64` and `u8` and some that take mutable self. End type `f64` is most commonly used for the results. 
+In other words, the traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'. However, the vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end types `f64` and `u8` and some that take mutable self. End type `f64` is most commonly used for the results.
 
 ### Documentation
 
@@ -90,7 +90,8 @@ Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimen
 * Vector additions, subtractions and products (scalar, kronecker, outer),
 * Other relationships and measures of difference,
 * Pearson's, Spearman's and Kendall's correlations,
-* Joint pdf, joint entropy, statistical dependence
+* `Median correlation`, which we define analogously to Pearson's, as cosine of an angle between two zero median vectors (instead of zero mean vectors).
+* Joint pdf, joint entropy, statistical dependence (mutual information).
 
 This trait is unchecked (for speed), so some caution with data is advisable.
 
@@ -103,7 +104,7 @@ A handful of methods from `Vecg`, specialised to an argument of known end type `
 Mutable vector addition, subtraction and multiplication.  
 Mutate `self` in-place.
 This is for efficiency and convenience. Specifically, in
-vector iterative methods. 
+vector iterative methods.
 
 `MutVecf64` is to be used in preference, when the end type of `self` is known to be `f64`. Beware that these methods work by side-effect and do not return anything, so they can not be functionally chained.
 
@@ -151,6 +152,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 * `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
 ## Appendix II: Recent Releases
+
+* **Version 1.0.5** Dependence is now the same as mutual information. Added 1D `median correlation`, which we define analogously to Pearson's, as cosine of the angle between two zero median vectors (instead of zero mean vectors). This is more robust. Added `dependencies` and `correlations` which efficiently map these relationships of a single given vector (typically of outcomes), to a set of vectors (typically features vectors).
 
 * **Version 1.0.4** Added joint pdf, joint entropy and dependence for a set of n vectors.
 

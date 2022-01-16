@@ -21,10 +21,11 @@ fn u8() -> Result<()> {
    println!("Entropy 2 u8:\t{}",wi(&v2.entropyu8())); // u8
    println!("Euclid's dist:\t{}",wi(&v2.vdistu8(&v1)));
    println!("Cityblock dist:\t{}",wi(&v2.cityblockd(&v1)));
-   println!("Joint Entropy gen: {}",wi(&v1.jointentropy(&v2)));  
+   println!("Joint Entropy gen: {}",wi(&v1.jointentropy(&v2)));   
    println!("Joint Entropy u8:  {}",wi(&v1.jointentropyu8(&v2)));
-   println!("Dep generic:\t{}",wi(&v1.dependence(&v2))); // generic
+   println!("Generic dep.:\t{}",wi(&v1.dependence(&v2))); // generic
    println!("Dependence u8:\t{}",wi(&v1.dependenceu8(&v2))); // u8
+   println!("Cos:\t\t{}",wi(&v1.cosineu8(&v2)));
    println!("Pearson Correlation:  {}",wi(&v1.correlation(&v2)));  
    println!("Spearman Correlation: {}",wi(&v1.spearmancorr(&v2)));
    let d = 5_usize;
@@ -105,12 +106,13 @@ fn genericstats() -> Result<()> {
 }
 #[test]
 fn vecg() -> Result<()> { 
-   let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.];
+   let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,10.,10.,13.,14.,15.];
    println!("v1: {}",wv(&v1));
-   let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,8.,15.];
+   let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,1.,15.];
    println!("v2: {}",wv(&v2)); 
    println!("Lexical order v1<v2:\t{}", wi(&(v1<v2)));
    println!("Pearson's Correlation:\t{}",wi(&v1.correlation(&v2))); 
+   println!("Median Correlation:\t{}",wi(&v1.mediancorr(&v2))); 
    println!("Kendall's Correlation:\t{}",wi(&v1.kendalcorr(&v2)));  
    println!("Spearman's Correlation:\t{}",wi(&v1.spearmancorr(&v2)));  
    println!("Euclidian distance:\t{}",wi(&v1.vdistf64(&v2)));
@@ -120,6 +122,8 @@ fn vecg() -> Result<()> {
    println!("Scalar product:\t\t{}",wi(&v1.dotp(&v2)));
    println!("Parallelogram area:\t{}",wi(&v1.varea(&v2)));
    println!("Arc area:\t\t{}",wi(&v1.varc(&v2))); 
+   println!("Entropy v1:\t\t{}",wi(&v1.entropy()));
+   println!("Entropy v2:\t\t{}",wi(&v2.entropy()));
    println!("Joint Entropy:\t\t{}",wi(&v1.jointentropy(&v2)));
    println!("Dependence:\t\t{}",wi(&v1.dependence(&v2)));
    println!("Cosine:\t\t\t{}",wi(&v1.cosine(&v2))); 
@@ -148,12 +152,16 @@ fn trend() -> Result<()> {
 #[test]
 fn vecvec() -> Result<()> { 
    let d = 55_usize;
-   let n = 99_usize;
+   let n = 13_usize;
    println!("testing on a random set of {} points in {} dimensional space",wi(&n),wi(&d));
    let mut weights = Vec::new();
    for i in 1..n+1 { weights.push(i as f64) }; // create test weights data
    let pt = genvecu8(d,n,5,17); // random u8 test data
-   println!("\nStatistical component wise dependence: {}",wi(&pt.dependencen()) );  
+   println!("Joint entropy: {}",wi(&pt.jointentropyn()) );  
+   println!("Statistical component wise dependence: {}",wi(&pt.dependencen()) ); 
+   let outcomes = &genvecu8(d,1,7,19)[0];  
+   println!("Dependencies of outcomes: {}",wv(&pt.dependencies(outcomes))); 
+   println!("Correlations with outcomes: {}",wv(&pt.correlations(outcomes)));
    let (eccstd,eccmed,eccecc) = pt.eccinfo(EPS); 
    // let me = pt.emedoid(EPS);
    let medoid = &pt[eccecc.minindex];

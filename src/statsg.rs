@@ -1,4 +1,4 @@
-use crate::{ here,wsum,wv,MStats,Med,Stats };
+use crate::{ here,wsum,wv,MStats,Med,Stats};
 use anyhow::{ensure, Result};
 // use std::ops::Sub;
 pub use indxvec::merge::{sortm,minmax};          
@@ -177,7 +177,7 @@ impl<T> Stats for &[T]
             .iter()
             .map(|&x| {
                 let fx = f64::from(x);
-                if !fx.is_normal() { panic!("{} does not accept zero valued data!",here!()) };     
+                assert!(fx.is_normal(),"{} does not accept zero valued data!",here!());     
                 let rx = 1_f64/fx;  // work with reciprocals
                 sx2 += rx * rx;
                 rx   
@@ -206,7 +206,6 @@ impl<T> Stats for &[T]
             ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
             w += 1_f64;
             sum += w / fx;
-
         }
         Ok(wsum(n) / sum)
     }
@@ -393,7 +392,15 @@ impl<T> Stats for &[T]
         _ => { }  
         }
         Ok(result)       
-    } 
+    }
+
+    /// Zero median data produced by subtracting the median.
+    /// Analogous to zero mean data when subtracting the mean.
+    fn zeromedian(self) -> Result<Vec<f64>> {
+        let Med{median,..} = self.median() // ignore quartile fields
+            .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
+        Ok(self.iter().map(|&s| f64::from(s)-median).collect())
+    }
 
     /// Probability density function of a sorted slice with repeats. 
     /// Repeats are counted and removed
