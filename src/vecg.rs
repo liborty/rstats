@@ -140,6 +140,23 @@ impl<T,U> Vecg<T,U> for &[T]
         out
     }
 
+    /// Cholesky decomposition of positive definite matrix into LLt
+    fn cholesky(self) -> Vec<f64> {
+    let n = self.len();
+    let mut res = vec![0.0; self.len()];
+    for i in 0..n {
+        for j in 0..(i+1){
+            let mut s = 0.0;
+            for k in 0..j {
+                s += res[i * n + k] * res[j * n + k];
+            }
+            res[i * n + j] = if i == j { (f64::from(self[i * n + i]) - s).sqrt() } 
+            else { 1.0 / res[j * n + j] * (f64::from(self[i * n + j]) - s) };
+        }
+    }
+    res
+}
+
     /// Joint probability density function of two pairwise matched slices 
     fn jointpdf(self,v:&[U]) -> Vec<f64> {     
         let n = self.len();

@@ -36,7 +36,7 @@ fn u8() -> Result<()> {
    let com = pt.covar(&pt.gmedian(EPS));
    println!("Covariances:\n{}",wv(&cov));
    println!("Comediances:\n{}",wv(&com));
-   println!("Their Cityblock Distance: {}\n",wi(&cov.cityblockd(&com)));
+   println!("Their Distance: {}\n",wi(&cov.vdist(&com)));
    Ok(())
 }
 #[test]
@@ -52,7 +52,8 @@ fn fstats() -> Result<()> {
     println!("Geometric  {}",wi(&v1.gmeanstd().unwrap()));
     println!("Harmonic   {}",wi(&v1.hmeanstd().unwrap()));
     println!("Autocorrelation:{}",wi(&v1.autocorr()));
-    println!("{}\n",v1.median().unwrap());
+    println!("{}",v1.median().unwrap());
+    println!("Mad:\t\t {}\n",wi(&v1.mad().unwrap()));
     Ok(())
  }
 #[test]

@@ -187,7 +187,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// into a single vector in this double loop order: left to right, top to bottom. 
     /// Instead of averaging these vectors over n points, their median is returned.
     /// Warning: may run out of memory for large number of points and high dimensionality.
-    fn comed(self, m:&[U], eps:f64) -> Vec<f64> { // m should be the median here
+    fn comed(self, m:&[U]) -> Vec<f64> { // m should be the median here
         let d = self[0].len(); // dimension of the vector(s)
         let mut coms:Vec<Vec<f64>> = Vec::with_capacity(self.len()); // vec of flat lower triangular results arrays  
         for thisp in self { // saving comeds for all the points 
@@ -198,7 +198,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
                 vm.iter().take(i+1).for_each(|vmj| com.push(thisc*vmj)));
             coms.push(com); 
         } 
-        coms.gmedian(eps) // return the median of the comeds
+        coms.transpose().iter().map(|col| { 
+            let Med{median,..} = col.median().unwrap(); median }
+            ).collect() 
     }
 
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors in self.
@@ -234,10 +236,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// into a single vector in this double loop order: left to right, top to bottom.
     /// Instead of averaging these vectors over n points, their median is returned.
     /// Warning: may run out of memory for large number of points and high dimensionality. 
-    fn wcomed(self, ws:&[U], m:&[f64], eps:f64) -> Vec<f64> {
+    fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64> {
         let d = self[0].len(); // dimension of the vector(s)
         let mut coms:Vec<Vec<f64>> = Vec::with_capacity(self.len()); 
-        self.iter().zip(ws).for_each(|(selfh,&wsh)| { // adding up covars for all the points
+        self.iter().zip(ws).for_each(|(selfh,&wsh)| { // storing comeds for all the points
             let w = f64::from(wsh);     
             let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2);  
             let vm = selfh.vsub(m);  // subtract zero median vector 
@@ -249,6 +251,8 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             }
             coms.push(com) 
         });
-        coms.wgmedian(ws, eps) // return the median of the comeds  
+        coms.transpose().iter().map(|col| { 
+            let Med{median,..} = col.median().unwrap(); median }
+            ).collect()  
     }   
 }

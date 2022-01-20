@@ -394,6 +394,16 @@ impl<T> Stats for &[T]
         Ok(result)       
     }
 
+    /// MAD data spread estimator - median of absolute differences (from median)
+    fn mad(self) -> Result<f64> {
+        let Med{median,..} = self.median() // ignore quartile fields
+            .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
+        let diffs:Vec<f64> = self.iter().map(|&s| (f64::from(s)-median).abs()).collect();
+        let Med{median:res,..} = diffs.median()
+            .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
+        Ok(res)
+    }
+
     /// Zero median data produced by subtracting the median.
     /// Analogous to zero mean data when subtracting the mean.
     fn zeromedian(self) -> Result<Vec<f64>> {

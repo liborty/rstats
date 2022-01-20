@@ -172,6 +172,9 @@ pub trait Stats {
     /// Median and quartiles
     fn median(self) -> Result<Med>
         where Self: std::marker::Sized { bail!("median not implemented for this type")}
+    /// MAD data spread estimator - median of absolute differences (from median)
+    fn mad(self) -> Result<f64> 
+        where Self: std::marker::Sized { bail!("median not implemented for this type")}    
     /// Zero median data, obtained by subtracting the median
     fn zeromedian(self) -> Result<Vec<f64>>
         where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
@@ -248,6 +251,8 @@ pub trait Vecg<T,U> {
     fn jointentropy(self, v:&[U]) -> f64;
     /// Statistical pairwise dependence in the range [0,1] based on joint entropy
     fn dependence(self, v:&[U]) -> f64; 
+    /// Cholesky decomposition of positive definite matrix into LLt
+    fn cholesky(self) -> Vec<f64>;
     /// Pearson's correlation.  
     fn correlation(self, v:&[U]) -> f64;
     /// Median based correlation
@@ -438,9 +443,9 @@ pub trait VecVecg<T,U> {
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med:&[U]) -> Vec<f64>; 
     /// Flattened lower triangular part of a comediance matrix of a Vec of f64 vectors.
-    fn comed(self, m:&[U], eps:f64) -> Vec<f64>;
+    fn comed(self, m:&[U]) -> Vec<f64>;
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
     fn wcovar(self, ws:&[U], m:&[f64]) -> Vec<f64>;
     /// Flattened lower triangular part of a comediance matrix for weighted f64 vectors.
-    fn wcomed(self, ws:&[U], m:&[f64], eps:f64) -> Vec<f64>;
+    fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64>;
 }
