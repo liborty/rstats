@@ -268,6 +268,6 @@ fn geometric_medians() -> Result<()> {
       sumg += pts.eccnonmember(&gm).vmag(); 
    } 
    // sumg /= (ITERATIONS*n*d) as f64;  
-   println!("Acentroid errs: {}\tns: {:>12}",wi(&(sumg/EPS)),sumtime); 
+   println!("Acentroid er/eps: {}\tns: {:>12}",wi(&(sumg/EPS)),sumtime); 
     Ok(())  
  }

@@ -211,9 +211,17 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// of scalar eccentricities of points in self.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
     fn eccinfo(self, eps: f64) -> (MStats, Med, MinMax<f64>) where Vec<f64>:FromIterator<f64> {
-        let gm:Vec<f64> = self.gmedian(eps);
+        let gm = self.gmedian(eps);
         let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
         (eccs.ameanstd().unwrap(),eccs.median().unwrap(),minmax(&eccs))
+    }
+
+    /// MADn multidimensional median of distances from gm: data spread estimator that is more stable than variances
+    fn madn(self, eps: f64) -> f64 {
+        let gm = self.smedian(eps); 
+        let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
+        let Med{median,..} = eccs.median().unwrap_or_else(|_| panic!("{},median failed\n",here!()));
+        median
     }
      
     /// GM and sorted eccentricities magnitudes.

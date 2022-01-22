@@ -394,7 +394,7 @@ impl<T> Stats for &[T]
         Ok(result)       
     }
 
-    /// MAD data spread estimator - median of absolute differences (from median)
+    /// MAD median absolute deviation: data spread estimator that is more stable than variance
     fn mad(self) -> Result<f64> {
         let Med{median,..} = self.median() // ignore quartile fields
             .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));

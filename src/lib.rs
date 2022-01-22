@@ -172,7 +172,7 @@ pub trait Stats {
     /// Median and quartiles
     fn median(self) -> Result<Med>
         where Self: std::marker::Sized { bail!("median not implemented for this type")}
-    /// MAD data spread estimator - median of absolute differences (from median)
+    /// MAD median absolute deviation: data spread estimator that is more stable than variance
     fn mad(self) -> Result<f64> 
         where Self: std::marker::Sized { bail!("median not implemented for this type")}    
     /// Zero median data, obtained by subtracting the median
@@ -395,6 +395,8 @@ pub trait VecVec<T> {
     fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>; 
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
     fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
+    /// MADn multidimensional median absolute deviation: data spread estimator that is more stable than variance
+    fn madn(self, eps: f64) -> f64;
     /// Medoid and Outlier as defined by eccentricities.
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64>;
     /// Returns sorted eccentricities magnitudes
