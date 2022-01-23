@@ -50,12 +50,34 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         jpdf.iter().map(|&x| -x*(x.ln()) ).sum() 
     }
 
-    /// Dependence (component wise) of a set of vectors.
-    /// i.e. `dependencen` returns 0 iff they are statistically independent
-    fn dependencen(self) -> f64 { 
+    /// Independence (component wise) of a set of vectors.
+    /// i.e. `independencen` returns 2 iff they are statistically independent
+    /// smaller value when they are dependent
+    fn independencen(self) -> f64 { 
         let individuales:f64 = self.iter().map(|v| v.entropy()).sum();
-        individuales - self.jointentropyn() 
+        2.0*self.jointentropyn()/individuales 
     } 
+
+    /// Flattened lower triangular part of a symmetric matrix for column vectors in self.
+    /// The upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
+    /// Applies closure f which computes a scalar relationship between two vectors, 
+    /// that is different features stored in columns of self.
+    /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
+    /// such as dependencies or correlations.
+    /// Example call: pts.codep(|v1,v2| v1.mediancorr(v2)) computes correlations between
+    /// all column vectors (features) in pts.
+ 
+    fn crossfeatures<F>(self,f:F) -> Vec<f64> where F: Fn(&[T],&[T]) -> f64 {
+        let n = self.len(); // number of the vector(s)
+        let mut codp:Vec<f64> = Vec::with_capacity((n+1)*n/2); // results 
+        let st = self.transpose();
+        st.iter().enumerate().for_each(|(i,v)| 
+            // its dependencies up to and including the diagonal
+            st.iter().take(i+1).for_each(|vj| { 
+                codp.push(f(v,vj)); 
+                }));  
+        codp
+    }
 
     /// acentroid = simple multidimensional arithmetic mean
     /// # Example

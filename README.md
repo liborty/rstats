@@ -153,9 +153,13 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.5** Dependence is now the same as mutual information. Added 1D `median correlation`, which we define analogously to Pearson's, as cosine of the angle between two zero median vectors (instead of zero mean vectors). This is more robust. Added `dependencies` and `correlations` which efficiently map these relationships of a single given vector (typically of outcomes), to a set of vectors (typically features vectors).
+* **Version 1.0.6** Independence is now normalised to the range [1,2], e.g. the independence of two identical vectors without repetitions is 1. Same  for any real values that are all unique. Then it is better to fall back to correlations.
 
-* **Version 1.0.4** Added joint pdf, joint entropy and dependence for a set of n vectors.
+    Added `crossfeatures` - computes relationships between all pairs of column vectors of self. Returns flattened lower triangular (symmetric) matrix.
+
+* **Version 1.0.5** Added 1D `median correlation`, which we define analogously to Pearson's, as cosine of the angle between two zero median vectors (instead of zero mean vectors). This is a more robust measure. Added `independencies` and `correlations` which efficiently map these relationships of a single given vector (typically of outcomes), to a set of vectors (typically feature vectors).
+
+* **Version 1.0.4** Added joint pdf, joint entropy and independence for a set of n vectors.
 
 * **Version 1.0.3** Better implementations of joint probability and joint entropy. Code style and testing improvements.
 

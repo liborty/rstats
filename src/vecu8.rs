@@ -122,9 +122,10 @@ impl Vecu8 for &[u8] {
         entropy              
     }
 
-    /// Dependence in the range [0,1] of two &[u8] variables
-    /// e.g. 0 is returned iff they are statistically pairwise independent
-    fn dependenceu8(self, v:&[u8]) -> f64 {     
-        self.entropyu8() + v.entropyu8() - self.jointentropyu8(v)
+    /// Independence in the range [1,2] of two &[u8] variables
+    /// e.g. 2 is returned iff they are statistically pairwise independent
+    /// returns 1 if they are identical or all values are unique
+    fn independenceu8(self, v:&[u8]) -> f64 {     
+        2.0*self.jointentropyu8(v)/(self.entropyu8() + v.entropyu8())
     }
 }

@@ -23,9 +23,10 @@ fn u8() -> Result<()> {
    println!("Cityblock dist:\t{}",wi(&v2.cityblockd(&v1)));
    println!("Joint Entropy gen: {}",wi(&v1.jointentropy(&v2)));   
    println!("Joint Entropy u8:  {}",wi(&v1.jointentropyu8(&v2)));
-   println!("Generic dep.:\t{}",wi(&v1.dependence(&v2))); // generic
-   println!("Dependence u8:\t{}",wi(&v1.dependenceu8(&v2))); // u8
+   println!("Generic indep.:\t{}",wi(&v1.independence(&v2))); // generic
+   println!("Independence u8:\t{}",wi(&v1.independenceu8(&v2))); // u8
    println!("Cos:\t\t{}",wi(&v1.cosineu8(&v2)));
+   println!("Median Correlation:  {}",wi(&v1.mediancorr(&v2)));  
    println!("Pearson Correlation:  {}",wi(&v1.correlation(&v2)));  
    println!("Spearman Correlation: {}",wi(&v1.spearmancorr(&v2)));
    let d = 5_usize;
@@ -33,16 +34,20 @@ fn u8() -> Result<()> {
    println!("Testing on a random set of {} points in {} d space:",wi(&n),wi(&d));
    let pt = genvecu8(d,n,5,7); // random test data 
    let cov = pt.covar(&pt.acentroid());
-   let com = pt.covar(&pt.gmedian(EPS));
    println!("Covariances:\n{}",wv(&cov));
+   let com = pt.covar(&pt.gmedian(EPS));
    println!("Comediances:\n{}",wv(&com));
-   println!("Their Distance: {}\n",wi(&cov.vdist(&com)));
+   println!("Their Distance: {}",wi(&cov.vdist(&com)));
+   println!("Independencies:\n{}",wv(&pt.crossfeatures(|v1,v2| v1.independence(v2))));
+   println!("Corelations:\n{}",wv(&pt.crossfeatures(|v1,v2| v1.mediancorr(v2))));
    Ok(())
 }
 #[test]
 fn fstats() -> Result<()> { 
     let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.]; 
     println!("\n{}",wv(&v1)); 
+    let v2 = revs(&v1);
+    println!("{}",wv(&v2)); 
     // println!("Linear transform:\n{}",wv(&v1.lintrans()));
     println!("Arithmetic mean:{}",wi(&v1.amean().unwrap()));
     println!("Geometric mean:\t{}",wi(&v1.gmean().unwrap()));
@@ -54,6 +59,22 @@ fn fstats() -> Result<()> {
     println!("Autocorrelation:{}",wi(&v1.autocorr()));
     println!("{}",v1.median().unwrap());
     println!("Mad:\t\t {}\n",wi(&v1.mad().unwrap()));
+   println!("Entropy 1:\t{}",wi(&v1.entropy()));
+   println!("Entropy 2:\t{}",wi(&v2.entropy())); // generic
+   println!("Euclid's dist:\t{}",wi(&v2.vdist(&v1)));
+   println!("Cityblock dist:\t{}",wi(&v2.cityblockd(&v1)));
+   println!("Joint Entropy: {}",wi(&v1.jointentropy(&v2)));   
+   println!("Independence:\t{}",wi(&v1.independence(&v2))); // generic
+   let d = 5_usize;
+   let n = 7_usize;
+   println!("Testing on a random set of {} points in {} d space:",wi(&n),wi(&d));
+   let pt = genvec(d,n,5,7); // random test data 
+   let cov = pt.covar(&pt.acentroid());
+   println!("Covariances:\n{}",wv(&cov));
+   let com = pt.comed(&pt.smedian(EPS));
+   println!("Comediances:\n{}",wv(&com));
+   println!("Their Distance: {}",wi(&cov.vdist(&com)));
+   println!("Independencies:\n{}",wv(&pt.crossfeatures(|v1,v2| v1.independence(v2))));
     Ok(())
  }
 #[test]
@@ -126,7 +147,7 @@ fn vecg() -> Result<()> {
    println!("Entropy v1:\t\t{}",wi(&v1.entropy()));
    println!("Entropy v2:\t\t{}",wi(&v2.entropy()));
    println!("Joint Entropy:\t\t{}",wi(&v1.jointentropy(&v2)));
-   println!("Dependence:\t\t{}",wi(&v1.dependence(&v2)));
+   println!("Independence:\t\t{}",wi(&v1.independence(&v2)));
    println!("Cosine:\t\t\t{}",wi(&v1.cosine(&v2))); 
    println!("Cosine of ranks:\t{}",
       wi(&rank(&v1,true).indx_to_f64().cosine(&rank(&v2,true).indx_to_f64())));        
@@ -159,9 +180,9 @@ fn vecvec() -> Result<()> {
    for i in 1..n+1 { weights.push(i as f64) }; // create test weights data
    let pt = genvecu8(d,n,5,17); // random u8 test data
    println!("Joint entropy: {}",wi(&pt.jointentropyn()) );  
-   println!("Statistical component wise dependence: {}",wi(&pt.dependencen()) ); 
+   println!("Statistical component wise independence: {}",wi(&pt.independencen()) ); 
    let outcomes = &genvecu8(d,1,7,19)[0];  
-   println!("Dependencies of outcomes: {}",wv(&pt.dependencies(outcomes))); 
+   println!("Independencies of outcomes: {}",wv(&pt.independencies(outcomes))); 
    println!("Correlations with outcomes: {}",wv(&pt.correlations(outcomes)));
    let (eccstd,eccmed,eccecc) = pt.eccinfo(EPS); 
    // let me = pt.emedoid(EPS);

@@ -140,7 +140,7 @@ impl<T,U> Vecg<T,U> for &[T]
         out
     }
 
-    /// Cholesky decomposition of positive definite matrix into LLt
+    /// Cholesky decomposition of positive definite matrix into LL^T
     fn cholesky(self) -> Vec<f64> {
     let n = self.len();
     let mut res = vec![0.0; self.len()];
@@ -186,11 +186,10 @@ impl<T,U> Vecg<T,U> for &[T]
         jpdf.iter().map(|&x| -x*(x.ln()) ).sum() 
     }
 
-    /// Dependence of &[T] &[U] variables.
-    /// e.g. `dependence` returns 0 iff they are statistically 
-    /// component wise independent
-    fn dependence(self, v:&[U]) -> f64 {   
-        self.entropy() + v.entropy() - self.jointentropy(v)
+    /// Independence of &[T] &[U] variables in the range [1,2]
+    /// returns 2 iff they are statistically component wise independent
+    fn independence(self, v:&[U]) -> f64 {   
+        2.0 * self.jointentropy(v) / (self.entropy() + v.entropy()) 
     }
     /// We define median based correlation as cosine of an angle between two
     /// zero median vectors (analogously to Pearson's zero mean vectors) 
