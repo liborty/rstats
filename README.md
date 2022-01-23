@@ -118,7 +118,7 @@ Some vector algebra as above that can be more efficient when the end type happen
 
 ## Trait VecVec
 
-Relationships between n vectors (in d dimensions). This is the main original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`, optionally boosted by a secant method `gsmedian`. These algorithms both solve Weiszfeld's convergence and stability problems in the neighbourhood of existing set points.
+Relationships between n vectors (in d dimensions). This is the main original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`, optionally boosted by a secant method `smedian`. These algorithms both solve Weiszfeld's convergence and stability problems in the neighbourhood of existing set points.
 
 * sums of distances, eccentricity (radius) measure,
 * centroid, medoid, outliers, true geometric median,

@@ -252,7 +252,7 @@ pub trait Vecg<T,U> {
     /// Statistical pairwise independence in the range [1,2] based on joint entropy
     fn independence(self, v:&[U]) -> f64; 
     /// Cholesky decomposition of positive definite matrix into LLt
-    fn cholesky(self) -> Vec<f64>;
+    // fn cholesky(self) -> Vec<f64>;
     /// Pearson's correlation.  
     fn correlation(self, v:&[U]) -> f64;
     /// Median based correlation
