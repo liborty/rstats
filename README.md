@@ -91,7 +91,7 @@ Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimen
 * Other relationships and measures of difference,
 * Pearson's, Spearman's and Kendall's correlations,
 * `Median correlation`, which we define analogously to Pearson's, as cosine of an angle between two zero median vectors (instead of zero mean vectors).
-* Joint pdf, joint entropy, statistical dependence (mutual information).
+* Joint pdf, joint entropy, statistical independence (based on mutual information).
 
 This trait is unchecked (for speed), so some caution with data is advisable.
 
@@ -114,7 +114,7 @@ Some vector algebra as above that can be more efficient when the end type happen
 
 * Relationships between two vectors (of bytes)
 * Frequency count of bytes by their values (histogram, pdf, jointpdf)
-* Entropy, jointentropy, dependence (different algorithms to those in Vecg)
+* Entropy, jointentropy, independence (different algorithms to those in Vecg)
 
 ## Trait VecVec
 
@@ -153,7 +153,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.6** Independence is now normalised to the range [1,2], e.g. the independence of two identical vectors without repetitions is 1. Same  for any real values that are all unique. Then it is better to fall back to correlations.
+* **Version 1.0.6** Independence of two vectors is now normalised to the range [1,2], e.g. the `independence` of two identical vectors without repetitions is 1. Same for vectors of any real values that are all unique. Then it is better to fall back to median correlations. Mutual independence of a set of vectors can often be less than one.
 
     Added `crossfeatures` - computes relationships between all pairs of column vectors of self. Returns flattened lower triangular (symmetric) matrix.
 
