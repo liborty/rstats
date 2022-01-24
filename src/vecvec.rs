@@ -50,12 +50,11 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         jpdf.iter().map(|&x| -x*(x.ln()) ).sum() 
     }
 
-    /// Independence (component wise) of a set of vectors.
-    /// i.e. `independencen` returns 2 iff they are statistically independent
-    /// smaller value when they are dependent
-    fn independencen(self) -> f64 { 
-        let individuales:f64 = self.iter().map(|v| v.entropy()).sum();
-        2.0*self.jointentropyn()/individuales 
+    /// Dependence (component wise) of a set of vectors.
+    /// i.e. `dependencen` returns 0 iff they are statistically independent
+    /// bigger values when they are dependent
+    fn dependencen(self) -> f64 { 
+        self.iter().map(|v| v.entropy()).sum::<f64>()/self.jointentropyn() - 1.0
     } 
 
     /// Flattened lower triangular part of a symmetric matrix for column vectors in self.
@@ -64,16 +63,15 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// that is different features stored in columns of self.
     /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
     /// such as dependencies or correlations.
-    /// Example call: pts.codep(|v1,v2| v1.mediancorr(v2)) computes correlations between
-    /// all column vectors (features) in pts.
+    /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2))` 
+    /// computes correlations between all column vectors (features) in pts.
  
     fn crossfeatures<F>(self,f:F) -> Vec<f64> where F: Fn(&[T],&[T]) -> f64 {
         let n = self.len(); // number of the vector(s)
         let mut codp:Vec<f64> = Vec::with_capacity((n+1)*n/2); // results 
-        let st = self.transpose();
-        st.iter().enumerate().for_each(|(i,v)| 
+        self.iter().enumerate().for_each(|(i,v)| 
             // its dependencies up to and including the diagonal
-            st.iter().take(i+1).for_each(|vj| { 
+            self.iter().take(i+1).for_each(|vj| { 
                 codp.push(f(v,vj)); 
                 }));  
         codp

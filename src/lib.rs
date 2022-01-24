@@ -249,6 +249,8 @@ pub trait Vecg<T,U> {
     fn jointpdf(self,v:&[U]) -> Vec<f64>;     
     /// Joint entropy of &[T],&[U] in nats (units of e)
     fn jointentropy(self, v:&[U]) -> f64;
+    /// Statistical pairwise dependence of &[T] &[U] variables in the range [0,1] 
+    fn dependence(self, v:&[U]) -> f64;   
     /// Statistical pairwise independence in the range [1,2] based on joint entropy
     fn independence(self, v:&[U]) -> f64; 
     /// Cholesky decomposition of positive definite matrix into LLt
@@ -331,6 +333,8 @@ pub trait Vecu8 {
     fn jointpdfu8(self, v:&[u8]) -> Vec<Vec<u32>>;
     /// Joint entropy of &[u8],&[u8] (in nats)
     fn jointentropyu8(self, v:&[u8]) -> f64;
+    /// Statistical pairwise dependence of two &[u8] variables in the range [0,1] 
+    fn dependenceu8(self, v:&[u8]) -> f64;   
     /// Independence in the range [1,2] of two &[u8] variables 
     fn independenceu8(self, v:&[u8]) -> f64;
 }
@@ -364,7 +368,7 @@ pub trait VecVec<T> {
     /// Joint entropy between a set of vectors of the same length
     fn jointentropyn(self) -> f64;
     /// Independence (component wise) of a set of vectors.
-    fn independencen(self) -> f64; 
+    fn dependencen(self) -> f64; 
     /// Flattened lower triangular relations matrix between columns of self 
     fn crossfeatures<F>(self,f:F) -> Vec<f64> where F: Fn(&[T],&[T]) -> f64; 
     /// Arithmetic Centre = euclidian mean of a set of points
@@ -422,8 +426,8 @@ pub trait VecVecg<T,U> {
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[U]) -> Vec<Vec<f64>>;
-    /// Independencies of vector m on each vector in self
-    fn independencies(self, m: &[U]) -> Vec<f64>;
+    /// Dependencies of vector m on each vector in self
+    fn dependencies(self, m: &[U]) -> Vec<f64>;
     /// (Median) correlations of m with each vector in self
     fn correlations(self, m: &[U]) -> Vec<f64>;
     /// Sum of distances from arbitrary point (v) to all the points in self      

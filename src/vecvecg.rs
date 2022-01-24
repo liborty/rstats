@@ -37,9 +37,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// Dependencies of m on each vector in self
     /// m is typically a vector of outcomes.
-    fn independencies(self, m: &[U]) -> Vec<f64> {  
+    fn dependencies(self, m: &[U]) -> Vec<f64> {  
         let entropym = m.entropy();
-        self.iter().map(|s| 2.0*s.jointentropy(m)/(entropym + s.entropy())).collect::<Vec<f64>>()
+        self.iter().map(|s| (entropym + s.entropy())/s.jointentropy(m)-1.0).collect::<Vec<f64>>()
     }
 
     /// (Median) correlations of m with each vector in self

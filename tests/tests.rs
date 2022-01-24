@@ -23,8 +23,8 @@ fn u8() -> Result<()> {
    println!("Cityblock dist:\t{}",wi(&v2.cityblockd(&v1)));
    println!("Joint Entropy gen: {}",wi(&v1.jointentropy(&v2)));   
    println!("Joint Entropy u8:  {}",wi(&v1.jointentropyu8(&v2)));
-   println!("Generic indep.:\t{}",wi(&v1.independence(&v2))); // generic
-   println!("Independence u8:\t{}",wi(&v1.independenceu8(&v2))); // u8
+   println!("Generic dependence:{}",wi(&v1.dependence(&v2))); // generic
+   println!("Dependence u8:\t{}",wi(&v1.dependenceu8(&v2))); // u8
    println!("Cos:\t\t{}",wi(&v1.cosineu8(&v2)));
    println!("Median Correlation:  {}",wi(&v1.mediancorr(&v2)));  
    println!("Pearson Correlation:  {}",wi(&v1.correlation(&v2)));  
@@ -38,8 +38,9 @@ fn u8() -> Result<()> {
    let com = pt.covar(&pt.gmedian(EPS));
    println!("Comediances:\n{}",wv(&com));
    println!("Their Distance: {}",wi(&cov.vdist(&com)));
-   println!("Independencies:\n{}",wv(&pt.crossfeatures(|v1,v2| v1.independence(v2))));
-   println!("Corelations:\n{}",wv(&pt.crossfeatures(|v1,v2| v1.mediancorr(v2))));
+   let trpt = pt.transpose();
+   println!("Column Dependencies:\n{}",wv(&trpt.crossfeatures(|v1,v2| v1.dependence(v2))));
+   println!("Column Correlations:\n{}",wv(&trpt.crossfeatures(|v1,v2| v1.mediancorr(v2))));
    Ok(())
 }
 #[test]
@@ -64,7 +65,7 @@ fn fstats() -> Result<()> {
    println!("Euclid's dist:\t{}",wi(&v2.vdist(&v1)));
    println!("Cityblock dist:\t{}",wi(&v2.cityblockd(&v1)));
    println!("Joint Entropy: {}",wi(&v1.jointentropy(&v2)));   
-   println!("Independence:\t{}",wi(&v1.independence(&v2))); // generic
+   println!("Dependence:\t{}",wi(&v1.dependence(&v2))); // generic
    let d = 5_usize;
    let n = 7_usize;
    println!("Testing on a random set of {} points in {} d space:",wi(&n),wi(&d));
@@ -74,7 +75,9 @@ fn fstats() -> Result<()> {
    let com = pt.comed(&pt.smedian(EPS));
    println!("Comediances:\n{}",wv(&com));
    println!("Their Distance: {}",wi(&cov.vdist(&com)));
-   println!("Independencies:\n{}",wv(&pt.crossfeatures(|v1,v2| v1.independence(v2))));
+   let trpt = pt.transpose();
+   println!("Column Dependencies:\n{}",wv(&trpt.crossfeatures(|v1,v2| v1.dependence(v2))));
+   println!("Column Correlations:\n{}",wv(&trpt.crossfeatures(|v1,v2| v1.mediancorr(v2))));
     Ok(())
  }
 #[test]
@@ -130,7 +133,7 @@ fn genericstats() -> Result<()> {
 fn vecg() -> Result<()> { 
    let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,10.,10.,13.,14.,15.];
    println!("v1: {}",wv(&v1));
-   let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,9.,7.,1.,15.];
+   let v2 = vec![1_f64,14.,2.,13.,3.,12.,4.,11.,5.,10.,6.,6.,7.,1.,15.];
    println!("v2: {}",wv(&v2)); 
    println!("Lexical order v1<v2:\t{}", wi(&(v1<v2)));
    println!("Pearson's Correlation:\t{}",wi(&v1.correlation(&v2))); 
@@ -147,7 +150,7 @@ fn vecg() -> Result<()> {
    println!("Entropy v1:\t\t{}",wi(&v1.entropy()));
    println!("Entropy v2:\t\t{}",wi(&v2.entropy()));
    println!("Joint Entropy:\t\t{}",wi(&v1.jointentropy(&v2)));
-   println!("Independence:\t\t{}",wi(&v1.independence(&v2)));
+   println!("Dependence:\t\t{}",wi(&v1.dependence(&v2)));
    println!("Cosine:\t\t\t{}",wi(&v1.cosine(&v2))); 
    println!("Cosine of ranks:\t{}",
       wi(&rank(&v1,true).indx_to_f64().cosine(&rank(&v2,true).indx_to_f64())));        
@@ -173,17 +176,18 @@ fn trend() -> Result<()> {
 
 #[test]
 fn vecvec() -> Result<()> { 
-   let d = 55_usize;
-   let n = 13_usize;
+   let d = 10_usize;
+   let n = 90_usize;
    println!("testing on a random set of {} points in {} dimensional space",wi(&n),wi(&d));
    let mut weights = Vec::new();
    for i in 1..n+1 { weights.push(i as f64) }; // create test weights data
    let pt = genvecu8(d,n,5,17); // random u8 test data
-   println!("Joint entropy: {}",wi(&pt.jointentropyn()) );  
-   println!("Statistical component wise independence: {}",wi(&pt.independencen()) ); 
-   let outcomes = &genvecu8(d,1,7,19)[0];  
-   println!("Independencies of outcomes: {}",wv(&pt.independencies(outcomes))); 
-   println!("Correlations with outcomes: {}",wv(&pt.correlations(outcomes)));
+   println!("Set joint entropy: {}",wi(&pt.jointentropyn()) );  
+   println!("Set dependence:    {}",wi(&pt.dependencen()) ); 
+   let outcomes = &genvecu8(n,1,7,19)[0]; // column vector 
+   let transppt = pt.transpose(); 
+   println!("Dependencies of outcomes: {}",wv(&transppt.dependencies(outcomes))); 
+   println!("Correlations with outcomes: {}",wv(&transppt.correlations(outcomes)));
    let (eccstd,eccmed,eccecc) = pt.eccinfo(EPS); 
    // let me = pt.emedoid(EPS);
    let medoid = &pt[eccecc.minindex];
