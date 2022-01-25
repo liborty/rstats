@@ -153,7 +153,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.7** 
+* **Version 1.0.7** Achieved further 20% speedup of `gmedian` by optimising some inner loops. 
 
 * **Version 1.0.6** Added `crossfeatures` - computes relationships between all pairs of vectors in self. Returns flattened lower triangular (symmetric) matrix.
 

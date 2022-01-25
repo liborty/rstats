@@ -53,6 +53,7 @@ pub fn tof64<T>(s: &[T]) -> Vec<f64> where T: Copy, f64: From<T> {
 }
 
 /// Necessary recast of a whole i64 slice to f64 
+/// 
 pub fn i64tof64(s: &[i64]) -> Vec<f64> {
     s.iter().map(| &x | x as f64).collect()
 }
@@ -172,6 +173,9 @@ pub trait Stats {
     /// Median and quartiles
     fn median(self) -> Result<Med>
         where Self: std::marker::Sized { bail!("median not implemented for this type")}
+    /// Fast median only by partitioning
+    fn newmedian(self) -> Result<f64> 
+        where Self: std::marker::Sized { bail!("newmedian not implemented for this type")}
     /// MAD median absolute deviation: data spread estimator that is more stable than variance
     fn mad(self) -> Result<f64> 
         where Self: std::marker::Sized { bail!("median not implemented for this type")}    
@@ -388,7 +392,7 @@ pub trait VecVec<T> {
     /// Next approx gm computed at a member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Next approx gm computed at a nonmember point p
-    fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
+    fn nxnonmember(self, p:&[f64]) -> Vec<f64>; 
     /// Estimated ecentricity vector from a member point given by its indx to gm
     fn eccmember(self, indx: usize) -> Vec<f64>;
     /// Estimated eccentricity vector from a non member point

@@ -303,32 +303,31 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut vsum = vec![0_f64; self[0].len()];
         let p = &self[indx];
         let mut recip = 0_f64;
-        self.iter().enumerate().for_each(|(i,thatp)| {
+        for (i,x) in self.iter().enumerate() {
             if i != indx {  // not point p
-                let mag = p.vdist(thatp);
-                if mag.is_normal() {  // not too close to p
-                    let rec = 1.0_f64/mag;
-                    vsum.mutvaddf64(&thatp.smultf64(rec)); // add vector
-                    recip += rec // add separately the reciprocals
-                }
+                let magsq = x.vdistsq(p);
+                if !magsq.is_normal() { continue } // too close
+                let rec = 1.0_f64/(magsq).sqrt();
+                vsum.mutvaddf64(&x.smultf64(rec)); // add vector
+                recip += rec // add separately the reciprocals 
             }
-        });
+        };
         vsum.mutsmultf64(1.0/recip);
         vsum 
     }
-
+ 
     /// Next approximate gm computed from a non-member point p
     fn nxnonmember(self, p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for x in self { 
-            let magsq = x.vdistsqf64(p);
+            let magsq:f64 = x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum(); 
             if !magsq.is_normal() { continue } // zero distance, safe to ignore
             let rec = 1.0_f64/(magsq).sqrt();
-            vsum.mutvaddf64(&x.smultf64(rec)); // add vector
+            vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += rec*f64::from(*xi)); 
             recip += rec // add separately the reciprocals    
         }
-        vsum.mutsmultf64(1.0/recip);
+        vsum.iter_mut().for_each(|vi| *vi /= recip);
         vsum
     }
 
@@ -342,9 +341,9 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn gmedian(self, eps: f64) -> Vec<f64> {
         let eps2 = eps.powi(2);
         let mut point = self.acentroid(); // start iterating from the Centre
-        loop { // vector iteration till accuracy eps is reached
+        loop { // vector iteration till accuracy eps2 is reached
             let nextp = self.nxnonmember(&point);          
-            if nextp.vdistsqf64(&point) < eps2 { return nextp }; // termination
+            if nextp.vdistsqf64(&point) < eps2 { return nextp }; // termination 
             point = nextp;
         } 
     }
@@ -355,13 +354,14 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn smedian(self, eps: f64) -> Vec<f64> {  
         let eps2 = eps.powi(2);
         let mut p1 = self.acentroid();
-        let mut mag1:f64 = p1.iter().map(|c| c.powi(2)).sum();
+        let mut mag1:f64 = p1.iter().map(|&c| c.powi(2)).sum();
         loop {  
             let p2 = self.nxnonmember(&p1);                                       
-            let e = p2.vsubf64(&p1); // new vector error, or eccentricity   
-            let mag2:f64 = e.iter().map(|c| c.powi(2)).sum();
+            let e:Vec<f64> = p2.iter().zip(&p1).map(|(&p2i,&p1i)| p2i-p1i).collect(); // new vector error, or eccentricity  
+            let mag2:f64 = e.iter().map(|&c| c.powi(2)).sum();
             if mag2 < eps2 { return p2 }; // termination
-            p1.mutvaddf64(&e.smultf64(mag1/(mag1-mag2)));
+            let secant = mag1/(mag1-mag2);
+            p1.iter_mut().zip(e).for_each(|(pi,ei)| *pi += ei*secant); 
             mag1 = mag2;
         };     
     }
