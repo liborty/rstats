@@ -27,17 +27,23 @@ To run all the tests, use single thread in order to produce the results in the r
 
 This crate begins with basic statistical measures and vector algebra, which provide self-contained tools for the multidimensional algorithms but can also be used in their own right.
 
-Our treatment of multidimensional sets of points (vectors) is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here. Specifically, the new simple multidimensional (geometric) median algorithm. Also, the `comediance matrix`  as a replacement for the covariance matrix. It is obtained simply by supplying `covar` with the geometric median instead of the usual centroid (mean vector).
+Our treatment of multidimensional sets of points (vectors) is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
+
+* `gmedian` - fast multidimensional (geometric) median algorithm. 
+
+* `comediance`, is a suggested replacement for covariance (matrix). It is obtained simply by supplying `covar` with the geometric median instead of the usual centroid. Thus zero median vectors are replacing zero mean vectors.
+
+* similarly, in just one dimension, our `mediancorr` is to replace Pearson's correlation. We define median correlation  as cosine of an angle between two zero median vectors (instead of zero mean vectors as per Pearson). 
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-Most authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are not even any quicker to compute.
+In n dimensions, many authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are not even any faster to compute.
 
 *Specifically, all 1-d measures are sensitive to the choice of axis and thus are affected by rotation.*
 
-In contrast, analyses based on the true geometric median (gm) are axis (rotation) independent. They are computed here by the novel methods `smedian` and `gmedian` and their weighted versions `wsmedian` and `wgmedian`.
+In contrast, analyses based on the true geometric median (gm) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by  `gmedian` and its weighted version `wgmedian`.
 
-### Implementation
+## Implementation
 
 The main constituent parts of Rstats are its traits. The selection of traits (to import) is primarily determined by the types of objects to be handled. These are mostly vectors of arbitrary length (dimensionality). The main traits are implementing methods applicable to a single vector (of numbers) - `Stats`, methods (of vector algebra) for two vectors - `Vecg`, methods for n vectors - `VecVec`, and methods for n vectors with another generic argument - `VecVecg`.
 
@@ -151,6 +157,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
+* `Median correlation` we define analogously to Pearson, as cosine of an angle between two vectors 'normalised' by subtracting their 1d medians from all components, instead of subtracting their means. 
+
 ## Appendix II: Recent Releases
 
 * **Version 1.0.7** Achieved further 20% speedup of `gmedian` by optimising some inner loops. 
@@ -159,7 +167,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
     Dependence of two vectors is now normalised to the range [0,1], e.g. the dependence of two identical vectors without repetitions is 1. Same for vectors of any real values that are all unique. In these cases it is better to fall back to correlations. N-dependence of a whole set of vectors will often be more than one.    
 
-* **Version 1.0.5** Added 1D `median correlation`, which we define analogously to Pearson's, as cosine of the angle between two zero median vectors (instead of zero mean vectors). This is a more robust measure. Added `dependencies` and `correlations` which efficiently map these relationships of a single given vector (typically of outcomes), to a set of vectors (typically feature vectors).
+* **Version 1.0.5** Added 1D median correlation `medaincorr`. This is a more robust measure. Added `dependencies` and `correlations` which efficiently map these relationships of a single given vector (typically of outcomes), to a set of vectors (typically feature vectors).
 
 * **Version 1.0.4** Added joint pdf, joint entropy and dependence for a set of n vectors.
 
@@ -169,7 +177,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 1.0.1** Minor change: `sortedeccs` and `wsortedeccs` now take gm as an argument for more efficient repeated use. Vecvec test improved.
 
-* **Version 1.0.0** Rstats reaches stability (of sorts)! Some code simplifications: `smedian` and `wsmedian` are now just slightly more accurate than `gmedian` and `wgmedian` respectively, otherwise their performance is very similar. Sometimes a bit slower, at other times, especially on 'difficult' data, they can be a bit faster.
+* **Version 1.0.0** Rstats reaches stability (of sorts)!
 
 * **Version 0.9.5** Improved `smedian`. Also added a weighted version of it: `wsmedian`.
 
