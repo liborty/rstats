@@ -238,7 +238,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// MADn multidimensional median of distances from gm: data spread estimator that is more stable than variances
     fn madn(self, eps: f64) -> f64 {
-        let gm = self.smedian(eps); 
+        let gm = self.gmedian(eps); 
         let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
         let Med{median,..} = eccs.median().unwrap_or_else(|_| panic!("{},median failed\n",here!()));
         median
@@ -321,11 +321,12 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for x in self { 
-            let magsq:f64 = x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum(); 
-            if !magsq.is_normal() { continue } // zero distance, safe to ignore
-            let rec = 1.0_f64/(magsq).sqrt();
-            vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += rec*f64::from(*xi)); 
-            recip += rec // add separately the reciprocals    
+            let mag:f64 = x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum::<f64>().sqrt(); 
+            if mag.is_normal() { // ignore this point should distance be zero
+                let rec = 1.0_f64/mag;
+                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += rec*f64::from(*xi)); 
+                recip += rec // add separately the reciprocals    
+            }
         }
         vsum.iter_mut().for_each(|vi| *vi /= recip);
         vsum
@@ -340,53 +341,33 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// There will eventually be a multithreaded version.
     fn gmedian(self, eps: f64) -> Vec<f64> {
         let eps2 = eps.powi(2);
-        let mut point = self.acentroid(); // start iterating from the Centre
+        let mut p = self.acentroid(); // start iterating from the Centre
         loop { // vector iteration till accuracy eps2 is reached
-            let nextp = self.nxnonmember(&point);          
-            if nextp.vdistsqf64(&point) < eps2 { return nextp }; // termination 
-            point = nextp;
-        } 
+            let nextp = self.nxnonmember(&p);          
+            if nextp.iter().zip(p).map(|(&xi,pi)|(xi-pi).powi(2)).sum::<f64>() < eps2 { return nextp }; // termination 
+            p = nextp;
+        }; 
     }
 
-    /// Secant recovery from divergence
-    /// for finding the geometric median.
-    /// Initialised with acentroid.
-    fn smedian(self, eps: f64) -> Vec<f64> {  
-        let eps2 = eps.powi(2);
-        let mut p1 = self.acentroid();
-        let mut mag1:f64 = p1.iter().map(|&c| c.powi(2)).sum();
-        loop {  
-            let p2 = self.nxnonmember(&p1);                                       
-            let e:Vec<f64> = p2.iter().zip(&p1).map(|(&p2i,&p1i)| p2i-p1i).collect(); // new vector error, or eccentricity  
-            let mag2:f64 = e.iter().map(|&c| c.powi(2)).sum();
-            if mag2 < eps2 { return p2 }; // termination
-            let secant = mag1/(mag1-mag2);
-            p1.iter_mut().zip(e).for_each(|(pi,ei)| *pi += ei*secant); 
-            mag1 = mag2;
-        };     
-    }
-
-    /// Same a smedian but returns also the number of iterations
+    /// Same a gmedian but returns also the number of iterations
     /// # Example
     /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
-    /// let pts = genvec(25,25,255,30); 
-    /// let (gm,iterations) = pts.ismedian(1e-10);  
-    /// assert_eq!(iterations,11);
+    /// use rstats::{Vecg,VecVec,genvec};
+    /// // generate 300 random points in 250 dimensions
+    /// let pts = genvec(250,300,255,30); 
+    /// let (gm,iterations) = pts.igmedian(1e-10); 
+    /// // finds gm to within 1e-10 in only 5 iterations, starting from the centroid 
+    /// assert_eq!(iterations,5);
     /// ```
-    fn ismedian(self, eps: f64) -> ( Vec<f64>, usize ) {  
+    fn igmedian(self, eps: f64) -> ( Vec<f64>, usize ) {  
         let eps2 = eps.powi(2);
-        let mut p1 = self.acentroid();
-        let mut mag1:f64 = p1.iter().map(|c| c.powi(2)).sum();
-        let mut iterations = 2_usize;
+        let mut p = self.acentroid(); 
+        let mut iterations = 1_usize;
         loop {  
-            let p2 = self.nxnonmember(&p1);                                       
-            let e = p2.vsubf64(&p1); // new vector error, or eccentricity   
-            let mag2:f64 = e.iter().map(|c| c.powi(2)).sum();
-            if mag2 < eps2 { return (p2,iterations) }; // termination
-            p1.mutvaddf64(&e.smultf64(mag1/(mag1-mag2))); 
-            mag1 = mag2;
+            let nextp = self.nxnonmember(&p);
+            if nextp.vdistsqf64(&p) < eps2 { return (nextp,iterations) }; // termination
             iterations +=1;
+            p = nextp;
         };     
     }
 }

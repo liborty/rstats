@@ -124,7 +124,7 @@ Some vector algebra as above that can be more efficient when the end type happen
 
 ## Trait VecVec
 
-Relationships between n vectors (in d dimensions). This is the main original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`, optionally boosted by a secant method `smedian`. These algorithms both solve Weiszfeld's convergence and stability problems in the neighbourhood of existing set points.
+Relationships between n vectors (in d dimensions). This is the main original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhood of existing set points.
 
 * sums of distances, eccentricity (radius) measure,
 * centroid, medoid, outliers, true geometric median,
@@ -161,6 +161,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.0.8** Pruned some non-essential code.
+
 * **Version 1.0.7** Achieved further 20% speedup of `gmedian` by optimising some inner loops. 
 
 * **Version 1.0.6** Added `crossfeatures` - computes relationships between all pairs of vectors in self. Returns flattened lower triangular (symmetric) matrix.
@@ -178,8 +180,6 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 1.0.1** Minor change: `sortedeccs` and `wsortedeccs` now take gm as an argument for more efficient repeated use. Vecvec test improved.
 
 * **Version 1.0.0** Rstats reaches stability (of sorts)!
-
-* **Version 0.9.5** Improved `smedian`. Also added a weighted version of it: `wsmedian`.
 
 * **Version 0.9.4** Organisation improvements. Added trait `Vecf64` and moved into it relevant methods from `Vecg`. Added a few functions to MutVecf64 trait. Simplified `gmedian`.
 

@@ -37,12 +37,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// Dependencies of m on each vector in self
     /// m is typically a vector of outcomes.
+    /// Factors out the entropy of m to save repetition of work
     fn dependencies(self, m: &[U]) -> Vec<f64> {  
         let entropym = m.entropy();
         self.iter().map(|s| (entropym + s.entropy())/s.jointentropy(m)-1.0).collect::<Vec<f64>>()
     }
 
     /// (Median) correlations of m with each vector in self
+    /// Factors out the unit vector of m to save repetition of work
     fn correlations(self, m: &[U]) -> Vec<f64> {
         let Med{median:mm,..} = m.median() // ignore quartile fields
             .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
@@ -103,18 +105,19 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         ( index.unindex(&coses,true), weights )
     }
 
-    /// Next approximate weighted median, from a non member point. 
+     /// Next approximate weighted median, from a non member point. 
     fn wnxnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
-        for i in 0..self.len() { 
-            let magsq = self[i].vdistsqf64(p);
-            if !magsq.is_normal() { continue } // zero distance, safe to ignore
-            let rec = f64::from(ws[i])/(magsq).sqrt(); // ws[i] is weigth for this point self[i]
-            vsum.mutvaddf64(&self[i].smult(rec)); // add weighted vector
-            recip += rec // add separately the reciprocals    
+        for (x,&w) in self.iter().zip(ws) { 
+            let mag:f64 = f64::from(w)*(x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum::<f64>()).sqrt(); 
+            if mag.is_normal() {  // skip point x when its distance is zero
+                let rec = 1_f64/mag;
+                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += rec*f64::from(*xi)); 
+                recip += rec // add separately the reciprocals    
+            }
         }
-        vsum.mutsmultf64(1_f64/recip);
+        vsum.iter_mut().for_each(|vi| *vi /= recip);
         vsum
     }
     
@@ -131,36 +134,21 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// for finding the weighted geometric median
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64> {  
         let eps2 = eps.powi(2);
-        let mut point = self.wacentroid(ws); // start iterating from the Centre
+        let mut p = self.wacentroid(ws); // start iterating from the Centre
         loop { // vector iteration till accuracy eps is reached
-            let nextp = self.wnxnonmember(ws,&point);          
-            if nextp.vdistsqf64(&point) < eps2 { return nextp }; // termination
-            point = nextp
+            let nextp = self.wnxnonmember(ws,&p);          
+            if nextp.iter().zip(p).map(|(&xi,pi)|(xi-pi).powi(2)).sum::<f64>() < eps2 { return nextp }; // termination 
+            p = nextp
         } 
     }
 
-    /// Secant recovery from divergence
-    /// for finding the weighted geometric median.
-    fn wsmedian(self, ws: &[U], eps: f64) -> Vec<f64> {  
-        let eps2 = eps.powi(2);
-        let mut p1 = self.wacentroid(ws);
-        let mut mag1:f64 = p1.iter().map(|c| c.powi(2)).sum();
-        loop {  
-            let p2 = self.wnxnonmember(ws,&p1);                                       
-            let e = p2.vsubf64(&p1); // new vector error, or eccentricity   
-            let mag2:f64 = e.iter().map(|c| c.powi(2)).sum();
-            if mag2 < eps2 { return p2 }; // termination
-            p1.mutvaddf64(&e.smultf64(mag1/(mag1-mag2)));
-            mag1 = mag2;
-        };     
-    }
-
-    /// Flattened lower triangular part of a covariance matrix for f64 vectors in self.
-    /// Since covariance matrix is symmetric, 
-    /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
-    /// N.b. the indexing is always assumed to be in this order: row,column.
-    /// The items of the resulting lower triangular array c[i][j] are here flattened
-    /// into a single vector in this double loop order: left to right, top to bottom 
+    /// Covariance matrix for f64 vectors in self. Becomes comediance when 
+    /// argument m is the geometric median instead of the centroid.
+    /// Since the matrix is symmetric, the missing upper triangular part can be trivially
+    /// regenerated for all j>i by: c(j,i) = c(i,j).
+    /// The indexing is always in this order: (row,column) (left to right, top to bottom).
+    /// The items are flattened into a single vector in this order.
+    /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
     fn covar(self, m:&[U]) -> Vec<f64> {
         let d = self[0].len(); // dimension of the vector(s)
         let mut cov:Vec<f64> = vec![0_f64; (d+1)*d/2]; // flat lower triangular results array  
@@ -175,16 +163,18 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
                 }));
             } 
         // now compute the means and return
-        cov.mutsmultf64(1.0_f64/(self.len()as f64));
+        let lf = self.len() as f64;
+        cov.iter_mut().for_each(|c| *c /= lf); 
         cov
     }
  
-    /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors in self.
-    /// Since covariance matrix is symmetric (positive semi definite), 
-    /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
-    /// N.b. the indexing is always assumed to be in this order: row,column.
-    /// The items of the resulting lower triangular array c[i][j] are here flattened
-    /// into a single vector in this double loop order: left to right, top to bottom 
+    /// Weighted covariance matrix for f64 vectors in self. Becomes comediance when 
+    /// argument m is the geometric median instead of the centroid.
+    /// Since the matrix is symmetric, the missing upper triangular part can be trivially
+    /// regenerated for all j>i by: c(j,i) = c(i,j).
+    /// The indexing is always in this order: (row,column) (left to right, top to bottom).
+    /// The items are flattened into a single vector in this order.
+    /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
     fn wcovar(self, ws:&[U], m:&[f64]) -> Vec<f64> {
         let n = self[0].len(); // dimension of the vector(s)
         // let mut covs:Vec<Vec<f64>> = Vec::new();
@@ -204,50 +194,5 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         cov.mutsmultf64(1_f64/wsum); 
         cov
     }
-
-    /// Flattened lower triangular part of a comediance matrix for f64 vectors in self.
-    /// Since comediance matrix is symmetric (positive semi definite), 
-    /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
-    /// N.b. the indexing is always assumed to be in this order: row,column.
-    /// The items of the resulting lower triangular array c[i][j] are here flattened
-    /// into a single vector in this double loop order: left to right, top to bottom. 
-    /// Instead of averaging these vectors over n points, their median is returned.
-    /// Warning: may run out of memory for large number of points and high dimensionality.
-    fn comed(self, m:&[U]) -> Vec<f64> { // m should be the median here 
-        let d = self[0].len(); // dimension of the vector(s)
-        let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2); // result vec flat lower triangular array 
-        let zs:Vec<Vec<f64>> = self.iter().map(|s| s.vsub(m)).collect(); // zero median vectors
-        for i in 0..d { // cross multiplaying the components
-            for j in 0..i+1 { // in this order so as to save memory
-                let thisproduct:Vec<f64> = zs.iter().map(|v| v[i]*v[j]).collect();
-                let Med{median,..} = thisproduct.median().unwrap();
-                com.push(median);
-            }
-        }
-        com
+    
     }
- 
-
-    /// Flattened lower triangular part of a comediance matrix for weighted f64 vectors in self.
-    /// Since comediance matrix is symmetric (positive semi definite), 
-    /// the upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
-    /// N.b. the indexing is always assumed to be in this order: row,column.
-    /// The items of the resulting lower triangular array c[i][j] are here flattened
-    /// into a single vector in this double loop order: left to right, top to bottom.
-    /// Instead of averaging these vectors over n points, their median is returned.
-    /// Warning: may run out of memory for large number of points and high dimensionality.
-    fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64> { // m should be the median here 
-        let d = self[0].len(); // dimension of the vector(s)
-        let zs:Vec<Vec<f64>> = self.iter().map(|s| s.vsub(m)).collect(); // zero median vectors
-        let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2); // result vec flat lower triangular array 
-        let wmean = ws.iter().map(|&w| f64::from(w)).sum::<f64>()/(self.len() as f64); 
-        for i in 0..d { // cross multiplaying the components
-            for j in 0..i+1 { // in this order so as to save memory
-                let thisproduct:Vec<f64> = zs.iter().zip(ws).map(|(v,&w)| f64::from(w)*v[i]*v[j]).collect();
-                let Med{median,..} = thisproduct.median().unwrap();
-                com.push(median/wmean);
-            }
-        };
-        com
-    }
-}

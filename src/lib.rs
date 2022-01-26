@@ -190,8 +190,7 @@ pub trait Stats {
     fn autocorr(self) -> f64; 
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Vec<f64>;
-    /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
-    /// produced by covar, covone, wcovar
+    /// Reconstructs the full symmetric matrix from its lower diagonal compact form
     fn symmatrix(self) -> Vec<Vec<f64>>;
    }
 
@@ -415,10 +414,8 @@ pub trait VecVec<T> {
     // fn nmedian(self, eps: f64) -> Vec<f64>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
-    /// Secant method geometric median
-    fn smedian(self, eps: f64) -> Vec<f64>; 
     /// Same a smedian but returns also the number of iterations 
-    fn ismedian(self, eps: f64) -> (Vec<f64>,usize);   
+    fn igmedian(self, eps: f64) -> (Vec<f64>,usize);   
 }
 
 /// Methods applicable to vector of vectors of generic end type and one argument
@@ -449,15 +446,9 @@ pub trait VecVecg<T,U> {
     /// Estimated weighted eccentricity for a non-member point 
     fn weccnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64>;
     /// The weighted geometric median to accuracy eps 
-    fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>; 
-    /// The weighted geometric median to accuracy eps
-    fn wsmedian(self, ws: &[U], eps: f64) -> Vec<f64>; 
+    fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>;
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
-    fn covar(self, med:&[U]) -> Vec<f64>; 
-    /// Flattened lower triangular part of a comediance matrix of a Vec of f64 vectors.
-    fn comed(self, m:&[U]) -> Vec<f64>;
+    fn covar(self, med:&[U]) -> Vec<f64>;  
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
     fn wcovar(self, ws:&[U], m:&[f64]) -> Vec<f64>;
-    /// Flattened lower triangular part of a comediance matrix for weighted f64 vectors.
-    fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64>;
 }

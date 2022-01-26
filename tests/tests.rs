@@ -6,7 +6,7 @@ use devtimer::DevTime;
 use anyhow::Result;
 use indxvec::{Indices,merge::*};
 use rstats::{Stats,MutVecg,Vecg,VecVec,VecVecg,Vecu8, Vecf64};
-use rstats::{wv,wi,printvv,genvec,genvecu8,i64tof64,tof64};
+use rstats::{Med,wv,wi,printvv,genvec,genvecu8,i64tof64,tof64};
 
 pub const EPS:f64 = 1e-10;
 #[test]
@@ -72,7 +72,7 @@ fn fstats() -> Result<()> {
    let pt = genvec(d,n,5,7); // random test data 
    let cov = pt.covar(&pt.acentroid());
    println!("Covariances:\n{}",wv(&cov));
-   let com = pt.comed(&pt.smedian(EPS));
+   let com = pt.covar(&pt.gmedian(EPS));
    println!("Comediances:\n{}",wv(&com));
    println!("Their Distance: {}",wi(&cov.vdist(&com)));
    let trpt = pt.transpose();
@@ -196,7 +196,7 @@ fn vecvec() -> Result<()> {
    let gcentroid = pt.gcentroid();
    let acentroid = pt.acentroid(); 
    let firstp = pt.firstpoint();
-   let median = pt.smedian(EPS);
+   let median = pt.gmedian(EPS);
    // let outlier = &pt[md.maxindex]; 
    // let eoutlier = &pt[me.maxindex];
  
@@ -252,16 +252,15 @@ fn geometric_medians() -> Result<()> {
    let mut timer = DevTime::new_simple();
  
    for i in 1..ITERATIONS {
-      let pts = genvecu8(d,n,i as u32,5*i as u32);
+      let pts = genvec(d,n,i as u32,5*i as u32);
       timer.start();
       let gm = pts.gmedian(EPS);
       timer.stop();
-      sumtime += timer.time_in_nanos().unwrap();
-      // sumg += pts.distsum(&gm)
+      sumtime += timer.time_in_nanos().unwrap();   
       sumg += pts.eccnonmember(&gm).vmag();    
    }
    // sumg /= (ITERATIONS*n*d) as f64;
-   println!("Gmedian err/eps: {}\tns: {:>12}",wi(&(sumg/EPS)),&sumtime); 
+   println!("Gmedian err/eps: {}\ts: {:<12}",wi(&(sumg/EPS)),wi(&(sumtime as f64/1e9)));
 
    sumg = 0_f64;
    sumtime = 0_u128;
@@ -270,15 +269,16 @@ fn geometric_medians() -> Result<()> {
    for i in 1..ITERATIONS {
       let pts = genvecu8(d,n,i as u32,5*i as u32);
       timer.start();
-      let gm = pts.smedian(EPS);
+      let ptstr = pts.transpose();
+      let qm:Vec<f64> = ptstr.iter().map(|p| { let Med{median,..} = p.median().unwrap(); median }).collect();
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
       // sumg += pts.distsum(&gm)
-      sumg += pts.eccnonmember(&gm).vmag();    
-   }
-   // sumg /= (ITERATIONS*n*d) as f64;
-   println!("Smedian err/eps: {}\tns: {:>12}",wi(&(sumg/EPS)),&sumtime); 
-   
+      sumg += pts.eccnonmember(&qm).vmag(); 
+   } 
+   // sumg /= (ITERATIONS*n*d) as f64;  
+   println!("Quasimed er/eps: {}\ts: {:<12}",wi(&(sumg/EPS)),wi(&(sumtime as f64/1e9))); 
+
    sumg = 0_f64;
    sumtime = 0_u128;
    timer = DevTime::new_simple();
@@ -293,6 +293,7 @@ fn geometric_medians() -> Result<()> {
       sumg += pts.eccnonmember(&gm).vmag(); 
    } 
    // sumg /= (ITERATIONS*n*d) as f64;  
-   println!("Acentroid er/eps: {}\tns: {:>12}",wi(&(sumg/EPS)),sumtime); 
+   println!("Centroid er/eps: {}\ts: {:<12}",wi(&(sumg/EPS)),wi(&(sumtime as f64/1e9))); 
+
     Ok(())  
  }
