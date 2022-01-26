@@ -109,10 +109,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn wnxnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
-        for (x,&w) in self.iter().zip(ws) { 
-            let mag:f64 = f64::from(w)*(x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum::<f64>()).sqrt(); 
+        for (x,&w) in self.iter().zip(ws) {  
+            let mag:f64 = x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum::<f64>().sqrt(); 
             if mag.is_normal() {  // skip point x when its distance is zero
-                let rec = 1_f64/mag;
+                let rec = f64::from(w)/mag;
                 vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += rec*f64::from(*xi)); 
                 recip += rec // add separately the reciprocals    
             }
@@ -121,7 +121,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         vsum
     }
     
-    /// Estimated (computed) eccentricity vector for a non member point. 
+    /// Estimated (computed) eccentricity vector for a non member point
     /// The true geometric median is as yet unknown.
     /// Returns the weighted eccentricity vector.
     /// The true geometric median would return zero vector.
@@ -139,7 +139,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             let nextp = self.wnxnonmember(ws,&p);          
             if nextp.iter().zip(p).map(|(&xi,pi)|(xi-pi).powi(2)).sum::<f64>() < eps2 { return nextp }; // termination 
             p = nextp
-        } 
+        }
     }
 
     /// Covariance matrix for f64 vectors in self. Becomes comediance when 
