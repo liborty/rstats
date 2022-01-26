@@ -13,7 +13,6 @@ categories = ["science","mathematics","algorithms","visualization","rust-pattern
 include = [
     "src/*.rs",
     "tests/*.rs",
-    "benches/*.rs",
     "Cargo.toml",
     "README.md",
     "LICENSE"

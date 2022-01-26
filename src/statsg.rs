@@ -393,15 +393,7 @@ impl<T> Stats for &[T]
         }
         Ok(result)       
     }
-/*
-    /// Fast median only of a &[T] slice by partitioning
-    fn newmedian(self) -> Result<f64> {
-        // define balance of signs closure
-        let balance = |x:f64| self.iter().map(|&s| (f64::from(s)-x).signum()).sum::<f64>(); 
-        let MinMax{min,minindex,max,maxindex} = minmax(self);        
-        Ok(1.)       
-    }
-*/
+
     /// MAD median absolute deviation: data spread estimator that is more stable than variance
     fn mad(self) -> Result<f64> {
         let Med{median,..} = self.median() // ignore quartile fields
