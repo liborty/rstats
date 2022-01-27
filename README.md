@@ -161,7 +161,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.8** Pruned some non-essential code.
+* **Version 1.0.8** Pruned some non-essential code, such as `smedian`. Gmedian now performs consistently a bit better.
 
 * **Version 1.0.7** Achieved further 20% speedup of `gmedian` by optimising some inner loops. 
 
