@@ -70,11 +70,9 @@ fn fstats() -> Result<()> {
    let n = 7_usize;
    println!("Testing on a random set of {} points in {} d space:",wi(&n),wi(&d));
    let pt = genvec(d,n,5,7); // random test data 
-   let cov = pt.covar(&pt.acentroid());
-   println!("Covariances:\n{}",wv(&cov));
-   let com = pt.covar(&pt.gmedian(EPS));
-   println!("Comediances:\n{}",wv(&com));
-   println!("Their Distance: {}",wi(&cov.vdist(&com)));
+   println!("Covariances:\n{}",wv(&pt.covar(&pt.acentroid())));
+   println!("Covariances of zero median data:\n{}",wv(&pt.covar(&pt.gmedian(EPS))));
+   println!("Median covariances of zero median data:\n{}",wv(&pt.comed(&pt.gmedian(EPS))));
    let trpt = pt.transpose();
    println!("Column Dependencies:\n{}",wv(&trpt.crossfeatures(|v1,v2| v1.dependence(v2))));
    println!("Column Correlations:\n{}",wv(&trpt.crossfeatures(|v1,v2| v1.mediancorr(v2))));
@@ -256,10 +254,10 @@ fn geometric_medians() -> Result<()> {
       timer.start();
       let gm = pts.gmedian(EPS);
       timer.stop();
-      sumtime += timer.time_in_nanos().unwrap();   
+      sumtime += timer.time_in_nanos().unwrap(); 
+      // sumg += pts.distsum(&gm);  
       sumg += pts.eccnonmember(&gm).vmag();    
    }
-   // sumg /= (ITERATIONS*n*d) as f64;
    println!("Gmedian err/eps: {}\ts: {:<12}",wi(&(sumg/EPS)),wi(&(sumtime as f64/1e9)));
 
    sumg = 0_f64;
@@ -273,10 +271,9 @@ fn geometric_medians() -> Result<()> {
       let qm:Vec<f64> = ptstr.iter().map(|p| { let Med{median,..} = p.median().unwrap(); median }).collect();
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
-      // sumg += pts.distsum(&gm)
+      // sumg += pts.distsum(&qm);
       sumg += pts.eccnonmember(&qm).vmag(); 
-   } 
-   // sumg /= (ITERATIONS*n*d) as f64;  
+   }  
    println!("Quasimed er/eps: {}\ts: {:<12}",wi(&(sumg/EPS)),wi(&(sumtime as f64/1e9))); 
 
    sumg = 0_f64;
@@ -289,10 +286,9 @@ fn geometric_medians() -> Result<()> {
       let gm = pts.acentroid();
       timer.stop();
       sumtime += timer.time_in_nanos().unwrap();
-      // sumg += pts.distsum(&gm)
+      // sumg += pts.distsum(&gm);
       sumg += pts.eccnonmember(&gm).vmag(); 
-   } 
-   // sumg /= (ITERATIONS*n*d) as f64;  
+   }  
    println!("Centroid er/eps: {}\ts: {:<12}",wi(&(sumg/EPS)),wi(&(sumtime as f64/1e9))); 
 
     Ok(())  

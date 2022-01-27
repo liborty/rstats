@@ -194,5 +194,51 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         cov.mutsmultf64(1_f64/wsum); 
         cov
     }
-    
+
+    /// Covariance matrix for f64 vectors in self. Becomes comediance when 
+    /// argument m is the geometric median instead of the centroid.
+    /// Since the matrix is symmetric, the missing upper triangular part can be trivially
+    /// regenerated for all j>i by: c(j,i) = c(i,j).
+    /// The indexing is always in this order: (row,column) (left to right, top to bottom).
+    /// The items are flattened into a single vector in this order.
+    /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
+    /// Similar to `covar` above but instead of averaging the covariances over n points, 
+    /// their median is returned.
+    fn comed(self, m:&[U]) -> Vec<f64> { // m should be the median here 
+        let d = self[0].len(); // dimension of the vector(s)
+        let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2); // result vec flat lower triangular array 
+        let zs:Vec<Vec<f64>> = self.iter().map(|s| s.vsub(m)).collect(); // zero median vectors
+        for i in 0..d { // cross multiplaying the components
+            for j in 0..i+1 { // in this order so as to save memory
+                let thisproduct:Vec<f64> = zs.iter().map(|v| v[i]*v[j]).collect();
+                let Med{median,..} = thisproduct.median().unwrap();
+                com.push(median);
+            }
+        }
+        com
     }
+
+    /// Covariance matrix for weighted f64 vectors in self. Becomes comediance when 
+    /// argument m is the geometric median instead of the centroid.
+    /// Since the matrix is symmetric, the missing upper triangular part can be trivially
+    /// regenerated for all j>i by: c(j,i) = c(i,j).
+    /// The indexing is always in this order: (row,column) (left to right, top to bottom).
+    /// The items are flattened into a single vector in this order.
+    /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
+    /// Similar to `wcovar` above but instead of averaging the covariances over n points, 
+    /// their median is returned.
+    fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64> { // m should be the median here 
+        let d = self[0].len(); // dimension of the vector(s)
+        let zs:Vec<Vec<f64>> = self.iter().map(|s| s.vsub(m)).collect(); // zero median vectors
+        let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2); // result vec flat lower triangular array 
+        let wmean = ws.iter().map(|&w| f64::from(w)).sum::<f64>()/(self.len() as f64); 
+        for i in 0..d { // cross multiplaying the components
+            for j in 0..i+1 { // in this order so as to save memory
+                let thisproduct:Vec<f64> = zs.iter().zip(ws).map(|(v,&w)| f64::from(w)*v[i]*v[j]).collect();
+                let Med{median,..} = thisproduct.median().unwrap();
+                com.push(median/wmean);
+            }
+        };
+        com
+    }
+}

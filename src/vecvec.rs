@@ -1,6 +1,6 @@
 use std::iter::FromIterator;
 
-use crate::{Med, MStats, MinMax, MutVecg, MutVecf64, Stats, Vecg, Vecf64, VecVec};
+use crate::{tof64, Med, MStats, MinMax, MutVecg, MutVecf64, Stats, Vecg, Vecf64, VecVec};
 pub use indxvec::{here,merge::*,Indices};
 
 impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
@@ -301,19 +301,20 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// specified by its index `indx` to self. 
     fn nxmember(self, indx: usize) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
-        let p = &self[indx];
+        let p = &tof64(&self[indx]);
         let mut recip = 0_f64;
         for (i,x) in self.iter().enumerate() {
             if i != indx {  // not point p
-                let magsq = x.vdistsq(p);
-                if !magsq.is_normal() { continue } // too close
-                let rec = 1.0_f64/(magsq).sqrt();
-                vsum.mutvaddf64(&x.smultf64(rec)); // add vector
-                recip += rec // add separately the reciprocals 
+                let mag:f64 = x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum::<f64>().sqrt(); 
+                if mag.is_normal() { // ignore this point should distance be zero
+                    let rec = 1.0_f64/mag;
+                    vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += rec*f64::from(*xi)); 
+                    recip += rec // add separately the reciprocals    
+                }
             }
         };
-        vsum.mutsmultf64(1.0/recip);
-        vsum 
+        vsum.iter_mut().for_each(|vi| *vi /= recip);
+        vsum
     }
  
     /// Next approximate gm computed from a non-member point p
