@@ -59,9 +59,9 @@ For more detailed comments, plus some examples, see the source. You may have to 
 
 * `struct MStats` to hold mean and standard deviation
 
-* `struct MinMax` re exported from crate `indxvec` to hold min and max values of a vector and their indices. It is returned by function `indxvec::merge::minmax`.
+* `struct MinMax` re-exported from crate `indxvec` to hold min and max values of a vector and their indices. It is returned by function `indxvec::merge::minmax`.
 
-* auxiliary functions: `i64tof64, tof64, here, wsum, wi, wv, printvv, genvec, genvecu8`.
+* auxiliary functions: `i64tof64, wsum`.
 
 ## Trait Stats
 
@@ -160,6 +160,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 * `Median correlation` we define analogously to Pearson, as cosine of an angle between two vectors 'normalised' by subtracting their 1d medians from all components, instead of subtracting their means. 
 
 ## Appendix II: Recent Releases
+
+* **Version 1.0.9** Moved `genvec` and `genvecu8` to `tests.rs` as non-essential. Removed some examples in the code that were using them. Changed the printing of vecs to utilise the new trait `Printing` from `indxvec`. See `testing.rs` for usage.
 
 * **Version 1.0.8** Pruned some non-essential code, such as `smedian`. Gmedian now performs consistently a bit better.
 

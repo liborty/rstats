@@ -7,7 +7,7 @@ pub mod vecvec;
 pub mod vecvecg;
 
 // reexporting to avoid duplication and for backwards compatibility
-pub use indxvec::{MinMax,here,wi,wv,printvv}; 
+pub use indxvec::{MinMax,Printing,here}; 
 /// simple error handling
 use anyhow::{Result,bail}; 
 use core::iter::FromIterator;
@@ -26,9 +26,9 @@ impl std::fmt::Display for Med {
         write!(
             f,
             "median:\n\tLower Q: {}\n\tMedian:  {}\n\tUpper Q: {}",
-            wi(&self.lquartile),
-            wi(&self.median),
-            wi(&self.uquartile)
+            self.lquartile.gr(),
+            self.median.gr(),
+            self.uquartile.gr()
         )
     }
 }
@@ -41,16 +41,11 @@ pub struct MStats {
 }
 impl std::fmt::Display for MStats {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "mean±std: {}±{}", wi(&self.mean), wi(&self.std))
+        write!(f, "mean±std: {}±{}", self.mean.gr(), self.std.gr())
     }
 }
 
 // Auxiliary Functions //
-
-/// Potentially useful recast of a whole slice
-pub fn tof64<T>(s: &[T]) -> Vec<f64> where T: Copy, f64: From<T> {
-    s.iter().map(| &x | f64::from(x)).collect()
-}
 
 /// Necessary recast of a whole i64 slice to f64 
 /// 
@@ -65,51 +60,6 @@ pub fn wsum(n: usize) -> f64 {
     (n * (n + 1)) as f64 / 2.
 }
 
-/// Generates a vector of n vectors, each of length d, all filled with random numbers for testing.
-/// It needs two seeds s1 and s2. Same seeds will produce the same random sequence.  
-/// Uses local closure `rand` to generate random numbers (avoids dependencies).  
-/// Random numbers are in the open interval 0..1 with uniform distribution.  
-pub fn genvec(d: usize, n: usize, mut s1: u32, mut s2: u32) -> Vec<Vec<f64>> {
-    if n * d < 1 { panic!("{}\n\tnon positive dimensions",here!()) }
-    // random numbers generating closure with captured seeds s1,s2 
-    let mut rand = || {
-        s1 = 36969 * (s1 & 65535) + (s1 >> 16);
-        s2 = 18000 * (s2 & 65535) + (s2 >> 16);
-        (((s1 << 16) & s2) as f64 + 1.0) * 2.328306435454494e-10
-    };
-    let mut v: Vec<Vec<f64>> = Vec::with_capacity(n);
-    for _i in 0..n {
-        let mut pt = Vec::with_capacity(d);
-        for _j in 0..d {
-            pt.push(rand())
-        }
-        v.push(pt)
-    } // fills the lot with random numbers
-    v
-}
-
-/// Generates a vector of n vectors, each of length d, all filled with random numbers for testing.
-/// It needs two seeds s1 and s2. Same seeds will produce the same random sequence.  
-/// Uses local closure `rand` to generate random numbers (avoids dependencies).  
-/// Random numbers are in the closed interval 0..255 with uniform distribution.  
-pub fn genvecu8(d: usize, n: usize, mut s1: u32, mut s2: u32) -> Vec<Vec<u8>> {
-    if n * d < 1 { panic!("{}\n\tgenvecu8: non positive dimensions",here!()) } 
-    // random numbers generating closure with captured seeds s1,s2 
-    let mut rand = || {
-        s1 = 36969 * (s1 & 65535) + (s1 >> 16);
-        s2 = 18000 * (s2 & 65535) + (s2 >> 16);
-        (256.0*(((s1 << 16) & s2) as f64 + 1.0)*2.328306435454494e-10).floor() as u8
-    };
-    let mut v: Vec<Vec<u8>> = Vec::with_capacity(n);
-    for _i in 0..n {
-        let mut pt = Vec::with_capacity(d);
-        for _j in 0..d {
-            pt.push(rand())
-        }
-        v.push(pt)
-    } // fills the lot with random numbers
-    v
-}
 
 // Traits
 

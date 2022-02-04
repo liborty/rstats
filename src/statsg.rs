@@ -1,7 +1,7 @@
-use crate::{ here,wsum,wv,MStats,Med,Stats};
+use crate::{ wsum,MStats,Med,Stats};
 use anyhow::{ensure, Result};
 // use std::ops::Sub;
-pub use indxvec::merge::{sortm,minmax};          
+pub use indxvec::{here,Printing,merge::{sortm,minmax}};          
 
 impl<T> Stats for &[T] 
     where T: Copy+PartialOrd+std::fmt::Display, // +Sub::<Output = T>,
@@ -22,7 +22,7 @@ impl<T> Stats for &[T]
         for &component in self {
            let c = f64::from(component); 
            ensure!(c.is_normal(),
-            "{} reciprocal not allowed for zero components!\n{}\n",here!(),wv(self)); 
+            "{} reciprocal not allowed for zero components!\n{}\n",here!(),self.gr()); 
         }     
         Ok( self.iter().map(|&x| 1.0/(f64::from(x))).collect() )     
     }

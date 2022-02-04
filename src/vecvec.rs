@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
-use crate::{tof64, Med, MStats, MinMax, MutVecg, MutVecf64, Stats, Vecg, Vecf64, VecVec};
-pub use indxvec::{here,merge::*,Indices};
+use crate::{ Med, MStats, MinMax, MutVecg, MutVecf64, Stats, Vecg, Vecf64, VecVec};
+pub use indxvec::{here,tof64,Printing,merge::*,Indices};
 
 impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     f64: From<T> {
@@ -22,14 +22,15 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     }
 
     /// Joint probability density function of n matched slices of the same length
-    fn jointpdfn(self) -> Vec<f64> {     
+    fn jointpdfn(self) -> Vec<f64> {  
         let d = self[0].len(); // their common dimensionality (length)
         for v in self.iter().skip(1) {
             if v.len() != d { panic!("{} all vectors must be of equal length!",here!()) }; 
         }
         let mut res:Vec<f64> = Vec::with_capacity(d);
         let mut tuples = self.transpose();
-        let df = d as f64; // for turning counts to probabilities
+        let df = tuples.len() as f64; // for turning counts to probabilities
+        println!("{}",df);
         // lexical sort to group together occurrences of identical tuples
         tuples.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap()); 
         let mut count = 1_usize; // running count
@@ -39,14 +40,15 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
                 res.push((count as f64)/df); // save frequency count as probability
                 lastindex = i; // current index becomes the new one
                 count = 1_usize; // reset counter
-            } else { count += 1; } );        
+            } 
+            else { count += 1; } );        
         res.push((count as f64)/df);  // flush the rest!
         res
     } 
 
     /// Joint entropy of vectors of the same length
     fn jointentropyn(self) -> f64 {
-        let jpdf = self.jointpdfn();
+        let jpdf = self.jointpdfn(); 
         jpdf.iter().map(|&x| -x*(x.ln()) ).sum() 
     }
 
@@ -78,28 +80,14 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     }
 
     /// acentroid = simple multidimensional arithmetic mean
-    /// # Example
-    /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
-    /// let pts = genvec(15,15,255,30); 
-    /// let dist = pts.distsum(&pts.acentroid());
-    /// assert_eq!(dist, 4.14556218326653_f64);
-    /// ```
     fn acentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()];
         for v in self { centre.mutvadd(v) }
         centre.mutsmultf64(1.0 / (self.len() as f64));
         centre
     }
+
     /// gcentroid = multidimensional geometric mean
-    /// # Example
-    /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
-    /// let pts = genvec(15,15,255,30);
-    /// let centre = pts.gcentroid();
-    /// let dist = pts.distsum(&centre);
-    /// assert_eq!(dist,4.897594485332543_f64);
-    /// ```
     fn gcentroid(self) -> Vec<f64> {
         let nf = self.len() as f64; // number of points
         let d = self[0].len(); // dimensions
@@ -113,14 +101,6 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     }
 
     /// hcentroid =  multidimensional harmonic mean
-    /// # Example
-    /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
-    /// let pts = genvec(15,15,255,30);
-    /// let centre = pts.hcentroid();
-    /// let dist = pts.distsum(&centre);
-    /// assert_eq!(dist,5.1272881071877014_f64);
-    /// ```
     fn hcentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()]; 
         for v in self { centre.mutvaddf64(&v.vinverse().unwrap()) }
@@ -155,13 +135,6 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// Outlier is the point with the greatest sum of distances.
     /// In other words, they are the members nearest and furthest from the geometric median. 
     /// Returns struct MinMax{min,minindex,max,maxindex}
-    /// # Example
-    /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
-    /// let pts = genvec(15,15,255,30);
-    /// let mm = pts.medout();
-    /// assert_eq!(mm.min,4.812334638782327_f64);
-    /// ```
     fn medout(self) -> MinMax<f64> {  
         minmax(&self.distsums())
     }
@@ -255,16 +228,6 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// Eccentricities of Medoid and Outlier.  
     /// Same as just the third element of a tuple returned by eccinfo
-    /// # Example
-    /// ```
-    /// use rstats::{Vecg,VecVec,genvec};
-    /// pub const EPS:f64 = 1e-7;
-    /// let d = 6_usize;
-    /// let pt = genvec(d,24,7,13); // random test data 5x20
-    /// let mm = pt.emedoid(EPS);
-    /// assert_eq!(mm.minindex,10); // index of e-medoid
-    /// assert_eq!(mm.maxindex,20);  // index of e-outlier
-    /// ```
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64> {
     let gm:Vec<f64> = self.gmedian(eps);
     let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
@@ -273,13 +236,6 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// Initial (first) point for geometric medians.
     /// Same as eccnonmember('origin') but saving the subtractions of zeroes. 
-    /// # Example
-    /// ```
-    /// use rstats::{Vecg,VecVec,VecVecg,genvec};
-    /// let pts = genvec(15,15,255,30); 
-    /// let dist = pts.distsum(&pts.firstpoint());
-    /// assert_eq!(dist,4.132376831171272_f64);
-    /// ```
     fn firstpoint(self) -> Vec<f64> {
         let mut rsum = 0_f64;
         let mut vsum = vec![0_f64; self[0].len()];
@@ -351,15 +307,6 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     }
 
     /// Same a gmedian but returns also the number of iterations
-    /// # Example
-    /// ```
-    /// use rstats::{Vecg,VecVec,genvec};
-    /// // generate 300 random points in 250 dimensions
-    /// let pts = genvec(250,300,255,30); 
-    /// let (gm,iterations) = pts.igmedian(1e-10); 
-    /// // finds gm to within 1e-10 in only 5 iterations, starting from the centroid 
-    /// assert_eq!(iterations,5);
-    /// ```
     fn igmedian(self, eps: f64) -> ( Vec<f64>, usize ) {  
         let eps2 = eps.powi(2);
         let mut p = self.acentroid(); 
