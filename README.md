@@ -9,12 +9,12 @@
 
 Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 
-Use in source files any of the following structs, as needed:  
+Use in your source files any of the following structs, as needed:  
 `use rstats::{MinMax,Med,Mstats};`  
-and any of the following helper functions:  
-`use rstats::{i64tof64,tof64,here,wi,wv,wsum,printvv,genvec,genvecu8};`  
 and any of the following traits:  
-`use rstats::{Stats,MutStats,Vecu8,Vecf64,Vecg,MutVecg,VecVec,VecVecg};`
+`use rstats::{Stats,MutStats,Vecu8,Vecf64,Vecg,MutVecg,VecVec,VecVecg};`  
+and any of the following helper functions:  
+`use rstats::{i64tof64,wsum};`
 
 It is highly recommended to read and run `tests/tests.rs`, which shows examples of usage.
 
@@ -33,7 +33,7 @@ Our treatment of multidimensional sets of points (vectors) is constructed from t
 
 * `comediance`, is a suggested replacement for covariance (matrix). It is obtained simply by supplying `covar` with the geometric median instead of the usual centroid. Thus zero median vectors are replacing zero mean vectors.
 
-* similarly, in just one dimension, our `mediancorr` is to replace Pearson's correlation. We define median correlation  as cosine of an angle between two zero median vectors (instead of zero mean vectors as per Pearson). 
+* similarly, in one dimension, our `mediancorr` is to replace Pearson's correlation. We define this *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors). 
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
@@ -69,7 +69,7 @@ One dimensional statistical measures implemented for all numeric end types.
 
 Its methods operate on one slice of generic data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of the data in slice `s`.
-Some of these methods are checked and will report all kinds of errors, such as an empty input. This means you have to call `.unwrap()` or something better on their results.
+Some of these methods are checked and will report all kinds of errors, such as an empty input. This means you have to apply to their results `?`, `.unwrap()` or something better.
 
 Included in this trait are:
 
@@ -96,7 +96,7 @@ Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimen
 * Vector additions, subtractions and products (scalar, kronecker, outer),
 * Other relationships and measures of difference,
 * Pearson's, Spearman's and Kendall's correlations,
-* `Median correlation`, which we define analogously to Pearson's, as cosine of an angle between two zero median vectors (instead of zero mean vectors).
+* `Median correlation`, which we define analogously to Pearson's, as cosine of an angle between two zero median vectors (instead of his zero mean vectors).
 * Joint pdf, joint entropy, statistical independence (based on mutual information).
 
 This trait is unchecked (for speed), so some caution with data is advisable.
