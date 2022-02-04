@@ -16,6 +16,8 @@ and any of the following traits:
 and any of the following helper functions:  
 `use rstats::{i64tof64,wsum};`
 
+The latest (nightly) version of this readme file and everything, is always available in the github repository [rstats](https://github.com/liborty/rstats). Sometimes it may be a little ahead of these official crates.io release versions.
+
 It is highly recommended to read and run `tests/tests.rs`, which shows examples of usage.
 
 To run all the tests, use single thread in order to produce the results in the right order:  
