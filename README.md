@@ -163,7 +163,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.9** Moved `genvec` and `genvecu8` to `tests.rs` as non-essential. Removed some examples in the code that were using them. Changed the printing of vecs to utilise the new trait `Printing` from `indxvec`. See `testing.rs` for usage.
+* **Version 1.0.10** Now using new random numbers generators from `indxvec` for testing.
+
+* **Version 1.0.9** Removed `genvec` and `genvecu8` as non-essential. Removed some examples in the code that were using them. Changed the printing of vecs to utilise the new trait `Printing` from `indxvec`. See `testing.rs` for usage.
 
 * **Version 1.0.8** Pruned some non-essential code, such as `smedian`. Gmedian now performs consistently a bit better.
 

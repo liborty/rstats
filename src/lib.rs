@@ -47,8 +47,7 @@ impl std::fmt::Display for MStats {
 
 // Auxiliary Functions //
 
-/// Necessary recast of a whole i64 slice to f64 
-/// 
+/// Necessary downcast of a whole i64 slice to f64  
 pub fn i64tof64(s: &[i64]) -> Vec<f64> {
     s.iter().map(| &x | x as f64).collect()
 }
