@@ -31,11 +31,11 @@ This crate begins with basic statistical measures and vector algebra, which prov
 
 Our treatment of multidimensional sets of points (vectors) is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
 
-* `gmedian` - fast multidimensional (geometric) median algorithm. 
+* `gmedian` - fast multidimensional (geometric) median algorithm.
 
 * `comediance`, is a suggested replacement for covariance (matrix). It is obtained simply by supplying `covar` with the geometric median instead of the usual centroid. Thus zero median vectors are replacing zero mean vectors.
 
-* similarly, in one dimension, our `mediancorr` is to replace Pearson's correlation. We define this *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors). 
+* similarly, in one dimension, our `mediancorr` is to replace Pearson's correlation. We define this *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
@@ -130,7 +130,7 @@ Relationships between n vectors (in d dimensions). This is the main original con
 
 * sums of distances, eccentricity (radius) measure,
 * centroid, medoid, outliers, true geometric median,
-* characterisations of sets of multidimensional points (of d random variables): means, stds, medians 
+* characterisations of sets of multidimensional points (of d random variables): means, stds, medians
 * transformation to zero geometric median data,
 * multivariate trend (regression) between two sets of nd points,
 * covariance and comediance matrices (weighted and unweighted).
@@ -141,7 +141,9 @@ Trait VecVec is entirely unchecked, so check your data upfront.
 
 Methods which take an additional generic vector argument, such as a vector of weights for computing the weighted geometric medians.
 
-## Appendix I: Terminology (and some new definitions) for sets of nD points
+## Appendix I: Terminology
+
+#### (Including some new definitions for sets of nD points)
 
 * `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, it is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if somewhat confusing) usage: Centroid = Centre = Arithmetic Mean.
 
@@ -159,9 +161,11 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
 
-* `Median correlation` we define analogously to Pearson, as cosine of an angle between two vectors 'normalised' by subtracting their 1d medians from all components, instead of subtracting their means. 
+* `Median correlation` we define analogously to Pearson, as cosine of an angle between two vectors 'normalised' by subtracting their 1d medians from all components, instead of subtracting their means.
 
 ## Appendix II: Recent Releases
+
+* **Version 1.0.11** - The random number generators in indxvec have been been moved to their own module `random`. To keep `tests.rs` compatible, the import is now changed accordingly, to: `use indxvec::random::*;`
 
 * **Version 1.0.10** Now using new random numbers generators from `indxvec` for testing.
 
@@ -169,7 +173,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 1.0.8** Pruned some non-essential code, such as `smedian`. Gmedian now performs consistently a bit better.
 
-* **Version 1.0.7** Achieved further 20% speedup of `gmedian` by optimising some inner loops. 
+* **Version 1.0.7** Achieved further 20% speedup of `gmedian` by optimising some inner loops.
 
 * **Version 1.0.6** Added `crossfeatures` - computes relationships between all pairs of vectors in self. Returns flattened lower triangular (symmetric) matrix.
 
