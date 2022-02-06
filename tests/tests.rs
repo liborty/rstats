@@ -1,6 +1,6 @@
 use anyhow::Result;
 use devtimer::DevTime;
-use indxvec::{merge::*, ranvu8, ranvvf64, ranvvu8, Indices, Printing, GR, UN};
+use indxvec::{merge::*, random::*, Indices, Printing, GR, UN};
 use rstats::{i64tof64, Med, Stats, VecVec, VecVecg, Vecf64, Vecg, Vecu8};
 
 pub const EPS: f64 = 1e-10;
@@ -216,7 +216,7 @@ fn vecvec() -> Result<()> {
     let mut weights = Vec::new();
     for i in 1..n + 1 {
         weights.push(i as f64)
-    } 
+    }
     let pt = ranvvu8(d, n, &mut seed);
     // println!("{}",pt.gr());
     println!("Set joint entropy: {}", pt.jointentropyn().gr());
