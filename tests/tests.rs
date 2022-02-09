@@ -1,7 +1,8 @@
 use anyhow::Result;
 use devtimer::DevTime;
-use indxvec::{merge::*, random::*, Indices, Printing, GR, UN};
+use indxvec::{merge::*, Indices, Printing, GR, UN};
 use rstats::{i64tof64, Med, Stats, VecVec, VecVecg, Vecf64, Vecg, Vecu8};
+use ran::*;
 
 pub const EPS: f64 = 1e-10;
 
@@ -34,8 +35,8 @@ fn u8() -> Result<()> {
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
-    let mut seed:u64 = 77777;
-    let pt = ranvvu8(d, n, &mut seed);
+    set_seed(77777);
+    let pt = ranvvu8(d, n);
     let cov = pt.covar(&pt.acentroid());
     println!("Covariances:\n{}", cov.gr());
     let com = pt.covar(&pt.gmedian(EPS));
@@ -79,9 +80,8 @@ fn fstats() -> Result<()> {
     println!("Dependence:\t{}", v1.dependence(&v2).gr()); // generic
     let d = 5_usize;
     let n = 7_usize;
-    let mut seed = 5555555_u64;
     println!("Testing on a random set of {} points in {} d space:", n, d);
-    let pt = ranvvf64(d, n, &mut seed);
+    let pt = ranvvf64(d, n);
     println!("Covariances:\n{}", pt.covar(&pt.acentroid()).gr());
     println!(
         "Covariances of zero median data:\n{}",
@@ -104,9 +104,8 @@ fn fstats() -> Result<()> {
 }
 
 #[test]
-fn ustats() -> Result<()> {
-    let mut seed = 3333333333333333_u64;
-    let v1 = ranvu8(20, &mut seed);
+fn ustats() -> Result<()> { 
+    let v1 = ranvu8(20);
     println!("\n{}", (&v1).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
     println!("Arithmetic mean:{}", v1.amean()?.gr());
@@ -199,9 +198,8 @@ fn vecg() -> Result<()> {
 /// numbers of points can differ
 fn trend() -> Result<()> {
     let d = 7_usize;
-    let mut seed = 1111111111_u64;
-    let pts1 = ranvvf64(d, 37,&mut seed);
-    let pts2 = ranvvf64(d, 33,&mut seed);
+    let pts1 = ranvvf64(d, 37);
+    let pts2 = ranvvf64(d, 33);
     println!("\nTrend vector:\n{}\n", pts1.trend(EPS, pts2).gr());
     Ok(())
 }
@@ -211,17 +209,16 @@ fn vecvec() -> Result<()> {
     let d = 10_usize;
     let n = 90_usize;
     println!("testing on a random set of {} points in {} dimensional space",n,d);
-    let mut seed = 7777777777777_u64;
     // create test weights data
     let mut weights = Vec::new();
     for i in 1..n + 1 {
         weights.push(i as f64)
     }
-    let pt = ranvvu8(d, n, &mut seed);
+    let pt = ranvvu8(d, n);
     // println!("{}",pt.gr());
     println!("Set joint entropy: {}", pt.jointentropyn().gr());
     println!("Set dependence:    {}", pt.dependencen().gr());
-    let outcomes = ranvu8(n,&mut seed);
+    let outcomes = ranvu8(n);
     let transppt = pt.transpose();
     println!(
         "Dependencies of outcomes: {}",
@@ -319,7 +316,6 @@ fn vecvec() -> Result<()> {
 }
 
 #[test]
-
 fn geometric_medians() -> Result<()> {
     const ITERATIONS: usize = 10;
     let n = 100_usize;
@@ -335,9 +331,8 @@ fn geometric_medians() -> Result<()> {
     let mut summ = 0_f64;
     let mut timerm = DevTime::new_simple();
     let mut gm: Vec<f64>;
-    let mut seed = 777777777777_u64;
     for _i in 1..ITERATIONS {
-        let pts = ranvvf64(d, n, &mut seed);
+        let pts = ranvvf64(d, n);
         let trpts = pts.transpose();
         timerg.start();
         gm = pts.gmedian(EPS);
