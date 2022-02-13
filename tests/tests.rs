@@ -35,7 +35,7 @@ fn u8() -> Result<()> {
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
-    set_seed(77777);
+    set_seeds(77777);
     let pt = ranvvu8(d, n);
     let cov = pt.covar(&pt.acentroid());
     println!("Covariances:\n{}", cov.gr());

@@ -25,5 +25,5 @@ indxvec = "^1"
 anyhow = "^1"
 
 [dev-dependencies]
-ran = "^0.1"
+ran = "^0.2"
 devtimer = "^4"
