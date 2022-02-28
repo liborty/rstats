@@ -165,6 +165,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.0.13** - Updated `ran` dev-dependency to "^0.3".
+
 * **Version 1.0.12** - New random number generators are now in their own crate `ran`. It has been added here to development dependencies, where it properly belongs. `tests.rs` have been changed accordingly. No other changes.
 
 * **Version 1.0.11** - The random number generators in indxvec have been been moved to their own module `random`. To keep `tests.rs` compatible, the import is now changed accordingly, to: `use indxvec::random::*;`

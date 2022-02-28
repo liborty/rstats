@@ -70,7 +70,7 @@ fn fstats() -> Result<()> {
     println!("Geometric  {}", v1.gmeanstd().unwrap().gr());
     println!("Harmonic   {}", v1.hmeanstd().unwrap().gr());
     println!("Autocorrelation:{}", v1.autocorr().gr());
-    println!("{}", v1.median()?.gr());
+    println!("{}", v1.median()?);
     println!("Mad:\t\t {}\n", v1.mad().unwrap().gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
     println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
@@ -105,6 +105,7 @@ fn fstats() -> Result<()> {
 
 #[test]
 fn ustats() -> Result<()> { 
+    set_seeds(1234567);
     let v1 = ranvu8(20);
     println!("\n{}", (&v1).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
@@ -116,7 +117,7 @@ fn ustats() -> Result<()> {
     println!("Geometric  {}", v1.gmeanstd()?.gr());
     println!("Harmonic   {}", v1.hmeanstd()?.gr());
     println!("Autocorrelation:{}", v1.autocorr());
-    println!("{}\n", v1.median()?.gr());
+    println!("{}\n", v1.median()?);
     Ok(())
 }
 
@@ -134,7 +135,7 @@ fn intstats() -> Result<()> {
     println!("Arithmetic {}", v1.ameanstd()?.gr());
     println!("Geometric  {}", v1.gmeanstd()?.gr());
     println!("Autocorrelation:{}", v1.autocorr().gr());
-    println!("{}\n", v1.median()?.gr());
+    println!("{}\n", v1.median()?);
     Ok(())
 }
 #[test]
@@ -149,7 +150,7 @@ fn genericstats() -> Result<()> {
     println!("Weighted Geom.\t{}", v.gwmeanstd()?.gr());
     println!("Weighted Harm.\t{}", v.hwmeanstd()?.gr());
     println!("Autocorrelation:{}", v.autocorr().gr());
-    println!("{}\n", &v.median()?.gr());
+    println!("{}\n", &v.median()?);
     Ok(())
 }
 #[test]

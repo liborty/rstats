@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "1.0.12"
+version = "1.0.13"
 authors = ["Libor Spacek"]
 edition = "2021"
 description = "Statistical Measures, Vector Algebra, Geometric Median, Data Analysis and Machine Learning"
@@ -25,5 +25,5 @@ indxvec = "^1"
 anyhow = "^1"
 
 [dev-dependencies]
-ran = "^0.2"
+ran = "^0.3"
 devtimer = "^4"
