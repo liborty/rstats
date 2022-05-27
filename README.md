@@ -173,6 +173,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.0.14** - Some improvements of README.md.
+
 * **Version 1.0.13** - Updated `ran` dev-dependency to "^0.3".
 
 * **Version 1.0.12** - New random number generators are now in their own crate `ran`. It has been added here to development dependencies, where it properly belongs. `tests.rs` have been changed accordingly. No other changes.
@@ -202,13 +204,3 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 1.0.1** Minor change: `sortedeccs` and `wsortedeccs` now take gm as an argument for more efficient repeated use. Vecvec test improved.
 
 * **Version 1.0.0** Rstats reaches stability (of sorts)!
-
-* **Version 0.9.4** Organisation improvements. Added trait `Vecf64` and moved into it relevant methods from `Vecg`. Added a few functions to MutVecf64 trait. Simplified `gmedian`.
-
-* **Version 0.9.3** Added `hwmeanstd` - harmonic weighted mean and standard deviation. Tidied up readme badges and some tests. Simplified random number generation. Weights for the weighted means are now ascending (more intuitive).
-
-* **Version 0.9.2** Fixed some tests broken by moved functions. Added harmonic standard deviation, harmonic centroid  and more tests.
-
-* **Version 0.9.1** Made the auxiliary functions more visible by moving them to `lib.rs` (the top level of the crate).
-
-* **Version 0.9.0** Added `kron` and `outer` products to `Vecg` trait.
