@@ -356,7 +356,7 @@ pub trait VecVec<T> {
     /// MADn multidimensional median absolute deviation: data spread estimator that is more stable than variance
     fn madn(self, eps: f64) -> f64;
     /// Mean projections of radii on each axis
-    fn radvec(self, eps: f64) -> Vec<f64>;
+    fn radvec(self, gm: &[f64]) -> Vec<f64>;
     /// Medoid and Outlier as defined by eccentricities.
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64>;
     /// Returns sorted eccentricities magnitudes
@@ -378,6 +378,8 @@ pub trait VecVecg<T,U> {
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Vec<f64>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[U]) -> Vec<Vec<f64>>;
+    /// Transform nd data to zeromedian for 
+    fn zerogm(self, gm: &[f64]) -> Vec<Vec<f64>>; 
     /// Dependencies of vector m on each vector in self
     fn dependencies(self, m: &[U]) -> Vec<f64>;
     /// (Median) correlations of m with each vector in self

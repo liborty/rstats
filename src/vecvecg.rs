@@ -32,7 +32,13 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// unlike the often used mean (`acentroid` here), or the quasi median,
     /// both of which depend on the choice of axis.
      fn translate(self, m: &[U]) -> Vec<Vec<f64>> {  
-        self.iter().map(|point| point.vsub(m)).collect()   
+        self.iter().map(|s| s.vsub(m)).collect()   
+    }
+
+    /// Transforms nd data to zeromedian form
+    /// essentially the same as translate but specialised to f64 gms
+    fn zerogm(self, gm: &[f64]) -> Vec<Vec<f64>> {  
+        self.iter().map(|s| s.vsubf64(gm)).collect()
     }
 
     /// Dependencies of m on each vector in self
