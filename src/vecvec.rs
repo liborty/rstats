@@ -66,7 +66,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
     /// such as dependencies or correlations.
     /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2))` 
-    /// computes correlations between all column vectors (features) in pts.
+    /// computes median correlations between all column vectors (features) in pts.
  
     fn crossfeatures<F>(self,f:F) -> Vec<f64> where F: Fn(&[T],&[T]) -> f64 {
         let n = self.len(); // number of the vector(s)
@@ -121,8 +121,10 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         dists
     } 
 
-    /// The sum of distances from one member point, given by its `indx`, to all the other points in self.
-    /// For all the points, use more efficient `distsums`.    
+    /// The sum of distances from one member point, given by its `indx`,
+    /// to all the other points in self.
+    /// For all the points, use more efficient `distsums`.
+    /// For measure of 'outlyingness', use radius from gm, in preference (is more efficient).    
     fn distsuminset(self, indx: usize) -> f64 { 
         let thisp = &self[indx];
         self.iter().enumerate().map(|(i,thatp)|
@@ -141,6 +143,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// Finds approximate vectors from each member point towards the geometric median.
     /// Twice as fast using symmetry, as doing them individually.
+    /// For measure of 'outlyingness' use `exacteccs` below
     fn eccentricities(self) -> Vec<Vec<f64>> {
         let n = self.len();
         // allocate vectors for the results
@@ -169,8 +172,9 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         eccs
     }
 
-    /// Exact eccentricity vectors from all member points by first finding the Geometric Median.
-    /// Usually faster than the approximate `eccentricities` above, especially when there are many points.
+    /// Exact radii (eccentricity) vectors from all member points by first finding the Geometric Median.
+    /// More accurate and usually faster as well than the approximate `eccentricities` above,
+    /// especially when there are many points.
     fn exacteccs(self, eps:f64) -> Vec<Vec<f64>> {        
         let mut eccs = Vec::with_capacity(self.len()); // Vectors for the results
         let gm:Vec<f64> = self.gmedian(eps);
@@ -209,7 +213,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         (eccs.ameanstd().unwrap(),eccs.median().unwrap(),minmax(&eccs))
     }
 
-    /// MADn multidimensional median of distances from gm: data spread estimator that is more stable than variances
+    /// MADn multidimensional median of radii: stable nd data spread estimator
     fn madn(self, eps: f64) -> f64 {
         let gm = self.gmedian(eps); 
         let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();

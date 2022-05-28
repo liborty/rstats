@@ -61,13 +61,16 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         self.iter().map(|p| p.vdist(v)).collect()
     }
 
-    /// The sum of distances from any single point v, typically not a member, to all the members of self.    
-    /// Geometric Median is defined as the point which minimises this function.
+    /// Sum of distances from any single point v, typically not a member, 
+    /// to all members of self.    
+    /// Geometric Median (gm) is defined as the point which minimises this function.
+    /// This is relatively expensive measure to compute.
+    /// The radius (distance) from gm is far more efficient, once gm has been found.
     fn distsum(self, v: &[U]) -> f64 {
         self.iter().map(|p| p.vdist(v)).sum::<f64>()
     }
 
-    /// Sorted eccentricities magnitudes, w.r.t. weighted geometric median.
+    /// Sorted eccentricities magnitudes (radii), w.r.t. weighted geometric median.
     /// associated cummulative probability density function in [0,1] of the weights.
     fn wsortedeccs(self, ws: &[U], gm: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len()); 

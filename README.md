@@ -134,11 +134,12 @@ Some vector algebra as above that can be more efficient when the end type happen
 
 ## Trait VecVec
 
-Relationships between n vectors (in d dimensions). This is the main original contribution of this library. True geometric median is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhood of existing set points.
+Relationships between n vectors (in d dimensions).
+This general data domain is denoted here as (nd). It is in nd where the main original contribution of this library lies. True geometric median (gm) is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhoods of existing set points.
 
-* sums of distances, eccentricity (radius) measure,
-* centroid, medoid, outliers, true geometric median,
-* characterisations of sets of multidimensional points (of n random variables): means, stds, medians
+* centroid, medoid, outliers, gm
+* sums of distances, radius of a point (as its distance from gm)
+* characterisation of a set of multidimensional points by the mean, standard deviation, median of its points' radii. These are useful recognition measures for the set.
 * transformation to zero geometric median data,
 * multivariate trend (regression) between two sets of nd points,
 * covariance and comediance matrices (weighted and unweighted).
@@ -147,7 +148,7 @@ Warning: trait VecVec is entirely unchecked, so check your data upfront.
 
 ## Trait VecVecg
 
-Methods which take an additional generic vector argument, such as a vector of weights for computing the weighted geometric medians.
+Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians.
 
 ## Appendix I: Terminology
 
@@ -172,6 +173,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 * `Median correlation` we define analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson normalises by subtracting the mean from all components, we subtract the median.
 
 ## Appendix II: Recent Releases
+
+* **Version 1.0.15** - Nightly.
 
 * **Version 1.0.14** - Some improvements of README.md.
 
