@@ -220,6 +220,25 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let Med{median,..} = eccs.median().unwrap_or_else(|_| panic!("{},median failed\n",here!()));
         median
     }
+
+    /// Mean projections of radii on each axis
+    fn radvec(self, eps: f64) -> Vec<f64> {
+        let gm = self.gmedian(eps);
+        let nf = self.len() as f64; 
+        let dims = self[0].len();
+        let unitc = 1_f64.powi(-(dims as i32)); // components of unit axis vectors
+        let mut projections = vec![0_f64; dims];
+        for s in self { 
+            // compute projection (dot product) on all the unit axes
+            // without explicitly constructing  unit axes vector
+            // as all its components are the same unitc
+            for (i,&component) in s.iter().enumerate() {
+                projections[i] += f64::from(component)*unitc;    
+            }
+        }
+        projections.iter_mut().for_each(|p| *p /= nf);
+        projections      
+    }
      
     /// GM and sorted eccentricities magnitudes.
     /// Describing a set of points `self` in n dimensions

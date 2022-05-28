@@ -355,6 +355,8 @@ pub trait VecVec<T> {
     fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
     /// MADn multidimensional median absolute deviation: data spread estimator that is more stable than variance
     fn madn(self, eps: f64) -> f64;
+    /// Mean projections of radii on each axis
+    fn radvec(self, eps: f64) -> Vec<f64>;
     /// Medoid and Outlier as defined by eccentricities.
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64>;
     /// Returns sorted eccentricities magnitudes
