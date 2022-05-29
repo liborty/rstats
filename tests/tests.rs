@@ -1,8 +1,8 @@
-use anyhow::Result;
+use anyhow::{Result};
 use devtimer::DevTime;
 use indxvec::{merge::*, Indices, Printing, GR, UN};
 use rstats::{i64tof64, Med, Stats, VecVec, VecVecg, Vecf64, Vecg, Vecu8};
-use ran::*;
+use ran::{*,generators::{set_seeds,ranvu8,ranvvu8,ranvvf64}};
 
 pub const EPS: f64 = 1e-10;
 
@@ -207,58 +207,61 @@ fn trend() -> Result<()> {
 
 #[test]
 fn vecvec() -> Result<()> {
-    let d = 10_usize;
+    let d = 9_usize;
     let n = 90_usize;
-    println!("testing on a random set of {} points in {} dimensional space",n,d);
+    println!("Testing on a random set of {} points in {} dimensional space",n,d);
     // create test weights data
-    let mut weights = Vec::new();
-    for i in 1..n + 1 {
-        weights.push(i as f64)
-    }
-    let pt = ranvvu8(d, n);
-    // println!("{}",pt.gr());
-    println!("Set joint entropy: {}", pt.jointentropyn().gr());
-    println!("Set dependence:    {}", pt.dependencen().gr());
-    let outcomes = ranvu8(n);
-    let transppt = pt.transpose();
+    // let mut weights = Vec::new();
+    // for i in 1..n {
+    //    weights.push(i as f64)
+    // }
+    set_seeds(333);
+    let ru = Rnum::newu8();
+    let pts = ru.ranvv(d,n).getvvu8(); 
+    // println!("{}",pts.gr());
+    println!("Set joint entropy: {}", pts.jointentropyn().gr());
+    println!("Set dependence:    {}", pts.dependencen().gr());
+    let outcomes = ru.ranv(n).getvu8();
+    let transppt = pts.transpose();
     println!(
         "Dependencies of outcomes: {}",
         transppt.dependencies(&outcomes).gr()
     );
     println!(
-        "Correlations with outcomes: {}",
-        transppt.correlations(&outcomes).gr()
+    "Correlations with outcomes: {}",
+    transppt.correlations(&outcomes).gr()
     );
-    let (eccstd, eccmed, eccecc) = pt.eccinfo(EPS);
-    // let me = pt.emedoid(EPS);
-    let medoid = &pt[eccecc.minindex];
-    let outlier = &pt[eccecc.maxindex];
-    let hcentroid = pt.hcentroid();
-    let gcentroid = pt.gcentroid();
-    let acentroid = pt.acentroid();
-    let firstp = pt.firstpoint();
-    let median = pt.gmedian(EPS);
-    // let outlier = &pt[md.maxindex];
-    // let eoutlier = &pt[me.maxindex];
-
-    let dists = pt.distsums();
-    let md = minmax(&dists);
-    println!("\nMedoid and Outlier Total Distances:\n{}", md);
+    let (eccstd, eccmed, eccecc) = pts.eccinfo(EPS);
+    // let me = pts.emedoid(EPS);
+    let medoid = &pts[eccecc.minindex];
+    let outlier = &pts[eccecc.maxindex];
+    let hcentroid = pts.hcentroid();
+    let gcentroid = pts.gcentroid();
+    let acentroid = pts.acentroid();
+    let firstp = pts.firstpoint();
+    let median = pts.gmedian(EPS);
+    let (posfr,negfr) = pts.tukeycounts(&median);    
+    println!("\nTukey radius for gm {} and +ve/-ve hemisphere frequencies:\n{}\n{}",
+        pts.tukeyradius(&median).gr(),posfr.gr(),negfr.gr());
+    // println!("Tukey radius for acentroid: {}\n",pts.tukeyradius(&acentroid));
+    let dists = pts.distsums();
+    let md = minmax(&dists); 
+    println!("Medoid and Outlier Total Distances:\n{}", md);
     println!("Total Distances {}", dists.ameanstd()?.gr());
     println!("Total Distances {}\n", dists.median()?);
     println!(
         "HCentroid's total distances:\t{}",
-        pt.distsum(&hcentroid).gr()
+        pts.distsum(&hcentroid).gr()
     );
     println!(
         "GCentroid's total distances:\t{}",
-        pt.distsum(&gcentroid).gr()
+        pts.distsum(&gcentroid).gr()
     );
     println!(
         "ACentroid's total distances:\t{}",
-        pt.distsum(&acentroid).gr()
+        pts.distsum(&acentroid).gr()
     );
-    println!("Median's total distances:\t{}", pt.distsum(&median).gr());
+    println!("Median's total distances:\t{}", pts.distsum(&median).gr());
     println!(
         "Outlier's distance to Medoid:\t{}",
         outlier.vdist(medoid).gr()
@@ -271,9 +274,9 @@ fn vecvec() -> Result<()> {
         "Medoid's radius (from Median):\t{}",
         medoid.vdist(&median).gr()
     );
-
+ 
     println!(
-        "\nMedoid and outlier radii (eccentricities):\n{}Radii {}\nRadii {}",
+        "\nMedoid, outlier and radii summary:\n{}\nRadii {}\nRadii {}",
         eccecc, eccstd, eccmed
     );
     println!("HCentroid's radius: {}", hcentroid.vdist(&median).gr());
@@ -283,12 +286,12 @@ fn vecvec() -> Result<()> {
     println!(
         "Median's error*{:e}: {}",
         1_f64 / EPS,
-        (pt.eccnonmember(&median).vmag() / EPS).gr()
+        (pts.eccnonmember(&median).vmag() / EPS).gr()
     );
     // let zmed = pt.translate(&median); // zero median transformed data
     // println!("Median's error:\t{}\n",zmed.gmedian(EPS).vmag()));
 
-    let seccs = pt.sortedeccs(true, &median);
+    let seccs = pts.sortedeccs(true, &median);
     // println!("\nSorted eccs: {}\n", seccs));
     let lqcnt = binsearch(&seccs, eccmed.lquartile);
     println!(
@@ -312,7 +315,7 @@ fn vecvec() -> Result<()> {
     // let medmed = vec![0.5_f64;n];
     // let (se, cpdf) =
     //  pt.wsortedcos(&medmed,&medmed.vunit(), &weights);
-    //  println!("Sorted coses:\n{}\ncpdf:\n{}\n",se),cpdf));
+    //  println!("Sorted coses:\n{}\ncpdf:\n{}\n",se),cpdf));  
     Ok(())
 }
 

@@ -221,6 +221,35 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         median
     }
 
+    /// Proportions of points found in each of 2d hemispheres
+    fn tukeycounts(self, gm: &[f64]) -> (Vec<f64>,Vec<f64>) {
+        let nf = self.len() as f64; 
+        let dims = self[0].len();
+        let mut poshemis = vec![0_f64; dims];
+        let mut neghemis = vec![0_f64; dims];       
+        let zerogm = self.zerogm(gm);
+        for v in zerogm {   
+            for (i,&component) in v.iter().enumerate() {
+                if component > 0. { poshemis[i] += 1. };
+                if component < 0. { neghemis[i] += 1. };  
+            }
+        }
+        for j in 0..dims {
+            poshemis[j] /= nf;
+            neghemis[j] /= nf;
+        } 
+    (poshemis,neghemis)  
+    }
+
+    /// Normalised Tukey radius (perfect value would be 0.5)
+    fn tukeyradius(self, gm: &[f64]) -> f64 {
+        let (posfrs,negfrs) = self.tukeycounts(gm);
+        let allcounts = [posfrs,negfrs].concat(); 
+        let mut min = 1.0;
+        for fr in allcounts { if fr < min { min = fr }};
+        min
+    }
+
     /// Mean projections of radii on each axis
     fn radvec(self, gm: &[f64]) -> Vec<f64> { 
         let nf = self.len() as f64; 

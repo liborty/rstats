@@ -357,6 +357,10 @@ pub trait VecVec<T> {
     fn madn(self, eps: f64) -> f64;
     /// Mean projections of radii on each axis
     fn radvec(self, gm: &[f64]) -> Vec<f64>;
+    /// Proportions of points found in each of 2d hemispheres
+    fn tukeycounts(self, gm: &[f64]) -> (Vec<f64>,Vec<f64>);
+    /// Normalised Tukey radius (perfect value would be 0.5)
+    fn tukeyradius(self, gm: &[f64]) -> f64;
     /// Medoid and Outlier as defined by eccentricities.
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64>;
     /// Returns sorted eccentricities magnitudes
