@@ -158,7 +158,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * `Quasi\Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here.
 
-* `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but not  implemented here, as its advantages over the geometric median are not clear.
+* `Tukey Median` is the point maximising `Tukey's Depth` (here implemented as `tukeyradius`), which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but only partially implemented here, as its advantages over the geometric median are not clear. 
 
 * `Medoid` is the member of the set with the least sum of distances to all other members.
 
@@ -174,7 +174,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.15** - Nightly.
+* **Version 1.0.15** - Added `radvec,tukeycounts,tukeyradius` ( `Tukey's Depth`).
 
 * **Version 1.0.14** - Some improvements of README.md.
 
