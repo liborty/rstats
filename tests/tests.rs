@@ -207,7 +207,7 @@ fn trend() -> Result<()> {
 
 #[test]
 fn vecvec() -> Result<()> {
-    let d = 9_usize;
+    let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {} points in {} dimensional space",n,d);
     // create test weights data
@@ -215,7 +215,7 @@ fn vecvec() -> Result<()> {
     // for i in 1..n {
     //    weights.push(i as f64)
     // }
-    set_seeds(333);
+    set_seeds(111);
     let ru = Rnum::newu8();
     let pts = ru.ranvv(d,n).getvvu8(); 
     // println!("{}",pts.gr());
@@ -239,14 +239,12 @@ fn vecvec() -> Result<()> {
     let gcentroid = pts.gcentroid();
     let acentroid = pts.acentroid();
     let firstp = pts.firstpoint();
-    let median = pts.gmedian(EPS);
-    let (posfr,negfr) = pts.tukeycounts(&median);    
-    println!("\nTukey radius for gm {} and +ve/-ve hemisphere frequencies:\n{}\n{}",
-        pts.tukeyradius(&median).gr(),posfr.gr(),negfr.gr());
-    // println!("Tukey radius for acentroid: {}\n",pts.tukeyradius(&acentroid));
+    let median = pts.gmedian(EPS);   
+    println!("\nMagnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
+    println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
     let dists = pts.distsums();
     let md = minmax(&dists); 
-    println!("Medoid and Outlier Total Distances:\n{}", md);
+    println!("\nMedoid and Outlier Total Distances:\n{}", md);
     println!("Total Distances {}", dists.ameanstd()?.gr());
     println!("Total Distances {}\n", dists.median()?);
     println!(

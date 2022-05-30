@@ -221,33 +221,20 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         median
     }
 
-    /// Proportions of points found in each of 2d hemispheres
-    fn tukeycounts(self, gm: &[f64]) -> (Vec<f64>,Vec<f64>) {
+    /// Proportions of points along each axis
+    fn tukeyvec(self, gm: &[f64]) -> Vec<f64> {
         let nf = self.len() as f64; 
         let dims = self[0].len();
-        let mut poshemis = vec![0_f64; dims];
-        let mut neghemis = vec![0_f64; dims];       
+        let mut hemis = vec![0_f64; dims];       
         let zerogm = self.zerogm(gm);
         for v in zerogm {   
             for (i,&component) in v.iter().enumerate() {
-                if component > 0. { poshemis[i] += 1. };
-                if component < 0. { neghemis[i] += 1. };  
+                if component > 0. { hemis[i] += 1. }
+                else if component < 0. { hemis[i] -= 1. };  
             }
         }
-        for j in 0..dims {
-            poshemis[j] /= nf;
-            neghemis[j] /= nf;
-        } 
-    (poshemis,neghemis)  
-    }
-
-    /// Normalised Tukey radius (perfect value would be 0.5)
-    fn tukeyradius(self, gm: &[f64]) -> f64 {
-        let (posfrs,negfrs) = self.tukeycounts(gm);
-        let allcounts = [posfrs,negfrs].concat(); 
-        let mut min = 1.0;
-        for fr in allcounts { if fr < min { min = fr }};
-        min
+        hemis.iter_mut().for_each(|hem| *hem /= nf );
+    hemis 
     }
 
     /// Mean projections of radii on each axis
