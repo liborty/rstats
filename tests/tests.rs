@@ -224,12 +224,12 @@ fn vecvec() -> Result<()> {
     let outcomes = ru.ranv(n).getvu8();
     let transppt = pts.transpose();
     println!(
-        "Dependencies of outcomes: {}",
+        "\nDependencies of outcomes:\n{}",
         transppt.dependencies(&outcomes).gr()
     );
     println!(
-    "Correlations with outcomes: {}",
-    transppt.correlations(&outcomes).gr()
+        "Correlations with outcomes:\n{}",
+        transppt.correlations(&outcomes).gr()
     );
     let (eccstd, eccmed, eccecc) = pts.eccinfo(EPS);
     // let me = pts.emedoid(EPS);
@@ -239,9 +239,13 @@ fn vecvec() -> Result<()> {
     let gcentroid = pts.gcentroid();
     let acentroid = pts.acentroid();
     let firstp = pts.firstpoint();
-    let median = pts.gmedian(EPS);   
-    println!("\nMagnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
+    let median = pts.gmedian(EPS);
+    
+    println!("\nRadvec projections:\n{}",pts.radvec(&median).gr());
     println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
+    println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
+    let testvec = ru.ranv(d).getvu8();
+    println!("Radvec belonging score: {}",pts.radvecscore(&testvec,&median).gr());
     let dists = pts.distsums();
     let md = minmax(&dists); 
     println!("\nMedoid and Outlier Total Distances:\n{}", md);

@@ -174,6 +174,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.0.17** - Improved `radvec`, added `radvecscore` to `vevecg`. It is a measure for a vector belonging to a set of vectors.
+
 * **Version 1.0.16** - Added `radvec,tukeyvec` and test of tukeyvec. Also changed usage of `ran` crate to its generic methods within `vecvec` test.
 
 * **Version 1.0.14** - Some improvements of README.md.

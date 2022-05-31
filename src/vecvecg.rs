@@ -250,4 +250,12 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         };
         com
     }
+
+        /// Measure for a vector belonging to a set, 
+        /// not based on the distance to some kind of 'center'
+        fn radvecscore(self, v:&[U], gm:&[f64]) -> f64 { 
+            let radvec =  self.radvec(gm); 
+        radvec.dotp(&v.vsub(gm))
+        }
+    
 }

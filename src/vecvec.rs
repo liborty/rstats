@@ -222,7 +222,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     }
 
     /// Proportions of points along each axis
-    fn tukeyvec(self, gm: &[f64]) -> Vec<f64> {
+    fn tukeyvec(self, gm: &[f64]) -> Vec<f64> { 
         let nf = self.len() as f64; 
         let dims = self[0].len();
         let mut hemis = vec![0_f64; dims];       
@@ -234,27 +234,29 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             }
         }
         hemis.iter_mut().for_each(|hem| *hem /= nf );
-    hemis 
+        hemis
     }
 
-    /// Mean projections of radii on each axis
+    /// Mean projections of zero median points onto each unit axis
     fn radvec(self, gm: &[f64]) -> Vec<f64> { 
         let nf = self.len() as f64; 
         let dims = self[0].len();
-        let unitc = 1_f64.powi(-(dims as i32)); // components of unit axis vectors
+        // components of averaging unit axis vectors
+        let unitc = (dims as f64).powf(-0.5)/nf; 
         let mut projections = vec![0_f64; dims];
         let zerogm = self.zerogm(gm);
         for v in zerogm { 
-            // compute projection (dot product) on all the unit axes
-            // without explicitly constructing  unit axes vector
-            // as all its components are the same unitc
+            // sum all zero median vectors by components 
             for (i,&component) in v.iter().enumerate() {
-                projections[i] += component*unitc;    
+                projections[i] += component;    
             }
         }
-        projections.iter_mut().for_each(|p| *p /= nf);
+        // average projections onto axis (unit) vectors
+        projections.iter_mut().for_each(|p| *p *= unitc);
         projections      
     }
+
+    
      
     /// GM and sorted eccentricities magnitudes.
     /// Describing a set of points `self` in n dimensions

@@ -355,7 +355,7 @@ pub trait VecVec<T> {
     fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
     /// MADn multidimensional median absolute deviation: data spread estimator that is more stable than variance
     fn madn(self, eps: f64) -> f64;
-    /// Mean projections of radii on each axis
+    /// Mean projections of zero median points onto each unit axix 
     fn radvec(self, gm: &[f64]) -> Vec<f64>;
     /// Proportions of points found along each axis
     fn tukeyvec(self, gm: &[f64]) -> Vec<f64>;
@@ -412,4 +412,6 @@ pub trait VecVecg<T,U> {
     /// Flatteened comediance matrix for weighted f64 vectors.
     /// Similar to `wcovar` above but medians instead of means are returned.
     fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64>;
+    /// Measure for a vector belonging to a set
+    fn radvecscore(self, v:&[U], gm:&[f64]) -> f64; 
 }
