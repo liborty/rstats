@@ -244,10 +244,10 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         // components of averaging unit axis vectors
         let unitc = (dims as f64).powf(-0.5)/nf; 
         let mut projections = vec![0_f64; dims];
-        let zerogm = self.zerogm(gm);
-        for v in zerogm { 
+        for v in self { 
+            let zerogmv = v.vsubf64(gm);
             // sum all zero median vectors by components 
-            for (i,&component) in v.iter().enumerate() {
+            for (i,&component) in zerogmv.iter().enumerate() {
                 projections[i] += component;    
             }
         }

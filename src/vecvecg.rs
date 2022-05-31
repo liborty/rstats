@@ -1,4 +1,4 @@
-use crate::{here,Med,Stats,Vecg,Vecf64,MutVecf64,VecVecg,VecVec};
+use crate::{here,wsum,Med,Stats,Vecg,Vecf64,MutVecf64,VecVecg,VecVec};
 pub use indxvec::{merge::*,Indices};
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display, 
@@ -251,11 +251,29 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         com
     }
 
-        /// Measure for a vector belonging to a set, 
-        /// not based on the distance to some kind of 'center'
-        fn radvecscore(self, v:&[U], gm:&[f64]) -> f64 { 
-            let radvec =  self.radvec(gm); 
-        radvec.dotp(&v.vsub(gm))
+    /// Mean weighted projections of zero median points onto each unit axis
+    fn wradvec(self, ws:&[U], gm: &[f64]) -> Vec<f64> { 
+        let dims = self[0].len();
+        // components of averaging unit axis vectors
+        let unitc = (dims as f64).powf(-0.5)/wsum(self.len()); 
+        let mut projections = vec![0_f64; dims]; 
+        for v in self { 
+            let zerogmv = v.vsubf64(gm);
+            // sum all zero median vectors by components 
+            for (i,&component) in zerogmv.iter().enumerate() {
+                projections[i] += f64::from(ws[i])*component;    
+            }
         }
+        // average projections onto axis (unit) vectors
+        projections.iter_mut().for_each(|p| *p *= unitc);
+        projections      
+    }
+
+    /// Measure for a vector belonging to a set, 
+    /// not based on the distance to some kind of 'center'
+    fn radvecscore(self, v:&[U], gm:&[f64]) -> f64 { 
+        let radvec =  self.radvec(gm); 
+    radvec.dotp(&v.vsub(gm))
+    }
     
 }

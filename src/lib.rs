@@ -412,6 +412,8 @@ pub trait VecVecg<T,U> {
     /// Flatteened comediance matrix for weighted f64 vectors.
     /// Similar to `wcovar` above but medians instead of means are returned.
     fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64>;
+    /// Mean weighted projections of zero median points onto each unit axis
+    fn wradvec(self, ws:&[U], gm: &[f64]) -> Vec<f64>; 
     /// Measure for a vector belonging to a set
     fn radvecscore(self, v:&[U], gm:&[f64]) -> f64; 
 }
