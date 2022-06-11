@@ -239,13 +239,11 @@ fn vecvec() -> Result<()> {
     let gcentroid = pts.gcentroid();
     let acentroid = pts.acentroid();
     let firstp = pts.firstpoint();
-    let median = pts.gmedian(EPS);
-    
-    println!("\nRadvec projections:\n{}",pts.radvec(&median).gr());
-    println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
+    let median = pts.gmedian(EPS);    
+
+    println!("\nMag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
-    let testvec = ru.ranv(d).getvu8();
-    println!("Radvec belonging score: {}",pts.radvecscore(&testvec,&median).gr());
+    // let testvec = ru.ranv(d).getvu8();
     let dists = pts.distsums();
     let md = minmax(&dists); 
     println!("\nMedoid and Outlier Total Distances:\n{}", md);
@@ -281,6 +279,7 @@ fn vecvec() -> Result<()> {
         "\nMedoid, outlier and radii summary:\n{}\nRadii {}\nRadii {}",
         eccecc, eccstd, eccmed
     );
+    println!("MADGM: {}", pts.madgm(&median).gr());
     println!("HCentroid's radius: {}", hcentroid.vdist(&median).gr());
     println!("GCentroid's radius: {}", gcentroid.vdist(&median).gr());
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());

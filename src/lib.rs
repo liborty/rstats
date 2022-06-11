@@ -178,6 +178,8 @@ pub trait Vecg<T,U> {
     fn vadd(self, v:&[U]) -> Vec<f64>; 
     /// Euclidian distance 
     fn vdist(self, v:&[U]) -> f64;
+    /// Weighted euclidian distance  
+    fn wvdist(self, ws:&[f64],v:&[U]) -> f64;
     /// Euclidian distance squared
     fn vdistsq(self, v:&[U]) -> f64; 
      /// cityblock distance
@@ -355,10 +357,8 @@ pub trait VecVec<T> {
     fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>; 
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
     fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
-    /// MADn multidimensional median absolute deviation: data spread estimator that is more stable than variance
-    fn madn(self, eps: f64) -> f64;
-    /// Mean projections of zero median points onto each unit axix 
-    fn radvec(self, gm: &[f64]) -> Vec<f64>;
+    /// MADGM, multidimensional median absolute deviation: stable nd data spread estimator
+    fn madgm(self, gm: &[f64]) -> f64;
     /// Proportions of points found along each axis
     fn tukeyvec(self, gm: &[f64]) -> Vec<f64>;
     /// Medoid and Outlier as defined by eccentricities.
@@ -404,6 +404,8 @@ pub trait VecVecg<T,U> {
     fn weccnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64>;
     /// The weighted geometric median to accuracy eps 
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>;
+    /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
+    fn wmadgm(self, ws: &[f64], wgm: &[f64]) -> f64;     
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med:&[U]) -> Vec<f64>;  
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
@@ -414,8 +416,4 @@ pub trait VecVecg<T,U> {
     /// Flatteened comediance matrix for weighted f64 vectors.
     /// Similar to `wcovar` above but medians instead of means are returned.
     fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64>;
-    /// Mean weighted projections of zero median points onto each unit axis
-    fn wradvec(self, ws:&[U], gm: &[f64]) -> Vec<f64>; 
-    /// Measure for a vector belonging to a set
-    fn radvecscore(self, v:&[U], gm:&[f64]) -> f64; 
 }

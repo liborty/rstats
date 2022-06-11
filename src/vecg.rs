@@ -70,6 +70,15 @@ impl<T,U> Vecg<T,U> for &[T]
             .sqrt()
     }
 
+    /// Weighted distance to `&[f64]`  
+    fn wvdist(self, ws:&[f64],v:&[U]) -> f64 {
+        self.iter().enumerate() 
+            .map(|(i, &xi)| ws[i]*(f64::from(xi)-f64::from(v[i])).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+        
+
     /// Euclidian distance squared  
     fn vdistsq(self, v:&[U]) -> f64 {
         self.iter()

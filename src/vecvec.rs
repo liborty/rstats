@@ -213,11 +213,10 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         (eccs.ameanstd().unwrap(),eccs.median().unwrap(),minmax(&eccs))
     }
 
-    /// MADn multidimensional median of radii: stable nd data spread estimator
-    fn madn(self, eps: f64) -> f64 {
-        let gm = self.gmedian(eps); 
-        let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
-        let Med{median,..} = eccs.median().unwrap_or_else(|_| panic!("{},median failed\n",here!()));
+    /// MADGM median of absolute deviations from gm: stable nd data spread estimator
+    fn madgm(self, gm: &[f64]) -> f64 {     
+        let devs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
+        let Med{median,..} = devs.median().unwrap_or_else(|_| panic!("{},median failed\n",here!()));
         median
     }
 
@@ -235,28 +234,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         }
         hemis.iter_mut().for_each(|hem| *hem /= nf );
         hemis
-    }
-
-    /// Mean projections of zero median points onto each unit axis
-    fn radvec(self, gm: &[f64]) -> Vec<f64> { 
-        let nf = self.len() as f64; 
-        let dims = self[0].len();
-        // components of averaging unit axis vectors
-        let unitc = (dims as f64).powf(-0.5)/nf; 
-        let mut projections = vec![0_f64; dims];
-        for v in self { 
-            let zerogmv = v.vsubf64(gm);
-            // sum all zero median vectors by components 
-            for (i,&component) in zerogmv.iter().enumerate() {
-                projections[i] += component;    
-            }
-        }
-        // average projections onto axis (unit) vectors
-        projections.iter_mut().for_each(|p| *p *= unitc);
-        projections      
-    }
-
-    
+    }    
      
     /// GM and sorted eccentricities magnitudes.
     /// Describing a set of points `self` in n dimensions

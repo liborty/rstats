@@ -33,9 +33,11 @@ Our treatment of multidimensional sets of points (vectors) is constructed from t
 
 * `gmedian` - fast multidimensional (geometric) median algorithm.
 
-* `comediance`, is a suggested replacement for covariance (matrix). It is obtained simply by supplying `covar` with the geometric median instead of the usual centroid. Thus *zero median vectors* are replacing zero mean vectors.
+* `madgm` - generalisation of robust data spread estimator known as 'MAD' in 1d (median of absolute deviations from median), to multiple dimensions (nd).    
 
-* `median correlation`: in one dimension, our `mediancorr` method is to replace *Pearson's correlation*. We define *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
+* `comediance` - instead of covariance (matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus *zero median vectors* are replacing *zero mean vectors* in covariance calculations.
+
+* `median correlation`- in one dimension, our `mediancorr` method is to replace *Pearson's correlation*. We define *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
@@ -175,11 +177,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.18** - Added `wradvec`, weighted radvec to `vevecg`.
+* **Version 1.0.18** - Renamed `madn` to `madgm` (median of absolute deviations, i.e. radii, from gm). Added its weighted version `wmadgm`. They now take `gm` or `wgm` respectively as an argument, to avoid recomputation.Removed `radvec`, as it was a simple difference of `gm` and `centroid`.
 
-* **Version 1.0.17** - Improved `radvec`, added `radvecscore` to `vevecg`. It is a measure for a vector belonging to a set of vectors.
-
-* **Version 1.0.16** - Added `radvec,tukeyvec` and test of tukeyvec. Also changed usage of `ran` crate to its generic methods within `vecvec` test.
+* **Version 1.0.16** - Added `tukeyvec` and test of tukeyvec. Also changed usage of `ran` crate to its generic methods within `vecvec` test.
 
 * **Version 1.0.14** - Some improvements of README.md.
 
