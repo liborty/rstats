@@ -170,7 +170,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
 
-* `MADGM` (median of distances from gm). This is a generalisation of `MAD` (maedian of absolute differences) measure from 1d to nd. It is a robust measure of data spread.
+* `MADGM` (median of distances from gm). This is a generalisation of `MAD` (median of absolute differences) measure from 1d to nd. It is a robust measure of data spread.
 
 * `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors.
 
