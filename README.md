@@ -154,23 +154,24 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 #### Including some new definitions for sets of nd points, i.e. n points in d dimensional space
 
-* `Centroid\Centre\Mean` is the (generally non member) point that minimises the sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, it is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if somewhat confusing) usage: Centroid = Centre = Arithmetic Mean.
+* `Centroid/Centre/Mean` is the (generally non member) point that minimises the sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, it is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if somewhat confusing) usage: Centroid = Centre = Arithmetic Mean.
 
-* `Quasi\Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here.
+* `Quasi/Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here.
 
-* `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but only partially implemented here by `tukeyvec`, as its advantages over the geometric median are not clear. 
-
-* `Medoid` is the member of the set with the least sum of distances to all other members.
-
-* `Outlier` is the member of the set with the greatest sum of distances to all other members.
+* `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but only partially implemented here by `tukeyvec`, as its advantages over the geometric median are not clear.
 
 * `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all members. This is the one we want. It is much less susceptible to outliers than centroid. In addition, unlike quasi median, `gm` is rotation independent.
 
-* `Zero median vector` is obtained by subtracting the geometric median. This is a proposed  alternative to the commonly used `zero mean vector`, obtained by subtracting the centroid.
+* `Medoid` is the member of the set with the least sum of distances to all other members. Equivalently, the member which is the nearest to the `gm`.
 
-* `Comediance` is similar to `covariance`, except zero median vectors are used to compute it,  instead of zero mean vectors.
+* `Outlier` is the member of the set with the greatest sum of distances to all other members (equivalently, it is the furthest from the `gm`).
 
-* `Median correlation` we define analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson normalises by subtracting the mean from all components, we subtract the median.
+* `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
+
+* `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors.
+
+* `Median correlation` between
+ two vectors. We define it analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson 'normalises' by subtracting the mean from all components, we subtract the median.
 
 ## Appendix II: Recent Releases
 

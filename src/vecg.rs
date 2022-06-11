@@ -98,6 +98,12 @@ impl<T,U> Vecg<T,U> for &[T]
         ( v.vmagsq() * self.vmagsq() ).sqrt() - self.dotp(v)
     } 
 
+    /// Positive dotp [0,2|a||b|]
+    /// = |a||b|(1+cos(theta)) = 2|a||b|S
+    fn pdotp(self, v:&[U]) -> f64 { 
+        ( v.vmagsq() * self.vmagsq() ).sqrt() + self.dotp(v) 
+    }
+
     /// We define vector similarity S in the interval [0,1] as
     /// S = (1+cos(theta))/2
     fn vsim(self, v:&[U]) -> f64 { (1.0+self.cosine(v))/2.0 }

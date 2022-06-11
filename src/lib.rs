@@ -189,6 +189,8 @@ pub trait Vecg<T,U> {
      fn varc(self, v:&[U]) -> f64; 
     /// Vector similarity S in the interval [0,1]: S = (1+cos(theta))/2
     fn vsim(self, v:&[U]) -> f64;
+    /// Positive dotp [0,2|a||b|] 
+    fn pdotp(self, v:&[U]) -> f64;
     /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2
     fn vdisim(self, v:&[U]) -> f64;
     /// Lower triangular part of a covariance matrix for a single f64 vector.
