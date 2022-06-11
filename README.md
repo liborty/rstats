@@ -166,9 +166,11 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * `Medoid` is the member of the set with the least sum of distances to all other members. Equivalently, the member which is the nearest to the `gm`.
 
-* `Outlier` is the member of the set with the greatest sum of distances to all other members (equivalently, it is the furthest from the `gm`).
+* `Outlier` is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm`.
 
 * `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
+
+* `MADGM` (median of distances from gm). This is a generalisation of `MAD` (maedian of absolute differences) measure from 1d to nd. It is a robust measure of data spread.
 
 * `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors.
 
@@ -177,7 +179,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.18** - Renamed `madn` to `madgm` (median of absolute deviations, i.e. radii, from gm). Added its weighted version `wmadgm`. They now take `gm` or `wgm` respectively as an argument, to avoid recomputation.Removed `radvec`, as it was a simple difference of `gm` and `centroid`.
+* **Version 1.0.18** - Renamed `madn` to `madgm` (median of absolute deviations, i.e. radii, from gm). Added its weighted version `wmadgm`. They now take `gm` or `wgm` respectively as an argument, to avoid recomputation. Removed `radvec`, as it was a simple difference of `gm` and `centroid`.
 
 * **Version 1.0.16** - Added `tukeyvec` and test of tukeyvec. Also changed usage of `ran` crate to its generic methods within `vecvec` test.
 
