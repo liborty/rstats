@@ -90,14 +90,16 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// gcentroid = multidimensional geometric mean
     fn gcentroid(self) -> Vec<f64> {
         let nf = self.len() as f64; // number of points
-        let d = self[0].len(); // dimensions
-        let mut centre = vec![0_f64; d];
-        let mut lnvec = vec![0_f64; d];
-        for v in self { 
-            v.iter().zip(&mut lnvec).for_each(|(&vi,lni)| *lni = f64::from(vi).ln() );
-            centre.mutvaddf64(&lnvec)
+        let dim = self[0].len(); // dimensions
+        let mut result = vec![0_f64; dim];
+        for d in 0..dim {
+            for v in self { 
+                result[d] += f64::from(v[d]).ln(); 
+            }
+            result[d] /= nf;
+            result[d] = result[d].exp() 
         }
-        centre.iter().map(|comp| (comp/nf).exp()).collect()        
+        result
     }
 
     /// hcentroid =  multidimensional harmonic mean

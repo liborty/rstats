@@ -219,7 +219,7 @@ fn vecvec() -> Result<()> {
     let ru = Rnum::newu8();
     let pts = ru.ranvv(d,n).getvvu8(); 
     // println!("{}",pts.gr());
-    println!("Set joint entropy: {GR}{}{UN}", pts.jointentropyn());
+    println!("Set joint entropy: {}", pts.jointentropyn().gr());
     println!("Set dependence:    {}", pts.dependencen().gr());
     let outcomes = ru.ranv(n).getvu8();
     let transppt = pts.transpose();
