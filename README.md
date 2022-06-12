@@ -179,6 +179,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.0.19** - Adjusted the argument types of `wmadgm` and `madgm`. Added weighted distance `wvdist`. Improved the testing of `vecvec`.
+
 * **Version 1.0.18** - Renamed `madn` to `madgm` (median of absolute deviations, i.e. radii, from gm). Added its weighted version `wmadgm`. They now take `gm` or `wgm` respectively as an argument, to avoid recomputation. Removed `radvec`, as it was a simple difference of `gm` and `centroid`.
 
 * **Version 1.0.16** - Added `tukeyvec` and test of tukeyvec. Also changed usage of `ran` crate to its generic methods within `vecvec` test.
