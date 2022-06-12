@@ -179,7 +179,7 @@ pub trait Vecg<T,U> {
     /// Euclidian distance 
     fn vdist(self, v:&[U]) -> f64;
     /// Weighted distance of self:&[T] to v:&[T], scaled by ws:&[U]  
-    fn wvdist(self, ws:&[U],v:&[T]) -> f64;
+    fn wvdistf64(self, ws:&[U],v:&[f64]) -> f64;
     /// Euclidian distance squared
     fn vdistsq(self, v:&[U]) -> f64; 
      /// cityblock distance
@@ -405,7 +405,7 @@ pub trait VecVecg<T,U> {
     /// The weighted geometric median to accuracy eps 
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>;
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
-    fn wmadgm(self, ws: &[U], wgm: &[T]) -> f64;     
+    fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64;     
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med:&[U]) -> Vec<f64>;  
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.

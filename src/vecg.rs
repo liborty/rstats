@@ -71,14 +71,14 @@ impl<T,U> Vecg<T,U> for &[T]
             .sqrt()
     }
 
-    /// Weighted distance of self:&[T] to v:&[T], scaled by ws:&[U]
-    /// allows weights to be of different type, e.g. u16  
-    fn wvdist(self, ws:&[U],v:&[T]) -> f64 {
+    /// Weighted distance of self:&[T] to v:&[f64], scaled by ws:&[U]
+    /// allows weights to be of different type to self, e.g. u16  
+    fn wvdistf64(self,ws:&[U],v:&[f64]) -> f64 {
         self.iter().enumerate() 
-            .map(|(i, &xi)| (f64::from(ws[i])*(f64::from(xi)-f64::from(v[i])).powi(2)))
+            .map(|(i, &xi)| (f64::from(ws[i])*(f64::from(xi)-v[i]).powi(2)))
             .sum::<f64>()
             .sqrt()
-    }        
+    } 
 
     /// Euclidian distance squared  
     fn vdistsq(self, v:&[U]) -> f64 {
@@ -316,7 +316,7 @@ impl<T,U> Vecg<T,U> for &[T]
 }
 
 impl<T> Vecf64<T> for &[T] 
-    where T: Copy+PartialOrd+std::fmt::Display,         
+    where T: Copy+PartialOrd+std::fmt::Display,
         f64: From<T>, f64: From<T> {
 
     /// scalar multiplication by f64

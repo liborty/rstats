@@ -217,7 +217,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> f64 {     
-        let devs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
+        let devs:Vec<f64> = self.iter().map(|v| v.vdistf64(gm)).collect();
         let Med{median,..} = devs.median().unwrap_or_else(|_| panic!("{},median failed\n",here!()));
         median
     }
