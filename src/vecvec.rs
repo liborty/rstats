@@ -30,7 +30,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut res:Vec<f64> = Vec::with_capacity(d);
         let mut tuples = self.transpose();
         let df = tuples.len() as f64; // for turning counts to probabilities
-        println!("{}",df);
+        // println!("{}",df);
         // lexical sort to group together occurrences of identical tuples
         tuples.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap()); 
         let mut count = 1_usize; // running count
@@ -49,7 +49,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// Joint entropy of vectors of the same length
     fn jointentropyn(self) -> f64 {
         let jpdf = self.jointpdfn(); 
-        jpdf.iter().map(|&x| -x*(x.ln()) ).sum() 
+        jpdf.iter().map(|&x| -x*(x.ln())).sum() 
     }
 
     /// Dependence (component wise) of a set of vectors.
