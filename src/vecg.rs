@@ -2,7 +2,8 @@ use crate::{here,Stats,Vecg,Vecf64};
 pub use indxvec::{Indices,merge::{sortm,rank}};
 
 impl<T,U> Vecg<T,U> for &[T] 
-    where T: Copy+PartialOrd+std::fmt::Display,
+    where 
+        T: Copy+PartialOrd+std::fmt::Display,
         U: Copy+PartialOrd+std::fmt::Display,
         f64: From<T>, f64: From<U> {
 
@@ -70,14 +71,14 @@ impl<T,U> Vecg<T,U> for &[T]
             .sqrt()
     }
 
-    /// Weighted distance to `&[f64]`  
-    fn wvdist(self, ws:&[f64],v:&[U]) -> f64 {
+    /// Weighted distance of self:&[T] to v:&[T], scaled by ws:&[U]
+    /// allows weights to be of different type, e.g. u16  
+    fn wvdist(self, ws:&[U],v:&[T]) -> f64 {
         self.iter().enumerate() 
-            .map(|(i, &xi)| ws[i]*(f64::from(xi)-f64::from(v[i])).powi(2))
+            .map(|(i, &xi)| (f64::from(ws[i])*(f64::from(xi)-f64::from(v[i])).powi(2)))
             .sum::<f64>()
             .sqrt()
-    }
-        
+    }        
 
     /// Euclidian distance squared  
     fn vdistsq(self, v:&[U]) -> f64 {
