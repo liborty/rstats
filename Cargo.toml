@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "1.0.19"
+version = "1.0.20"
 authors = ["Libor Spacek"]
 edition = "2021"
 description = "Statistical Measures, Vector Algebra, Geometric Median, Data Analysis and Machine Learning"

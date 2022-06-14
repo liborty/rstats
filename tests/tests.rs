@@ -1,6 +1,6 @@
 use anyhow::{Result};
 use devtimer::DevTime;
-use indxvec::{merge::*, Indices, Printing, GR, UN};
+use indxvec::{merge::*, printing::*, Indices, Printing};
 use rstats::{i64tof64, Med, Stats, VecVec, VecVecg, Vecf64, Vecg, Vecu8};
 use ran::{*,generators::{set_seeds,ranvu8,ranvvu8,ranvvf64}};
 
