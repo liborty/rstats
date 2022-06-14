@@ -22,6 +22,7 @@ maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
 indxvec = "^1"
+# indxvec = {path = "../indxvec"}
 anyhow = "^1"
 
 [dev-dependencies]
