@@ -1,6 +1,6 @@
 use anyhow::{Result};
 use devtimer::DevTime;
-use indxvec::{merge::*, printing::*, Indices, Printing};
+use indxvec::{printing::*, Indices, Vecops,Printing};
 use rstats::{i64tof64, Med, Stats, VecVec, VecVecg, Vecf64, Vecg, Vecu8};
 use ran::{*,generators::{set_seeds,ranvu8,ranvvu8,ranvvf64}};
 
@@ -59,7 +59,7 @@ fn fstats() -> Result<()> {
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
     ];
     println!("\n{}", (&v1).gr());
-    let v2 = revs(&v1);
+    let v2 = v1.revs();
     println!("{}", (&v2).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
     println!("Arithmetic mean:{}", v1.amean().unwrap().gr());
@@ -181,9 +181,9 @@ fn vecg() -> Result<()> {
     println!("Dependence:\t\t{}", v1.dependence(&v2).gr());
     println!("Cosine:\t\t\t{}", v1.cosine(&v2).gr());
     println!("Cosine of ranks:\t{}",
-        rank(&v1, true)
+        v1.rank(true)
             .indx_to_f64()
-            .cosine(&rank(&v2, true).indx_to_f64())
+            .cosine(&v2.rank(true).indx_to_f64())
             .gr() );
     println!("Cos Similarity [0,1]:\t{}", v1.vsim(&v2).gr());
     println!("Cos Dissimilarity:\t{}", v1.vdisim(&v2).gr());
@@ -246,7 +246,7 @@ fn vecvec() -> Result<()> {
     println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
     // let testvec = ru.ranv(d).getvu8();
     let dists = pts.distsums();
-    let md = minmax(&dists); 
+    let md = dists.minmax(); 
     println!("\nMedoid and Outlier Total Distances:\n{}", md);
     println!("Total Distances {}", dists.ameanstd()?.gr());
     println!("Total Distances {}", dists.median()?);
@@ -271,19 +271,19 @@ fn vecvec() -> Result<()> {
 
     let seccs = pts.sortedeccs(true, &median);
     // println!("\nSorted eccs: {}\n", seccs));
-    let lqcnt = binsearch(&seccs, eccmed.lquartile);
+    let lqcnt = seccs.binsearch(eccmed.lquartile);
     println!(
         "Inner quarter of points: {} within radius: {}",
         lqcnt.gr(),
         seccs[lqcnt - 1].gr()
     );
-    let medcnt = binsearch(&seccs, eccmed.median);
+    let medcnt = seccs.binsearch(eccmed.median);
     println!(
         "Inner half of points:    {} within radius: {}",
         medcnt.gr(),
         seccs[medcnt - 1].gr()
     );
-    let uqcnt = binsearch(&seccs, eccmed.uquartile);
+    let uqcnt = seccs.binsearch(eccmed.uquartile);
     println!(
         "Inner three quarters:    {} within radius: {}",
         uqcnt.gr(),

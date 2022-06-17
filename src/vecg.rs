@@ -1,5 +1,5 @@
 use crate::{here,Stats,Vecg,Vecf64};
-pub use indxvec::{Indices,merge::{sortm,rank}};
+pub use indxvec::{Indices,Vecops};
 
 impl<T,U> Vecg<T,U> for &[T] 
     where 
@@ -308,8 +308,8 @@ impl<T,U> Vecg<T,U> for &[T]
     /// assert_eq!(v1.spearmancorr(&v2),-0.1076923076923077);
     /// ```
     fn spearmancorr(self, v: &[U]) -> f64 {
-        let xvec = rank(self,true);
-        let yvec = rank(v,true); // rank from crate idxvec::merge
+        let xvec = self.rank(true);
+        let yvec = v.rank(true); // rank from crate idxvec::merge
         // It is just Pearson's correlation of usize ranks
         xvec.ucorrelation(&yvec) // using Indices trait from idxvec
     }

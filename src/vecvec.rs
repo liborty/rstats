@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
 use crate::{ Med, MStats, MinMax, MutVecg, MutVecf64, Stats, Vecg, Vecf64, VecVec, VecVecg};
-pub use indxvec::{here,tof64,Printing,merge::*,Indices};
+pub use indxvec::{here,tof64,Printing,Vecops,Indices};
 
 impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     f64: From<T> {
@@ -139,9 +139,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// Outlier is the point with the greatest sum of distances.
     /// In other words, they are the members nearest and furthest from the geometric median. 
     /// Returns struct MinMax{min,minindex,max,maxindex}
-    fn medout(self) -> MinMax<f64> {  
-        minmax(&self.distsums())
-    }
+    fn medout(self) -> MinMax<f64> {  self.distsums().minmax() }
 
     /// Finds approximate vectors from each member point towards the geometric median.
     /// Twice as fast using symmetry, as doing them individually.
@@ -212,7 +210,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn eccinfo(self, eps: f64) -> (MStats, Med, MinMax<f64>) where Vec<f64>:FromIterator<f64> {
         let gm = self.gmedian(eps);
         let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
-        (eccs.ameanstd().unwrap(),eccs.median().unwrap(),minmax(&eccs))
+        (eccs.ameanstd().unwrap(),eccs.median().unwrap(),eccs.minmax())
     }
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
@@ -244,7 +242,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut eccs = Vec::with_capacity(self.len()); 
         // collect raw ecentricities magnitudes
         for v in self { eccs.push(v.vdistf64(gm)) }
-        sortm(&eccs,ascending)
+        eccs.sortm(ascending)
     }    
 
     /// Eccentricities of Medoid and Outlier.  
@@ -252,7 +250,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64> {
     let gm:Vec<f64> = self.gmedian(eps);
     let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
-    minmax(&eccs)
+    eccs.minmax()
 } 
 
     /// Initial (first) point for geometric medians.

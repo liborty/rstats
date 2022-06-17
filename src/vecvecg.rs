@@ -1,5 +1,5 @@
 use crate::{here,Med,Stats,Vecg,Vecf64,MutVecf64,VecVecg,VecVec};
-pub use indxvec::{merge::*,Indices};
+pub use indxvec::{Vecops,Indices};
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display, 
     f64: From<T>, U: Copy+PartialOrd+std::fmt::Display,f64: From<U>  {
@@ -83,7 +83,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         // collect true eccentricities magnitudes
         for v in self { eccs.push(v.vdistf64(gm)) }
         // create sort index of the eccs
-        let index = sortidx(&eccs);
+        let index = eccs.sortidx();
         // pick the associated points weights in the order of the sorted eccs
         let mut weights = index.unindexf64(ws,true);
         let mut sumw = 0_f64;
@@ -103,7 +103,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
             coses.push(p.vsubunit(medmed).dotp(unitzmed)); 
         } 
         // create sort index of the coses
-        let index = sortidx(&coses);
+        let index = coses.sortidx();
         // pick the associated points weights in the same order as the sorted coses
         let mut weights = index.unindexf64(ws,true);
         let mut sumw = 0_f64;

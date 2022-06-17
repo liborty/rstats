@@ -1,7 +1,7 @@
 use crate::{ wsum,MStats,Med,Stats};
 use anyhow::{ensure, Result};
 // use std::ops::Sub;
-pub use indxvec::{here,Printing,merge::{sortm,minmax}};          
+pub use indxvec::{here,Printing,Vecops};          
 
 impl<T> Stats for &[T] 
     where T: Copy+PartialOrd+std::fmt::Display, // +Sub::<Output = T>,
@@ -368,7 +368,7 @@ impl<T> Stats for &[T]
         let mid = gaps / 2;
         let quarter = gaps / 4;
         let threeq = 3 * gaps / 4;
-        let v = sortm(self,true);     
+        let v = self.sortm(true);     
         let mut result = Med { median: 
             if 2*mid < gaps { (f64::from(v[mid]) + f64::from(v[mid + 1])) / 2.0 }
             else { f64::from(v[mid]) }, ..Default::default() };
@@ -432,7 +432,7 @@ impl<T> Stats for &[T]
 
     /// Information (entropy) (in nats)
     fn entropy(self) -> f64 {
-        let pdfv = sortm(self,true).pdf();      
+        let pdfv = self.sortm(true).pdf();      
         pdfv.iter().map(|&x| -x*(x.ln()) ).sum()                 
     }
 
@@ -462,7 +462,7 @@ impl<T> Stats for &[T]
     }
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Vec<f64> {
-        let mm = minmax(self);
+        let mm = self.minmax();
         let range = f64::from(mm.max)-f64::from(mm.min);
         self.iter().map(|&x|(f64::from(x)-f64::from(mm.min))/range).collect()        
     }

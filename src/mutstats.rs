@@ -1,6 +1,6 @@
 use crate::{MutStats};
 
-pub use indxvec::merge::{sortm,minmax};          
+pub use indxvec::Vecops;          
 
 impl MutStats for &mut [f64] {  
 
@@ -23,7 +23,7 @@ impl MutStats for &mut [f64] {
 
     /// Linear transform to interval [0,1]
     fn mlintrans(self) {
-        let mm = minmax(self);
+        let mm = self.minmax();
         let range = mm.max-mm.min;
         for c in self.iter_mut() { *c = (*c-mm.min)/range }        
     }
