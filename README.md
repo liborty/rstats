@@ -179,7 +179,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.21** - Changed imports from `indxvec` to fit with its latest multicoloured version 1.2.0.
+* **Version 1.0.21** - Changed imports from `indxvec` to fit with its latest multicoloured version 1.2.1.
 
 * **Version 1.0.19** - Adjusted the argument types of `wmadgm` and `madgm`. Added weighted distance `wvdist`. Improved the testing of `vecvec`.
 
