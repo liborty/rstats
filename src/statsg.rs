@@ -1,7 +1,6 @@
 use crate::{ wsum,MStats,Med,Stats};
 use anyhow::{ensure, Result};
-// use std::ops::Sub;
-pub use indxvec::{here,Printing,Vecops};          
+use indxvec::{here,Printing,Vecops};    
 
 impl<T> Stats for &[T] 
     where T: Copy+PartialOrd+std::fmt::Display, // +Sub::<Output = T>,
@@ -394,15 +393,11 @@ impl<T> Stats for &[T]
         Ok(result)       
     }
 
-    /// MAD median absolute deviations: data spread estimator that is more stable than variance
-    /// and more precise than quartiles
-    fn mad(self) -> Result<f64> {
-        let Med{median,..} = self.median() // ignore quartile fields
-            .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
-        let diffs:Vec<f64> = self.iter().map(|&s| (f64::from(s)-median).abs()).collect();
-        let Med{median:res,..} = diffs.median()
-            .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
-        Ok(res)
+    /// MAD median absolute deviations: data spread estimator.
+    /// Is more stable than standard deviation and more precise than quartiles.
+    fn mad(self,median:f64) -> Result<f64> {
+        let diffs:Vec<f64> = self.iter().map(|&s| (f64::from(s)-median).abs()).collect(); 
+        Ok(medians::medianf64(&diffs))
     }
 
     /// Zero median data produced by subtracting the median.

@@ -70,8 +70,8 @@ fn fstats() -> Result<()> {
     println!("Geometric  {}", v1.gmeanstd().unwrap().gr());
     println!("Harmonic   {}", v1.hmeanstd().unwrap().gr());
     println!("Autocorrelation:{}", v1.autocorr().gr());
-    println!("{}", v1.median()?);
-    println!("Mad:\t\t {}\n", v1.mad().unwrap().gr());
+    let med =  medians::median(&v1);
+    println!("Median {} +- {}",med.gr(),v1.mad(med).unwrap().gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
     println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
     println!("Euclid's dist:\t{}", v2.vdist(&v1).gr());

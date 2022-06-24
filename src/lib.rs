@@ -1,9 +1,18 @@
+#![warn(missing_docs)]
+//! Statistics, Vector Algebra, 
+//! Characterising multidimensional data, Machine Learning.
+
+/// Basic statistics on a single generic vector
 pub mod statsg;
-pub mod mutstats;
+/// Vector Algebra on two generic vectors
 pub mod vecg;
+/// Stats and Vector Algebra on one or two u8 vectors 
 pub mod vecu8;
+/// Vector Algerba mutating an f64 vector
 pub mod mutvec;
+/// Multidimensional operations on sets of vectors
 pub mod vecvec;
+/// Multidimensional operations on sets of vectors, with additional inputs
 pub mod vecvecg;
 
 // reexporting to avoid duplication and for backwards compatibility
@@ -14,12 +23,16 @@ use core::iter::FromIterator;
 
 // Structs //
 
-/// Median and quartiles
+
 #[derive(Default)]
+/// Median and quartiles
 pub struct Med {
+    /// lower quartile, as MND (median of negative differences)
     pub lquartile: f64,
+    /// the median value
     pub median: f64,
-    pub uquartile: f64,
+    /// upper quartile, as MPD (median of positive differences)
+    pub uquartile: f64
 }
 impl std::fmt::Display for Med {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -36,8 +49,10 @@ impl std::fmt::Display for Med {
 /// Mean and standard deviation (or std ratio for geometric mean)
 #[derive(Default)]
 pub struct MStats {
+    /// the mean of some kind (geometric, arithmetic, harmonic...)
     pub mean: f64,
-    pub std: f64,
+    /// standard deviation (measure of data spread)
+    pub std: f64
 }
 impl std::fmt::Display for MStats {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -78,7 +93,7 @@ pub trait Stats {
     fn vreciprocal(self) -> Result<Vec<f64>>;
     /// vector with inverse magnitude 
     fn vinverse(self) -> Result<Vec<f64>>;
-    // negated vector (all components swap sign)
+    /// negated vector (all components swap sign)
     fn negv(self) -> Vec<f64>;
     /// Unit vector
     fn vunit(self) -> Vec<f64>;
@@ -125,8 +140,8 @@ pub trait Stats {
     /// Fast median only by partitioning
     fn newmedian(self) -> Result<f64> 
         where Self: std::marker::Sized { bail!("newmedian not implemented for this type")}
-    /// MAD median absolute deviation: data spread estimator that is more stable than variance
-    fn mad(self) -> Result<f64> 
+    /// MAD median absolute difference: data spread estimator that is more stable than variance
+    fn mad(self, _median:f64) -> Result<f64> 
         where Self: std::marker::Sized { bail!("median not implemented for this type")}    
     /// Zero median data, obtained by subtracting the median
     fn zeromedian(self) -> Result<Vec<f64>>
@@ -142,22 +157,6 @@ pub trait Stats {
     /// Reconstructs the full symmetric matrix from its lower diagonal compact form
     fn symmatrix(self) -> Vec<Vec<f64>>;
    }
-
-/// A few of the `Stats` methods are reimplemented here
-/// (only for f64), so that they mutate `self` in-place.
-/// This is more efficient and convenient in some circumstances.
-pub trait MutStats {
-    /// Invert the magnitude
-    fn minvert(self); 
-    // negate vector (all components swap sign)
-    fn mneg(self);
-    /// Make into a unit vector
-    fn munit(self);
-    /// Linearly transform to interval [0,1]
-    fn mlintrans(self);
-    /// Sort in place  
-    fn msortf(self); 
-}
 
 /// Vector Algebra on two vectors (represented here as generic slices).
 /// Also included are scalar operations on the `self` vector.
@@ -253,12 +252,22 @@ pub trait MutVecg<U> {
 
 /// Vector mutating operations that take one argument of f64 end type.
 pub trait MutVecf64 {
+    /// Invert the magnitude
+    fn minvert(self); 
+    /// Negate the vector (all components swap sign)
+    fn mneg(self);
+    /// Make into a unit vector
+    fn munit(self);
+    /// Linearly transform to interval [0,1]
+    fn mlintrans(self);
+    /// Sort in place  
+    fn msortf(self);    
     /// mutable multiplication by a scalar
     fn mutsmultf64(self, _s:f64); 
     /// mutable vector subtraction 
     fn mutvsubf64(self, _v:&[f64]);
     /// mutable vector addition
-    fn mutvaddf64(self, _v:&[f64]); 
+    fn mutvaddf64(self, _v:&[f64]);    
 }
 
 /// Methods specialised to, or more efficient for `&[u8]`
@@ -310,7 +319,8 @@ pub trait VecVecu8 {
     /// The weighted geometric median
     fn wgmedian(self, ws:&[u8], eps: f64) -> Vec<f64>;
     /// Lower triangular part of a covariance matrix of a Vec of u8 vectors.
-    fn covar(self, med:&[f64]) -> Vec<f64>; 
+    fn covar(self, med:&[f64]) -> Vec<f64>;
+    /// Lower triangular part of a covariance matrix of a Vec of weighted u8 vectors.
     fn wcovar(self, ws:&[u8], m:&[f64]) -> Vec<f64>;
 }
 

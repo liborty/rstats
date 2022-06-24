@@ -179,6 +179,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.0.22** - Added dependency on crate `medians` for faster 1D medians. Rationalisation: subsumed module `mutstats.rs` into `mutvec.rs`. Removed trait `Mutstats`, added its few methods to trait `MutVecf64`. Added some more doc comments.
+
 * **Version 1.0.21** - Changed imports from `indxvec` to fit with its latest multicoloured version 1.2.1.
 
 * **Version 1.0.19** - Adjusted the argument types of `wmadgm` and `madgm`. Added weighted distance `wvdist`. Improved the testing of `vecvec`.
