@@ -9,10 +9,19 @@
 
 Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 
-Use in your source files any of the following structs, as needed:  
-`use rstats::{MinMax,Med,Mstats};`  
-and any of the following traits:  
-`use rstats::{Stats,MutStats,Vecu8,Vecf64,Vecg,MutVecg,VecVec,VecVecg};`  
+Use in your source files any of the following structs, if needed:
+
+```rust  
+use rstats::{Mstats};  
+use indxvec::{MinMax};  
+use medians::Med;
+```
+
+and any of the following rstats traits:
+```rust 
+use rstats::{Stats, Vecu8, Vecg, MutVecg, VecVecu8, VecVec, VecVecg};
+```
+
 and any of the following helper functions:  
 `use rstats::{i64tof64,wsum};`
 
@@ -37,13 +46,13 @@ Our treatment of multidimensional sets of points (vectors) is constructed from t
 
 * `comediance` - instead of covariance (matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus *zero median vectors* are replacing *zero mean vectors* in covariance calculations.
 
-* `median correlation`- in one dimension, our `mediancorr` method is to replace *Pearson's correlation*. We define *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
+* `median correlation`- in one dimension (1d), our `mediancorr` method is to replace *Pearson's correlation*. We define *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-In n dimensions, many authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are not even any faster to compute.
+In n dimensions (nd), many authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are not even any faster to compute.
 
-*Specifically, all such 1-d measures are sensitive to the choice of axis and thus are affected by rotation.*
+*Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by rotation.*
 
 In contrast, analyses based on the true geometric median (gm) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its weighted version `wgmedian`, in traits `vecvec` and `vecvecg` respectively.
 
@@ -53,22 +62,19 @@ The main constituent parts of Rstats are its traits. The selection of traits (to
 
 * `Stats`: a single vector (of numbers),
 * `Vecg`: methods (of vector algebra) operating on two vectors, e.g. scalar product
+* `MutVecg`: some of the above methods, mutating self
 * `VecVec`: methods operating on n vectors, 
 * `VecVecg`: methods for n vectors, plus another generic argument, e.g. vector of weights.
 
-In other words, the traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'. However, the vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end types `f64` and `u8` and some that take mutable self. End type `f64` is most commonly used for the results.
+In other words, the traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'. However, the vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end type `u8` and some that take mutable self. End type `f64` is most commonly used for the results.
 
 ### Documentation
 
 For more detailed comments, plus some examples, see the source. You may have to unclick the 'implementations on foreign types' somewhere near the bottom of the page in the rust docs to get to it.  (Since these traits are implemented over the pre-existing Rust Vec type).
 
-## Structs
+## Struct
 
-* `struct Med` holds the median and quartiles
-
-* `struct MStats` holds the mean and standard deviation
-
-* `struct MinMax`, re-exported from crate `indxvec`. It holds min and max values of a vector and their indices. It is returned by function `indxvec::merge::minmax`.
+* `struct MStats` holds the central tendency, e.g. mean, and spread, e.g. standard deviation.
 
 ##  Auxiliary Functions
 
@@ -88,22 +94,19 @@ Included in this trait are:
 * means (arithmetic, geometric and harmonic),
 * standard deviations,
 * linearly weighted means (useful for time dependent data analysis),
-* median and quartiles,
 * probability density function (pdf)
 * autocorrelation, entropy
 * linear transformation to [0,1],
 * other measures and vector algebra operators
 
-## Trait MutStats
-
-A few of the `Stats` methods are reimplemented under this trait
-(only for f64), so that they mutate `self` in-place.
-This is more efficient and convenient in some circumstances, such as in
-vector iterative methods.
+Note that fast implementation of 1d medians is as of version 1.1.0 in crate `medians`:  
+`use medians::{Med,Median};`
 
 ## Trait Vecg
 
-Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimensionality):
+Generic vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimensionality). It may be necessary to invoke some using the 'turbofish' `::<type>` syntax to indicate the type U of the supplied argument, e.g.:  
+`datavec.as_slice().methodname::<f64>(arg)`  
+This is because Rust is currently incapable of inferring the type ('the inference bug').
 
 * Vector additions, subtractions and products (scalar, kronecker, outer),
 * Other relationships and measures of difference,
@@ -113,18 +116,10 @@ Vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimen
 
 This trait is unchecked (for speed), so some caution with data is advisable.
 
-## Trait Vecf64
+## Trait MutVecg
 
-A handful of methods from `Vecg`, specialised to an argument of known end type `f64` or `&[f64]`.
-
-## Traits MutVecg & MutVecf64
-
-Mutable vector addition, subtraction and multiplication.  
-Mutate `self` in-place.
-This is for efficiency and convenience. Specifically, in
-vector iterative methods.
-
-`MutVecf64` is to be used in preference, when the end type of `self` is known to be `f64`. Beware that these methods work by side-effect and do not return anything, so they can not be functionally chained.
+A select few of the `Stats` and `Vecg` methods (e.g. mutable vector addition, subtraction and multiplication) are reimplemented under these traits, so that they can mutate `self` in-place.
+This is more efficient and convenient in some circumstances, such as in vector iterative methods.
 
 ## Trait Vecu8
 
@@ -179,7 +174,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.0.22** - Added dependency on crate `medians` for faster 1D medians. Rationalisation: subsumed module `mutstats.rs` into `mutvec.rs`. Removed trait `Mutstats`, added its few methods to trait `MutVecf64`. Added some more doc comments.
+* **Version 1.1.0** - Big release. Added dependency on crate `medians` for fast 1D medians. Simplifications: subsumed module `mutstats.rs` into `mutvec.rs`. Removed traits `Mutstats` and `MutVecf64` and added their few methods to trait `MutVecg`. Added some more doc comments here. Generalisations: methods in `Vecg` and `MutVecg` now work on any type T of self and a potentially different type U for their argument. They should be called with the 'turbofish' syntax.
 
 * **Version 1.0.21** - Changed imports from `indxvec` to fit with its latest multicoloured version 1.2.1.
 

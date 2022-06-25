@@ -1,27 +1,23 @@
-use crate::{MutVecg,MutVecf64};
+use crate::{MutVecg};
 use indxvec::Vecops; 
 
 /// Mutable vector operations on `&mut [f64]`, where the operand endtype is generic
-impl<U> MutVecg<U> for &mut [f64] where U: Copy+PartialOrd, f64: From<U> {
+impl MutVecg for &mut [f64] {
     /// Scalar multiplication of a vector, mutates self
-    fn mutsmult(self, s:U) {
+    fn mutsmult<U>(self, s:U) where U: Copy+PartialOrd, f64: From<U> {
         let sf = f64::from(s);
         self.iter_mut().for_each(|x| *x *= sf);
     }
 
     /// Vector subtraction, mutates self
-    fn mutvsub(self, v: &[U]) {
+    fn mutvsub<U>(self, v: &[U]) where U: Copy+PartialOrd, f64: From<U> {
         self.iter_mut().zip(v).for_each(|(x,&vi)| *x -= f64::from(vi))
     } 
 
     /// Vector addition, mutates self
-    fn mutvadd(self, v: &[U]) {
+    fn mutvadd<U>(self, v: &[U]) where U: Copy+PartialOrd, f64: From<U> {
         self.iter_mut().zip(v).for_each(|(x,&vi)| *x += f64::from(vi))
     } 
-}
-
-/// Mutable operations on `&mut [f64]`, where the operand endtype, if any, is also f64 
-impl MutVecf64 for &mut [f64] {
 
     /// Vector with inverse magnitude
     fn minvert(self) {
@@ -52,17 +48,4 @@ impl MutVecf64 for &mut [f64] {
     fn msortf(self) {
         self.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap())
     }
-
-    /// Scalar multiplication of a vector, mutates self
-    fn mutsmultf64(self, s:f64) {    
-        self.iter_mut().for_each(|x| *x *= s);
-    }
-    /// Vector subtraction, mutates self
-    fn mutvsubf64(self, v: &[f64]) {
-        self.iter_mut().zip(v).for_each(|(x,&vi)| *x -= vi)
-    } 
-    /// Vector addition, mutates self
-    fn mutvaddf64(self, v: &[f64]) {
-        self.iter_mut().zip(v).for_each(|(x,&vi)| *x += vi)
-    } 
 }

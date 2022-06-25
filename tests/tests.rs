@@ -1,8 +1,9 @@
 use anyhow::{Result};
 use devtimer::DevTime;
 use indxvec::{printing::*, Indices, Vecops,Printing};
-use rstats::{i64tof64, Med, Stats, VecVec, VecVecg, Vecf64, Vecg, Vecu8};
+use rstats::{i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
 use ran::{*,generators::{set_seeds,ranvu8,ranvvu8,ranvvf64}};
+use medians::{Median};
 
 pub const EPS: f64 = 1e-10;
 
@@ -32,6 +33,8 @@ fn u8() -> Result<()> {
     println!("Median Correlation:  {}", v1.mediancorr(&v2).gr());
     println!("Pearson Correlation:  {}", v1.correlation(&v2).gr());
     println!("Spearman Correlation: {}", v1.spearmancorr(&v2).gr());
+    let med =  v1.as_slice().median();
+    println!("Median:\t\t{} +- {}",med.gr(),v1.mad(med).gr());
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
@@ -70,13 +73,13 @@ fn fstats() -> Result<()> {
     println!("Geometric  {}", v1.gmeanstd().unwrap().gr());
     println!("Harmonic   {}", v1.hmeanstd().unwrap().gr());
     println!("Autocorrelation:{}", v1.autocorr().gr());
-    let med =  medians::median(&v1);
-    println!("Median {} +- {}",med.gr(),v1.mad(med).unwrap().gr());
+    let med =  v1.as_slice().median();
+    println!("Median:\t\t{} +- {}",med.gr(),v1.mad(med).gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
     println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
     println!("Euclid's dist:\t{}", v2.vdist(&v1).gr());
     println!("Cityblock dist:\t{}", v2.cityblockd(&v1).gr());
-    println!("Joint Entropy: {}", v1.jointentropy(&v2).gr());
+    println!("Joint Entropy:  {}", v1.jointentropy(&v2).gr());
     println!("Dependence:\t{}", v1.dependence(&v2).gr()); // generic
     let d = 5_usize;
     let n = 7_usize;
@@ -116,8 +119,8 @@ fn ustats() -> Result<()> {
     println!("Arithmetic {}", v1.ameanstd()?.gr());
     println!("Geometric  {}", v1.gmeanstd()?.gr());
     println!("Harmonic   {}", v1.hmeanstd()?.gr());
-    println!("Autocorrelation:{}", v1.autocorr());
-    println!("{}\n", v1.median()?);
+    println!("Autocorrelation:{}", v1.autocorr().gr());
+    println!("{}\n", v1.as_slice().medinfo());
     Ok(())
 }
 
@@ -134,8 +137,9 @@ fn intstats() -> Result<()> {
     // println!("Magnitude:\t{}",v1.vmag()));
     println!("Arithmetic {}", v1.ameanstd()?.gr());
     println!("Geometric  {}", v1.gmeanstd()?.gr());
+    println!("Harmonic   {}", v1.hmeanstd()?.gr());
     println!("Autocorrelation:{}", v1.autocorr().gr());
-    println!("{}\n", v1.median()?);
+    println!("{}\n", v1.as_slice().medinfo());
     Ok(())
 }
 #[test]
@@ -150,7 +154,7 @@ fn genericstats() -> Result<()> {
     println!("Weighted Geom.\t{}", v.gwmeanstd()?.gr());
     println!("Weighted Harm.\t{}", v.hwmeanstd()?.gr());
     println!("Autocorrelation:{}", v.autocorr().gr());
-    println!("{}\n", &v.median()?);
+    println!("{}\n", &v.as_slice().medinfo());
     Ok(())
 }
 #[test]
@@ -168,7 +172,7 @@ fn vecg() -> Result<()> {
     println!("Median Correlation:\t{}", v1.mediancorr(&v2).gr());
     println!("Kendall's Correlation:\t{}", v1.kendalcorr(&v2).gr());
     println!("Spearman's Correlation:\t{}", v1.spearmancorr(&v2).gr());
-    println!("Euclidian distance:\t{}", v1.vdistf64(&v2).gr());
+    println!("Euclidian distance:\t{}", v1.vdist::<f64>(&v2).gr());
     println!("Cityblock distance:\t{}", v1.cityblockd(&v2).gr());
     println!("Vector difference: {}", v1.vsub(&v2).gr());
     println!("Vector sum: {}", v1.vadd(&v2).gr());
@@ -249,8 +253,8 @@ fn vecvec() -> Result<()> {
     let md = dists.minmax(); 
     println!("\nMedoid and Outlier Total Distances:\n{}", md);
     println!("Total Distances {}", dists.ameanstd()?.gr());
-    println!("Total Distances {}", dists.median()?);
-    println!("Median's total distances:\t{}", pts.distsum(&median).gr()); 
+    println!("Total distances {}", dists.as_slice().medinfo());
+    println!("GM's total distances:\t{}", pts.distsum(&median).gr()); 
     println!("ACentroid's total distances:\t{}",pts.distsum(&acentroid).gr());
     println!("HCentroid's total distances:\t{}",pts.distsum(&hcentroid).gr());
     println!("GCentroid's total distances:\t{}",pts.distsum(&gcentroid).gr());
@@ -271,7 +275,7 @@ fn vecvec() -> Result<()> {
 
     let seccs = pts.sortedeccs(true, &median);
     // println!("\nSorted eccs: {}\n", seccs));
-    let lqcnt = seccs.binsearch(eccmed.lquartile);
+    let lqcnt = seccs.binsearch(eccmed.lq);
     println!(
         "Inner quarter of points: {} within radius: {}",
         lqcnt.gr(),
@@ -283,7 +287,7 @@ fn vecvec() -> Result<()> {
         medcnt.gr(),
         seccs[medcnt - 1].gr()
     );
-    let uqcnt = seccs.binsearch(eccmed.uquartile);
+    let uqcnt = seccs.binsearch(eccmed.uq);
     println!(
         "Inner three quarters:    {} within radius: {}",
         uqcnt.gr(),
@@ -323,10 +327,7 @@ fn geometric_medians() -> Result<()> {
         timerq.start();
         gm = trpts
             .iter()
-            .map(|p| {
-                let Med { median, .. } = p.median().unwrap();
-                median
-            })
+            .map(|p| p.as_slice().median())
             .collect();
         timerq.stop();
         sumq += pts.eccnonmember(&gm).vmag();

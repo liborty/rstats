@@ -16,35 +16,11 @@ pub mod vecvec;
 pub mod vecvecg;
 
 // reexporting to avoid duplication and for backwards compatibility
-pub use indxvec::{MinMax,Printing,here}; 
+pub use indxvec::{MinMax,Printing,here};
+pub use medians::{Med,Median};
 /// simple error handling
 use anyhow::{Result,bail}; 
 use core::iter::FromIterator;
-
-// Structs //
-
-
-#[derive(Default)]
-/// Median and quartiles
-pub struct Med {
-    /// lower quartile, as MND (median of negative differences)
-    pub lquartile: f64,
-    /// the median value
-    pub median: f64,
-    /// upper quartile, as MPD (median of positive differences)
-    pub uquartile: f64
-}
-impl std::fmt::Display for Med {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "median:\n\tLower Q: {}\n\tMedian:  {}\n\tUpper Q: {}",
-            self.lquartile.gr(),
-            self.median.gr(),
-            self.uquartile.gr()
-        )
-    }
-}
 
 /// Mean and standard deviation (or std ratio for geometric mean)
 #[derive(Default)]
@@ -96,8 +72,7 @@ pub trait Stats {
     /// negated vector (all components swap sign)
     fn negv(self) -> Vec<f64>;
     /// Unit vector
-    fn vunit(self) -> Vec<f64>;
-    
+    fn vunit(self) -> Vec<f64>;    
     /// Arithmetic mean
     fn amean(self) -> Result<f64> 
         where Self: std::marker::Sized { bail!("amean not implemented for this type")}
@@ -134,15 +109,6 @@ pub trait Stats {
     /// Weighted geometric mean and standard deviation ratio
     fn gwmeanstd(self) -> Result<MStats>
         where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
-    /// Median and quartiles
-    fn median(self) -> Result<Med>
-        where Self: std::marker::Sized { bail!("median not implemented for this type")}
-    /// Fast median only by partitioning
-    fn newmedian(self) -> Result<f64> 
-        where Self: std::marker::Sized { bail!("newmedian not implemented for this type")}
-    /// MAD median absolute difference: data spread estimator that is more stable than variance
-    fn mad(self, _median:f64) -> Result<f64> 
-        where Self: std::marker::Sized { bail!("median not implemented for this type")}    
     /// Zero median data, obtained by subtracting the median
     fn zeromedian(self) -> Result<Vec<f64>>
         where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
@@ -160,80 +126,64 @@ pub trait Stats {
 
 /// Vector Algebra on two vectors (represented here as generic slices).
 /// Also included are scalar operations on the `self` vector.
-pub trait Vecg<T,U> { 
+pub trait Vecg { 
     /// Scalar addition to vector
-    fn sadd(self, s:U) -> Vec<f64>;
+    fn sadd<U>(self, s:U) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Scalar multiplication of vector, creates new vec
-     fn smult(self, s:U) -> Vec<f64>;
+     fn smult<U>(self, s:U) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Scalar product 
-    fn dotp(self, v:&[U]) -> f64;
+    fn dotp<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Cosine of angle between two slices
-    fn cosine(self, v:&[U]) -> f64;
+    fn cosine<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Vectors' subtraction (difference)
-    fn vsub(self, v:&[U]) -> Vec<f64>;
+    fn vsub<U>(self, v:&[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Vectors difference as unit vector (done together for efficiency)
-    fn vsubunit(self, v: &[U]) -> Vec<f64>; 
+    fn vsubunit<U>(self, v: &[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Vector addition
-    fn vadd(self, v:&[U]) -> Vec<f64>; 
+    fn vadd<U>(self, v:&[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Euclidian distance 
-    fn vdist(self, v:&[U]) -> f64;
+    fn vdist<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Weighted distance of self:&[T] to v:&[T], scaled by ws:&[U]  
-    fn wvdistf64(self, ws:&[U],v:&[f64]) -> f64;
+    fn wvdistf64<U>(self, ws:&[U],v:&[f64]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Euclidian distance squared
-    fn vdistsq(self, v:&[U]) -> f64; 
+    fn vdistsq<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
      /// cityblock distance
-    fn cityblockd(self, v:&[U]) -> f64;
+    fn cityblockd<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Magnitude of the cross product |a x b| = |a||b|sin(theta).
     /// Attains maximum `|a|.|b|` when the vectors are othogonal.
-    fn varea(self, v:&[U]) -> f64;
+    fn varea<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Area proportional to the swept arc
-     fn varc(self, v:&[U]) -> f64; 
+     fn varc<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Vector similarity S in the interval [0,1]: S = (1+cos(theta))/2
-    fn vsim(self, v:&[U]) -> f64;
+    fn vsim<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Positive dotp [0,2|a||b|] 
-    fn pdotp(self, v:&[U]) -> f64;
+    fn pdotp<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2
-    fn vdisim(self, v:&[U]) -> f64;
+    fn vdisim<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Lower triangular part of a covariance matrix for a single f64 vector.
-    fn covone(self, m:&[U]) -> Vec<f64>;
+    fn covone<U>(self, m:&[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Kronecker product of two vectors 
-    fn kron(self, m:&[U]) -> Vec<f64>; 
+    fn kron<U>(self, m:&[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Outer product of two vectors 
-    fn outer(self, m:&[U]) -> Vec<Vec<f64>>; 
+    fn outer<U>(self, m:&[U]) -> Vec<Vec<f64>> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Joint probability density function 
-    fn jointpdf(self,v:&[U]) -> Vec<f64>;     
+    fn jointpdf<U>(self,v:&[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;     
     /// Joint entropy of &[T],&[U] in nats (units of e)
-    fn jointentropy(self, v:&[U]) -> f64;
+    fn jointentropy<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Statistical pairwise dependence of &[T] &[U] variables in the range [0,1] 
-    fn dependence(self, v:&[U]) -> f64;   
+    fn dependence<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;   
     /// Statistical pairwise independence in the range [1,2] based on joint entropy
-    fn independence(self, v:&[U]) -> f64; 
+    fn independence<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Cholesky decomposition of positive definite matrix into LLt
     // fn cholesky(self) -> Vec<f64>;
     /// Pearson's correlation.  
-    fn correlation(self, v:&[U]) -> f64;
+    fn correlation<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Median based correlation
-    fn mediancorr(self, v: &[U]) -> f64;
+    fn mediancorr<U>(self, v: &[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Kendall Tau-B correlation. 
-    fn kendalcorr(self, v:&[U]) -> f64;
+    fn kendalcorr<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Spearman rho correlation.
-    fn spearmancorr(self, v:&[U]) -> f64;   
-}
-/// Vector algebra: methods operaing on one vector of generic end type
-/// and the second argument, which is a scalar or vector of f64 end type.
-pub trait Vecf64<_T> {
-    /// Scalar multiplication by f64
-    fn smultf64(self, s:f64) -> Vec<f64>;
-    /// Vector subtraction of `&[f64]`
-    fn vsubf64(self, v:&[f64]) -> Vec<f64>;
-    /// Vectors difference unitised (done together for efficiency)
-    fn vsubunitf64(self, v: &[f64]) -> Vec<f64>;
-    /// Euclidian distance to `&[f64]`
-    fn vdistf64(self, v:&[f64]) -> f64;
-    /// Adding `&[f64]` 
-    fn vaddf64(self, v:&[f64]) -> Vec<f64>;
-    /// Euclidian distance to `&[f64]` squared  
-    fn vdistsqf64(self, v:&[f64]) -> f64;
+    fn spearmancorr<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;   
 }
 
 /// Mutable vector operations that take one generic argument. 
@@ -241,17 +191,14 @@ pub trait Vecf64<_T> {
 /// to mutate `self` in-place (only for f64). 
 /// This is for efficiency and convenience, for example, in
 /// vector iterative methods.
-pub trait MutVecg<U> {
+pub trait MutVecg {
     /// mutable multiplication by a scalar
-    fn mutsmult(self, _s:U);  
+    fn mutsmult<U>(self, _s:U) where U: Copy+PartialOrd, f64: From<U>;  
     /// mutable vector subtraction
-    fn mutvsub(self, _v: &[U]); 
+    fn mutvsub<U>(self, _v: &[U]) where U: Copy+PartialOrd, f64: From<U>; 
     /// mutable vector addition
-    fn mutvadd(self, _v: &[U]);  
-}
+    fn mutvadd<U>(self, _v: &[U]) where U: Copy+PartialOrd, f64: From<U>;  
 
-/// Vector mutating operations that take one argument of f64 end type.
-pub trait MutVecf64 {
     /// Invert the magnitude
     fn minvert(self); 
     /// Negate the vector (all components swap sign)
@@ -261,13 +208,7 @@ pub trait MutVecf64 {
     /// Linearly transform to interval [0,1]
     fn mlintrans(self);
     /// Sort in place  
-    fn msortf(self);    
-    /// mutable multiplication by a scalar
-    fn mutsmultf64(self, _s:f64); 
-    /// mutable vector subtraction 
-    fn mutvsubf64(self, _v:&[f64]);
-    /// mutable vector addition
-    fn mutvaddf64(self, _v:&[f64]);    
+    fn msortf(self);
 }
 
 /// Methods specialised to, or more efficient for `&[u8]`
@@ -367,7 +308,7 @@ pub trait VecVec<T> {
     fn exacteccs(self, eps: f64) -> Vec<Vec<f64>>; 
     /// Median and quartiles of eccentricities (new robust measure of spread of a multivariate sample)
     fn eccinfo(self, eps: f64) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
-    /// MADGM, multidimensional median absolute deviation: stable nd data spread estimator
+    /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> f64;
     /// Proportions of points found along each axis
     fn tukeyvec(self, gm: &[f64]) -> Vec<f64>;

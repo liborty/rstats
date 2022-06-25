@@ -1,8 +1,10 @@
-use crate::{here,Med,Stats,Vecg,Vecf64,MutVecf64,VecVecg,VecVec};
-pub use indxvec::{Vecops,Indices};
+use crate::{Stats,Vecg,MutVecg,VecVecg,VecVec};
+use indxvec::{Vecops,Indices};
+use medians::{Median};
 
-impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display, 
-    f64: From<T>, U: Copy+PartialOrd+std::fmt::Display,f64: From<U>  {
+impl<T,U> VecVecg<T,U> for &[Vec<T>] 
+    where T: Copy+PartialOrd+std::fmt::Display,f64:From<T>, 
+    U: Copy+PartialOrd+std::fmt::Display,f64:From<U> {
 
     /// Weighted Centre
     fn wacentroid(self,ws: &[U]) -> Vec<f64> where {
@@ -11,9 +13,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         self.iter().zip(ws).for_each(|(s,&w)|
         { 
             wsum += f64::from(w);
-            centre.mutvaddf64(&s.smult(w))
+            centre.mutvadd::<f64>(&s.smult(w))
         });
-        centre.mutsmultf64(1.0 / wsum);
+        centre.mutsmult::<f64>(1.0 / wsum);
         centre
     }
 
@@ -22,7 +24,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// The two sets have to be in the same space but can have different numbers of points.
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Vec<f64> {
         let mut m1 = self.gmedian(eps);       
-        m1.mutvsubf64(&v.gmedian(eps));
+        m1.mutvsub::<f64>(&v.gmedian(eps));
         m1
     }
 
@@ -38,7 +40,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// Transforms nd data to zeromedian form
     /// essentially the same as translate but specialised to f64 gms
     fn zerogm(self, gm: &[f64]) -> Vec<Vec<f64>> {  
-        self.iter().map(|s| s.vsubf64(gm)).collect()
+        self.iter().map(|s| s.vsub::<f64>(gm)).collect()
     }
 
     /// Dependencies of m on each vector in self
@@ -52,12 +54,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// (Median) correlations of m with each vector in self
     /// Factors out the unit vector of m to save repetition of work
     fn correlations(self, m: &[U]) -> Vec<f64> {
-        let Med{median:mm,..} = m.median() // ignore quartile fields
-            .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
+        let mm = m.median(); // ignore quartile fields 
         let unitzerom =  m.sadd(-mm).vunit();
         self.iter().map(|s|{ 
-            let Med{median:ms,..} = s.median()            
-                .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
+            let ms = s.as_slice().median();   
             s.sadd(-ms).vunit().dotp(&unitzerom)
         }).collect::<Vec<f64>>()
     }
@@ -81,7 +81,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn wsortedeccs(self, ws: &[U], gm: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len()); 
         // collect true eccentricities magnitudes
-        for v in self { eccs.push(v.vdistf64(gm)) }
+        for v in self { eccs.push(v.vdist::<f64>(gm)) }
         // create sort index of the eccs
         let index = eccs.sortidx();
         // pick the associated points weights in the order of the sorted eccs
@@ -136,7 +136,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// The true geometric median would return zero vector.
     /// This function is suitable for a single non-member point. 
     fn weccnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64> {
-       self.wnxnonmember(ws,p).vsubf64(p)
+       self.wnxnonmember(ws,p).vsub::<f64>(p)
     }
 
     /// Secant method with recovery from divergence
@@ -154,8 +154,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64 {     
         let devs:Vec<f64> = self.iter().map(|v| v.wvdistf64(ws,wgm)).collect();
-        let Med{median,..} = devs.median().unwrap_or_else(|_| panic!("{},median failed\n",here!()));
-        median
+        devs.as_slice().median()
     }
 
     /// Covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -207,7 +206,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
                 }));
         });
         // now compute the means and return
-        cov.mutsmultf64(1_f64/wsum); 
+        cov.mutsmult::<f64>(1_f64/wsum); 
         cov
     }
 
@@ -219,16 +218,15 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// The items are flattened into a single vector in this order.
     /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
     /// Similar to `covar` above but instead of averaging the covariances over n points, 
-    /// their median is returned.
+    /// their medians are returned.
     fn comed(self, m:&[U]) -> Vec<f64> { // m should be the median here 
         let d = self[0].len(); // dimension of the vector(s)
         let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2); // result vec flat lower triangular array 
         let zs:Vec<Vec<f64>> = self.iter().map(|s| s.vsub(m)).collect(); // zero median vectors
         for i in 0..d { // cross multiplaying the components
             for j in 0..i+1 { // in this order so as to save memory
-                let thisproduct:Vec<f64> = zs.iter().map(|v| v[i]*v[j]).collect();
-                let Med{median,..} = thisproduct.median().unwrap();
-                com.push(median);
+                let thisproduct:Vec<f64> = zs.iter().map(|v| v[i]*v[j]).collect(); 
+                com.push(thisproduct.as_slice().median());
             }
         }
         com
@@ -250,9 +248,8 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let wmean = ws.iter().map(|&w| f64::from(w)).sum::<f64>()/(self.len() as f64); 
         for i in 0..d { // cross multiplaying the components
             for j in 0..i+1 { // in this order so as to save memory
-                let thisproduct:Vec<f64> = zs.iter().zip(ws).map(|(v,&w)| f64::from(w)*v[i]*v[j]).collect();
-                let Med{median,..} = thisproduct.median().unwrap();
-                com.push(median/wmean);
+                let thisproduct:Vec<f64> = zs.iter().zip(ws).map(|(v,&w)| f64::from(w)*v[i]*v[j]).collect();  
+                com.push(thisproduct.as_slice().median()/wmean);
             }
         };
         com

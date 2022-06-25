@@ -1,10 +1,11 @@
 use std::iter::FromIterator;
 
-use crate::{ Med, MStats, MinMax, MutVecg, MutVecf64, Stats, Vecg, Vecf64, VecVec, VecVecg};
-pub use indxvec::{here,tof64,Printing,Vecops,Indices};
+use crate::{ MStats, MinMax, MutVecg, Stats, Vecg, VecVec, VecVecg};
+use indxvec::{here,tof64,Vecops};
+use medians::{Med,Median};
 
-impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
-    f64: From<T> {
+impl<T> VecVec<T> for &[Vec<T>] 
+    where T: Copy+PartialOrd+std::fmt::Display,f64: From<T> {
 
     /// Transpose vec of vecs like a matrix
     fn transpose(self) -> Vec<Vec<T>> {
@@ -83,7 +84,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn acentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()];
         for v in self { centre.mutvadd(v) }
-        centre.mutsmultf64(1.0 / (self.len() as f64));
+        centre.mutsmult::<f64>(1.0 / (self.len() as f64));
         centre
     }
 
@@ -105,8 +106,8 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// hcentroid =  multidimensional harmonic mean
     fn hcentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()]; 
-        for v in self { centre.mutvaddf64(&v.vinverse().unwrap()) }
-        centre.smultf64(1.0/(self.len() as f64)).vinverse().unwrap()       
+        for v in self { centre.mutvadd::<f64>(&v.vinverse().unwrap()) }
+        centre.smult::<f64>(1.0/(self.len() as f64)).vinverse().unwrap()       
     }
 
     /// For each member point, gives its sum of distances to all other points and their MinMax
@@ -158,15 +159,15 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
                 let dvmag = self[j].vdist(thisp);             
                 if !dvmag.is_normal() { continue }
                 let rec = 1.0_f64/dvmag;
-                eccs[i].mutvaddf64(&self[j].smultf64(rec));
+                eccs[i].mutvadd::<f64>(&self[j].smult::<f64>(rec));
                 recips[i] += rec;
                 // mind the vector's opposite orientations w.r.t. to the two points!
-                eccs[j].mutvsubf64(&self[j].smultf64(rec)); 
+                eccs[j].mutvsub::<f64>(&self[j].smult::<f64>(rec)); 
                 recips[j] += rec; // but scalar distances are the same
             }
         }
         for i in 0..n { 
-            eccs[i].mutsmultf64(1.0/recips[i]); 
+            eccs[i].mutsmult::<f64>(1.0/recips[i]); 
             eccs[i].mutvsub(&self[i]) 
         }
         eccs
@@ -201,7 +202,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     /// The true geometric median would return zero vector.
     /// This function is suitable for a single non-member point. 
     fn eccnonmember(self, p:&[f64]) -> Vec<f64> {
-        self.nxnonmember(p).vsubf64(p)
+        self.nxnonmember(p).vsub::<f64>(p)
     }
 
     /// Mean and Std (in MStats struct), Median and quartiles (in Med struct), Median and Outlier (in MinMax struct) 
@@ -210,14 +211,13 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn eccinfo(self, eps: f64) -> (MStats, Med, MinMax<f64>) where Vec<f64>:FromIterator<f64> {
         let gm = self.gmedian(eps);
         let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
-        (eccs.ameanstd().unwrap(),eccs.median().unwrap(),eccs.minmax())
+        (eccs.ameanstd().unwrap(),eccs.medinfo(),eccs.minmax())
     }
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> f64 {     
-        let devs:Vec<f64> = self.iter().map(|v| v.vdistf64(gm)).collect();
-        let Med{median,..} = devs.median().unwrap_or_else(|_| panic!("{},median failed\n",here!()));
-        median
+        let devs:Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
+        devs.as_slice().median()    
     }
 
     /// Proportions of points along each axis
@@ -241,7 +241,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
     fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64> { 
         let mut eccs = Vec::with_capacity(self.len()); 
         // collect raw ecentricities magnitudes
-        for v in self { eccs.push(v.vdistf64(gm)) }
+        for v in self { eccs.push(v.vdist::<f64>(gm)) }
         eccs.sortm(ascending)
     }    
 
@@ -265,10 +265,10 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
                 // the sum of reciprocals of magnitudes for the final scaling  
                 rsum += rec;
                 // so not using simply .unitv 
-                vsum.mutvaddf64(&p.smultf64(rec)) // add all unit vectors
+                vsum.mutvadd::<f64>(&p.smult::<f64>(rec)) // add all unit vectors
             }
         }
-        vsum.mutsmultf64(1.0/rsum); // scale by the sum of reciprocals
+        vsum.mutsmult::<f64>(1.0/rsum); // scale by the sum of reciprocals
         vsum
     }    
     
@@ -332,7 +332,7 @@ impl<T> VecVec<T> for &[Vec<T>] where T: Copy+PartialOrd+std::fmt::Display,
         let mut iterations = 1_usize;
         loop {  
             let nextp = self.nxnonmember(&p);
-            if nextp.vdistsqf64(&p) < eps2 { return (nextp,iterations) }; // termination
+            if nextp.vdistsq::<f64>(&p) < eps2 { return (nextp,iterations) }; // termination
             iterations +=1;
             p = nextp;
         };     

@@ -1,10 +1,10 @@
-use crate::{ wsum,MStats,Med,Stats};
+use crate::{ wsum,MStats,Stats};
 use anyhow::{ensure, Result};
-use indxvec::{here,Printing,Vecops};    
+use indxvec::{here,Printing,Vecops};
+use medians::{Median};    
 
 impl<T> Stats for &[T] 
-    where T: Copy+PartialOrd+std::fmt::Display, // +Sub::<Output = T>,
-        f64: From<T> {  
+    where T: Copy+PartialOrd+std::fmt::Display,f64:From<T> {  
 
     /// Vector magnitude
     fn vmag(self) -> f64 {
@@ -352,59 +352,10 @@ impl<T> Stats for &[T]
         })
     }
 
-    /// Median of a &[T] slice by sorting
-    /// # Example
-    /// ```
-    /// use rstats::{Stats};
-    /// let v1 = vec![1_u8,2,3,4,5,6,7,8,9,10,11,12,13,14];
-    /// let res = &v1.median().unwrap();
-    /// assert_eq!(res.median,7.5_f64);
-    /// assert_eq!(res.lquartile,4.25_f64);
-    /// assert_eq!(res.uquartile,10.75_f64);
-    /// ```
-    fn median(self) -> Result<Med> {
-        let gaps = self.len()-1;
-        let mid = gaps / 2;
-        let quarter = gaps / 4;
-        let threeq = 3 * gaps / 4;
-        let v = self.sortm(true);     
-        let mut result = Med { median: 
-            if 2*mid < gaps { (f64::from(v[mid]) + f64::from(v[mid + 1])) / 2.0 }
-            else { f64::from(v[mid]) }, ..Default::default() };
-        match gaps % 4 {
-        0 => {
-            result.lquartile = f64::from(v[quarter]);
-            result.uquartile = f64::from(v[threeq]);
-            return Ok(result) },
-        1 => {
-            result.lquartile = (3.*f64::from(v[quarter]) + f64::from(v[quarter+1])) / 4_f64;
-            result.uquartile = (f64::from(v[threeq]) + 3.*f64::from(v[threeq+1])) / 4_f64;
-            return Ok(result) },
-        2 => {
-            result.lquartile = (f64::from(v[quarter]) + f64::from(v[quarter+1])) / 2.;
-            result.uquartile = (f64::from(v[threeq]) + f64::from(v[threeq+1])) / 2.;
-            return Ok(result) },
-        3 => {
-            result.lquartile = (f64::from(v[quarter]) + 3.*f64::from(v[quarter+1])) / 4.;
-            result.uquartile = (3.*f64::from(v[threeq]) + f64::from(v[threeq+1])) / 4.
-            },
-        _ => { }  
-        }
-        Ok(result)       
-    }
-
-    /// MAD median absolute deviations: data spread estimator.
-    /// Is more stable than standard deviation and more precise than quartiles.
-    fn mad(self,median:f64) -> Result<f64> {
-        let diffs:Vec<f64> = self.iter().map(|&s| (f64::from(s)-median).abs()).collect(); 
-        Ok(medians::medianf64(&diffs))
-    }
-
     /// Zero median data produced by subtracting the median.
     /// Analogous to zero mean data when subtracting the mean.
     fn zeromedian(self) -> Result<Vec<f64>> {
-        let Med{median,..} = self.median() // ignore quartile fields
-            .unwrap_or_else(|_|panic!("{} failed to obtain median",here!()));
+        let median = self.median(); 
         Ok(self.iter().map(|&s| f64::from(s)-median).collect())
     }
 
