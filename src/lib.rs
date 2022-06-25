@@ -1,6 +1,7 @@
 #![warn(missing_docs)]
 //! Statistics, Vector Algebra, 
-//! Characterising multidimensional data, Machine Learning.
+//! Characterising Multidimensional Data, Machine Learning,
+//! Data Analysis
 
 /// Basic statistics on a single generic vector
 pub mod statsg;
