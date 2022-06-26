@@ -16,7 +16,7 @@ pub mod vecvec;
 /// Multidimensional operations on sets of vectors, with additional inputs
 pub mod vecvecg;
 
-// reexporting to avoid duplication and for backwards compatibility
+// reexporting useful related methods
 pub use indxvec::{MinMax,Printing,here};
 pub use medians::{Med,Median};
 /// simple error handling
@@ -213,23 +213,7 @@ pub trait MutVecg {
 }
 
 /// Methods specialised to, or more efficient for `&[u8]`
-pub trait Vecu8 {
-    /// Scalar product of two (positive) u8 slices.   
-    /// Must be of the same length - no error checking (for speed)
-    fn dotpu8(self, v: &[u8]) -> u64; 
-    /// Cosine between two (positive) u8 slices.
-    fn cosineu8(self, v: &[u8]) -> f64; 
-    /// Vector subtraction (converts results to f64 as they can be negative)
-    fn vsubu8(self, v: &[u8]) -> Vec<f64>;
-    /// Vector addition ( converts results to f64, as they can exceed 255 )
-    fn vaddu8(self, v: &[u8]) -> Vec<f64>;
-    /// Euclidian distance between self &[u8] and v:&[u8].  
-    /// Faster than vsub followed by vmag, as both are done in one loop
-    fn vdistu8(self, v: &[u8]) -> f64; 
-    /// cityblock distance
-    fn cityblockdu8(self, v:&[u8]) -> f64;
-    ///Euclidian distance squared, the arguments are both of &[u8] type  
-    fn vdistsqu8(self, v: &[u8]) -> u64; 
+pub trait Vecu8 {    
     /// Probability density function of bytes data
     fn pdfu8(self) -> Vec<f64>;
     /// Information (entropy) of &[u8] (in nats)

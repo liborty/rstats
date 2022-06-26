@@ -174,6 +174,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.1.1** - Crate size reduction. Some more code pruning, this time of methods in trait `Vecu8`, which are performed perfectly adequately by their generic counterparts in `Vecg`. Leaving only those with different u8 specific algorithms. 
+
 * **Version 1.1.0** - Big release. Added dependency on crate `medians` for fast 1D medians. Simplifications: subsumed module `mutstats.rs` into `mutvec.rs`. Removed traits `Mutstats` and `MutVecf64` and added their few methods to trait `MutVecg`. Added some more doc comments here. Generalisations: methods in `Vecg` and `MutVecg` now work on any type T of self and a potentially different type U for their argument. They should be called with the 'turbofish' syntax.
 
 * **Version 1.0.21** - Changed imports from `indxvec` to fit with its latest multicoloured version 1.2.1.
@@ -183,35 +185,3 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 1.0.18** - Renamed `madn` to `madgm` (median of absolute deviations, i.e. radii, from gm). Added its weighted version `wmadgm`. They now take `gm` or `wgm` respectively as an argument, to avoid recomputation. Removed `radvec`, as it was a simple difference of `gm` and `centroid`.
 
 * **Version 1.0.16** - Added `tukeyvec` and test of tukeyvec. Also changed usage of `ran` crate to its generic methods within `vecvec` test.
-
-* **Version 1.0.14** - Some improvements of README.md.
-
-* **Version 1.0.13** - Updated `ran` dev-dependency to "^0.3".
-
-* **Version 1.0.12** - New random number generators are now in their own crate `ran`. It has been added here to development dependencies, where it properly belongs. `tests.rs` have been changed accordingly. No other changes.
-
-* **Version 1.0.11** - The random number generators in indxvec have been been moved to their own module `random`. To keep `tests.rs` compatible, the import is now changed accordingly, to: `use indxvec::random::*;`
-
-* **Version 1.0.10** Now using new random numbers generators from `indxvec` for testing.
-
-* **Version 1.0.9** Removed `genvec` and `genvecu8` as non-essential. Removed some examples in the code that were using them. Changed the printing of vecs to utilise the new trait `Printing` from `indxvec`. See `testing.rs` for usage.
-
-* **Version 1.0.8** Pruned some non-essential code, such as `smedian`. Gmedian now performs consistently a bit better.
-
-* **Version 1.0.7** Achieved further 20% speedup of `gmedian` by optimising some inner loops.
-
-* **Version 1.0.6** Added `crossfeatures` - computes relationships between all pairs of vectors in self. Returns flattened lower triangular (symmetric) matrix.
-
-    Dependence of two vectors is now normalised to the range [0,1], e.g. the dependence of two identical vectors without repetitions is 1. Same for vectors of any real values that are all unique. In these cases it is better to fall back to correlations. N-dependence of a whole set of vectors will often be more than one.    
-
-* **Version 1.0.5** Added 1D median correlation `medaincorr`. This is a more robust measure. Added `dependencies` and `correlations` which efficiently map these relationships of a single given vector (typically of outcomes), to a set of vectors (typically feature vectors).
-
-* **Version 1.0.4** Added joint pdf, joint entropy and dependence for a set of n vectors.
-
-* **Version 1.0.3** Better implementations of joint probability and joint entropy. Code style and testing improvements.
-
-* **Version 1.0.2** Updated the dependency `indxvec` to version 1. A few minor changes to this document.
-
-* **Version 1.0.1** Minor change: `sortedeccs` and `wsortedeccs` now take gm as an argument for more efficient repeated use. Vecvec test improved.
-
-* **Version 1.0.0** Rstats reaches stability (of sorts)!

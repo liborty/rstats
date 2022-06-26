@@ -2,67 +2,6 @@ use crate::{Vecu8,here};
 
 impl Vecu8 for &[u8] {
 
-    /// Scalar product of two (positive) u8 slices.   
-    /// Must be of the same length - no error checking (for speed)
-    fn dotpu8(self, v: &[u8]) -> u64 {
-        self.iter().zip(v).map(|(&xi, &vi)| (xi as u64)*(vi as u64)).sum::<u64>()
-    }
-
-    /// Cosine between two (positive) u8 slices.
-    fn cosineu8(self, v: &[u8]) -> f64 {
-     let (mut sxy, mut sy2) = (0_f64, 0_f64);
-     let sx2: f64 = self
-         .iter()
-         .zip(v)
-         .map(|(&ux, &uy)| {
-             let x  = ux as f64;
-             let y = uy as f64;
-             sxy += x * y;
-             sy2 += y * y;
-             x*x
-         })
-         .sum();
-     sxy / (sx2*sy2).sqrt()
-    }
- 
-    /// Vector subtraction (converts results to f64 as they can be negative)
-    fn vsubu8(self, v: &[u8]) -> Vec<f64> {
-        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64) - (vi as f64)).collect()
-    }
-
-    /// Vector addition ( converts results to f64, as they can exceed 255 )
-    fn vaddu8(self, v: &[u8]) -> Vec<f64> {
-        self.iter().zip(v).map(|(&xi, &vi)| (xi as f64)+(vi as f64)).collect()
-    }
-
-    /// Euclidian distance between self &[u8] and v:&[u8].  
-    /// Faster than vsub followed by vmag, as both are done in one loop
-    fn vdistu8(self, v: &[u8]) -> f64 {
-        self.iter()
-            .zip(v)
-            .map(|(&xi, &vi)| ((xi as f64)-(vi as f64)).powi(2))
-            .sum::<f64>()
-            .sqrt()
-    }
-
-    /// cityblock distance
-    fn cityblockdu8(self, v:&[u8]) -> f64 {
-        self.iter()
-        .zip(v)
-        .map(|(&xi, &vi)| { let d = xi as f64 -vi as f64; if d<0_f64 {-d} else {d} } ) 
-        .sum::<f64>()      
-    }
-    ///Euclidian distance squared, the arguments are both of &[u8] type  
-    fn vdistsqu8(self, v: &[u8]) -> u64 {
-        self.iter()
-            .zip(v)
-            .map(|(&xi, &vi)| {
-               let x = xi as i32;
-               let y = vi as i32;
-                (x - y).pow(2) as u64})           
-            .sum::<u64>()
-    }
- 
     /// Probability density function of bytes data
     fn pdfu8(self) -> Vec<f64> {  
         let nf = self.len() as f64;

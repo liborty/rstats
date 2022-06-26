@@ -19,22 +19,21 @@ fn u8() -> Result<()> {
         1_u8, 2, 2, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2,
     ];
     println!("v2: {}", (&v2).gr());
+    println!("v1*v2:\t{}",v1.dotp(&v2).gr());
+    println!("v1+v2: {}",v1.vadd(&v2).gr());   
+    println!("v1-v2: {}",v1.vsub(&v2).gr());    
     println!("Lexical order v1<v2: {}", (v1 < v2).gr());
-    println!("Entropy 1:\t{}", v1.entropy().gr());
-    println!("Entropy 2 gen:\t{}", v2.entropy().gr()); // generic
-    println!("Entropy 2 u8:\t{}", v2.entropyu8().gr()); // u8
-    println!("Euclid's dist:\t{}", v2.vdistu8(&v1).gr());
-    println!("Cityblock dist:\t{}", v2.cityblockd(&v1).gr());
-    println!("Joint Entropy gen: {}", v1.jointentropy(&v2).gr());
-    println!("Joint Entropy u8:  {}", v1.jointentropyu8(&v2).gr());
-    println!("Generic dependence:{}", v1.dependence(&v2).gr()); // generic
-    println!("Dependence u8:\t{}", v1.dependenceu8(&v2).gr()); // u8
-    println!("Cos:\t\t{}", v1.cosineu8(&v2).gr());
-    println!("Median Correlation:  {}", v1.mediancorr(&v2).gr());
-    println!("Pearson Correlation:  {}", v1.correlation(&v2).gr());
-    println!("Spearman Correlation: {}", v1.spearmancorr(&v2).gr());
+    println!("Entropy v1:\t{}", v1.entropy().gr());
+    println!("Entropyu8 v1:\t{}", v1.entropyu8().gr());
+    println!("Entropy v2:\t{}", v2.entropy().gr()); // generic
+    println!("Entropyu8 v2:\t{}", v2.entropyu8().gr()); // u8 
+    println!("Joint Entropy:  {}", v1.jointentropy(&v2).gr());
+    println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2).gr());
+    println!("Dependence:   {}", v1.dependence(&v2).gr()); // generic
+    println!("Dependenceu8: {}", v1.dependenceu8(&v2).gr()); // u8 
     let med =  v1.as_slice().median();
-    println!("Median:\t\t{} +- {}",med.gr(),v1.mad(med).gr());
+    println!("Median v1:    {} +-{}",med.gr(),v1.mad(med).gr());
+    println!("{}",v1.medinfo());   
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
@@ -85,13 +84,13 @@ fn fstats() -> Result<()> {
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
     let pt = ranvvf64(d, n);
-    println!("Covariances:\n{}", pt.covar(&pt.acentroid()).gr());
+    println!("Classical Covariances:\n{}", pt.covar(&pt.acentroid()).gr());
     println!(
         "Covariances of zero median data:\n{}",
         pt.covar(&pt.gmedian(EPS)).gr()
     );
     println!(
-        "Median covariances of zero median data:\n{}",
+        "Comediances:\n{}",
         pt.comed(&pt.gmedian(EPS)).gr()
     );
     let trpt = pt.transpose();
