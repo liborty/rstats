@@ -2,7 +2,7 @@ use anyhow::{Result};
 use devtimer::DevTime;
 use indxvec::{printing::*, Indices, Vecops,Printing};
 use rstats::{i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
-use ran::{*,generators::{set_seeds,ranvu8,ranvvu8,ranvvf64}};
+use ran::{*,generators::{ranvu8,ranvvu8,ranvvf64}};
 use medians::{Median};
 
 pub const EPS: f64 = 1e-10;
