@@ -19,7 +19,7 @@ use medians::Med;
 
 and any of the following rstats traits:
 ```rust 
-use rstats::{Stats, Vecu8, Vecg, MutVecg, VecVecu8, VecVec, VecVecg};
+use rstats::{ Stats, Vecg, Vecu8, MutVecg, VecVec, VecVecg };
 ```
 
 and any of the following helper functions:  
@@ -125,7 +125,6 @@ This is more efficient and convenient in some circumstances, such as in vector i
 
 Some vector algebra as above that can be more efficient when the end type happens to be u8 (bytes). They have u8 appended to their names to avoid confusion with Vecg methods.
 
-* Relationships between two vectors (of bytes)
 * Frequency count of bytes by their values (histogram, pdf, jointpdf)
 * Entropy, jointentropy, independence (different algorithms to those in Vecg)
 

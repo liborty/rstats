@@ -231,26 +231,6 @@ pub trait Vecu8 {
     fn independenceu8(self, v:&[u8]) -> f64;
 }
 
-/// A few specialised methods applicable to `Vec<Vec<u8>>` (vector of vectors of bytes).
-pub trait VecVecu8 { 
-    /// Centroid = euclidian mean of a set of points  
-    fn acentroid(self) -> Vec<f64>;
-    /// Weighted Centre
-    fn wacentroid(self,ws: &[u8]) -> Vec<f64>;
-    /// Eccentricity vector added to a non member point,
-    fn nxnonmember(self, p:&[f64]) -> Vec<f64>;
-    /// Weighted eccentricity vector for a non member point
-    fn wnxnonmember(self, ws:&[u8], p:&[f64]) -> Vec<f64>; 
-    /// Weighted geometric median, sorted eccentricities magnitudes, cpdf of the weights
-    fn gmedian(self, eps:f64) -> Vec<f64>; 
-    /// The weighted geometric median
-    fn wgmedian(self, ws:&[u8], eps: f64) -> Vec<f64>;
-    /// Lower triangular part of a covariance matrix of a Vec of u8 vectors.
-    fn covar(self, med:&[f64]) -> Vec<f64>;
-    /// Lower triangular part of a covariance matrix of a Vec of weighted u8 vectors.
-    fn wcovar(self, ws:&[u8], m:&[f64]) -> Vec<f64>;
-}
-
 /// Methods applicable to a single argument: a vector of vectors of generic end type.
 /// Operations on a set of multidimensional vectors.
 pub trait VecVec<T> {
