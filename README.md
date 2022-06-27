@@ -174,6 +174,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.1.2** - Tidying up of methods in trait VecVec. Removed some, added some. Some preparations for parallelism.
+
 * **Version 1.1.1** - Crate size reduction. Some more code pruning, this time of methods in trait `Vecu8`, which are performed perfectly adequately by their generic counterparts in `Vecg`. Leaving only those with different u8 specific algorithms. 
 
 * **Version 1.1.0** - Big release. Added dependency on crate `medians` for fast 1D medians. Simplifications: subsumed module `mutstats.rs` into `mutvec.rs`. Removed traits `Mutstats` and `MutVecf64` and added their few methods to trait `MutVecg`. Added some more doc comments here. Generalisations: methods in `Vecg` and `MutVecg` now work on any type T of self and a potentially different type U for their argument. They should be called with the 'turbofish' syntax.

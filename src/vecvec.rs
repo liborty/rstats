@@ -7,7 +7,7 @@ use medians::{Med,Median};
 impl<T> VecVec<T> for &[Vec<T>] 
     where T: Copy+PartialOrd+std::fmt::Display,f64: From<T> {
 
-    /// Transpose vec of vecs like a matrix
+    /// Transpose vec of vecs as a matrix
     fn transpose(self) -> Vec<Vec<T>> {
         let n = self.len();
         let d = self[0].len();
@@ -80,7 +80,7 @@ impl<T> VecVec<T> for &[Vec<T>]
         codp
     }
 
-    /// acentroid = simple multidimensional arithmetic mean
+    /// acentroid = multidimensional arithmetic mean
     fn acentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()];
         for v in self { centre.mutvadd(v) }
@@ -127,7 +127,7 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// The sum of distances from one member point, given by its `indx`,
     /// to all the other points in self.
     /// For all the points, use more efficient `distsums`.
-    /// For measure of 'outlyingness', use radius from gm, in preference (is more efficient).    
+    /// For measure of 'outlyingness', use nore efficient radius from gm.    
     fn distsuminset(self, indx: usize) -> f64 { 
         let thisp = &self[indx];
         self.iter().enumerate().map(|(i,thatp)|
@@ -140,7 +140,8 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// Outlier is the point with the greatest sum of distances.
     /// In other words, they are the members nearest and furthest from the geometric median. 
     /// Returns struct MinMax{min,minindex,max,maxindex}
-    fn medout(self) -> MinMax<f64> {  self.distsums().minmax() }
+    fn medout(self,gm:&[f64]) -> MinMax<f64> {  
+        self.iter().map(|s| s.vdist::<f64>(gm)).collect::<Vec<f64>>().minmax() }
 
     /// Finds approximate vectors from each member point towards the geometric median.
     /// Twice as fast using symmetry, as doing them individually.
@@ -173,45 +174,32 @@ impl<T> VecVec<T> for &[Vec<T>]
         eccs
     }
 
-    /// Exact radii (eccentricity) vectors from all member points by first finding the Geometric Median.
+    /// Exact radii (eccentricity) vectors to all member points from the Geometric Median.
     /// More accurate and usually faster as well than the approximate `eccentricities` above,
     /// especially when there are many points.
-    fn exacteccs(self, eps:f64) -> Vec<Vec<f64>> {        
-        let mut eccs = Vec::with_capacity(self.len()); // Vectors for the results
-        let gm:Vec<f64> = self.gmedian(eps);
-        for v in self {
-            eccs.push(gm.vsub(v))
-        }
-        eccs
-    }
+    fn exacteccs(self, gm:&[f64]) -> Vec<Vec<f64>> { 
+        self.iter().map(|s| s.vsub::<f64>(gm)).collect::<Vec<Vec<f64>>>()
+    } 
 
-    /// Estimated (computed) eccentricity vector for a member point.
-    /// It points towards the geometric median. 
-    /// The true geometric median is as yet unknown.
-    /// The true geometric median would return zero vector.
-    /// The member point in question is specified by its index `indx`.
-    /// This function is suitable for a single member point. 
-    /// When eccentricities of all the points are wanted, use `exacteccs` above.
-    fn eccmember(self, indx: usize) -> Vec<f64> {
-        self.nxmember(indx).vsub(&self[indx])
-    }
-    
-    /// Estimated (computed) eccentricity vector for a non member point. 
-    /// The true geometric median is as yet unknown.
-    /// Returns the eccentricity vector.
-    /// The true geometric median would return zero vector.
-    /// This function is suitable for a single non-member point. 
-    fn eccnonmember(self, p:&[f64]) -> Vec<f64> {
-        self.nxnonmember(p).vsub::<f64>(p)
-    }
-
-    /// Mean and Std (in MStats struct), Median and quartiles (in Med struct), Median and Outlier (in MinMax struct) 
+    /// Mean and Std (in MStats struct), Median info (in Med struct), Median and Outlier (in MinMax struct) 
     /// of scalar eccentricities of points in self.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
-    fn eccinfo(self, eps: f64) -> (MStats, Med, MinMax<f64>) where Vec<f64>:FromIterator<f64> {
-        let gm = self.gmedian(eps);
-        let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
-        (eccs.ameanstd().unwrap(),eccs.medinfo(),eccs.minmax())
+    fn eccinfo(self, gm:&[f64]) -> (MStats, Med, MinMax<f64>) where Vec<f64>:FromIterator<f64> {
+        let rads:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
+        (rads.ameanstd().unwrap(),rads.medinfo(),rads.minmax())
+    }
+
+    /// Quasi median, recommended only for comparison purposes
+    fn quasimedian(self) -> Vec<f64> {
+        self.transpose()
+            .iter()
+            .map(|p| p.as_slice().median())
+            .collect()
+    }
+
+    /// Geometric median estimate's error and recipsum
+    fn gmerror(self,gm:&[f64]) -> f64 {
+        self.nxnonmember(gm).vdist::<f64>(gm)
     }
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
@@ -243,15 +231,7 @@ impl<T> VecVec<T> for &[Vec<T>]
         // collect raw ecentricities magnitudes
         for v in self { eccs.push(v.vdist::<f64>(gm)) }
         eccs.sortm(ascending)
-    }    
-
-    /// Eccentricities of Medoid and Outlier.  
-    /// Same as just the third element of a tuple returned by eccinfo
-    fn emedoid(self, eps: f64) -> MinMax<f64> where Vec<f64>:FromIterator<f64> {
-    let gm:Vec<f64> = self.gmedian(eps);
-    let eccs:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
-    eccs.minmax()
-} 
+    }
 
     /// Initial (first) point for geometric medians.
     /// Same as eccnonmember('origin') but saving the subtractions of zeroes. 
@@ -294,18 +274,52 @@ impl<T> VecVec<T> for &[Vec<T>]
  
     /// Next approximate gm computed from a non-member point p
     fn nxnonmember(self, p:&[f64]) -> Vec<f64> {
+        // vsum is the sum vector of unit vectors towards the points
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
         for x in self { 
+            // |x-p| done in-place for speed. Could have simply called x.vdist(p)
             let mag:f64 = x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum::<f64>().sqrt(); 
             if mag.is_normal() { // ignore this point should distance be zero
-                let rec = 1.0_f64/mag;
-                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += rec*f64::from(*xi)); 
-                recip += rec // add separately the reciprocals    
+                let rec = 1.0_f64/mag; // reciprocal of distance (scalar)
+                // vsum increments by components
+                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += f64::from(*xi)*rec); 
+                recip += rec // add separately the reciprocals for final scaling   
             }
         }
         vsum.iter_mut().for_each(|vi| *vi /= recip);
         vsum
+    }
+
+    /// Like `nxnonmember` but returns the vectors sum and reciprocals sum
+    /// Good for testing and parallelism
+    fn vsumrecip(self, p:&[f64]) -> (Vec<f64>,f64) {
+        // vsum is the sum vector of unit vectors towards the points
+        let mut vsum = vec![0_f64; self[0].len()];
+        let mut recip = 0_f64;
+        for x in self { 
+            // |x-p| done in-place for speed. Could have simply called x.vdist(p)
+            let mag:f64 = x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum::<f64>().sqrt(); 
+            if mag.is_normal() { // ignore this point should distance be zero
+                let rec = 1.0_f64/mag; // reciprocal of distance (scalar)
+                // vsum increments by components
+                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += f64::from(*xi)*rec); 
+                recip += rec // add separately the reciprocals for final scaling   
+            }
+        } 
+        (vsum,recip)
+    }
+
+    /// Change to gm due to just one added point p
+    fn gmdelta(self,gm:&[f64],p:&[f64]) -> Vec<f64> {
+        let mag = p.vdist::<f64>(gm);
+        if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); };
+        let (mut vsum,mut recipsum) = self.vsumrecip(gm);
+        let recip = 1f64/mag;
+        vsum.mutvadd::<f64>(&p.smult::<f64>(recip));
+        recipsum += recip;
+        vsum.mutsmult::<f64>(1./recipsum);
+        vsum.vsub::<f64>(gm)
     }
 
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.

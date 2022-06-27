@@ -2,7 +2,7 @@ use anyhow::{Result};
 use devtimer::DevTime;
 use indxvec::{printing::*, Indices, Vecops,Printing};
 use rstats::{i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
-use ran::{*,generators::{ranvu8,ranvvu8,ranvvf64}};
+use ran::{*,set_seeds};
 use medians::{Median};
 
 pub const EPS: f64 = 1e-10;
@@ -38,7 +38,7 @@ fn u8() -> Result<()> {
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
     set_seeds(77777);
-    let pt = ranvvu8(d, n);
+    let pt = Rnum::newu8().ranvv(d, n).getvvu8();
     let cov = pt.covar(&pt.acentroid());
     println!("Covariances:\n{}", cov.gr());
     let com = pt.covar(&pt.gmedian(EPS));
@@ -83,7 +83,7 @@ fn fstats() -> Result<()> {
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
-    let pt = ranvvf64(d, n);
+    let pt = Rnum::newf64().ranvv(d, n).getvvf64();
     println!("Classical Covariances:\n{}", pt.covar(&pt.acentroid()).gr());
     println!(
         "Covariances of zero median data:\n{}",
@@ -108,7 +108,7 @@ fn fstats() -> Result<()> {
 #[test]
 fn ustats() -> Result<()> { 
     set_seeds(1234567);
-    let v1 = ranvu8(20);
+    let v1 = Rnum::newu8().ranv(20).getvu8(); 
     println!("\n{}", (&v1).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
     println!("Arithmetic mean:{}", v1.amean()?.gr());
@@ -202,8 +202,10 @@ fn vecg() -> Result<()> {
 /// numbers of points can differ
 fn trend() -> Result<()> {
     let d = 7_usize;
-    let pts1 = ranvvf64(d, 37);
-    let pts2 = ranvvf64(d, 33);
+    set_seeds(777);
+    let rf64 = Rnum::newf64(); 
+    let pts1 = rf64.ranvv(d, 37).getvvf64();
+    let pts2 = rf64.ranvv(d, 33).getvvf64();
     println!("\nTrend vector:\n{}\n", pts1.trend(EPS, pts2).gr());
     Ok(())
 }
@@ -213,11 +215,6 @@ fn vecvec() -> Result<()> {
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {} points in {} dimensional space",n,d);
-    // create test weights data
-    // let mut weights = Vec::new();
-    // for i in 1..n {
-    //    weights.push(i as f64)
-    // }
     set_seeds(111);
     let ru = Rnum::newu8();
     let pts = ru.ranvv(d,n).getvvu8(); 
@@ -235,7 +232,8 @@ fn vecvec() -> Result<()> {
         transppt.correlations(&outcomes).gr()
     );
     
-    let (eccstd, eccmed, eccecc) = pts.eccinfo(EPS);
+    let gm = pts.gmedian(EPS);
+    let (eccstd, eccmed, eccecc) = pts.eccinfo(&gm);
     // let me = pts.emedoid(EPS);
     let medoid = &pts[eccecc.minindex];
     let outlier = &pts[eccecc.maxindex];
@@ -245,6 +243,8 @@ fn vecvec() -> Result<()> {
     let firstp = pts.firstpoint();
     let median = pts.gmedian(EPS);  
     
+    println!("Gmedelta due to acentroid:\n{}",pts.gmdelta(&gm,&acentroid).gr() );
+    println!("Gmedelta due to gcentroid:\n{}",pts.gmdelta(&gm,&gcentroid).gr() );
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
     println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
     // let testvec = ru.ranv(d).getvu8();
@@ -263,7 +263,7 @@ fn vecvec() -> Result<()> {
         eccecc, eccstd, eccmed
     );
     println!("MADGM: {}", pts.madgm(&median).gr());
-    println!("Median's error*{:e}: {}",1_f64 / EPS,(pts.eccnonmember(&median).vmag() / EPS).gr());
+    println!("Median's error*{:e}: {}",1_f64 / EPS,( pts.nxnonmember(&median).vdist::<f64>(&median) / EPS).gr());
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());
     println!("Firstpoint's radius: {}", firstp.vdist(&median).gr());
     println!("Medoid's radius:     {}",medoid.vdist(&median).gr());
@@ -305,6 +305,7 @@ fn geometric_medians() -> Result<()> {
     const ITERATIONS: usize = 10;
     let n = 100_usize;
     let d = 1000_usize;
+    set_seeds(12345);
     println!(
         "timing {} medians of {} points in {} dimensions",
         ITERATIONS, n, d
@@ -316,24 +317,20 @@ fn geometric_medians() -> Result<()> {
     let mut summ = 0_f64;
     let mut timerm = DevTime::new_simple();
     let mut gm: Vec<f64>;
-    for _i in 1..ITERATIONS {
-        let pts = ranvvf64(d, n);
-        let trpts = pts.transpose();
+    for _i in 1..ITERATIONS { 
+        let pts = Rnum::newf64().ranvv(d, n).getvvf64();
         timerg.start();
         gm = pts.gmedian(EPS);
         timerg.stop();
-        sumg += pts.eccnonmember(&gm).vmag();
+        sumg += pts.gmerror(&gm);
         timerq.start();
-        gm = trpts
-            .iter()
-            .map(|p| p.as_slice().median())
-            .collect();
+        gm = pts.quasimedian(); 
         timerq.stop();
-        sumq += pts.eccnonmember(&gm).vmag();
+        sumq += pts.gmerror(&gm);
         timerm.start();
         gm = pts.acentroid();
         timerm.stop();
-        summ += pts.eccnonmember(&gm).vmag();
+        summ += pts.gmerror(&gm);
     }
     println!(
         "Geometric md {GR}err/eps: {:17.5}\tseconds: {:9}{UN}",

@@ -115,14 +115,16 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     }
 
      /// Next approximate weighted median, from a non member point. 
-    fn wnxnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64> {
+    fn wnxnonmember(self, ws:&[U], g:&[f64]) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
-        for (x,&w) in self.iter().zip(ws) {  
-            let mag:f64 = x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum::<f64>().sqrt(); 
-            if mag.is_normal() {  // skip point x when its distance is zero
-                let rec = f64::from(w)/mag;
-                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += rec*f64::from(*xi)); 
+        for (p,&w) in self.iter().zip(ws) { 
+            // individual magnitute |p-g| 
+            let mag:f64 = p.iter().zip(g).map(|(&pi,&gi)|(f64::from(pi)-gi).powi(2)).sum::<f64>().sqrt(); 
+            if mag.is_normal() {  // skip point p when its distance from g is zero
+                let rec = f64::from(w)/mag; // weighted reciprocal
+                // vsum of weighted p's by components (weight w(p) is subsumed in rec)
+                vsum.iter_mut().zip(p).for_each(|(vi,pi)| *vi += rec*f64::from(*pi)); 
                 recip += rec // add separately the reciprocals    
             }
         }
@@ -138,22 +140,21 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn weccnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64> {
        self.wnxnonmember(ws,p).vsub::<f64>(p)
     }
-
-    /// Secant method with recovery from divergence
-    /// for finding the weighted geometric median
+ 
+    /// Weighted geometric median
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64> {  
         let eps2 = eps.powi(2);
-        let mut p = self.wacentroid(ws); // start iterating from the Centre
+        let mut g = self.wacentroid(ws); // start iterating from the Centre
         loop { // vector iteration till accuracy eps is reached
-            let nextp = self.wnxnonmember(ws,&p);          
-            if nextp.iter().zip(p).map(|(&xi,pi)|(xi-pi).powi(2)).sum::<f64>() < eps2 { return nextp }; // termination 
-            p = nextp
+            let nextg = self.wnxnonmember(ws,&g);          
+            if nextg.iter().zip(g).map(|(&xi,gi)|(xi-gi).powi(2)).sum::<f64>() < eps2 { return nextg }; // termination 
+            g = nextg
         }
     }
 
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64 {     
-        let devs:Vec<f64> = self.iter().map(|v| v.wvdistf64(ws,wgm)).collect();
+        let devs:Vec<f64> = self.iter().map(|v| v.wvdist(ws,wgm)).collect();
         devs.as_slice().median()
     }
 
