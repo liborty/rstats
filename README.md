@@ -173,6 +173,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.1.3** - Added `quasimedian`, `gmerror`, `gmedrecs` and `wgmedrecs`. Some more tidying up.
+
 * **Version 1.1.2** - Tidying up of methods in trait VecVec. Removed some, added some. Some preparations for parallelism.
 
 * **Version 1.1.1** - Crate size reduction. Some more code pruning, this time of methods in trait `Vecu8`, which are performed perfectly adequately by their generic counterparts in `Vecg`. Leaving only those with different u8 specific algorithms. 

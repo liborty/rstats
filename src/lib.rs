@@ -287,7 +287,9 @@ pub trait VecVec<T> {
     // fn nmedian(self, eps: f64) -> Vec<f64>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
-    /// Same a smedian but returns also the number of iterations 
+    /// Like `gmedian` but returns also the sum of reciprocals of distances to it.
+    fn gmedrecs(self, eps: f64) -> (Vec<f64>,f64);
+    /// Like `gmedian` but returns also the number of iterations.
     fn igmedian(self, eps: f64) -> (Vec<f64>,usize);   
 }
 
@@ -322,6 +324,8 @@ pub trait VecVecg<T,U> {
     fn weccnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64>;
     /// The weighted geometric median to accuracy eps 
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>;
+    /// Like `wgmedian` but returns also the sum of reciprocals of (weighted) distances to it.
+    fn wgmedrecs(self, ws:&[U], eps: f64) -> (Vec<f64>,f64);
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64;     
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.

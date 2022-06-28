@@ -317,8 +317,10 @@ fn geometric_medians() -> Result<()> {
     let mut summ = 0_f64;
     let mut timerm = DevTime::new_simple();
     let mut gm: Vec<f64>;
-    for _i in 1..ITERATIONS { 
+     for _i in 1..ITERATIONS { 
         let pts = Rnum::newf64().ranvv(d, n).getvvf64();
+        // let (_,recsum) = pts.gmedrecs(EPS);
+        // println!("Reciprocals sum: {}",recsum);
         timerg.start();
         gm = pts.gmedian(EPS);
         timerg.stop();

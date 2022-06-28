@@ -152,6 +152,31 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         }
     }
 
+    /// Like `wgmedian` but returns also the sum of reciprocals of (weighted) distances to it.
+    fn wgmedrecs(self, ws:&[U], eps: f64) -> (Vec<f64>,f64) {
+            let eps2 = eps.powi(2);
+            let mut g = self.acentroid(); // start iterating from the Centre 
+            loop { // vector iteration till accuracy eps2 is reached  
+                let mut nextg = vec![0_f64; self[0].len()];   
+                let mut recsum = 0_f64;
+                for (x,&w) in self.iter().zip(ws) { 
+                    // |x-g| done in-place for speed. Could have simply called x.vdist(g)
+                    //let mag:f64 = g.vdist::<f64>(&x); 
+                    let mag = g.iter().zip(x).map(|(&gi,&xi)|(f64::from(xi)-gi).powi(2)).sum::<f64>(); 
+                    if mag.is_normal() { 
+                        let rec = f64::from(w)/(mag.sqrt()); // reciprocal of distance (scalar)
+                        // vsum increments by components
+                        nextg.iter_mut().zip(x).for_each(|(vi,&xi)| *vi += f64::from(xi)*rec); 
+                        recsum += rec // add separately the reciprocals for final scaling   
+                    } // else simply ignore this point should its distance from g be zero
+                }
+                nextg.iter_mut().for_each(|gi| *gi /= recsum);    
+                if nextg.iter().zip(g).map(|(&xi,gi)|(xi-gi).powi(2)).sum::<f64>() < eps2 { 
+                    return (nextg,recsum) }; // termination        
+                g = nextg;            
+            }
+        }
+
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64 {     
         let devs:Vec<f64> = self.iter().map(|v| v.wvdist(ws,wgm)).collect();
