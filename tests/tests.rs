@@ -232,7 +232,7 @@ fn vecvec() -> Result<()> {
         transppt.correlations(&outcomes).gr()
     );
     
-    let gm = pts.gmedian(EPS);
+    let (gm,recips) = pts.gmedrecs(EPS);
     let (eccstd, eccmed, eccecc) = pts.eccinfo(&gm);
     // let me = pts.emedoid(EPS);
     let medoid = &pts[eccecc.minindex];
@@ -242,7 +242,8 @@ fn vecvec() -> Result<()> {
     let acentroid = pts.acentroid();
     let firstp = pts.firstpoint();
     let median = pts.gmedian(EPS);  
-    
+
+    println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
     println!("Gmedelta due to acentroid:\n{}",pts.gmdelta(&gm,&acentroid).gr() );
     println!("Gmedelta due to gcentroid:\n{}",pts.gmdelta(&gm,&gcentroid).gr() );
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
