@@ -174,7 +174,7 @@ pub trait Vecg {
     fn jointentropy<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Statistical pairwise dependence of &[T] &[U] variables in the range [0,1] 
     fn dependence<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;   
-    /// Statistical pairwise independence in the range [1,2] based on joint entropy
+    /// Statistical pairwise independence in the range [0,1] based on joint entropy
     fn independence<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Cholesky decomposition of positive definite matrix into LLt
     // fn cholesky(self) -> Vec<f64>;
@@ -260,13 +260,12 @@ pub trait VecVec<T> {
     fn distsuminset(self, indx: usize) -> f64;
     /// Next approx gm computed at a member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
-    /// Next approx gm computed at a nonmember point p
-    fn nxnonmember(self, p:&[f64]) -> Vec<f64>; 
-    /// Like `nxnonmember` but returns the vectors sum and reciprocals sum
-    /// Good for testing and parallelism
-    fn vsumrecip(self, p:&[f64]) -> (Vec<f64>,f64);
+    /// Like gmparts, except only does one iteration from any non-member point g
+    fn nxnonmember(self, g:&[f64]) -> (Vec<f64>,Vec<f64>,f64); 
     /// Change to gm due to just one added point p
-    fn gmdelta(self,gm:&[f64],p:&[f64]) -> Vec<f64>;
+    fn gmdelta(self,gm:&[f64],gmrecips:f64,p:&[f64]) -> Vec<f64>;
+    /// Contribution an existing set point p has made to the gm
+    fn gmcontrib(self,gm:&[f64],recips:f64,p:&[T]) -> Vec<f64>;
     /// Estimated eccentricity vectors from each member point
     fn eccentricities(self) -> Vec<Vec<f64>>;
     /// Exact eccentricity vectors to each member point by using the gm 
@@ -287,10 +286,8 @@ pub trait VecVec<T> {
     // fn nmedian(self, eps: f64) -> Vec<f64>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
-    /// Like `gmedian` but returns also the sum of reciprocals of distances to it.
-    fn gmedrecs(self, eps: f64) -> (Vec<f64>,f64);
-    /// Like `gmedian` but returns also the number of iterations.
-    fn igmedian(self, eps: f64) -> (Vec<f64>,usize);   
+    /// Like `wgmedian` but returns the sum of unit vecs and the sum of reciprocals of distances.
+    fn gmparts(self, eps: f64) -> (Vec<f64>,Vec<f64>,f64);
 }
 
 /// Methods applicable to vector of vectors of generic end type and one argument
@@ -318,14 +315,12 @@ pub trait VecVecg<T,U> {
     fn wsortedeccs(self,ws:&[U],gm:&[f64]) -> (Vec<f64>,Vec<f64>); 
     /// Sorted cosines magnitudes and cpdf, needs central median
     fn wsortedcos(self,medmed:&[U],unitzmed:&[U],ws:&[U]) -> (Vec<f64>,Vec<f64>); 
-    /// Estimated weighted gm computed at a non member point
-    fn wnxnonmember(self, ws:&[U], g:&[f64]) -> Vec<f64>; 
-    /// Estimated weighted eccentricity for a non-member point 
-    fn weccnonmember(self, ws:&[U], p:&[f64]) -> Vec<f64>;
+    /// Like wgmparts, except only does one iteration from any non-member point g
+    fn wnxnonmember(self, ws:&[U], g:&[f64]) -> (Vec<f64>,Vec<f64>,f64); 
     /// The weighted geometric median to accuracy eps 
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>;
-    /// Like `wgmedian` but returns also the sum of reciprocals of (weighted) distances to it.
-    fn wgmedrecs(self, ws:&[U], eps: f64) -> (Vec<f64>,f64);
+    /// Like `gmedian` but returns also the sum of unit vecs and the sum of reciprocals. 
+    fn wgmparts(self, ws:&[U],eps: f64) -> (Vec<f64>,Vec<f64>,f64);
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64;     
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.

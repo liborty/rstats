@@ -40,13 +40,15 @@ This crate begins with basic statistical measures and vector algebra, which prov
 
 Our treatment of multidimensional sets of points (vectors) is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
 
-* `gmedian` - fast multidimensional (geometric) median algorithm.
+* `median correlation`- in one dimension (1d), our `mediancorr` method is to replace *Pearson's correlation*. We define *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
 
-* `madgm` - generalisation of robust data spread estimator known as 'MAD' in 1d (median of absolute deviations from median), to multiple dimensions (nd).    
+* `gmedian` - fast multidimensional geometric median (gm) algorithm.
+
+* `madgm` - generalisation of robust data spread estimator known as 'MAD' (median of absolute deviations from median),  from 1d to nd. 
+
+* `contribution` - of a point to an nd set. Defined as gm displacement if the point was removed. Related to the  inverse radius but not always the same, as the positions of  other points are taken into account.
 
 * `comediance` - instead of covariance (matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus *zero median vectors* are replacing *zero mean vectors* in covariance calculations.
-
-* `median correlation`- in one dimension (1d), our `mediancorr` method is to replace *Pearson's correlation*. We define *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
@@ -173,7 +175,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
-* **Version 1.1.3** - Added `quasimedian`, `gmerror`, `gmedrecs` and `wgmedrecs`. Some more tidying up.
+* **Version 1.1.4** - Speedup: invented faster termination condition for gm algorithm! Generality: invented `contribution` measure for nd set points. Tidied up functions associated with gm. Deleted and added some.
+
+* **Version 1.1.3** - Added `quasimedian`, `gmerror`. Some more tidying up.
 
 * **Version 1.1.2** - Tidying up of methods in trait VecVec. Removed some, added some. Some preparations for parallelism.
 

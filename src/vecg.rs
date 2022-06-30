@@ -78,7 +78,9 @@ impl<T> Vecg for &[T]
     }
 
     /// Weighted distance of self:&[T] to v:&[V], scaled by ws:&[U]
-    /// allows all three to be of different types  
+    /// allows all three to be of different types
+    /// 
+    ///   
     fn wvdist<U,V>(self,ws:&[U],v:&[V]) -> f64
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>, 
             V: Copy, f64:From<V> {
@@ -232,11 +234,11 @@ impl<T> Vecg for &[T]
         (self.entropy() + v.entropy())/self.jointentropy(v)-1.0 
     }
 
-    /// Independence of &[T] &[U] variables in the range [1,2]
-    /// returns 2 iff they are statistically component wise independent
+    /// Independence of &[T] &[U] variables in the range [0,1]
+    /// returns 1 iff they are statistically component wise independent
     fn independence<U>(self, v:&[U]) -> f64
     where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {   
-        2.0 * self.jointentropy(v) / (self.entropy() + v.entropy()) 
+        2.0 * self.jointentropy(v) / (self.entropy() + v.entropy())-1.0
     }
 
     /// We define median based correlation as cosine of an angle between two

@@ -197,9 +197,10 @@ impl<T> VecVec<T> for &[Vec<T>]
             .collect()
     }
 
-    /// Geometric median estimate's error
-    fn gmerror(self,gm:&[f64]) -> f64 {
-        self.nxnonmember(gm).vdist::<f64>(gm)
+    /// Geometric median's estimated error
+    fn gmerror(self,g:&[f64]) -> f64 {
+        let (gm,_,_) = self.nxnonmember(g);
+        gm.vdist::<f64>(g)
     }
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
@@ -208,16 +209,17 @@ impl<T> VecVec<T> for &[Vec<T>]
         devs.as_slice().median()    
     }
 
-    /// Proportions of points along each axis
+    /// Proportions of points along each +/-axis (hemisphere)
+    /// Excludes points that are perpendicular to it
     fn tukeyvec(self, gm: &[f64]) -> Vec<f64> { 
         let nf = self.len() as f64; 
         let dims = self[0].len();
-        let mut hemis = vec![0_f64; dims];       
+        let mut hemis = vec![0_f64; 2*dims];       
         let zerogm = self.zerogm(gm);
         for v in zerogm {   
             for (i,&component) in v.iter().enumerate() {
                 if component > 0. { hemis[i] += 1. }
-                else if component < 0. { hemis[i] -= 1. };  
+                else if component < 0. { hemis[dims+i] += 1. };  
             }
         }
         hemis.iter_mut().for_each(|hem| *hem /= nf );
@@ -271,8 +273,8 @@ impl<T> VecVec<T> for &[Vec<T>]
         vsum
     }
  
-    /// Next approximate gm computed from a non-member point p
-    fn nxnonmember(self, g:&[f64]) -> Vec<f64> {
+    /// Like gmparts, except only does one iteration from any non-member point g
+    fn nxnonmember(self, g:&[f64]) -> (Vec<f64>,Vec<f64>,f64) {
         // vsum is the sum vector of unit vectors towards the points
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
@@ -286,55 +288,45 @@ impl<T> VecVec<T> for &[Vec<T>]
                 recip += rec // add separately the reciprocals for final scaling   
             }
         }
-        vsum.iter_mut().for_each(|vi| *vi /= recip);
-        vsum
-    }
-
-    /// Like `nxnonmember` but returns the vectors sum and reciprocals sum
-    /// Good for testing and parallelism
-    fn vsumrecip(self, p:&[f64]) -> (Vec<f64>,f64) {
-        // vsum is the sum vector of unit vectors towards the points
-        let mut vsum = vec![0_f64; self[0].len()];
-        let mut recip = 0_f64;
-        for x in self { 
-            // |x-p| done in-place for speed. Could have simply called x.vdist(p)
-            let mag:f64 = x.iter().zip(p).map(|(&xi,&pi)|(f64::from(xi)-pi).powi(2)).sum::<f64>().sqrt(); 
-            if mag.is_normal() { // ignore this point should distance be zero
-                let rec = 1.0_f64/mag; // reciprocal of distance (scalar)
-                // vsum increments by components
-                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += f64::from(*xi)*rec); 
-                recip += rec // add separately the reciprocals for final scaling   
-            }
-        } 
-        (vsum,recip)
+        ( vsum.iter().map(|vi| vi / recip).collect::<Vec<f64>>(),        
+          vsum,
+          recip )
     }
 
     /// Change to gm due to just one added point p
-    fn gmdelta(self,gm:&[f64],p:&[f64]) -> Vec<f64> {
+    fn gmdelta(self,gm:&[f64],recips:f64,p:&[f64]) -> Vec<f64> {
         let mag = p.vdist::<f64>(gm);
-        if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); };
-        let (mut vsum,mut recipsum) = self.vsumrecip(gm);
-        let recip = 1f64/mag;
-        vsum.mutvadd::<f64>(&p.smult::<f64>(recip));
-        recipsum += recip;
-        vsum.mutsmult::<f64>(1./recipsum);
-        vsum.vsub::<f64>(gm)
+        if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); }; 
+        let recip = 1f64/mag; // first had to test for division by zero
+        gm.smult::<f64>(recips).vadd::<f64>(&p.smult::<f64>(recip))
+            .smult::<f64>(1./(recips+recip)).vsub::<f64>(gm)
     }
+
+    /// Contribution an existing set point p has made to the gm
+    fn gmcontrib(self,gm:&[f64],recips:f64,p:&[T]) -> Vec<f64> {
+        let mag = p.vdist::<f64>(gm);
+        if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); }; 
+        let recip = 1f64/mag; // first had to test for division by zero
+        gm.vsub::<f64>(&gm.smult::<f64>(recips).vsub::<f64>(&p.smult::<f64>(recip))
+            .smult::<f64>(1./(recips-recip)))
+    }   
 
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
     /// It has (provably) only vector iterative solutions.
     /// Search methods are slow and difficult in highly dimensional space.
-    /// Weiszfeld's fixed point iteration formula had known problems with sometimes failing to converge.
+    /// Weiszfeld's fixed point iteration formula has known problems with sometimes failing to converge.
     /// Especially, when the points are dense in the close proximity of the gm, or gm coincides with one of them.  
     /// However, these problems are fixed in my new algorithm here.      
     /// There will eventually be a multithreaded version.
-    fn gmedian(self, eps: f64) -> Vec<f64> {
-        let eps2 = eps.powi(2);
+    /// The sum of reciprocals is strictly increasing and so is used here as
+    /// easy to evaluate termination condition.
+    fn gmedian(self, eps: f64) -> Vec<f64> { 
         let mut g = self.acentroid(); // start iterating from the Centre 
-        loop { // vector iteration till accuracy eps2 is reached  
+        let mut recsum = 0f64;
+        loop { // vector iteration till accuracy eps is exceeded  
             let mut nextg = vec![0_f64; self[0].len()];   
-            let mut recsum = 0_f64;
-            for x in self { 
+            let mut nextrecsum = 0_f64;
+            for x in self {   
                 // |x-g| done in-place for speed. Could have simply called x.vdist(g)
                 //let mag:f64 = g.vdist::<f64>(&x); 
                 let mag = g.iter().zip(x).map(|(&gi,&xi)|(f64::from(xi)-gi).powi(2)).sum::<f64>(); 
@@ -342,23 +334,25 @@ impl<T> VecVec<T> for &[Vec<T>]
                     let rec = 1.0_f64/(mag.sqrt()); // reciprocal of distance (scalar)
                     // vsum increments by components
                     nextg.iter_mut().zip(x).for_each(|(vi,&xi)| *vi += f64::from(xi)*rec); 
-                    recsum += rec // add separately the reciprocals for final scaling   
+                    nextrecsum += rec // add separately the reciprocals for final scaling   
                 } // else simply ignore this point should its distance from g be zero
             }
-            nextg.iter_mut().for_each(|gi| *gi /= recsum);    
-            if nextg.iter().zip(g).map(|(&xi,gi)|(xi-gi).powi(2)).sum::<f64>() < eps2 { return nextg }; // termination        
-            g = nextg;            
+            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);       
+            // eprintln!("recsum {}, nextrecsum {} diff {}",recsum,nextrecsum,nextrecsum-recsum);
+            if nextrecsum-recsum < eps { return nextg };  // termination test
+            g = nextg;
+            recsum = nextrecsum;            
         }
     }
     
-    /// Like `wgmedian` but returns also the sum of reciprocals of distances to it.
-    fn gmedrecs(self, eps: f64) -> (Vec<f64>,f64) {
-        let eps2 = eps.powi(2);
-        let mut g = self.acentroid(); // start iterating from the Centre 
-        loop { // vector iteration till accuracy eps2 is reached  
+    /// Like `gmedian` but returns also the sum of unit vecs and the sum of reciprocals. 
+    fn gmparts(self, eps: f64) -> (Vec<f64>,Vec<f64>,f64) { 
+        let mut g = self.acentroid(); // start iterating from the Centre
+        let mut recsum = 0f64; 
+        loop { // vector iteration till accuracy eps is exceeded  
             let mut nextg = vec![0_f64; self[0].len()];   
-            let mut recsum = 0_f64;
-            for x in self { 
+            let mut nextrecsum = 0f64;
+            for x in self { // for all points
                 // |x-g| done in-place for speed. Could have simply called x.vdist(g)
                 //let mag:f64 = g.vdist::<f64>(&x); 
                 let mag = g.iter().zip(x).map(|(&gi,&xi)|(f64::from(xi)-gi).powi(2)).sum::<f64>(); 
@@ -366,26 +360,19 @@ impl<T> VecVec<T> for &[Vec<T>]
                     let rec = 1.0_f64/(mag.sqrt()); // reciprocal of distance (scalar)
                     // vsum increments by components
                     nextg.iter_mut().zip(x).for_each(|(vi,&xi)| *vi += f64::from(xi)*rec); 
-                    recsum += rec // add separately the reciprocals for final scaling   
+                    nextrecsum += rec // add separately the reciprocals for final scaling   
                 } // else simply ignore this point should its distance from g be zero
             }
-            nextg.iter_mut().for_each(|gi| *gi /= recsum);    
-            if nextg.iter().zip(g).map(|(&xi,gi)|(xi-gi).powi(2)).sum::<f64>() < eps2 { 
-                return (nextg,recsum) }; // termination        
-            g = nextg;            
+            if nextrecsum-recsum < eps { 
+                return (
+                    nextg.iter().map(|&gi| gi/nextrecsum).collect::<Vec<f64>>(),
+                    nextg,
+                    nextrecsum
+                ); }; // termination        
+            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
+            g = nextg;
+            recsum = nextrecsum;            
         }
     }
 
-    /// Same a gmedian but returns also the number of iterations
-    fn igmedian(self, eps: f64) -> ( Vec<f64>, usize ) {  
-        let eps2 = eps.powi(2);
-        let mut p = self.acentroid(); 
-        let mut iterations = 1_usize;
-        loop {  
-            let nextp = self.nxnonmember(&p);
-            if nextp.vdistsq::<f64>(&p) < eps2 { return (nextp,iterations) }; // termination
-            iterations +=1;
-            p = nextp;
-        };     
-    }
 }

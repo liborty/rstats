@@ -1,6 +1,6 @@
 use anyhow::{Result};
 use devtimer::DevTime;
-use indxvec::{printing::*, Indices, Vecops,Printing};
+use indxvec::{printing::*, tof64, Indices, Vecops,Printing};
 use rstats::{i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
 use ran::{*,set_seeds};
 use medians::{Median};
@@ -182,6 +182,7 @@ fn vecg() -> Result<()> {
     println!("Entropy v2:\t\t{}", v2.entropy().gr());
     println!("Joint Entropy:\t\t{}", v1.jointentropy(&v2).gr());
     println!("Dependence:\t\t{}", v1.dependence(&v2).gr());
+    println!("Independence:\t\t{}", v1.independence(&v2).gr());
     println!("Cosine:\t\t\t{}", v1.cosine(&v2).gr());
     println!("Cosine of ranks:\t{}",
         v1.rank(true)
@@ -218,9 +219,10 @@ fn vecvec() -> Result<()> {
     set_seeds(111);
     let ru = Rnum::newu8();
     let pts = ru.ranvv(d,n).getvvu8(); 
-    // println!("{}",pts.gr());
+    // println!("\nTest data:\n{}",pts.gr());
     println!("Set joint entropy: {}", pts.jointentropyn().gr());
     println!("Set dependence:    {}", pts.dependencen().gr());
+    // println!("\nTest outcomes:\n{}",pts.gr());  
     let outcomes = ru.ranv(n).getvu8();
     let transppt = pts.transpose();
     println!(
@@ -232,9 +234,8 @@ fn vecvec() -> Result<()> {
         transppt.correlations(&outcomes).gr()
     );
     
-    let (gm,recips) = pts.gmedrecs(EPS);
-    let (eccstd, eccmed, eccecc) = pts.eccinfo(&gm);
-    // let me = pts.emedoid(EPS);
+    let (gm,_vsum,recips) = pts.gmparts(EPS);
+    let (eccstd, eccmed, eccecc) = pts.eccinfo(&gm); 
     let medoid = &pts[eccecc.minindex];
     let outlier = &pts[eccecc.maxindex];
     let hcentroid = pts.hcentroid();
@@ -244,10 +245,13 @@ fn vecvec() -> Result<()> {
     let median = pts.gmedian(EPS);  
 
     println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
-    println!("Gmedelta due to acentroid:\n{}",pts.gmdelta(&gm,&acentroid).gr() );
-    println!("Gmedelta due to gcentroid:\n{}",pts.gmdelta(&gm,&gcentroid).gr() );
+    println!("Magnitude of gmedelta due to acentroid: {}",pts.gmdelta(&gm,recips,&acentroid).vmag().gr() );
+
+    println!("Magnitude of gmedelta due to gcentroid: {}",pts.gmdelta(&gm,recips,&gcentroid).vmag().gr() );
+    println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&tof64(outlier)).gr());    
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
     println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
+    println!("Mag of Tukeyvec for outlier:   {}",pts.tukeyvec(&tof64(outlier)).vmag().gr());
     // let testvec = ru.ranv(d).getvu8();
     let dists = pts.distsums();
     let md = dists.minmax(); 
@@ -258,13 +262,14 @@ fn vecvec() -> Result<()> {
     println!("ACentroid's total distances:\t{}",pts.distsum(&acentroid).gr());
     println!("HCentroid's total distances:\t{}",pts.distsum(&hcentroid).gr());
     println!("GCentroid's total distances:\t{}",pts.distsum(&gcentroid).gr());
-
+ 
     println!(
         "\nMedoid, outlier and radii summary:\n{}\nRadii {}\nRadii {}",
         eccecc, eccstd, eccmed
     );
+    let (ngm,_,_) = pts.nxnonmember(&median);
     println!("MADGM: {}", pts.madgm(&median).gr());
-    println!("Median's error*{:e}: {}",1_f64 / EPS,( pts.nxnonmember(&median).vdist::<f64>(&median) / EPS).gr());
+    println!("Median's error:      {GR}{:e}{UN}",ngm.vdist::<f64>(&median));
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());
     println!("Firstpoint's radius: {}", firstp.vdist(&median).gr());
     println!("Medoid's radius:     {}",medoid.vdist(&median).gr());
@@ -293,6 +298,8 @@ fn vecvec() -> Result<()> {
         uqcnt.gr(),
         seccs[uqcnt - 1].gr()
     );
+    let contribs = pts.iter().map(|p| pts.gmcontrib(&gm, recips, p).vmag()).collect::<Vec<f64>>();
+    println!("\nContributions Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
     // create pretend median of medians
     // let medmed = vec![0.5_f64;n];
     // let (se, cpdf) =
@@ -321,7 +328,7 @@ fn geometric_medians() -> Result<()> {
      for _i in 1..ITERATIONS { 
         let pts = Rnum::newf64().ranvv(d, n).getvvf64();
         // let (_,recsum) = pts.gmedrecs(EPS);
-        // println!("Reciprocals sum: {}",recsum);
+        // println!("Mean Reciprocal: {}",d as f64/recsum);
         timerg.start();
         gm = pts.gmedian(EPS);
         timerg.stop();
