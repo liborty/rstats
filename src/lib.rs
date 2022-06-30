@@ -307,8 +307,6 @@ pub trait VecVecg<T,U> {
     fn distsum(self, v: &[U]) -> f64;
     /// Individual distances from any point v (typically not in self) to all the points in self.    
     fn dists(self, v: &[U]) -> Vec<f64>;
-    /// Medoid and Outlier (by distance) of a set of points
-    // fn medoid(self) -> MinMax<f64>; 
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
     fn wsortedeccs(self,ws:&[U],gm:&[f64]) -> (Vec<f64>,Vec<f64>); 
     /// Sorted cosines magnitudes and cpdf, needs central median
