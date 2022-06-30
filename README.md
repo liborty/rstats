@@ -120,15 +120,14 @@ This trait is unchecked (for speed), so some caution with data is advisable.
 
 ## Trait MutVecg
 
-A select few of the `Stats` and `Vecg` methods (e.g. mutable vector addition, subtraction and multiplication) are reimplemented under these traits, so that they can mutate `self` in-place.
-This is more efficient and convenient in some circumstances, such as in vector iterative methods.
+A select few of the `Stats` and `Vecg` methods (e.g. mutable vector addition, subtraction and multiplication) are reimplemented under this trait, so that they can mutate `self` in-place. This is more efficient and convenient in some circumstances, such as in vector iterative methods.
 
 ## Trait Vecu8
 
-Some vector algebra as above that can be more efficient when the end type happens to be u8 (bytes). They have u8 appended to their names to avoid confusion with Vecg methods.
+Some vector algebra as above that can be more efficient when the end type happens to be u8 (bytes). These methods have u8 appended to their names to avoid confusion with Vecg methods. These specific algorithms are different to their generic equivalents in Vecg.
 
 * Frequency count of bytes by their values (histogram, pdf, jointpdf)
-* Entropy, jointentropy, independence (different algorithms to those in Vecg)
+* Entropy, jointentropy, independence.
 
 ## Trait VecVec
 
@@ -137,24 +136,27 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 
 * centroid, medoid, outliers, gm
 * sums of distances, radius of a point (as its distance from gm)
-* characterisation of a set of multidimensional points by the mean, standard deviation, median of its points' radii. These are useful recognition measures for the set.
+* characterisation of a set of multidimensional points by the mean, standard deviation, median and MAD of its points' radii. These are useful recognition measures for the set.
 * transformation to zero geometric median data,
 * multivariate trend (regression) between two sets of nd points,
-* covariance and comediance matrices (weighted and unweighted).
+* covariance and comediance matrices.
 
 Warning: trait VecVec is entirely unchecked, so check your data upfront.
 
 ## Trait VecVecg
 
-Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians.
+Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight).
 
 ## Appendix I: Terminology
 
 #### Including some new definitions for sets of nd points, i.e. n points in d dimensional space
 
-* `Centroid/Centre/Mean` is the (generally non member) point that minimises the sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. By drawing physical analogy with gravity, it is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common (if somewhat confusing) usage: Centroid = Centre = Arithmetic Mean.
+* `Median correlation` between
+ two 1d vectors. We define it analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson 'normalises' by subtracting the mean from all components, we subtract the median.
 
-* `Quasi/Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not use here.
+* `Centroid/Centre/Mean` is the (generally non member) nd point that minimises the sum of *squares* of distances to all other member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
+
+* `Quasi/Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not recommend using.
 
 * `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but only partially implemented here by `tukeyvec`, as its advantages over the geometric median are not clear.
 
@@ -166,12 +168,11 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
 
-* `MADGM` (median of distances from gm). This is a generalisation of `MAD` (median of absolute differences) measure from 1d to nd. It is a robust measure of data spread.
+* `MADGM` (median of distances from gm). This is a generalisation of `MAD` (median of absolute differences) measure from 1d to nd. It is a robust measure of nd data spread.
 
-* `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors.
+* `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors. By Cholesky singular value decomposition of this positive definite matrix, it is possible to calculate *Mahalanobis distance* (weighted distace, where the weights are derived from the shape of the data points cloud). 
 
-* `Median correlation` between
- two vectors. We define it analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson 'normalises' by subtracting the mean from all components, we subtract the median.
+* `Contribution`: one of the questions of interest to Machine Learning (ML) is how to quantify the significance of the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define `the contribution` of a point as the change of gm caused by deleting that point.
 
 ## Appendix II: Recent Releases
 
