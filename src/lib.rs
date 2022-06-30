@@ -281,12 +281,10 @@ pub trait VecVec<T> {
     /// Proportions of points found along each axis
     fn tukeyvec(self, gm: &[f64]) -> Vec<f64>;
     /// Returns sorted eccentricities magnitudes
-    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64>; 
-    /// Improved Weizsfeld's Algorithm for geometric median, to accuracy eps
-    // fn nmedian(self, eps: f64) -> Vec<f64>;
+    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
-    /// Like `wgmedian` but returns the sum of unit vecs and the sum of reciprocals of distances.
+    /// Like `gmedian` but returns the sum of unit vecs and the sum of reciprocals of distances.
     fn gmparts(self, eps: f64) -> (Vec<f64>,Vec<f64>,f64);
 }
 
@@ -319,7 +317,7 @@ pub trait VecVecg<T,U> {
     fn wnxnonmember(self, ws:&[U], g:&[f64]) -> (Vec<f64>,Vec<f64>,f64); 
     /// The weighted geometric median to accuracy eps 
     fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>;
-    /// Like `gmedian` but returns also the sum of unit vecs and the sum of reciprocals. 
+    /// Like `wgmedian` but returns also the sum of unit vecs and the sum of reciprocals. 
     fn wgmparts(self, ws:&[U],eps: f64) -> (Vec<f64>,Vec<f64>,f64);
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64;     
