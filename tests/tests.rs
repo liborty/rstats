@@ -192,8 +192,8 @@ fn vecg() -> Result<()> {
     println!("Cos Similarity [0,1]:\t{}", v1.vsim(&v2).gr());
     println!("Cos Dissimilarity:\t{}", v1.vdisim(&v2).gr());
     println!("[1,2,3].kron(&[4,5]):\t{}", [1, 2, 3].kron(&[4, 5]).gr());
-    let outerp = [1, 2, 3].outer(&[4, 5, 6, 7]);
-    println!("[1,2,3].outer(&[4,5,6,7]):\n{}", outerp.gr());
+    let outerp = [1, 2, 3].outer(&[4, 5]);
+    println!("[1,2,3].outer(&[4,5]):\n{}", outerp.gr());
     // println!("Transposed: "); printvv([1,2,3].outer(&[4,5,6,7]).transpose());
     Ok(())
 }
@@ -245,9 +245,9 @@ fn vecvec() -> Result<()> {
     let median = pts.gmedian(EPS);  
 
     println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
-    println!("Magnitude of gmedelta due to acentroid: {}",pts.gmdelta(&gm,recips,&acentroid).vmag().gr() );
+    println!("Gmedelta due to acentroid: {}",pts.gmdelta(&gm,recips,&acentroid).gr() );
 
-    println!("Magnitude of gmedelta due to gcentroid: {}",pts.gmdelta(&gm,recips,&gcentroid).vmag().gr() );
+    println!("Gmedelta due to gcentroid: {}",pts.gmdelta(&gm,recips,&gcentroid).gr() );
     println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&tof64(outlier)).gr());    
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
     println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
@@ -286,7 +286,8 @@ fn vecvec() -> Result<()> {
         lqcnt.gr(),
         seccs[lqcnt - 1].gr()
     );
-    let medcnt = seccs.binsearch(eccmed.median);
+    let medcnt = pts.len()/2; 
+    // seccs.binsearch(eccmed.median);
     println!(
         "Inner half of points:    {} within radius: {}",
         medcnt.gr(),
@@ -298,7 +299,7 @@ fn vecvec() -> Result<()> {
         uqcnt.gr(),
         seccs[uqcnt - 1].gr()
     );
-    let contribs = pts.iter().map(|p| pts.gmcontrib(&gm, recips, p).vmag()).collect::<Vec<f64>>();
+    let contribs = pts.iter().map(|p| pts.gmcontrib(&gm, recips, p)).collect::<Vec<f64>>();
     println!("\nContributions Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
     // create pretend median of medians
     // let medmed = vec![0.5_f64;n];

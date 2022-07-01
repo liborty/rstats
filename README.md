@@ -46,7 +46,7 @@ Our treatment of multidimensional sets of points (vectors) is constructed from t
 
 * `madgm` - generalisation of robust data spread estimator known as 'MAD' (median of absolute deviations from median),  from 1d to nd. 
 
-* `contribution` - of a point to an nd set. Defined as gm displacement if the point was removed. Related to the  inverse radius but not always the same, as the positions of  other points are taken into account.
+* `contribution` - of a point to an nd set. Defined as gm displacement if the point was removed. Similar to the point's inverse radius but not the same, as it depends on all the points.
 
 * `comediance` - instead of covariance (matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus *zero median vectors* are replacing *zero mean vectors* in covariance calculations.
 
@@ -172,7 +172,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors. By Cholesky singular value decomposition of this positive definite matrix, it is possible to calculate *Mahalanobis distance* (weighted distace, where the weights are derived from the shape of the data points cloud). 
 
-* `Contribution`: one of the questions of interest to Machine Learning (ML) is how to quantify the significance of the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define `the contribution` of a point as the change of gm caused by deleting that point.
+* `Contribution`: one of the questions of interest to Machine Learning (ML) is how to quantify the significance of the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define `the contribution` of a point as the magnitude of change of gm caused by deleting that point.
 
 ## Appendix II: Recent Releases
 
