@@ -46,7 +46,7 @@ Our treatment of multidimensional sets of points (vectors) is constructed from t
 
 * `madgm` - generalisation of robust data spread estimator known as 'MAD' (median of absolute deviations from median),  from 1d to nd. 
 
-* `contribution` - of a point to an nd set. Defined as gm displacement if the point was removed. Similar to the point's inverse radius but not the same, as it depends on all the points.
+* `contribution` - of a point to an nd set. Defined as gm displacement if the point was added/removed. Related to the point's radius but not the same, as it depends on all the points.
 
 * `comediance` - instead of covariance (matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus *zero median vectors* are replacing *zero mean vectors* in covariance calculations.
 
