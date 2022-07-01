@@ -172,9 +172,11 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors. By Cholesky singular value decomposition of this positive definite matrix, it is possible to calculate *Mahalanobis distance* (weighted distace, where the weights are derived from the shape of the data points cloud). 
 
-* `Contribution`: one of the questions of interest to Machine Learning (ML) is how to quantify the significance of the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define `the contribution` of a point as the magnitude of change of gm caused by deleting that point.
+* `Contribution`: one of the questions of interest to Machine Learning (ML) is how to quantify the significance of the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define `the contribution` of a point as the change to gm caused by adding/deleting that point. Generally more outlying points make greater contributions but not as much as is the case with means. The contribution depends on the arrangement of other set points as well.
 
 ## Appendix II: Recent Releases
+
+* **Version 1.1.5** - Added `contribution` methods to `VecVec`: `contribvec_newp`, `contrib_newpt`, `contribvec.oldpt`, `contrib.oldpt`. Named according to whether they return a vector change to gm, or just a magnitude of change measure and whether it is a new point, or an existing point.
 
 * **Version 1.1.4** - Speedup: invented faster termination condition for gm algorithm! Generality: invented `contribution` measure for nd set points. Tidied up functions associated with gm. Deleted and added some.
 
@@ -185,11 +187,3 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 1.1.1** - Crate size reduction. Some more code pruning, this time of methods in trait `Vecu8`, which are performed perfectly adequately by their generic counterparts in `Vecg`. Leaving only those with different u8 specific algorithms. 
 
 * **Version 1.1.0** - Big release. Added dependency on crate `medians` for fast 1D medians. Simplifications: subsumed module `mutstats.rs` into `mutvec.rs`. Removed traits `Mutstats` and `MutVecf64` and added their few methods to trait `MutVecg`. Added some more doc comments here. Generalisations: methods in `Vecg` and `MutVecg` now work on any type T of self and a potentially different type U for their argument. They should be called with the 'turbofish' syntax.
-
-* **Version 1.0.21** - Changed imports from `indxvec` to fit with its latest multicoloured version 1.2.1.
-
-* **Version 1.0.19** - Adjusted the argument types of `wmadgm` and `madgm`. Added weighted distance `wvdist`. Improved the testing of `vecvec`.
-
-* **Version 1.0.18** - Renamed `madn` to `madgm` (median of absolute deviations, i.e. radii, from gm). Added its weighted version `wmadgm`. They now take `gm` or `wgm` respectively as an argument, to avoid recomputation. Removed `radvec`, as it was a simple difference of `gm` and `centroid`.
-
-* **Version 1.0.16** - Added `tukeyvec` and test of tukeyvec. Also changed usage of `ran` crate to its generic methods within `vecvec` test.

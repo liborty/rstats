@@ -216,7 +216,7 @@ fn vecvec() -> Result<()> {
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {} points in {} dimensional space",n,d);
-    set_seeds(111);
+    set_seeds(113);
     let ru = Rnum::newu8();
     let pts = ru.ranvv(d,n).getvvu8(); 
     // println!("\nTest data:\n{}",pts.gr());
@@ -245,9 +245,6 @@ fn vecvec() -> Result<()> {
     let median = pts.gmedian(EPS);  
 
     println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
-    println!("Gmedelta due to acentroid: {}",pts.gmdelta(&gm,recips,&acentroid).gr() );
-
-    println!("Gmedelta due to gcentroid: {}",pts.gmdelta(&gm,recips,&gcentroid).gr() );
     println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&tof64(outlier)).gr());    
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
     println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
@@ -299,8 +296,12 @@ fn vecvec() -> Result<()> {
         uqcnt.gr(),
         seccs[uqcnt - 1].gr()
     );
-    let contribs = pts.iter().map(|p| pts.gmcontrib(&gm, recips, p)).collect::<Vec<f64>>();
-    println!("\nContributions Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
+
+    println!("\nContribution of adding acentroid:   {}",pts.contrib_newpt(&gm,recips,&acentroid).gr() );
+    println!("Contribution of adding gcentroid:   {}",pts.contrib_newpt(&gm,recips,&gcentroid).gr() );
+    println!("Contribution of removing outlier:  {}",pts.contrib_oldpt(&gm,recips,outlier).gr() );
+    let contribs = pts.iter().map(|p| pts.contrib_oldpt(&gm, recips, p)).collect::<Vec<f64>>();
+    println!("\nContributions of Data Points, Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
     // create pretend median of medians
     // let medmed = vec![0.5_f64;n];
     // let (se, cpdf) =

@@ -261,11 +261,15 @@ pub trait VecVec<T> {
     /// Next approx gm computed at a member point given by its indx
     fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Like gmparts, except only does one iteration from any non-member point g
-    fn nxnonmember(self, g:&[f64]) -> (Vec<f64>,Vec<f64>,f64); 
-    /// Magnitude of change to gm due to just one added point p
-    fn gmdelta(self,gm:&[f64],gmrecips:f64,p:&[f64]) -> f64;
-    /// Magnitude of contribution an existing set point p has made to the gm
-    fn gmcontrib(self,gm:&[f64],recips:f64,p:&[T]) -> f64;
+    fn nxnonmember(self, g:&[f64]) -> (Vec<f64>,Vec<f64>,f64);
+    /// Change to gm that adding point p will cause
+    fn contribvec_newpt(self,gm:&[f64],recips:f64,p:&[f64]) -> Vec<f64>;
+    /// Magnitude of change to gm that adding point p will cause
+    fn contrib_newpt(self,gm:&[f64],recips:f64,p:&[f64]) -> f64;
+    /// Contribution an existing set point p has made to the gm
+    fn contribvec_oldpt(self,gm:&[f64],recips:f64,p:&[T]) -> Vec<f64>;
+    /// Contribution removing an existing p will make (as a negative number)
+    fn contrib_oldpt(self,gm:&[f64],recips:f64,p:&[T]) -> f64;
     /// Estimated eccentricity vectors from each member point
     fn eccentricities(self) -> Vec<Vec<f64>>;
     /// Exact eccentricity vectors to each member point by using the gm 

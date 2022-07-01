@@ -293,24 +293,42 @@ impl<T> VecVec<T> for &[Vec<T>]
           recip )
     }
 
-    /// Magnitude of change to gm due to just one added point p
-    fn gmdelta(self,gm:&[f64],recips:f64,p:&[f64]) -> f64 {
-        let mag = p.vdist::<f64>(gm);
+    /// Change to gm that adding point p will cause
+    fn contribvec_newpt(self,gm:&[f64],recips:f64,p:&[f64]) -> Vec<f64>{
+        let dv = p.vsub::<f64>(gm);
+        let mag = dv.vmag();
         if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); }; 
         let recip = 1f64/mag; // first had to test for division by zero
-        //gm.smult::<f64>(recips).vadd::<f64>(&p.smult::<f64>(recip))
-        //    .smult::<f64>(1./(recips+recip)).vsub::<f64>(gm)
-        1.0 / (recips + recip)
+        // adding new unit vector (to approximate zero vector)
+        dv.smult::<f64>(recip/(recips+recip)) // to unit v. and scaling by new sum of reciprocals 
     }
 
-    /// Contribution an existing set point p has made to the gm
-    fn gmcontrib(self,gm:&[f64],recips:f64,p:&[T]) -> f64 {
+    /// Magnitude of change to gm that adding point p will cause
+    fn contrib_newpt(self,gm:&[f64],recips:f64,p:&[f64]) -> f64 {
         let mag = p.vdist::<f64>(gm);
         if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); }; 
         let recip = 1f64/mag; // first had to test for division by zero
-        //gm.vsub::<f64>(&gm.smult::<f64>(recips).vsub::<f64>(&p.smult::<f64>(recip))
-        //    .smult::<f64>(1./(recips-recip)))
-        1.0 / (recips - recip)
+        1.0 / (recips + recip)
+        //self.contribvec_newpt(gm,recips,p).vmag()
+    }    
+
+    /// Contribution an existing set point p has made to the gm
+    fn contribvec_oldpt(self,gm:&[f64],recips:f64,p:&[T]) -> Vec<f64> {
+        let dv = p.vsub::<f64>(gm);
+        let mag = dv.vmag();
+        if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); };
+        let recip = 1f64/mag; // first had to test for division by zero 
+        dv.smult::<f64>(recip/(recip - recips)) // scaling
+    }
+    
+    /// Contribution removing an existing set point p will make
+    /// Is a negative number
+    fn contrib_oldpt(self,gm:&[f64],recips:f64,p:&[T]) -> f64 {
+        let mag = p.vdist::<f64>(gm);
+        if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); }; 
+        let recip = 1f64/mag; // first had to test for division by zero
+        1.0 / (recip - recips) 
+        // self.contribvec_oldpt(gm,recips,p).vmag()
     }   
 
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
