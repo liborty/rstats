@@ -297,10 +297,10 @@ fn vecvec() -> Result<()> {
         seccs[uqcnt - 1].gr()
     );
 
-    println!("\nContribution of adding acentroid:   {}",pts.contrib_newpt(&gm,recips,&acentroid).gr() );
-    println!("Contribution of adding gcentroid:   {}",pts.contrib_newpt(&gm,recips,&gcentroid).gr() );
-    println!("Contribution of removing outlier:  {}",pts.contrib_oldpt(&gm,recips,outlier).gr() );
-    let contribs = pts.iter().map(|p| pts.contrib_oldpt(&gm, recips, p)).collect::<Vec<f64>>();
+    println!("\nContribution of adding acentroid:   {}",acentroid.contrib_newpt(&gm,recips).gr() );
+    println!("Contribution of adding gcentroid:   {}",gcentroid.contrib_newpt(&gm,recips).gr() );
+    println!("Contribution of removing outlier:  {}",outlier.contrib_oldpt(&gm,recips).gr() );
+    let contribs = pts.iter().map(|p| p.contrib_oldpt(&gm, recips)).collect::<Vec<f64>>();
     println!("\nContributions of Data Points, Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
     // create pretend median of medians
     // let medmed = vec![0.5_f64;n];

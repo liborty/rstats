@@ -176,6 +176,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix II: Recent Releases
 
+* **Version 1.1.6** - Moved `contrib_vec_newp`, `contrib_newpt`, `contribvec.oldpt`, `contrib.oldpt` to more appropriate trait Vecg.
+
 * **Version 1.1.5** - Added `contribution` methods to `VecVec`: `contribvec_newp`, `contrib_newpt`, `contribvec.oldpt`, `contrib.oldpt`. Named according to whether they return a vector change to gm, or just a magnitude of change measure and whether it is a new point, or an existing point.
 
 * **Version 1.1.4** - Speedup: invented faster termination condition for gm algorithm! Generality: invented `contribution` measure for nd set points. Tidied up functions associated with gm. Deleted and added some.
