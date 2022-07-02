@@ -359,7 +359,7 @@ impl<T> Vecg for &[T]
         let mag = self.vdist::<f64>(gm);
         if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); }; 
         let recip = 1f64/mag; // first had to test for division by zero
-        1.0 / (recips + recip)
+        1_f64 / (recips + recip)
         //self.contribvec_newpt(gm,recips,p).vmag()
     }    
     
@@ -378,7 +378,7 @@ impl<T> Vecg for &[T]
         let mag = self.vdist::<f64>(gm);
         if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); }; 
         let recip = 1f64/mag; // first had to test for division by zero
-        1.0 / (recip - recips) 
+        1_f64 / (recip - recips) 
         // self.contribvec_oldpt(gm,recips,p).vmag()
     }   
 }
