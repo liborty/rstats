@@ -58,6 +58,33 @@ In n dimensions (nd), many authors  'cheat' by using *quasi medians* (1-d median
 
 In contrast, analyses based on the true geometric median (gm) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its weighted version `wgmedian`, in traits `vecvec` and `vecvecg` respectively.
 
+## Terminology
+
+#### Including some new definitions for sets of nd points, i.e. n points in d dimensional space
+
+* `Median correlation` between
+ two 1d vectors. We define it analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson 'normalises' by subtracting the mean from all components, we subtract the median.
+
+* `Centroid/Centre/Mean` is the (generally non member) nd point that minimises the sum of *squares* of distances to all other member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
+
+* `Quasi/Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not recommend using.
+
+* `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but only partially implemented here by `tukeyvec`, as its advantages over the geometric median are not clear.
+
+* `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all members. This is the one we want. It is much less susceptible to outliers than centroid. In addition, unlike quasi median, `gm` is rotation independent.
+
+* `Medoid` is the member of the set with the least sum of distances to all other members. Equivalently, the member which is the nearest to the `gm`.
+
+* `Outlier` is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm`.
+
+* `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
+
+* `MADGM` (median of distances from gm). This is a generalisation of `MAD` (median of absolute differences) measure from 1d to nd. It is a robust measure of nd data spread.
+
+* `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors. By Cholesky singular value decomposition of this positive definite matrix, it is possible to calculate *Mahalanobis distance* (weighted distace, where the weights are derived from the shape of the data points cloud). 
+
+* `Contribution`: one of the questions of interest to Machine Learning (ML) is how to quantify the significance of the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define `the contribution` of a point as the change to gm caused by adding/deleting that point. Generally more outlying points make greater contributions but not as much as is the case with means. The contribution depends on the arrangement of other set points as well.
+
 ## Implementation
 
 The main constituent parts of Rstats are its traits. The selection of traits (to import) is primarily determined by the types of objects to be handled. These are mostly vectors of arbitrary length (dimensionality). The main traits are implementing methods applicable to:
@@ -147,34 +174,9 @@ Warning: trait VecVec is entirely unchecked, so check your data upfront.
 
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight).
 
-## Appendix I: Terminology
+## Appendix: Recent Releases
 
-#### Including some new definitions for sets of nd points, i.e. n points in d dimensional space
-
-* `Median correlation` between
- two 1d vectors. We define it analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson 'normalises' by subtracting the mean from all components, we subtract the median.
-
-* `Centroid/Centre/Mean` is the (generally non member) nd point that minimises the sum of *squares* of distances to all other member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
-
-* `Quasi/Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not recommend using.
-
-* `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but only partially implemented here by `tukeyvec`, as its advantages over the geometric median are not clear.
-
-* `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all members. This is the one we want. It is much less susceptible to outliers than centroid. In addition, unlike quasi median, `gm` is rotation independent.
-
-* `Medoid` is the member of the set with the least sum of distances to all other members. Equivalently, the member which is the nearest to the `gm`.
-
-* `Outlier` is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm`.
-
-* `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
-
-* `MADGM` (median of distances from gm). This is a generalisation of `MAD` (median of absolute differences) measure from 1d to nd. It is a robust measure of nd data spread.
-
-* `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors. By Cholesky singular value decomposition of this positive definite matrix, it is possible to calculate *Mahalanobis distance* (weighted distace, where the weights are derived from the shape of the data points cloud). 
-
-* `Contribution`: one of the questions of interest to Machine Learning (ML) is how to quantify the significance of the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define `the contribution` of a point as the change to gm caused by adding/deleting that point. Generally more outlying points make greater contributions but not as much as is the case with means. The contribution depends on the arrangement of other set points as well.
-
-## Appendix II: Recent Releases
+* **Version 1.1.7** - Updated to the latest version of `indexvec v1.2.8`. Employed its fast `hashsort`. Readme rearrangement.
 
 * **Version 1.1.6** - Moved `contrib_vec_newp`, `contrib_newpt`, `contribvec.oldpt`, `contrib.oldpt` to more appropriate trait Vecg.
 

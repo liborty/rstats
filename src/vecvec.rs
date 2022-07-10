@@ -1,11 +1,11 @@
 use std::iter::FromIterator;
 
 use crate::{ MStats, MinMax, MutVecg, Stats, Vecg, VecVec, VecVecg};
-use indxvec::{here,tof64,Vecops};
+use indxvec::{here,tof64,F64,Vecops};
 use medians::{Med,Median};
 
 impl<T> VecVec<T> for &[Vec<T>] 
-    where T: Copy+PartialOrd+std::fmt::Display,f64: From<T> {
+    where T: Copy+PartialOrd+std::fmt::Display,f64:From<T> {
 
     /// Transpose vec of vecs as a matrix
     fn transpose(self) -> Vec<Vec<T>> {
@@ -228,11 +228,11 @@ impl<T> VecVec<T> for &[Vec<T>]
      
     /// GM and sorted eccentricities magnitudes.
     /// Describing a set of points `self` in n dimensions
-    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64> { 
+    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64> where F64:From<T> { 
         let mut eccs = Vec::with_capacity(self.len()); 
         // collect raw ecentricities magnitudes
         for v in self { eccs.push(v.vdist::<f64>(gm)) }
-        eccs.sortm(ascending)
+        eccs.sorth(ascending) // latest hash sort from indxvec
     }
 
     /// Initial (first) point for geometric medians.

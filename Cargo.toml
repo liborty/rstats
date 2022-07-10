@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "1.1.6"
+version = "1.1.7"
 authors = ["Libor Spacek"]
 edition = "2021"
 description = "Statistical Measures, Vector Algebra, Geometric Median, Data Analysis and Machine Learning"
@@ -8,19 +8,21 @@ readme = "README.md"
 homepage = "https://github.com/liborty/rstats"
 repository = "https://github.com/liborty/rstats"
 license = "Apache-2.0"
-keywords = ["machine-learning","statistics","vector-algebra","geometric-median","multidimensional"]
+keywords = ["machine-learning","statistics","vector-algebra","geometric-median","data-analysis"]
 categories = ["science","mathematics","algorithms","visualization","rust-patterns"]
 include = [
     "src/*.rs",
     "tests/*.rs",
     "Cargo.toml",
     "README.md",
+    "README.pdf",
     "LICENSE"
 ]
 [badges]
 maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
+# indxvec = { path = "../indxvec" }
 indxvec = "^1"
 medians = "^0"
 anyhow = "^1"

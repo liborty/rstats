@@ -1,5 +1,5 @@
 use crate::{Stats,Vecg,MutVecg,VecVecg,VecVec};
-use indxvec::{Vecops,Indices};
+use indxvec::{F64,Vecops,Indices};
 use medians::{Median};
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
@@ -78,12 +78,12 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// Sorted eccentricities magnitudes (radii), w.r.t. weighted geometric median.
     /// associated cummulative probability density function in [0,1] of the weights.
-    fn wsortedeccs(self, ws: &[U], gm: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
+    fn wsortedeccs(self, ws: &[U], gm: &[f64]) -> ( Vec<f64>,Vec<f64> ) where F64:From<T> { 
         let mut eccs = Vec::with_capacity(self.len()); 
         // collect true eccentricities magnitudes
         for v in self { eccs.push(v.vdist::<f64>(gm)) }
         // create sort index of the eccs
-        let index = eccs.sortidx();
+        let index = eccs.hashsort_indexed();
         // pick the associated points weights in the order of the sorted eccs
         let mut weights = index.unindexf64(ws,true);
         let mut sumw = 0_f64;
@@ -97,13 +97,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Sorted cosines magnitudes,
     /// associated cummulative probability density function in [0,1] of the weights.
     /// Needs central median
-    fn wsortedcos(self, medmed: &[U], unitzmed: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> ) { 
+    fn wsortedcos(self, medmed: &[U], unitzmed: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> )
+        where F64:From<T> { 
         let mut coses = Vec::with_capacity(self.len());  
         for p in self { // collect coses      
             coses.push(p.vsubunit(medmed).dotp(unitzmed)); 
         } 
         // create sort index of the coses
-        let index = coses.sortidx();
+        let index = coses.hashsort_indexed();
         // pick the associated points weights in the same order as the sorted coses
         let mut weights = index.unindexf64(ws,true);
         let mut sumw = 0_f64;

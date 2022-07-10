@@ -17,7 +17,7 @@ pub mod vecvec;
 pub mod vecvecg;
 
 // reexporting useful related methods
-pub use indxvec::{MinMax,Printing,here};
+pub use indxvec::{MinMax,F64,Printing,here};
 pub use medians::{Med,Median};
 /// simple error handling
 use anyhow::{Result,bail}; 
@@ -285,7 +285,7 @@ pub trait VecVec<T> {
     /// Proportions of points found along each axis
     fn tukeyvec(self, gm: &[f64]) -> Vec<f64>;
     /// Returns sorted eccentricities magnitudes
-    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64>;
+    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64> where F64:From<T>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Like `gmedian` but returns the sum of unit vecs and the sum of reciprocals of distances.
@@ -312,9 +312,9 @@ pub trait VecVecg<T,U> {
     /// Individual distances from any point v (typically not in self) to all the points in self.    
     fn dists(self, v: &[U]) -> Vec<f64>;
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
-    fn wsortedeccs(self,ws:&[U],gm:&[f64]) -> (Vec<f64>,Vec<f64>); 
+    fn wsortedeccs(self,ws:&[U],gm:&[f64]) -> (Vec<f64>,Vec<f64>) where F64:From<T>; 
     /// Sorted cosines magnitudes and cpdf, needs central median
-    fn wsortedcos(self,medmed:&[U],unitzmed:&[U],ws:&[U]) -> (Vec<f64>,Vec<f64>); 
+    fn wsortedcos(self,medmed:&[U],unitzmed:&[U],ws:&[U]) -> (Vec<f64>,Vec<f64>) where F64:From<T>; 
     /// Like wgmparts, except only does one iteration from any non-member point g
     fn wnxnonmember(self, ws:&[U], g:&[f64]) -> (Vec<f64>,Vec<f64>,f64); 
     /// The weighted geometric median to accuracy eps 
