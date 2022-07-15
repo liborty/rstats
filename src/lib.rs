@@ -39,15 +39,16 @@ impl std::fmt::Display for MStats {
 
 // Auxiliary Functions //
 
-/// Necessary downcast of a whole i64 slice to f64  
+/// Downcast of a whole i64 slice to f64  
 pub fn i64tof64(s: &[i64]) -> Vec<f64> {
     s.iter().map(| &x | x as f64).collect()
 }
 
-/// Sum of linear weights 1..n.
+/// Sum of natural numbers 1..n.
 /// Also the size of an upper or lower triangle 
 /// of a square array (including the diagonal)
-pub fn wsum(n: usize) -> f64 {
+/// to exclude the diagonal, use `sumn(n-1)`
+pub fn sumn(n: usize) -> f64 {
     (n * (n + 1)) as f64 / 2.
 }
 
@@ -217,8 +218,6 @@ pub trait MutVecg {
     fn munit(self);
     /// Linearly transform to interval [0,1]
     fn mlintrans(self);
-    /// Sort in place  
-    fn msortf(self);
 }
 
 /// Methods specialised to, or more efficient for `&[u8]`
@@ -251,7 +250,9 @@ pub trait VecVec<T> {
     /// Independence (component wise) of a set of vectors.
     fn dependencen(self) -> f64; 
     /// Flattened lower triangular relations matrix between columns of self 
-    fn crossfeatures<F>(self,f:F) -> Vec<f64> where F: Fn(&[T],&[T]) -> f64; 
+    fn crossfeatures(self,f:fn(&[T],&[T])->f64) -> Vec<f64>;
+    /// Sum of nd points (or vectors)
+    fn sumv(self) -> Vec<f64>; 
     /// Arithmetic Centre = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
     /// Geometric Centroid
@@ -288,6 +289,8 @@ pub trait VecVec<T> {
     fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64> where F64:From<T>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
+    /// Point-by-point geometric median
+    fn pmedian(self, eps: f64) -> Vec<f64>;
     /// Like `gmedian` but returns the sum of unit vecs and the sum of reciprocals of distances.
     fn gmparts(self, eps: f64) -> (Vec<f64>,Vec<f64>,f64);
 }
@@ -295,6 +298,9 @@ pub trait VecVec<T> {
 /// Methods applicable to vector of vectors of generic end type and one argument
 /// of a similar kind.
 pub trait VecVecg<T,U> { 
+
+    /// Weighted sum of nd points (or vectors)
+    fn wsumv(self,ws: &[U]) -> Vec<f64>;
     /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points
     fn wacentroid(self,ws: &[U]) -> Vec<f64>;
     /// Trend between two sets

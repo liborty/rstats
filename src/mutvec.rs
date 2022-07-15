@@ -41,11 +41,5 @@ impl MutVecg for &mut [f64] {
         let mm = self.minmax();
         let range = mm.max-mm.min;
         for c in self.iter_mut() { *c = (*c-mm.min)/range }        
-    }
-    
-    /// Sorts a mutable slice in place.  
-    /// It is the responsibility of the user to ensure that there are no NaNs etc.
-    fn msortf(self) {
-        self.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap())
-    }
+    } 
 }

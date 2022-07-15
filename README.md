@@ -108,7 +108,7 @@ For more detailed comments, plus some examples, see the source. You may have to 
 ##  Auxiliary Functions
 
 * `i64tof64`: converts an i64 vector to f64, 
-* `wsum`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.).
+* `nsum`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.).
 
 ## Trait Stats
 
@@ -176,7 +176,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.1.7** - Updated to the latest version of `indexvec v1.2.8`. Employed its fast `hashsort`. Readme rearrangement.
+* **Version 1.1.8**' - Added `pmedian` to `VecVec` trait. Similar to `gmedian` but iterates point-by-point. Is a little faster but also slightly less accurate.v 1.
+
+* **Version 1.1.7** - Updated to the latest version of `indexvec v1.2.8`. Employed its fast `hashsort`. Readme rearrangement. Moved `msortf` to `indxvec::Mutops` trait as `mutsort()`. It now works on generic T end_types.
 
 * **Version 1.1.6** - Moved `contrib_vec_newp`, `contrib_newpt`, `contribvec.oldpt`, `contrib.oldpt` to more appropriate trait Vecg.
 

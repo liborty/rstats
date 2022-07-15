@@ -6,17 +6,28 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     where T: Copy+PartialOrd+std::fmt::Display,f64:From<T>, 
     U: Copy+PartialOrd+std::fmt::Display,f64:From<U> {
 
+    /// Weighted sum of nd points (or vectors). 
+    /// Weights are associated with points, not coordinates
+    fn wsumv(self,ws: &[U]) -> Vec<f64> {
+        let mut resvec = vec![0_f64;self[0].len()]; 
+        for (v,&w) in self.iter().zip(ws) { 
+            let weight = f64::from(w);
+            for (res,component) in resvec.iter_mut().zip(v) {
+                *res += weight*f64::from(*component) }
+        };
+        resvec
+    }
+
     /// Weighted Centre
-    fn wacentroid(self,ws: &[U]) -> Vec<f64> where {
-        let mut centre = vec![0_f64; self[0].len()];
+    fn wacentroid(self,ws: &[U]) -> Vec<f64> { 
         let mut wsum = 0_f64;
-        self.iter().zip(ws).for_each(|(s,&w)|
-        { 
-            wsum += f64::from(w);
-            centre.mutvadd::<f64>(&s.smult(w))
-        });
-        centre.mutsmult::<f64>(1.0 / wsum);
-        centre
+        let mut result = vec![0_f64;self[0].len()]; 
+        for (v,&w) in self.iter().zip(ws) { 
+            let weight = f64::from(w); // saves converting twice
+            wsum += weight;
+            result.mutvadd(&v.smult(weight)); };
+        result.mutsmult::<f64>(1.0/wsum); // divide by weighted sum to get the mean
+        result
     }
 
     /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.

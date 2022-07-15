@@ -1,6 +1,6 @@
 use anyhow::{Result};
 use devtimer::DevTime;
-use indxvec::{printing::*, tof64, Indices, Vecops,Printing};
+use indxvec::{printing::*, Indices, Vecops,Printing};
 use rstats::{i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
 use ran::{*,set_seeds};
 use medians::{Median};
@@ -55,6 +55,7 @@ fn u8() -> Result<()> {
     );
     Ok(())
 }
+
 #[test]
 fn fstats() -> Result<()> {
     let v1 = vec![
@@ -141,6 +142,7 @@ fn intstats() -> Result<()> {
     println!("{}\n", v1.as_slice().medinfo());
     Ok(())
 }
+
 #[test]
 /// Generic implementation
 fn genericstats() -> Result<()> {
@@ -156,6 +158,7 @@ fn genericstats() -> Result<()> {
     println!("{}\n", &v.as_slice().medinfo());
     Ok(())
 }
+
 #[test]
 fn vecg() -> Result<()> {
     let v1 = vec![
@@ -245,10 +248,10 @@ fn vecvec() -> Result<()> {
     let median = pts.gmedian(EPS);  
 
     println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
-    println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&tof64(outlier)).gr());    
+    println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&outlier.tof64()).gr());    
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
     println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
-    println!("Mag of Tukeyvec for outlier:   {}",pts.tukeyvec(&tof64(outlier)).vmag().gr());
+    println!("Mag of Tukeyvec for outlier:   {}",pts.tukeyvec(&outlier.tof64()).vmag().gr());
     // let testvec = ru.ranv(d).getvu8();
     let dists = pts.distsums();
     let md = dists.minmax(); 
@@ -315,7 +318,7 @@ fn geometric_medians() -> Result<()> {
     const ITERATIONS: usize = 10;
     let n = 100_usize;
     let d = 1000_usize;
-    set_seeds(12345);
+    set_seeds(7777777);
     println!(
         "timing {} medians of {} points in {} dimensions",
         ITERATIONS, n, d
@@ -332,7 +335,7 @@ fn geometric_medians() -> Result<()> {
         // let (_,recsum) = pts.gmedrecs(EPS);
         // println!("Mean Reciprocal: {}",d as f64/recsum);
         timerg.start();
-        gm = pts.gmedian(EPS);
+        gm = pts.pmedian(EPS);
         timerg.stop();
         sumg += pts.gmerror(&gm);
         timerq.start();
@@ -345,18 +348,15 @@ fn geometric_medians() -> Result<()> {
         summ += pts.gmerror(&gm);
     }
     println!(
-        "Geometric md {GR}err/eps: {:17.5}\tseconds: {:9}{UN}",
-        sumg / EPS,
+        "Geometric md {GR}err: {:.5e}\tseconds: {:.5e}{UN}", sumg,
         timerg.time_in_nanos().unwrap() as f64 / 1e9
     );
     println!(
-        "Arithm. mean {GR}err/eps: {:17.5}\tseconds: {:9}{UN}",
-        summ / EPS,
+        "Arithm. mean {GR}err: {:.5e}\tseconds: {:.5e}{UN}", summ,
         timerm.time_in_nanos().unwrap() as f64 / 1e9
     );
     println!(
-        "Quasi median {GR}err/eps: {:17.5}\tseconds: {:9}{UN}",
-        sumq / EPS,
+        "Quasi median {GR}err: {:.5e}\tseconds: {:.5e}{UN}", sumq,
         timerq.time_in_nanos().unwrap() as f64 / 1e9
     );
     Ok(())

@@ -1,4 +1,4 @@
-use crate::{ wsum,MStats,Stats};
+use crate::{ sumn,MStats,Stats};
 use anyhow::{ensure, Result};
 use indxvec::{here,Printing,Vecops};
 use medians::{Median};    
@@ -105,7 +105,7 @@ impl<T> Stats for &[T]
                 iw * f64::from(x)
             })
             .sum::<f64>()
-            / wsum(n))
+            / sumn(n))
     }
 
     /// Linearly weighted arithmetic mean and standard deviation of an f64 slice.    
@@ -134,8 +134,8 @@ impl<T> Stats for &[T]
                 wx
             })
             .sum::<f64>()
-            / wsum(n);
-        Ok(MStats { mean,std:(sx2 / wsum(n) - mean.powi(2)).sqrt()})
+            / sumn(n);
+        Ok(MStats { mean,std:(sx2 / sumn(n) - mean.powi(2)).sqrt()})
     }
 
     /// Harmonic mean of an f64 slice.
@@ -206,7 +206,7 @@ impl<T> Stats for &[T]
             w += 1_f64;
             sum += w / fx;
         }
-        Ok(wsum(n) / sum)
+        Ok(sumn(n) / sum)
     }
 
     /// Weighted harmonic mean and standard deviation 
@@ -222,7 +222,7 @@ impl<T> Stats for &[T]
     fn hwmeanstd(self) -> Result<MStats> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!",here!());
-        let nf = wsum(n);
+        let nf = sumn(n);
         let mut sx2 = 0_f64;
         let mut w = 0_f64;        
         let sx = self
@@ -319,7 +319,7 @@ impl<T> Stats for &[T]
             sum += w * fx.ln();
 
         }
-        Ok((sum/wsum(n)).exp())
+        Ok((sum/sumn(n)).exp())
     }
 
     /// Linearly weighted version of gmeanstd.
@@ -345,10 +345,10 @@ impl<T> Stats for &[T]
             sum += w * lnx;
             sx2 += w * lnx * lnx; 
         }
-        sum /= wsum(n);
+        sum /= sumn(n);
         Ok(MStats {
             mean: sum.exp(),
-            std: (sx2 as f64 / wsum(n) - sum.powi(2)).sqrt().exp(),
+            std: (sx2 as f64 / sumn(n) - sum.powi(2)).sqrt().exp(),
         })
     }
 

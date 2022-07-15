@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
 use crate::{ MStats, MinMax, MutVecg, Stats, Vecg, VecVec, VecVecg};
-use indxvec::{here,tof64,F64,Vecops};
+use indxvec::{here,F64,Vecops};
 use medians::{Med,Median};
 
 impl<T> VecVec<T> for &[Vec<T>] 
@@ -67,9 +67,8 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
     /// such as dependencies or correlations.
     /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2))` 
-    /// computes median correlations between all column vectors (features) in pts.
- 
-    fn crossfeatures<F>(self,f:F) -> Vec<f64> where F: Fn(&[T],&[T]) -> f64 {
+    /// computes median correlations between all column vectors (features) in pts. 
+    fn crossfeatures(self,f:fn(&[T],&[T])->f64) -> Vec<f64> {
         let n = self.len(); // number of the vector(s)
         let mut codp:Vec<f64> = Vec::with_capacity((n+1)*n/2); // results 
         self.iter().enumerate().for_each(|(i,v)| 
@@ -80,10 +79,17 @@ impl<T> VecVec<T> for &[Vec<T>]
         codp
     }
 
+    /// Sum of nd points (or vectors)
+    fn sumv(self) -> Vec<f64> {
+        let mut resvec = vec![0_f64;self[0].len()]; 
+        for v in self { resvec.mutvadd(v) };
+        resvec
+    }
+
     /// acentroid = multidimensional arithmetic mean
     fn acentroid(self) -> Vec<f64> {
         let mut centre = vec![0_f64; self[0].len()];
-        for v in self { centre.mutvadd(v) }
+        for v in self { centre.mutvadd(v) };
         centre.mutsmult::<f64>(1.0 / (self.len() as f64));
         centre
     }
@@ -200,7 +206,7 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// Geometric median's estimated error
     fn gmerror(self,g:&[f64]) -> f64 {
         let (gm,_,_) = self.nxnonmember(g);
-        gm.vdist::<f64>(g)
+        gm.vdistsq::<f64>(g)
     }
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
@@ -257,7 +263,7 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// specified by its index `indx` to self. 
     fn nxmember(self, indx: usize) -> Vec<f64> {
         let mut vsum = vec![0_f64; self[0].len()];
-        let p = &tof64(&self[indx]);
+        let p = &self[indx].tof64();
         let mut recip = 0_f64;
         for (i,x) in self.iter().enumerate() {
             if i != indx {  // not point p
@@ -302,20 +308,19 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// There will eventually be a multithreaded version.
     /// The sum of reciprocals is strictly increasing and so is used here as
     /// easy to evaluate termination condition.
-    fn gmedian(self, eps: f64) -> Vec<f64> { 
-        let mut g = self.acentroid(); // start iterating from the Centre 
+    fn gmedian(self, eps: f64) -> Vec<f64> {  
+        let mut g = self.acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
         let mut recsum = 0f64;
         loop { // vector iteration till accuracy eps is exceeded  
             let mut nextg = vec![0_f64; self[0].len()];   
             let mut nextrecsum = 0_f64;
-            for x in self {   
-                // |x-g| done in-place for speed. Could have simply called x.vdist(g)
-                //let mag:f64 = g.vdist::<f64>(&x); 
-                let mag = g.iter().zip(x).map(|(&gi,&xi)|(f64::from(xi)-gi).powi(2)).sum::<f64>(); 
-                if mag.is_normal() { 
+            for v in self {   
+                // |v-g| done in-place for speed. Could have simply called x.vdist(g)
+                let mag:f64 = v.iter().zip(&g).map(|(&vi,gi)|(f64::from(vi)-gi).powi(2)).sum(); 
+                if mag >= eps { 
                     let rec = 1.0_f64/(mag.sqrt()); // reciprocal of distance (scalar)
-                    // vsum increments by components
-                    nextg.iter_mut().zip(x).for_each(|(vi,&xi)| *vi += f64::from(xi)*rec); 
+                    // vsum increment by components
+                    for (vi,gi) in v.iter().zip(&mut nextg) { *gi += f64::from(*vi)*rec }; 
                     nextrecsum += rec // add separately the reciprocals for final scaling   
                 } // else simply ignore this point should its distance from g be zero
             }
@@ -326,7 +331,64 @@ impl<T> VecVec<T> for &[Vec<T>]
             recsum = nextrecsum;            
         }
     }
-    
+
+    /// Point by point Geometric Median (gm).
+    /// Gm is the point that minimises the sum of distances to a given set of points.
+    /// It has (provably) only vector iterative solutions.
+    /// Search methods are slow and difficult in highly dimensional space.
+    /// Weiszfeld's fixed point iteration formula has known problems with sometimes failing to converge.
+    /// Especially, when the points are dense in the close proximity of the gm, or gm coincides with one of them.  
+    /// However, these problems are fixed in my new algorithm here.      
+    /// There will eventually be a multithreaded version.
+    /// The sum of reciprocals is strictly increasing and so is used here as
+    /// easy to evaluate termination condition.
+    fn pmedian(self, eps: f64) -> Vec<f64> { 
+        // start iterating from the centroid, alternatively from the origin: vec![0_f64; self[0].len()] 
+        let mut g = self.acentroid();
+        // running global sum of reciprocals
+        let mut recsum = 0f64;     
+        // running global sum of unit vectors
+        let mut vsum = vec![0_f64; self[0].len()];
+        // previous reciprocals for each point 
+        let mut precs:Vec<f64> = Vec::with_capacity(self.len());
+        // termination flag triggered by any one point
+        let mut terminate = false; 
+        
+        // initial vsum,recsum and precs
+        for p in self { 
+            let magsq:f64 = p.iter().zip(&g).map(|(&pi,gi)|(f64::from(pi)-gi).powi(2)).sum(); 
+            if magsq < eps { precs.push(0.); continue; }; // skip this point, it is too close 
+            let rec = 1.0/(magsq.sqrt()); 
+            // vsum incremented by components of unit vector
+            for (vscomp,pcomp) in vsum.iter_mut().zip(p) { *vscomp += f64::from(*pcomp)*(rec) }; 
+            // vsum.mutvadd::<f64>(&p.smult::<f64>(rec)); // the above, shorter but slower
+            precs.push(rec); // store rec for this p
+            recsum += rec; 
+        }
+        // first iteration done, update g
+        for (gcomp,vscomp) in g.iter_mut().zip(&vsum) { *gcomp = vscomp/recsum };
+ 
+        g = vsum.smult::<f64>(1.0/recsum); 
+        loop { // vector iteration till accuracy eps is exceeded 
+            for (p,rec) in self.iter().zip(&mut precs) { 
+                let magsq:f64 = p.iter().zip(&g).map(|(&pi,gi)|(f64::from(pi)-gi).powi(2)).sum(); 
+                if magsq < eps { *rec = 0.0; continue; }; // skip this point if too close
+                let recip = 1.0/(magsq.sqrt()); 
+                let recdelta = recip - *rec; // change in reciprocal for p
+                *rec = recip; // update rec for this p for next time
+                // vsum updated by components
+                for (vscomp,pcomp) in vsum.iter_mut().zip(p) { *vscomp += f64::from(*pcomp)*recdelta };
+                // update recsum
+                recsum += recdelta; 
+                // update g immediately for each point p 
+                for (gcomp,vscomp) in g.iter_mut().zip(&vsum) { *gcomp = vscomp/recsum };
+                // termination condition detected but do the rest of the points anyway
+                if !terminate && recdelta.abs() < eps { terminate = true }; 
+            }
+            if terminate { return g };  // termination reached 
+        }
+    }
+
     /// Like `gmedian` but returns also the sum of unit vecs and the sum of reciprocals. 
     fn gmparts(self, eps: f64) -> (Vec<f64>,Vec<f64>,f64) { 
         let mut g = self.acentroid(); // start iterating from the Centre
