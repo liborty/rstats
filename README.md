@@ -176,6 +176,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.0** - Removed mistakenly included large file bloating the crate size.
+
 * **Version 1.1.9** - Added `pmedian` to `VecVec` trait. Similar to `gmedian` but iterates point-by-point. Is more accurate but slightly slower. Added dev-dependency `times` and used it in `timing_gm()` test in `tests/tests.rs` to compare execution times of some nd algorithms.
 
 * **Version 1.1.7** - Updated to the latest version of `indexvec v1.2.8`. Employed its fast `hashsort`. Readme rearrangement. Moved `msortf` to `indxvec::Mutops` trait as `mutsort()`. It now works on generic T end_types.
