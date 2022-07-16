@@ -317,7 +317,7 @@ impl<T> VecVec<T> for &[Vec<T>]
             for v in self {   
                 // |v-g| done in-place for speed. Could have simply called x.vdist(g)
                 let mag:f64 = v.iter().zip(&g).map(|(&vi,gi)|(f64::from(vi)-gi).powi(2)).sum(); 
-                if mag >= eps { 
+                if mag > eps { 
                     let rec = 1.0_f64/(mag.sqrt()); // reciprocal of distance (scalar)
                     // vsum increment by components
                     for (vi,gi) in v.iter().zip(&mut nextg) { *gi += f64::from(*vi)*rec }; 
@@ -342,7 +342,7 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// There will eventually be a multithreaded version.
     /// The sum of reciprocals is strictly increasing and so is used here as
     /// easy to evaluate termination condition.
-    fn pmedian(self, eps: f64) -> Vec<f64> { 
+    fn pmedian(self, eps: f64) -> Vec<f64> {  
         // start iterating from the centroid, alternatively from the origin: vec![0_f64; self[0].len()] 
         let mut g = self.acentroid();
         // running global sum of reciprocals
@@ -352,7 +352,7 @@ impl<T> VecVec<T> for &[Vec<T>]
         // previous reciprocals for each point 
         let mut precs:Vec<f64> = Vec::with_capacity(self.len());
         // termination flag triggered by any one point
-        let mut terminate = false; 
+        let mut terminate = true; 
         
         // initial vsum,recsum and precs
         for p in self { 
@@ -360,7 +360,7 @@ impl<T> VecVec<T> for &[Vec<T>]
             if magsq < eps { precs.push(0.); continue; }; // skip this point, it is too close 
             let rec = 1.0/(magsq.sqrt()); 
             // vsum incremented by components of unit vector
-            for (vscomp,pcomp) in vsum.iter_mut().zip(p) { *vscomp += f64::from(*pcomp)*(rec) }; 
+            for (vscomp,&pcomp) in vsum.iter_mut().zip(p) { *vscomp += rec*f64::from(pcomp) }; 
             // vsum.mutvadd::<f64>(&p.smult::<f64>(rec)); // the above, shorter but slower
             precs.push(rec); // store rec for this p
             recsum += rec; 
@@ -372,20 +372,21 @@ impl<T> VecVec<T> for &[Vec<T>]
         loop { // vector iteration till accuracy eps is exceeded 
             for (p,rec) in self.iter().zip(&mut precs) { 
                 let magsq:f64 = p.iter().zip(&g).map(|(&pi,gi)|(f64::from(pi)-gi).powi(2)).sum(); 
-                if magsq < eps { *rec = 0.0; continue; }; // skip this point if too close
+                if magsq < eps { *rec = 0.0; continue; }; // skip this point, it is too close
                 let recip = 1.0/(magsq.sqrt()); 
                 let recdelta = recip - *rec; // change in reciprocal for p
                 *rec = recip; // update rec for this p for next time
                 // vsum updated by components
-                for (vscomp,pcomp) in vsum.iter_mut().zip(p) { *vscomp += f64::from(*pcomp)*recdelta };
+                for (vscomp,pcomp) in vsum.iter_mut().zip(p) { *vscomp += recdelta*f64::from(*pcomp) };
                 // update recsum
                 recsum += recdelta; 
                 // update g immediately for each point p 
                 for (gcomp,vscomp) in g.iter_mut().zip(&vsum) { *gcomp = vscomp/recsum };
                 // termination condition detected but do the rest of the points anyway
-                if !terminate && recdelta.abs() < eps { terminate = true }; 
+                if terminate && recdelta.abs() > eps { terminate = false }; 
             }
             if terminate { return g };  // termination reached 
+            terminate = true
         }
     }
 

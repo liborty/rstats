@@ -1,11 +1,12 @@
 use anyhow::{Result};
-use devtimer::DevTime;
+// use devtimer::DevTime;
 use indxvec::{printing::*, Indices, Vecops,Printing};
 use rstats::{i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
 use ran::{*,set_seeds};
 use medians::{Median};
+use times::{benchvvf64};
 
-pub const EPS: f64 = 1e-10;
+pub const EPS: f64 = 1e-3;
 
 #[cfg(test)]
 
@@ -313,6 +314,21 @@ fn vecvec() -> Result<()> {
     Ok(())
 }
 
+const NAMES:[&str;4] = [ "gmedian","pmedian","quasimedian","acentroid" ];
+
+const CLOSURESU8:[fn(&[Vec<f64>]);4] = [
+    |v:&[_]| { v.gmedian(EPS); }, 
+    |v:&[_]| { v.pmedian(EPS); }, 
+    |v:&[_]| { v.quasimedian(); },
+    |v:&[_]| { v.acentroid(); } ];
+
+#[test]
+fn timing_gm() {
+    set_seeds(7777777777_u64);   // intialise random numbers generator
+    // Rnum encapsulates the type of the data items
+   benchvvf64(Rnum::newf64(),100,5,10,&NAMES,&CLOSURESU8); 
+}
+
 #[test]
 fn geometric_medians() -> Result<()> {
     const ITERATIONS: usize = 10;
@@ -320,44 +336,27 @@ fn geometric_medians() -> Result<()> {
     let d = 1000_usize;
     set_seeds(7777777);
     println!(
-        "timing {} medians of {} points in {} dimensions",
-        ITERATIONS, n, d
+        "{} medians of {} points in {} dimensions", ITERATIONS, n, d
     );
-    let mut sumg = 0_f64;
-    let mut timerg = DevTime::new_simple();
-    let mut sumq = 0_f64;
-    let mut timerq = DevTime::new_simple();
-    let mut summ = 0_f64;
-    let mut timerm = DevTime::new_simple();
+    let mut sumg = 0_f64; 
+    let mut sump = 0_f64; 
+    let mut sumq = 0_f64; 
+    let mut summ = 0_f64; 
     let mut gm: Vec<f64>;
      for _i in 1..ITERATIONS { 
         let pts = Rnum::newf64().ranvv(d, n).getvvf64();
-        // let (_,recsum) = pts.gmedrecs(EPS);
-        // println!("Mean Reciprocal: {}",d as f64/recsum);
-        timerg.start();
-        gm = pts.pmedian(EPS);
-        timerg.stop();
+        gm = pts.gmedian(EPS);
         sumg += pts.gmerror(&gm);
-        timerq.start();
+        gm = pts.pmedian(EPS);
+        sump += pts.gmerror(&gm);    
         gm = pts.quasimedian(); 
-        timerq.stop();
         sumq += pts.gmerror(&gm);
-        timerm.start();
         gm = pts.acentroid();
-        timerm.stop();
         summ += pts.gmerror(&gm);
     }
-    println!(
-        "Geometric md {GR}err: {:.5e}\tseconds: {:.5e}{UN}", sumg,
-        timerg.time_in_nanos().unwrap() as f64 / 1e9
-    );
-    println!(
-        "Arithm. mean {GR}err: {:.5e}\tseconds: {:.5e}{UN}", summ,
-        timerm.time_in_nanos().unwrap() as f64 / 1e9
-    );
-    println!(
-        "Quasi median {GR}err: {:.5e}\tseconds: {:.5e}{UN}", sumq,
-        timerq.time_in_nanos().unwrap() as f64 / 1e9
-    );
+    println!( "Pmedian      err: {GR}{:.5e}{UN}", sump);
+    println!( "Gmedian      err: {GR}{:.5e}{UN}", sumg);
+    println!( "Acentroid    err: {GR}{:.5e}{UN}", summ);
+    println!( "Quasi median err: {GR}{:.5e}{UN}", sumq);
     Ok(())
 }

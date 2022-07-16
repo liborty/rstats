@@ -29,4 +29,4 @@ anyhow = "^1"
 [dev-dependencies]
 ran = "^1"
 times = "^0"
-devtimer = "^4"
+# devtimer = "^4"
