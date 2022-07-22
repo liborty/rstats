@@ -22,8 +22,8 @@ and any of the following rstats traits:
 use rstats::{ Stats, Vecg, Vecu8, MutVecg, VecVec, VecVecg };
 ```
 
-and any of the following helper functions:  
-`use rstats::{i64tof64,wsum};`
+and any of the following crate level helper functions:  
+`use rstats::{i64tof64,sumn};`
 
 The latest (nightly) version of this readme file and everything, is always available in the github repository [rstats](https://github.com/liborty/rstats). Sometimes it may be a little ahead of the crates.io release versions.
 
@@ -91,6 +91,7 @@ The main constituent parts of Rstats are its traits. The selection of traits (to
 
 * `Stats`: a single vector (of numbers),
 * `Vecg`: methods (of vector algebra) operating on two vectors, e.g. scalar product
+* `Vecu8`: some special methods for end-type u8
 * `MutVecg`: some of the above methods, mutating self
 * `VecVec`: methods operating on n vectors, 
 * `VecVecg`: methods for n vectors, plus another generic argument, e.g. vector of weights.
@@ -108,7 +109,7 @@ For more detailed comments, plus some examples, see the source. You may have to 
 ##  Auxiliary Functions
 
 * `i64tof64`: converts an i64 vector to f64, 
-* `nsum`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.).
+* `sumn`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.).
 
 ## Trait Stats
 

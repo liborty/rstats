@@ -223,8 +223,8 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             let vm = thisp.vsub(m);  // zero mean vector
             vm.iter().enumerate().for_each(|(i,thisc)| 
                 // its products up to and including the diagonal (itself)
-                vm.iter().take(i+1).for_each(|vmj| { 
-                    cov[covsub] += thisc*vmj;
+                vm.iter().take(i+1).for_each(|vmi| { 
+                    cov[covsub] += thisc*vmi;
                     covsub += 1;
                 }));
             } 
@@ -249,10 +249,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         self.iter().zip(ws).for_each(|(selfh,&wsh)| { // adding up covars for all the points
             let w = f64::from(wsh); wsum += w;
             let mut covsub = 0_usize; // subscript into the flattened array cov 
-            let vm = selfh.vsub(m);  // subtract zero mean/median vector  
+            let vm = selfh.vsub(m);   // subtract zero mean/median vector  
             vm.iter().enumerate().for_each(|(i,&thisc)|            
-                vm.iter().take(i+1).for_each(|&vmj| {  // its weighted products up to and including the diagonal 
-                    cov[covsub] += w*thisc*vmj;
+                vm.iter().take(i+1).for_each(|&vmi| {  // its weighted products up to and including the diagonal 
+                    cov[covsub] += w*thisc*vmi;
                     covsub += 1;
                 }));
         });

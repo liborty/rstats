@@ -366,8 +366,7 @@ impl<T> VecVec<T> for &[Vec<T>]
             recsum += rec; 
         }
         // first iteration done, update g
-        for (gcomp,vscomp) in g.iter_mut().zip(&vsum) { *gcomp = vscomp/recsum };
- 
+        for (gcomp,vscomp) in g.iter_mut().zip(&vsum) { *gcomp = vscomp/recsum }; 
         g = vsum.smult::<f64>(1.0/recsum); 
         loop { // vector iteration till accuracy eps is exceeded 
             for (p,rec) in self.iter().zip(&mut precs) { 
