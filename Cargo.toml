@@ -11,8 +11,14 @@ license = "Apache-2.0"
 keywords = ["machine-learning","statistics","vector-algebra","geometric-median","data-analysis"]
 categories = ["science","mathematics","algorithms","visualization","rust-patterns"]
 include = [
-    "src/*.rs",
-    "tests/*.rs",
+    "src/lib.rs",
+    "src/mutvec.rs",
+    "src/statsg.rs", 
+    "src/vecg.rs",
+    "src/vecu8.rs",
+    "src/vecvec.rs",
+    "src/vecvecg.rs",      
+    "tests/tests.rs",
     "Cargo.toml",
     "README.md",
     "LICENSE"
