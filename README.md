@@ -177,6 +177,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.1** - Code pruning - removed `wsortedcos` of questionable utility from trait `VecVecg`.
+
 * **Version 1.2.0** - Removed mistakenly included large file bloating the crate size.
 
 * **Version 1.1.9** - Added `pmedian` to `VecVec` trait. Similar to `gmedian` but iterates point-by-point. Is more accurate but slightly slower. Added dev-dependency `times` and used it in `timing_gm()` test in `tests/tests.rs` to compare execution times of some nd algorithms.

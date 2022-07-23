@@ -96,34 +96,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         // create sort index of the eccs
         let index = eccs.hashsort_indexed();
         // pick the associated points weights in the order of the sorted eccs
-        let mut weights = index.unindexf64(ws,true);
-        let mut sumw = 0_f64;
-        // accummulate the weights
-        weights.iter_mut().for_each(|w|{ sumw += *w; *w = sumw });     
-        // divide by the final sum to get cummulative probabilities in [0,1]
-        weights.iter_mut().for_each(|w| *w /= sumw );     
-        ( index.unindex(&eccs, true), weights )
-    }
-
-    /// Sorted cosines magnitudes,
-    /// associated cummulative probability density function in [0,1] of the weights.
-    /// Needs central median
-    fn wsortedcos(self, medmed: &[U], unitzmed: &[U], ws: &[U]) -> ( Vec<f64>,Vec<f64> )
-        where F64:From<T> { 
-        let mut coses = Vec::with_capacity(self.len());  
-        for p in self { // collect coses      
-            coses.push(p.vsubunit(medmed).dotp(unitzmed)); 
-        } 
-        // create sort index of the coses
-        let index = coses.hashsort_indexed();
-        // pick the associated points weights in the same order as the sorted coses
-        let mut weights = index.unindexf64(ws,true);
-        let mut sumw = 0_f64;
-        // accummulate the weights to form cpdf
-        weights.iter_mut().for_each(|w|{ sumw += *w; *w = sumw });
-        // divide by the sum to get cum. probabilities in [0,1]
-        weights.iter_mut().for_each(|w| *w /= sumw );     
-        ( index.unindex(&coses,true), weights )
+        let weights = index.unindex(ws,true);
+        let sumw = weights.iter().map(|&w|f64::from(w)).sum::<f64>();
+        let mut accum = 0_f64;
+        // accummulate the probabilities in [0,1]
+        let probs = weights.iter().map(|&w| {
+            accum += f64::from(w);
+            accum / sumw }).collect::<Vec<f64>>();     
+        ( index.unindex(&eccs, true), probs )
     }
 
     /// Like wgmparts, except only does one iteration from any non-member point g

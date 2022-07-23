@@ -319,8 +319,6 @@ pub trait VecVecg<T,U> {
     fn dists(self, v: &[U]) -> Vec<f64>;
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
     fn wsortedeccs(self,ws:&[U],gm:&[f64]) -> (Vec<f64>,Vec<f64>) where F64:From<T>; 
-    /// Sorted cosines magnitudes and cpdf, needs central median
-    fn wsortedcos(self,medmed:&[U],unitzmed:&[U],ws:&[U]) -> (Vec<f64>,Vec<f64>) where F64:From<T>; 
     /// Like wgmparts, except only does one iteration from any non-member point g
     fn wnxnonmember(self, ws:&[U], g:&[f64]) -> (Vec<f64>,Vec<f64>,f64); 
     /// The weighted geometric median to accuracy eps 
