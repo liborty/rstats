@@ -9,28 +9,32 @@
 
 Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 
-Use in your source files any of the following structs, if needed:
+Use in your source files any of the following structs, when needed:
 
 ```rust  
-use rstats::{Mstats};  
-use indxvec::{MinMax};  
-use medians::Med;
+use rstats::{Mstats,MinMax,F64,Med};
 ```
 
-and any of the following rstats traits:
+and any of the following rstats defined traits:
+
 ```rust 
 use rstats::{ Stats, Vecg, Vecu8, MutVecg, VecVec, VecVecg };
 ```
 
-and any of the following crate level helper functions:  
-`use rstats::{i64tof64,sumn};`
+and any of the following crate level helper functions:
 
-The latest (nightly) version of this readme file and everything, is always available in the github repository [rstats](https://github.com/liborty/rstats). Sometimes it may be a little ahead of the crates.io release versions.
+```rust  
+use rstats::{i64tof64,sumn};
+```
+
+The latest (nightly) version is always available in the github repository [rstats](https://github.com/liborty/rstats). Sometimes it may be a little ahead of the crates.io release versions.
 
 It is highly recommended to read and run `tests/tests.rs`, which shows examples of usage.
+To run all the tests, use single thread in order to produce the results in the right order:
 
-To run all the tests, use single thread in order to produce the results in the right order:  
-`cargo test --release -- --test-threads=1 --nocapture --color always`
+```bash  
+cargo test --release -- --test-threads=1 --nocapture --color always
+```
 
 ## Introduction
 
@@ -42,7 +46,7 @@ Our treatment of multidimensional sets of points (vectors) is constructed from t
 
 * `median correlation`- in one dimension (1d), our `mediancorr` method is to replace *Pearson's correlation*. We define *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
 
-* `gmedian` - fast multidimensional geometric median (gm) algorithm.
+* `gmedian` - fast multidimensional *geometric median (gm)* algorithm.
 
 * `madgm` - generalisation of robust data spread estimator known as 'MAD' (median of absolute deviations from median),  from 1d to nd. 
 
@@ -52,9 +56,9 @@ Our treatment of multidimensional sets of points (vectors) is constructed from t
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-In n dimensions (nd), many authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are not even any faster to compute.
+In n dimensions (nd), many authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are even slower to compute than our gm.
 
-*Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by rotation.*
+*Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by their rotation.*
 
 In contrast, analyses based on the true geometric median (gm) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its weighted version `wgmedian`, in traits `vecvec` and `vecvecg` respectively.
 
