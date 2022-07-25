@@ -1,5 +1,5 @@
 use indxvec::{printing::*, Indices, Vecops,Printing};
-use rstats::{i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
+use rstats::{error::RError,i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
 use ran::{*,set_seeds};
 use medians::{Median};
 use times::{benchvvf64};
@@ -9,7 +9,7 @@ pub const EPS: f64 = 1e-3;
 #[cfg(test)]
 
 #[test]
-fn u8() -> Result<()> {
+fn u8() {
     let v1 = vec![
         1_u8, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6,
     ];
@@ -51,12 +51,11 @@ fn u8() -> Result<()> {
     println!(
         "Column Correlations:\n{}",
         trpt.crossfeatures(|v1, v2| v1.mediancorr(v2)).gr()
-    );
-    Ok(())
+    ); 
 }
 
 #[test]
-fn fstats() -> Result<()> {
+fn fstats() {
     let v1 = vec![
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
     ];
@@ -102,11 +101,10 @@ fn fstats() -> Result<()> {
         "Column Correlations:\n{}",
         trpt.crossfeatures(|v1, v2| v1.mediancorr(v2)).gr()
     );
-    Ok(())
 }
 
 #[test]
-fn ustats() -> Result<()> { 
+fn ustats() -> Result<(),RError> { 
     set_seeds(1234567);
     let v1 = Rnum::newu8().ranv(20).getvu8(); 
     println!("\n{}", (&v1).gr());
@@ -125,7 +123,7 @@ fn ustats() -> Result<()> {
 
 #[test]
 /// &[i64] requires explicit recast
-fn intstats() -> Result<()> {
+fn intstats() -> Result<(),RError> {
     let v = vec![1_i64, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     let v1 = i64tof64(&v); // downcast to f64 here
@@ -144,7 +142,7 @@ fn intstats() -> Result<()> {
 
 #[test]
 /// Generic implementation
-fn genericstats() -> Result<()> {
+fn genericstats() -> Result<(),RError> {
     let v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?.gr());
@@ -159,7 +157,7 @@ fn genericstats() -> Result<()> {
 }
 
 #[test]
-fn vecg() -> Result<()> {
+fn vecg() {
     let v1 = vec![
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 10., 10., 13., 14., 15.,
     ];
@@ -196,25 +194,23 @@ fn vecg() -> Result<()> {
     println!("[1,2,3].kron(&[4,5]):\t{}", [1, 2, 3].kron(&[4, 5]).gr());
     let outerp = [1, 2, 3].outer(&[4, 5]);
     println!("[1,2,3].outer(&[4,5]):\n{}", outerp.gr());
-    // println!("Transposed: "); printvv([1,2,3].outer(&[4,5,6,7]).transpose());
-    Ok(())
+    // println!("Transposed: "); printvv([1,2,3].outer(&[4,5,6,7]).transpose()); 
 }
 
 #[test]
 /// Trend between two data sets in space of the same dimensions but
 /// numbers of points can differ
-fn trend() -> Result<()> {
+fn trend() {
     let d = 7_usize;
     set_seeds(777);
     let rf64 = Rnum::newf64(); 
     let pts1 = rf64.ranvv(d, 37).getvvf64();
     let pts2 = rf64.ranvv(d, 33).getvvf64();
     println!("\nTrend vector:\n{}\n", pts1.trend(EPS, pts2).gr());
-    Ok(())
 }
 
 #[test]
-fn vecvec() -> Result<()> {
+fn vecvec() -> Result<(),RError> {
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {} points in {} dimensional space",n,d);
@@ -308,7 +304,7 @@ fn vecvec() -> Result<()> {
     // let medmed = vec![0.5_f64;n];
     // let (se, cpdf) =
     //  pt.wsortedcos(&medmed,&medmed.vunit(), &weights);
-    //  println!("Sorted coses:\n{}\ncpdf:\n{}\n",se),cpdf));  
+    //  println!("Sorted coses:\n{}\ncpdf:\n{}\n",se),cpdf));
     Ok(())
 }
 
@@ -328,7 +324,7 @@ fn timing_gm() {
 }
 
 #[test]
-fn geometric_medians() -> Result<()> {
+fn geometric_medians() {
     const ITERATIONS: usize = 10;
     let n = 100_usize;
     let d = 1000_usize;
@@ -356,5 +352,4 @@ fn geometric_medians() -> Result<()> {
     println!( "Gmedian      err: {GR}{:.5e}{UN}", sumg);
     println!( "Acentroid    err: {GR}{:.5e}{UN}", summ);
     println!( "Quasi median err: {GR}{:.5e}{UN}", sumq);
-    Ok(())
 }

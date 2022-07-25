@@ -29,7 +29,6 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 indxvec = "^1"
 medians = "^1"
-# anyhow = "^1"
 
 [dev-dependencies]
 ran = "^1"

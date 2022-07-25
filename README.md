@@ -12,7 +12,7 @@ Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 Use in your source files any of the following structs, when needed:
 
 ```rust  
-use rstats::{Mstats,MinMax,F64,Med};
+use rstats::{error::RError, Mstats, MinMax, F64, Med};
 ```
 
 and any of the following rstats defined traits:
@@ -180,6 +180,8 @@ Warning: trait VecVec is entirely unchecked, so check your data upfront.
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight).
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.2** - Introduced custom error RError, potentially returned by some methods of trait `Statsg`. Removed the dependency on crate `anyhow`.
 
 * **Version 1.2.1** - Code pruning - removed `wsortedcos` of questionable utility from trait `VecVecg`.
 

@@ -180,9 +180,10 @@ impl<T> Stats for &[T]
             sx2 += rx*rx;
             sx += rx;   
             }; 
+        let recipmean = sx/nf;
         Ok(MStats {
-            mean: nf/sx,
-            std: ((sx2/nf-(sx/nf).powi(2))/(sx.powi(4))).sqrt()
+            mean: 1.0/recipmean,
+            std: ((sx2/nf-recipmean.powi(2))/(recipmean.powi(4))/nf).sqrt()
         })
     }
     /// Linearly weighted harmonic mean of an f64 slice.    
@@ -236,7 +237,7 @@ impl<T> Stats for &[T]
             }).sum::<f64>()/nf;  
         Ok(MStats {
             mean: 1.0/sx,
-             std: ((sx2/nf-sx.powi(2))/(nf*sx.powi(4))).sqrt() 
+             std: ((sx2/nf-sx.powi(2))/(nf.powi(-3)*sx.powi(4))).sqrt() 
         })
     }
 
@@ -257,7 +258,7 @@ impl<T> Stats for &[T]
         let mut sum = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            ensure!( fx.is_normal(),"{} does not accept zero valued data!",here!());        
+            if !fx.is_normal() { return Err(RError::ArithError); };        
             sum += fx.ln()
         }
         Ok((sum / (n as f64)).exp())
@@ -276,12 +277,12 @@ impl<T> Stats for &[T]
     /// ```
     fn gmeanstd(self) -> Result<MStats,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!", here!());
+        if n == 0 { return Err(RError::NoDataError); }; 
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            if !fx.is_normal() { return Err(RError::ArithError); };
             let lx = fx.ln();
             sum += lx;
             sx2 += lx * lx
@@ -308,12 +309,12 @@ impl<T> Stats for &[T]
     /// ```
     fn gwmean(self) -> Result<f64,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!", here!());
+        if n == 0 { return Err(RError::NoDataError); }; 
         let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            if !fx.is_normal() { return Err(RError::ArithError); }; 
             w += 1_f64;
             sum += w * fx.ln();
 
@@ -332,13 +333,13 @@ impl<T> Stats for &[T]
     /// ```
     fn gwmeanstd(self) -> Result<MStats,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!", here!()); 
+        if n == 0 { return Err(RError::NoDataError); }; 
         let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            if !fx.is_normal() { return Err(RError::ArithError); }; 
             let lnx = fx.ln();
             w += 1_f64;
             sum += w * lnx;
