@@ -3,6 +3,8 @@
 //! Characterising Multidimensional Data, Machine Learning,
 //! Data Analysis
 
+/// Custom Error RError
+pub mod error;
 /// Basic statistics on a single generic vector
 pub mod statsg;
 /// Vector Algebra on two generic vectors
@@ -20,7 +22,8 @@ pub mod vecvecg;
 pub use indxvec::{MinMax,F64,Printing,here};
 pub use medians::{Med,Median};
 /// simple error handling
-use anyhow::{Result,bail}; 
+// use anyhow::{Result,bail}; 
+use crate::error::RError;
 use core::iter::FromIterator;
 
 /// Mean and standard deviation (or std ratio for geometric mean)
@@ -68,52 +71,52 @@ pub trait Stats {
     /// Vector magnitude squared (sum of squares)
     fn vmagsq(self) -> f64;
     /// vector with reciprocal components
-    fn vreciprocal(self) -> Result<Vec<f64>>;
+    fn vreciprocal(self) -> Result<Vec<f64>,RError>;
     /// vector with inverse magnitude 
-    fn vinverse(self) -> Result<Vec<f64>>;
+    fn vinverse(self) -> Result<Vec<f64>,RError>;
     /// negated vector (all components swap sign)
     fn negv(self) -> Vec<f64>;
     /// Unit vector
     fn vunit(self) -> Vec<f64>;    
     /// Arithmetic mean
-    fn amean(self) -> Result<f64> 
-        where Self: std::marker::Sized { bail!("amean not implemented for this type")}
+    fn amean(self) -> Result<f64,RError>; 
+       // where Self: std::marker::Sized { bail!("amean not implemented for this type")}
     /// Arithmetic mean and standard deviation
-    fn ameanstd(self) -> Result<MStats> 
-        where Self: std::marker::Sized { bail!("ameanstd not implemented for this type")}
+    fn ameanstd(self) -> Result<MStats,RError>; 
+       // where Self: std::marker::Sized { bail!("ameanstd not implemented for this type")}
     /// Weighted arithmetic mean
-    fn awmean(self) -> Result<f64> 
-        where Self: std::marker::Sized { bail!("awmean not implemented for this type")}
+    fn awmean(self) -> Result<f64,RError>;  
+       // where Self: std::marker::Sized { bail!("awmean not implemented for this type")}
     /// Weighted arithmetic men and standard deviation
-    fn awmeanstd(self) -> Result<MStats>
-        where Self: std::marker::Sized { bail!("awmeanstd not implemented for this type")}
+    fn awmeanstd(self) -> Result<MStats,RError>;
+        // where Self: std::marker::Sized { bail!("awmeanstd not implemented for this type")}
     /// Harmonic mean
-    fn hmean(self) -> Result<f64>
-        where Self: std::marker::Sized { bail!("hmean not implemented for this type")}
+    fn hmean(self) -> Result<f64,RError>;
+        // where Self: std::marker::Sized { bail!("hmean not implemented for this type")}
     /// Harmonic mean and experimental standard deviation 
-    fn hmeanstd(self) -> Result<MStats>
-        where Self: std::marker::Sized { bail!("hmeanstd not implemented for this type")}
+    fn hmeanstd(self) -> Result<MStats,RError>;
+        // where Self: std::marker::Sized { bail!("hmeanstd not implemented for this type")}
     /// Weighted harmonic mean
-    fn hwmean(self) -> Result<f64> 
-        where Self: std::marker::Sized { bail!("hwmean not implemented for this type")}
+    fn hwmean(self) -> Result<f64,RError>; 
+        // where Self: std::marker::Sized { bail!("hwmean not implemented for this type")}
     /// Weighted harmonic mean and standard deviation 
-    fn hwmeanstd(self) -> Result<MStats>
-        where Self: std::marker::Sized { bail!("hwgmeanstd not implemented for this type")}
+    fn hwmeanstd(self) -> Result<MStats,RError>;
+       // where Self: std::marker::Sized { bail!("hwgmeanstd not implemented for this type")}
     /// Geometric mean
-    fn gmean(self) -> Result<f64>
-        where Self: std::marker::Sized { bail!("gmean not implemented for this type")}
+    fn gmean(self) -> Result<f64,RError>;
+        // where Self: std::marker::Sized { bail!("gmean not implemented for this type")}
     /// Geometric mean and standard deviation ratio
-    fn gmeanstd(self) -> Result<MStats>
-        where Self: std::marker::Sized { bail!("gmeanstd not implemented for this type")}
+    fn gmeanstd(self) -> Result<MStats,RError>;
+        // where Self: std::marker::Sized { bail!("gmeanstd not implemented for this type")}
     /// Weighed geometric mean
-    fn gwmean(self) -> Result<f64> 
-        where Self: std::marker::Sized { bail!("gwmean not implemented for this type")}
+    fn gwmean(self) -> Result<f64,RError>; 
+        // where Self: std::marker::Sized { bail!("gwmean not implemented for this type")}
     /// Weighted geometric mean and standard deviation ratio
-    fn gwmeanstd(self) -> Result<MStats>
-        where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
+    fn gwmeanstd(self) -> Result<MStats,RError>;
+        // where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
     /// Zero median data, obtained by subtracting the median
-    fn zeromedian(self) -> Result<Vec<f64>>
-        where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
+    fn zeromedian(self) -> Result<Vec<f64>,RError>;
+       // where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
     /// Probability density function of a sorted slice
     fn pdf(self) -> Vec<f64>;
     /// Information (entropy) in nats

@@ -1,5 +1,3 @@
-use anyhow::{Result};
-// use devtimer::DevTime;
 use indxvec::{printing::*, Indices, Vecops,Printing};
 use rstats::{i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
 use ran::{*,set_seeds};

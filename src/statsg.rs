@@ -1,6 +1,7 @@
-use crate::{ sumn,MStats,Stats};
-use anyhow::{ensure, Result};
-use indxvec::{here,Printing,Vecops};
+use crate::{ sumn, MStats, Stats, error::RError };
+// use anyhow::{ensure, Result};
+
+use indxvec::{here,Vecops};
 use medians::{Median};    
 
 impl<T> Stats for &[T] 
@@ -12,25 +13,25 @@ impl<T> Stats for &[T]
     }
 
     /// Vector magnitude squared (sum of squares)
-    fn vmagsq(self) -> f64  {
+    fn vmagsq(self) -> f64 {
         self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>()
     }
 
     /// Vector with reciprocal components
-    fn vreciprocal(self) -> Result<Vec<f64>> {
+    fn vreciprocal(self) -> Result<Vec<f64>,RError> {
         for &component in self {
            let c = f64::from(component); 
-           ensure!(c.is_normal(),
-            "{} reciprocal not allowed for zero components!\n{}\n",here!(),self.gr()); 
+           if !c.is_normal() { return Err(RError::ArithError); }; 
         }     
         Ok( self.iter().map(|&x| 1.0/(f64::from(x))).collect() )     
     }
 
     /// Vector with inverse magnitude
-    fn vinverse(self) -> Result<Vec<f64>> {
+    fn vinverse(self) -> Result<Vec<f64>,RError> {
         let mag = self.vmagsq();
-        ensure!(mag > 0.0,"{} zero vector can not be inverted!",here!());     
-        Ok( self.iter().map(|&x| f64::from(x)/mag).collect() )     
+        if mag > 0.0 {     
+            Ok( self.iter().map(|&x| f64::from(x)/mag).collect() ) }
+        else { Err(RError::DataError) }    
     }
 
     // negated vector (all components swap sign)
@@ -51,10 +52,11 @@ impl<T> Stats for &[T]
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().amean().unwrap(),7.5_f64);
     /// ```
-    fn amean(self) -> Result<f64> {
+    fn amean(self) -> Result<f64,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!",here!());
-        Ok(self.iter().map(|&x| f64::from(x)).sum::<f64>() / (n as f64))
+        if n > 0 {
+            Ok(self.iter().map(|&x| f64::from(x)).sum::<f64>() / (n as f64)) }
+        else { Err(RError::NoDataError) }    
     }
 
     /// Arithmetic mean and (population) standard deviation 
@@ -66,9 +68,9 @@ impl<T> Stats for &[T]
     /// assert_eq!(res.mean,7.5_f64);
     /// assert_eq!(res.std,4.031128874149275_f64);
     /// ```
-    fn ameanstd(self) -> Result<MStats> {
+    fn ameanstd(self) -> Result<MStats,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!",here!());
+        if n == 0 { return Err(RError::NoDataError); };
         let nf = n as f64;
         let mut sx2 = 0_f64;
         let mean = self
@@ -95,17 +97,15 @@ impl<T> Stats for &[T]
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().awmean().unwrap(),9.666666666666666_f64);
     /// ```
-    fn awmean(self) -> Result<f64> {
+    fn awmean(self) -> Result<f64,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!", here!());
+        if n == 0 { return Err(RError::NoDataError); };
         let mut iw = 0_f64; // descending linear weights
         Ok(self.iter()
             .map(|&x| {
                 iw += 1_f64;
                 iw * f64::from(x)
-            })
-            .sum::<f64>()
-            / sumn(n))
+            }).sum::<f64>() / sumn(n))
     }
 
     /// Linearly weighted arithmetic mean and standard deviation of an f64 slice.    
@@ -119,9 +119,9 @@ impl<T> Stats for &[T]
     /// assert_eq!(res.mean,9.666666666666666_f64);
     /// assert_eq!(res.std,3.399346342395192_f64);
     /// ```
-    fn awmeanstd(self) -> Result<MStats> {
+    fn awmeanstd(self) -> Result<MStats,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!", here!());        
+        if n == 0 { return Err(RError::NoDataError); }; 
         let mut sx2 = 0_f64;
         let mut w = 0_f64; // descending linear weights
         let mean = self
@@ -145,13 +145,13 @@ impl<T> Stats for &[T]
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().hmean().unwrap(),4.305622526633627_f64);
     /// ```
-    fn hmean(self) -> Result<f64> {
+    fn hmean(self) -> Result<f64,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!", here!());        
+        if n == 0 { return Err(RError::NoDataError); };    
         let mut sum = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            ensure!( fx.is_normal(),"{} does not accept zero valued data!",here!());         
+            if !fx.is_normal() { return Err(RError::ArithError); };      
             sum += 1.0 / fx
         }
         Ok(n as f64 / sum)
@@ -167,23 +167,22 @@ impl<T> Stats for &[T]
     /// assert_eq!(res.mean,4.305622526633627_f64);
     /// assert_eq!(res.std,1.1996764516690959_f64);
     /// ```
-    fn hmeanstd(self) -> Result<MStats> {
+    fn hmeanstd(self) -> Result<MStats,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!",here!());
+        if n == 0 { return Err(RError::NoDataError); };
         let nf = n as f64;
         let mut sx2 = 0_f64;        
-        let rmean = self
-            .iter()
-            .map(|&x| {
-                let fx = f64::from(x);
-                assert!(fx.is_normal(),"{} does not accept zero valued data!",here!());     
-                let rx = 1_f64/fx;  // work with reciprocals
-                sx2 += rx * rx;
-                rx   
-            }).sum::<f64>()/nf;    
+        let mut sx = 0_f64;
+        for &x in self { 
+            let fx = f64::from(x);
+            if !fx.is_normal() { return Err(RError::ArithError); };   
+            let rx = 1_f64/fx;  // work with reciprocals
+            sx2 += rx*rx;
+            sx += rx;   
+            }; 
         Ok(MStats {
-            mean: 1.0/rmean,
-            std: ((sx2/nf-rmean.powi(2))/(nf*rmean.powi(4))).sqrt()
+            mean: nf/sx,
+            std: ((sx2/nf-(sx/nf).powi(2))/(sx.powi(4))).sqrt()
         })
     }
     /// Linearly weighted harmonic mean of an f64 slice.    
@@ -195,14 +194,14 @@ impl<T> Stats for &[T]
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().hwmean().unwrap(),7.5_f64);
     /// ```
-    fn hwmean(self) -> Result<f64> {
+    fn hwmean(self) -> Result<f64,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!", here!());
+        if n == 0 { return Err(RError::NoDataError); };
         let mut sum = 0_f64;
         let mut w = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            ensure!(fx.is_normal(),"{} does not accept zero valued data!",here!());
+            if !fx.is_normal() { return Err(RError::ArithError); };
             w += 1_f64;
             sum += w / fx;
         }
@@ -219,9 +218,9 @@ impl<T> Stats for &[T]
     /// assert_eq!(res.mean,4.305622526633627_f64);
     /// assert_eq!(res.std,1.1996764516690959_f64);
     /// ```
-    fn hwmeanstd(self) -> Result<MStats> {
+    fn hwmeanstd(self) -> Result<MStats,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!",here!());
+        if n == 0 { return Err(RError::NoDataError); };
         let nf = sumn(n);
         let mut sx2 = 0_f64;
         let mut w = 0_f64;        
@@ -252,9 +251,9 @@ impl<T> Stats for &[T]
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().gmean().unwrap(),6.045855171418503_f64);
     /// ```
-    fn gmean(self) -> Result<f64> {
+    fn gmean(self) -> Result<f64,RError> {
         let n = self.len();
-        ensure!(n > 0, "{} sample is empty!", here!());
+        if n == 0 { return Err(RError::NoDataError); }; 
         let mut sum = 0_f64;
         for &x in self {
             let fx = f64::from(x);
@@ -275,7 +274,7 @@ impl<T> Stats for &[T]
     /// assert_eq!(res.mean,6.045855171418503_f64);
     /// assert_eq!(res.std,2.1084348239406303_f64);
     /// ```
-    fn gmeanstd(self) -> Result<MStats> {
+    fn gmeanstd(self) -> Result<MStats,RError> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!", here!());
         let mut sum = 0_f64;
@@ -307,7 +306,7 @@ impl<T> Stats for &[T]
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// assert_eq!(v1.as_slice().gwmean().unwrap(),8.8185222496341_f64);
     /// ```
-    fn gwmean(self) -> Result<f64> {
+    fn gwmean(self) -> Result<f64,RError> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!", here!());
         let mut w = 0_f64; // ascending weights
@@ -331,7 +330,7 @@ impl<T> Stats for &[T]
     /// assert_eq!(res.mean,8.8185222496341_f64);
     /// assert_eq!(res.std,1.626825493266009_f64);
     /// ```
-    fn gwmeanstd(self) -> Result<MStats> {
+    fn gwmeanstd(self) -> Result<MStats,RError> {
         let n = self.len();
         ensure!(n > 0, "{} sample is empty!", here!()); 
         let mut w = 0_f64; // ascending weights
@@ -354,7 +353,7 @@ impl<T> Stats for &[T]
 
     /// Zero median data produced by subtracting the median.
     /// Analogous to zero mean data when subtracting the mean.
-    fn zeromedian(self) -> Result<Vec<f64>> {
+    fn zeromedian(self) -> Result<Vec<f64>,RError> {
         let median = self.median(); 
         Ok(self.iter().map(|&s| f64::from(s)-median).collect())
     }
