@@ -12,6 +12,7 @@ keywords = ["machine-learning","statistics","vector-algebra","geometric-median",
 categories = ["science","mathematics","algorithms","visualization","rust-patterns"]
 include = [
     "src/lib.rs",
+    "src/error.rs",
     "src/mutvec.rs",
     "src/statsg.rs", 
     "src/vecg.rs",
