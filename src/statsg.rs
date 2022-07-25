@@ -224,20 +224,19 @@ impl<T> Stats for &[T]
         if n == 0 { return Err(RError::NoDataError); };
         let nf = sumn(n);
         let mut sx2 = 0_f64;
+        let mut sx = 0_f64;
         let mut w = 0_f64;        
-        let sx = self
-            .iter()
-            .map(|&x| {
+        for &x in self {
                 w += 1_f64;
                 let fx = f64::from(x);
-                if !fx.is_normal() { panic!("{} does not accept zero valued data!",here!()) };     
-                let rx = w/fx;  // work with reciprocals
-                sx2 += w/(fx*fx); 
-                rx   
-            }).sum::<f64>()/nf;  
+                if !fx.is_normal() { return Err(RError::ArithError); };
+                sx += w/fx;  // work with reciprocals
+                sx2 += w/(fx*fx);
+            }; 
+        let recipmean = sx/nf; 
         Ok(MStats {
-            mean: 1.0/sx,
-             std: ((sx2/nf-sx.powi(2))/(nf.powi(-3)*sx.powi(4))).sqrt() 
+            mean: 1.0/recipmean,
+            std: ((sx2/nf-recipmean.powi(2))/(recipmean.powi(4))/nf).sqrt()
         })
     }
 

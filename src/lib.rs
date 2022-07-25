@@ -3,15 +3,15 @@
 //! Characterising Multidimensional Data, Machine Learning,
 //! Data Analysis
 
-/// Custom Error RError
+/// Custom error RError
 pub mod error;
 /// Basic statistics on a single generic vector
 pub mod statsg;
-/// Vector Algebra on two generic vectors
+/// Vector algebra on two generic vectors
 pub mod vecg;
-/// Stats and Vector Algebra on one or two u8 vectors 
+/// Stats and vector algebra on one or two u8 vectors 
 pub mod vecu8;
-/// Vector Algerba mutating an f64 vector
+/// Vector algebra mutating an f64 vector
 pub mod mutvec;
 /// Multidimensional operations on sets of vectors
 pub mod vecvec;
@@ -21,10 +21,7 @@ pub mod vecvecg;
 // reexporting useful related methods
 pub use indxvec::{MinMax,F64,Printing,here};
 pub use medians::{Med,Median};
-/// simple error handling
-// use anyhow::{Result,bail}; 
 use crate::error::RError;
-use core::iter::FromIterator;
 
 /// Mean and standard deviation (or std ratio for geometric mean)
 #[derive(Default)]
