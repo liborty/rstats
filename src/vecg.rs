@@ -78,9 +78,7 @@ impl<T> Vecg for &[T]
     }
 
     /// Weighted distance of self:&[T] to v:&[V], scaled by ws:&[U]
-    /// allows all three to be of different types
-    /// 
-    ///   
+    /// allows all three to be of different types 
     fn wvdist<U,V>(self,ws:&[U],v:&[V]) -> f64
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>, 
             V: Copy, f64:From<V> {

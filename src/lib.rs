@@ -1,7 +1,6 @@
 #![warn(missing_docs)]
-//! Statistics, Vector Algebra, 
-//! Characterising Multidimensional Data, Machine Learning,
-//! Data Analysis
+//! Statistics, Vector Algebra, Information Measures,
+//! Multidimensional Data Analysis, Machine Learning.
 
 /// Custom error RError
 pub mod error;
@@ -19,27 +18,31 @@ pub mod vecvec;
 pub mod vecvecg;
 
 // reexporting useful related methods
-pub use indxvec::{MinMax,F64,Printing,here};
+pub use indxvec::{MinMax,F64,Printing,printing::*,here};
 pub use medians::{Med,Median};
 use crate::error::RError;
 
-/// Mean and standard deviation (or std ratio for geometric mean)
+/// Holds measures of central tendency and spread.
+/// For example, geometric mean and standard deviation ratio.
+/// Usually some kind of mean and its associated standard deviation.
 #[derive(Default)]
 pub struct MStats {
-    /// the mean of some kind (geometric, arithmetic, harmonic...)
+    /// central tendency - a mean of some kind (geometric, arithmetic, harmonic...)
     pub mean: f64,
-    /// standard deviation (measure of data spread)
+    /// measure of data spread, typically standard deviation
     pub std: f64
 }
 impl std::fmt::Display for MStats {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "mean±std: {}±{}", self.mean.gr(), self.std.gr())
+        write!(f, "mean±std: {GR}{}±{}{UN}", self.mean, self.std)
     }
 }
 
-// Auxiliary Functions //
+// Auxiliary Functions
 
-/// Downcast of a whole i64 slice to f64  
+/// Data of end type `i64` has to be explicitly converted to `f64` (`as f64` does not work). 
+/// This is to raise awareness that in this conversion, some precision may be lost. 
+/// This function lossily clone-converts a slice `&[i64]` to `Vec<f64>`.  
 pub fn i64tof64(s: &[i64]) -> Vec<f64> {
     s.iter().map(| &x | x as f64).collect()
 }
@@ -58,9 +61,6 @@ pub fn sumn(n: usize) -> f64 {
 /// Statistical measures of a single variable (one generic vector of data) and 
 /// vector algebra applicable to a single (generic) vector. 
 /// Thus these methods take no arguments.
-/// There is just one limitation: data of end type `i64` has to be explicitly converted to `f64`.
-/// That is to raise awareness that, in this particular case, some precision may be lost. 
-/// Function `statsg::i64tof64(&s)` will convert the whole slice.
 pub trait Stats { 
 
     /// Vector magnitude
@@ -197,11 +197,10 @@ pub trait Vecg {
     fn contrib_oldpt(self,gm:&[f64],recips:f64) -> f64;  
 }
 
-/// Mutable vector operations that take one generic argument. 
+/// Mutable operations on one generic slice. 
 /// A few of the essential `Vecg` methods are reimplemented here 
-/// to mutate `self` in-place (only for f64). 
-/// This is for efficiency and convenience, for example, in
-/// vector iterative methods.
+/// to mutate `self`. This is for efficiency and convenience.
+/// For example, in vector iterative methods.
 pub trait MutVecg {
     /// mutable multiplication by a scalar
     fn mutsmult<U>(self, _s:U) where U: Copy+PartialOrd, f64: From<U>;  
@@ -220,7 +219,7 @@ pub trait MutVecg {
     fn mlintrans(self);
 }
 
-/// Methods specialised to, or more efficient for `&[u8]`
+/// Methods specialised to and more efficient, for `&[u8]`
 pub trait Vecu8 {    
     /// Probability density function of bytes data
     fn pdfu8(self) -> Vec<f64>;
@@ -238,10 +237,10 @@ pub trait Vecu8 {
     fn independenceu8(self, v:&[u8]) -> f64;
 }
 
-/// Methods applicable to a single argument: a vector of vectors of generic end type.
-/// Operations on a set of multidimensional vectors.
+/// Methods applicable to a slice of vectors of generic end type.
+/// Operations on a whole set of multidimensional vectors.
 pub trait VecVec<T> {
-    /// Transpose vec of vecs like a classical array
+    /// Transpose slice of vecs like a classical array
     fn transpose(self) -> Vec<Vec<T>>;
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Vec<f64>;
@@ -295,8 +294,8 @@ pub trait VecVec<T> {
     fn gmparts(self, eps: f64) -> (Vec<f64>,Vec<f64>,f64);
 }
 
-/// Methods applicable to vector of vectors of generic end type and one argument
-/// of a similar kind.
+/// Methods applicable to slice of vectors of generic end type, plus one other argument
+/// of a similar kind
 pub trait VecVecg<T,U> { 
 
     /// Weighted sum of nd points (or vectors)
