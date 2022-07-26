@@ -119,9 +119,9 @@ pub trait Stats {
     /// Information (entropy) in nats
     fn entropy(self) -> f64;
     /// (Auto)correlation coefficient of pairs of successive values of (time series) variable.
-    fn autocorr(self) -> f64; 
+    fn autocorr(self) -> Result<f64,RError>; 
     /// Linear transform to interval [0,1]
-    fn lintrans(self) -> Vec<f64>;
+    fn lintrans(self) -> Result<Vec<f64>,RError>;
     /// Reconstructs the full symmetric matrix from its lower diagonal compact form
     fn symmatrix(self) -> Vec<Vec<f64>>;
    }

@@ -55,7 +55,7 @@ fn u8() {
 }
 
 #[test]
-fn fstats() {
+fn fstats() -> Result<(),RError> {
     let v1 = vec![
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
     ];
@@ -63,14 +63,14 @@ fn fstats() {
     let v2 = v1.revs();
     println!("{}", (&v2).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
-    println!("Arithmetic mean:{}", v1.amean().unwrap().gr());
-    println!("Geometric mean:\t{}", v1.gmean().unwrap().gr());
-    println!("Harmonic mean:\t{}", v1.hmean().unwrap().gr());
+    println!("Arithmetic mean:{}", v1.amean()?.gr());
+    println!("Geometric mean:\t{}", v1.gmean()?.gr());
+    println!("Harmonic mean:\t{}", v1.hmean()?.gr());
     println!("Magnitude:\t{}", v1.vmag().gr());
-    println!("Arithmetic {}", v1.ameanstd().unwrap().gr());
-    println!("Geometric  {}", v1.gmeanstd().unwrap().gr());
-    println!("Harmonic   {}", v1.hmeanstd().unwrap().gr());
-    println!("Autocorrelation:{}", v1.autocorr().gr());
+    println!("Arithmetic {}", v1.ameanstd()?.gr());
+    println!("Geometric  {}", v1.gmeanstd()?.gr());
+    println!("Harmonic   {}", v1.hmeanstd()?.gr());
+    println!("Autocorrelation:{}", v1.autocorr()?.gr());
     let med =  v1.as_slice().median();
     println!("Median:\t\t{} +- {}",med.gr(),v1.mad(med).gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
@@ -101,6 +101,7 @@ fn fstats() {
         "Column Correlations:\n{}",
         trpt.crossfeatures(|v1, v2| v1.mediancorr(v2)).gr()
     );
+    Ok(())
 }
 
 #[test]
@@ -116,7 +117,7 @@ fn ustats() -> Result<(),RError> {
     println!("Arithmetic {}", v1.ameanstd()?.gr());
     println!("Geometric  {}", v1.gmeanstd()?.gr());
     println!("Harmonic   {}", v1.hmeanstd()?.gr());
-    println!("Autocorrelation:{}", v1.autocorr().gr());
+    println!("Autocorrelation:{}", v1.autocorr()?.gr());
     println!("{}\n", v1.as_slice().medinfo());
     Ok(())
 }
@@ -127,7 +128,7 @@ fn intstats() -> Result<(),RError> {
     let v = vec![1_i64, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     let v1 = i64tof64(&v); // downcast to f64 here
-    println!("Linear transform:\n{}",v1.lintrans().gr());
+    println!("Linear transform:\n{}",v1.lintrans()?.gr());
     println!("Arithmetic mean:{}", v1.amean()?.gr());
     println!("Geometric mean:\t{}", v1.gmean()?.gr());
     println!("Harmonic mean:\t{}", v1.hmean()?.gr());
@@ -135,7 +136,7 @@ fn intstats() -> Result<(),RError> {
     println!("Arithmetic {}", v1.ameanstd()?.gr());
     println!("Geometric  {}", v1.gmeanstd()?.gr());
     println!("Harmonic   {}", v1.hmeanstd()?.gr());
-    println!("Autocorrelation:{}", v1.autocorr().gr());
+    println!("Autocorrelation:{}", v1.autocorr()?.gr());
     println!("{}\n", v1.as_slice().medinfo());
     Ok(())
 }
@@ -151,7 +152,7 @@ fn genericstats() -> Result<(),RError> {
     println!("Weighted Arit.\t{}", v.awmeanstd()?.gr());
     println!("Weighted Geom.\t{}", v.gwmeanstd()?.gr());
     println!("Weighted Harm.\t{}", v.hwmeanstd()?.gr());
-    println!("Autocorrelation:{}", v.autocorr().gr());
+    println!("Autocorrelation:{}", v.autocorr()?.gr());
     println!("{}\n", &v.as_slice().medinfo());
     Ok(())
 }

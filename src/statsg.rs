@@ -1,7 +1,7 @@
 use crate::{ sumn, MStats, Stats, error::RError };
 // use anyhow::{ensure, Result};
 
-use indxvec::{here,Vecops};
+use indxvec::{Vecops};
 use medians::{Median};    
 
 impl<T> Stats for &[T] 
@@ -9,16 +9,25 @@ impl<T> Stats for &[T]
 
     /// Vector magnitude
     fn vmag(self) -> f64 {
-        self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>().sqrt()
+        match self.len() {
+            0 => 0_f64,
+            1 => f64::from(self[0]),
+            _ =>  self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>().sqrt()
+        }
     }
 
     /// Vector magnitude squared (sum of squares)
     fn vmagsq(self) -> f64 {
-        self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>()
+        match self.len() {
+            0 => 0_f64,
+            1 => f64::from(self[0]).powi(2),
+            _=> self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>()
+        }
     }
 
     /// Vector with reciprocal components
     fn vreciprocal(self) -> Result<Vec<f64>,RError> {
+        if self.is_empty() { return  Err(RError::NoDataError)  };
         for &component in self {
            let c = f64::from(component); 
            if !c.is_normal() { return Err(RError::ArithError); }; 
@@ -28,19 +37,22 @@ impl<T> Stats for &[T]
 
     /// Vector with inverse magnitude
     fn vinverse(self) -> Result<Vec<f64>,RError> {
+        if self.is_empty() { return  Err(RError::NoDataError)  };
         let mag = self.vmagsq();
-        if mag > 0.0 {     
+        if mag > 0.0 {  
             Ok( self.iter().map(|&x| f64::from(x)/mag).collect() ) }
         else { Err(RError::DataError) }    
     }
 
     // negated vector (all components swap sign)
     fn negv(self) -> Vec<f64> { 
+        if self.is_empty() { return Vec::new();  };
         self.iter().map(|&x| (-f64::from(x))).collect()
     }
 
     /// Unit vector
     fn vunit(self) -> Vec<f64> {
+        if self.is_empty() { return Vec::new();  };
         let m = 1.0 / self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>().sqrt();
         self.iter().map(|&x| m*(f64::from(x))).collect() 
     }
@@ -386,12 +398,12 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.autocorr(),0.9984603532054123_f64);
+    /// assert_eq!(v1.autocorr().unwrap(),0.9984603532054123_f64);
     /// ```
-    fn autocorr(self) -> f64 {
+    fn autocorr(self) -> Result<f64,RError> {
         let (mut sx, mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64, 0_f64);
         let n = self.len();
-        if n < 2 { panic!("{} vector is too short",here!()) }
+        if n < 2 { return Err(RError::NoDataError); }; 
         let mut x = f64::from(self[0]);    
         self.iter().skip(1).for_each(|&si| {
             let y = f64::from(si);
@@ -403,13 +415,15 @@ impl<T> Stats for &[T]
             x = y
         });        
         let nf = n as f64;
-        (sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt()
+        Ok((sxy - sx / nf * sy) / ((sx2 - sx / nf * sx) * (sy2 - sy / nf * sy)).sqrt())
     }
+
     /// Linear transform to interval [0,1]
-    fn lintrans(self) -> Vec<f64> {
+    fn lintrans(self) -> Result<Vec<f64>,RError> {
         let mm = self.minmax();
         let range = f64::from(mm.max)-f64::from(mm.min);
-        self.iter().map(|&x|(f64::from(x)-f64::from(mm.min))/range).collect()        
+        if range == 0_f64 { return  Err(RError::ArithError); };
+        Ok(self.iter().map(|&x|(f64::from(x)-f64::from(mm.min))/range).collect())        
     }
 
     /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
