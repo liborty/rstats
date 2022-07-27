@@ -18,16 +18,19 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         Ok(self.transpose().iter().map(|s| s.dotp(v)).collect())
     }
 
-    /*
-    /// Leftmultiply matrix m by matrix self
-    fn leftmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RError> {
+    /// Rectangular Matrices multiplication: self * m.
+    /// Returns DataError if lengths of rows of self: `self[0].len()` 
+    /// and columns of m: `m.len()` do not match.
+    /// Result dimensions are self.len() x m[0].len() 
+    fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RError> {
         if self[0].len() != m.len() { return Err(RError::DataError); };
-        self.iter().map(|s| s.dotp(
-            m.iter()v).collect()
-        Ok(self.iter().map(|s| s.dotp(v)).collect())
+        let mut res:Vec<Vec<f64>> = vec![Vec::new();self.len()];
+        let mtr  = m.transpose();
+        for (i,srow) in self.iter().enumerate() { 
+            mtr.iter().for_each(|mcolumn| { res[i].push(srow.dotp(mcolumn));}) };
+        Ok(res)
     }
-    */
-    
+
     /// Weighted sum of nd points (or vectors). 
     /// Weights are associated with points, not coordinates
     fn wsumv(self,ws: &[U]) -> Vec<f64> {

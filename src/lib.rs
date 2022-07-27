@@ -301,6 +301,8 @@ pub trait VecVecg<T,U> {
     fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RError>;
     /// Rightmultiply (row) vector v by matrix self
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RError>;
+    /// Matrix multiplication self * m
+    fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RError>;
     /// Weighted sum of nd points (or vectors)
     fn wsumv(self,ws: &[U]) -> Vec<f64>;
     /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points
