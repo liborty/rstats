@@ -297,6 +297,10 @@ pub trait VecVec<T> {
 /// of a similar kind
 pub trait VecVecg<T,U> { 
 
+    /// Leftmultiply (column) vector v by matrix self
+    fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RError>;
+    /// Rightmultiply (row) vector v by matrix self
+    fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RError>;
     /// Weighted sum of nd points (or vectors)
     fn wsumv(self,ws: &[U]) -> Vec<f64>;
     /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points

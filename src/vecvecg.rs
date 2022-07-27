@@ -1,4 +1,4 @@
-use crate::{Stats,Vecg,MutVecg,VecVecg,VecVec};
+use crate::{error::RError,Stats,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::{F64,Vecops,Indices};
 use medians::{Median};
 
@@ -6,6 +6,28 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     where T: Copy+PartialOrd+std::fmt::Display,f64:From<T>, 
     U: Copy+PartialOrd+std::fmt::Display,f64:From<U> {
 
+    /// Leftmultiply (column) vector v by matrix self
+    fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RError> {
+        if self[0].len() != v.len() { return Err(RError::DataError); };
+        Ok(self.iter().map(|s| s.dotp(v)).collect())
+    }
+
+    /// Rightmultiply (row) vector v by matrix self
+    fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RError> {
+        if v.len() != self.len() { return Err(RError::DataError); };
+        Ok(self.transpose().iter().map(|s| s.dotp(v)).collect())
+    }
+
+    /*
+    /// Leftmultiply matrix m by matrix self
+    fn leftmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RError> {
+        if self[0].len() != m.len() { return Err(RError::DataError); };
+        self.iter().map(|s| s.dotp(
+            m.iter()v).collect()
+        Ok(self.iter().map(|s| s.dotp(v)).collect())
+    }
+    */
+    
     /// Weighted sum of nd points (or vectors). 
     /// Weights are associated with points, not coordinates
     fn wsumv(self,ws: &[U]) -> Vec<f64> {
