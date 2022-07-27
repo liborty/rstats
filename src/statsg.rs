@@ -478,8 +478,8 @@ impl<T> Stats for &[T]
                 }
                 res[isub + j] = if i == j { 
                     let rt = (f64::from(self[isub + i]) - sum).sqrt();
-                    // nan here means the matrix was not
-                    // positive semi definite, so return ArithError
+                    // nan here means that the input matrix was not positive semi definite, 
+                    // or was badly ill-conditioned, so return ArithError
                     if rt.is_nan() { return Err(RError::ArithError); };
                     rt } 
                 else { 1.0 / res[jsub + j] * (f64::from(self[isub + j]) - sum) };

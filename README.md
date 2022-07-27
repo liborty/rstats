@@ -43,7 +43,7 @@ cargo test --release -- --test-threads=1 --nocapture --color always
 
 `Rstats` is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Big Data Analysis. It uses `non analytical statistics`, where the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the data, not from some assumed distributions.
 
-This crate begins with basic statistical measures and vector algebra, which provide self-contained tools for the multidimensional algorithms but can also be used in their own right.
+This crate begins with basic statistical measures and vector algebra, which provide self-contained tools for the machine learning (ML) multidimensional algorithms but can also be used in their own right.
 
 Our treatment of multidimensional sets of points (vectors) is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
 
