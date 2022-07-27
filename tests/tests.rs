@@ -241,8 +241,11 @@ fn vecvec() -> Result<(),RError> {
     let gcentroid = pts.gcentroid();
     let acentroid = pts.acentroid();
     let firstp = pts.firstpoint();
-    let median = pts.gmedian(EPS);  
+    let median = pts.gmedian(EPS);    
 
+    let cov = pts.covar(&acentroid);
+    println!("\nCholesky L matrix:\n{}",cov.cholesky()?.gr());
+    
     println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
     println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&outlier.tof64()).gr());    
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());

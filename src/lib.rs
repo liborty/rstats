@@ -1,6 +1,6 @@
 #![warn(missing_docs)]
 //! Statistics, Vector Algebra, Information Measures,
-//! Multidimensional Data Analysis, Machine Learning.
+//! Matrix Decomposition, Multidimensional Data Analysis, Machine Learning.
 
 /// Custom error RError
 pub mod error;
@@ -54,7 +54,6 @@ pub fn i64tof64(s: &[i64]) -> Vec<f64> {
 pub fn sumn(n: usize) -> f64 {
     (n * (n + 1)) as f64 / 2.
 }
-
 
 // Traits
 
@@ -124,7 +123,9 @@ pub trait Stats {
     fn lintrans(self) -> Result<Vec<f64>,RError>;
     /// Reconstructs the full symmetric matrix from its lower diagonal compact form
     fn symmatrix(self) -> Vec<Vec<f64>>;
-   }
+    /// Cholesky decomposition of a positive definite matrix into LLt
+    fn cholesky(self) -> Result<Vec<f64>,RError>;
+}
 
 /// Vector Algebra on two vectors (represented here as generic slices).
 /// Also included are scalar operations on the `self` vector.
@@ -177,8 +178,6 @@ pub trait Vecg {
     fn dependence<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;   
     /// Statistical pairwise independence in the range [0,1] based on joint entropy
     fn independence<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
-    /// Cholesky decomposition of positive definite matrix into LLt
-    // fn cholesky(self) -> Vec<f64>;
     /// Pearson's correlation.  
     fn correlation<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Median based correlation

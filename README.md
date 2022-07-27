@@ -5,6 +5,9 @@
 [<img alt="crates.io" src="https://img.shields.io/crates/d/rstats?logo=rust">](https://crates.io/crates/rstats)
 [<img alt="docs.rs" src="https://img.shields.io/docsrs/rstats?logo=rust">](https://docs.rs/rstats)
 
+Statistics, Vector Algebra, Information Measures,
+Matrix Decomposition, Multidimensional Data Analysis, Machine Learning and more ...
+
 ## Usage
 
 Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
@@ -180,6 +183,8 @@ Warning: trait VecVec is entirely unchecked, so check your data upfront.
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight).
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.4** - Added Cholesky–Banachiewicz algorithm `cholesky` to trait `Statsg` for efficient matrix decomposition.
 
 * **Version 1.2.3** - Fixed `hwmeanstd`. Some more tidying up using RError. `Autocorr` and `lintrans` now also check their data and return `Result`. 
 

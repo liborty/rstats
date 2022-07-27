@@ -2,7 +2,16 @@ use crate::{ sumn, MStats, Stats, error::RError };
 // use anyhow::{ensure, Result};
 
 use indxvec::{Vecops};
-use medians::{Median};    
+use medians::{Median}; 
+
+/// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
+/// coordinates within a square lower triangular matrix.
+/// Enables memory efficient representation of such matrices as a flat vector.
+fn seqtosubs(s:usize) -> (usize,usize) {
+    let row = ((((8*s+1) as f64).sqrt() - 1.)/2.) as usize; // cast truncates, like .floor()
+    let column = s - row*(row+1)/2; // subtracting previous triangular number
+    (row,column)
+}
 
 impl<T> Stats for &[T] 
     where T: Copy+PartialOrd+std::fmt::Display,f64:From<T> {  
@@ -428,23 +437,55 @@ impl<T> Stats for &[T]
 
     /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
     /// as produced by covar, covone, wcovar
-    fn symmatrix(self) -> Vec<Vec<f64>> {
-
-         fn trseqtosubs(s:usize) -> (usize,usize) { 
-            // solution of quadratic equation to find the dimension of the full square matrix
-            let row = ((((8*s+1) as f64).sqrt() - 1.)/2.) as usize; // cast truncates, like .floor()
-            let column = s - row*(row+1)/2; // subtracting previous triangular number
-            (row,column)
-        }
-
-        let (n,_) = trseqtosubs(self.len());
+    fn symmatrix(self) -> Vec<Vec<f64>> {        
+        let (n,_) = seqtosubs(self.len());
         let mut mat = vec![vec![0_f64;n];n]; // create the square matrix 
         self.iter().enumerate().for_each(|(i,&s)| {
-            let (row,column) = trseqtosubs(i);
+            let (row,column) = seqtosubs(i);
             if row < column { mat[column][row] = f64::from(s) as f64; }; // symmetrical reflection
             // also set values in lower triangular region, including the diagonal
             mat[row][column] = f64::from(s); } ); 
         mat
     }    
- 
+    
+    /// Efficient Cholesky-Banachiewicz matrix decomposition into `LL^T`,
+    /// where L is the returned lower triangular matrix. 
+    /// (The upper part, `L^T` can be trivially reconstructed by transposing L).
+    /// Expects as input a symmetric, square, positive (semi) definite matrix
+    /// in compact lower triangular 1d vector form, 
+    /// such as a covariance matrix produced here by `covar`.
+    /// The computations are all done on the compact form, 
+    /// making this implementation memory efficient for large (symmetric) matrices.
+    /// Reports errors if the above conditions are not satisfied.
+    fn cholesky(self) -> Result<Vec<f64>,RError> {
+        let sl = self.len();
+        // input not long enough to compute anything
+        if sl < 3 { return Err(RError::NoDataError); };
+        // n is the dimension of the implied square matrix.
+        // Not needed as an extra argument. We compute it 
+        // by solving a quadratic equation in seqtosubs()
+        let (n,c) = seqtosubs(sl);
+        // input is not a triangular number, is of wrong size
+        if c != 0 { return Err(RError::DataError); }; 
+        let mut res = vec![0.0; sl]; // result L is of the same size as the input
+        for i in 0..n {
+            let isub = i*(i+1)/2; // matrix row index to the compact vector index
+            for j in 0..(i+1){ // i+1 to include the diagonal
+                let jsub = j*(j+1)/2; // matrix column index to the compact vector index
+                let mut sum = 0.0;
+                for k in 0..j {
+                    sum += res[isub + k] * res[jsub + k];
+                }
+                res[isub + j] = if i == j { 
+                    let rt = (f64::from(self[isub + i]) - sum).sqrt();
+                    // nan here means the matrix was not
+                    // positive semi definite, so return ArithError
+                    if rt.is_nan() { return Err(RError::ArithError); };
+                    rt } 
+                else { 1.0 / res[jsub + j] * (f64::from(self[isub + j]) - sum) };
+            }
+        }
+        Ok(res)
+    }
+
 }
