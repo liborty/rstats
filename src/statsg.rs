@@ -451,7 +451,7 @@ impl<T> Stats for &[T]
     /// Efficient Cholesky-Banachiewicz matrix decomposition into `LL^T`,
     /// where L is the returned lower triangular matrix. 
     /// (The upper part, `L^T` can be trivially reconstructed by transposing L).
-    /// Expects as input a symmetric, square, positive (semi) definite matrix
+    /// Expects as input a symmetric, square, positive definite matrix
     /// in compact lower triangular 1d vector form, 
     /// such as a covariance matrix produced here by `covar`.
     /// The computations are all done on the compact form, 
@@ -476,13 +476,13 @@ impl<T> Stats for &[T]
                 for k in 0..j {
                     sum += res[isub + k] * res[jsub + k];
                 }
-                res[isub + j] = if i == j { 
-                    let rt = (f64::from(self[isub + i]) - sum).sqrt();
-                    // nan here means that the input matrix was not positive semi definite, 
-                    // or was badly ill-conditioned, so return ArithError
-                    if rt.is_nan() { return Err(RError::ArithError); };
-                    rt } 
-                else { 1.0 / res[jsub + j] * (f64::from(self[isub + j]) - sum) };
+                let dif = f64::from(self[isub + j]) - sum;
+                res[isub + j] = if i == j { // diagonal elements
+                    // dif <= 0 means that the input matrix is not positive semi definite, 
+                    // or is ill-conditioned, so we return ArithError
+                    if dif <= 0_f64 { return Err(RError::ArithError); }; 
+                    dif.sqrt() } // passed, so enter real non-zero square root
+                else { dif / res[jsub + j] };
             }
         }
         Ok(res)
