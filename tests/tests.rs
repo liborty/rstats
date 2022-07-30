@@ -1,5 +1,5 @@
 use indxvec::{printing::*, Indices, Vecops,Printing};
-use rstats::{error::RError,i64tof64, Stats, VecVec, VecVecg, Vecg, Vecu8};
+use rstats::{error::RError,i64tof64, identity_lmatrix, Stats, VecVec, VecVecg, Vecg, Vecu8};
 use ran::{*,set_seeds};
 use medians::{Median};
 use times::{benchvvf64};
@@ -55,7 +55,7 @@ fn u8() {
 }
 
 #[test]
-fn fstats() -> Result<(),RError> {
+fn fstats() -> Result<(),RError<& 'static str>> {
     let v1 = vec![
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
     ];
@@ -105,7 +105,7 @@ fn fstats() -> Result<(),RError> {
 }
 
 #[test]
-fn ustats() -> Result<(),RError> { 
+fn ustats() -> Result<(),RError<& 'static str>> { 
     set_seeds(1234567);
     let v1 = Rnum::newu8().ranv(20).getvu8(); 
     println!("\n{}", (&v1).gr());
@@ -124,7 +124,7 @@ fn ustats() -> Result<(),RError> {
 
 #[test]
 /// &[i64] requires explicit recast
-fn intstats() -> Result<(),RError> {
+fn intstats() -> Result<(),RError<& 'static str>> {
     let v = vec![1_i64, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     let v1 = i64tof64(&v); // downcast to f64 here
@@ -143,7 +143,7 @@ fn intstats() -> Result<(),RError> {
 
 #[test]
 /// Generic implementation
-fn genericstats() -> Result<(),RError> {
+fn genericstats() -> Result<(),RError<& 'static str>> {
     let v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?.gr());
@@ -211,7 +211,8 @@ fn trend() {
 }
 
 #[test]
-fn vecvec() -> Result<(),RError> {
+fn vecvec() -> Result<(),RError<& 'static str>> {
+    println!("5x5 identity lower triangular matrix:\n{}",identity_lmatrix(5).gr());
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {} points in {} dimensional space",n,d);
@@ -244,7 +245,11 @@ fn vecvec() -> Result<(),RError> {
     let median = pts.gmedian(EPS);    
 
     let cov = pts.covar(&acentroid);
-    println!("\nCholesky L matrix:\n{}",cov.cholesky()?.gr());
+    let cholmat = cov.cholesky()?;
+    println!("\nCholesky L matrix size {}\n{}",cholmat.len(),cholmat.gr());
+    println!("\nCholesky L matrix solved:\n{}",
+        cholmat
+        .forward_substitute(&[1.,0.,0.,0.,0.,0.,0.,0.,0.,0.])?.gr());  
     
     println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
     println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&outlier.tof64()).gr());    

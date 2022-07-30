@@ -51,8 +51,25 @@ pub fn i64tof64(s: &[i64]) -> Vec<f64> {
 /// Also the size of an upper or lower triangle 
 /// of a square array (including the diagonal)
 /// to exclude the diagonal, use `sumn(n-1)`
-pub fn sumn(n: usize) -> f64 {
-    (n * (n + 1)) as f64 / 2.
+pub fn sumn(n: usize) -> usize { n * (n + 1) / 2 }
+
+/// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
+/// coordinates within a square lower triangular matrix.
+/// Enables memory efficient representation of such matrices as a flat vector.
+pub fn seqtosubs(s:usize) -> (usize,usize) {
+    let row = ((((8*s+1) as f64).sqrt() - 1.)/2.) as usize; // cast truncates, like .floor()
+    let column = s - row*(row+1)/2; // subtracting the previous triangular number
+    (row,column)
+}
+
+/// Generates an nxn identity matrix in lower triangular 1d scan form
+pub fn identity_lmatrix(n:usize) -> Vec<f64> {
+    let mut res = Vec::new();
+    for i in 0..n { 
+        for _ in 0..i { res.push(0_f64) };
+        res.push(1_f64);
+    }
+    res 
 }
 
 // Traits
@@ -67,64 +84,66 @@ pub trait Stats {
     /// Vector magnitude squared (sum of squares)
     fn vmagsq(self) -> f64;
     /// vector with reciprocal components
-    fn vreciprocal(self) -> Result<Vec<f64>,RError>;
+    fn vreciprocal(self) -> Result<Vec<f64>,RError<&'static str>>;
     /// vector with inverse magnitude 
-    fn vinverse(self) -> Result<Vec<f64>,RError>;
+    fn vinverse(self) -> Result<Vec<f64>,RError<&'static str>>;
     /// negated vector (all components swap sign)
     fn negv(self) -> Vec<f64>;
     /// Unit vector
     fn vunit(self) -> Vec<f64>;    
     /// Arithmetic mean
-    fn amean(self) -> Result<f64,RError>; 
+    fn amean(self) -> Result<f64,RError<&'static str>>; 
        // where Self: std::marker::Sized { bail!("amean not implemented for this type")}
     /// Arithmetic mean and standard deviation
-    fn ameanstd(self) -> Result<MStats,RError>; 
+    fn ameanstd(self) -> Result<MStats,RError<&'static str>>; 
        // where Self: std::marker::Sized { bail!("ameanstd not implemented for this type")}
     /// Weighted arithmetic mean
-    fn awmean(self) -> Result<f64,RError>;  
+    fn awmean(self) -> Result<f64,RError<&'static str>>;  
        // where Self: std::marker::Sized { bail!("awmean not implemented for this type")}
     /// Weighted arithmetic men and standard deviation
-    fn awmeanstd(self) -> Result<MStats,RError>;
+    fn awmeanstd(self) -> Result<MStats,RError<&'static str>>;
         // where Self: std::marker::Sized { bail!("awmeanstd not implemented for this type")}
     /// Harmonic mean
-    fn hmean(self) -> Result<f64,RError>;
+    fn hmean(self) -> Result<f64,RError<&'static str>>;
         // where Self: std::marker::Sized { bail!("hmean not implemented for this type")}
     /// Harmonic mean and experimental standard deviation 
-    fn hmeanstd(self) -> Result<MStats,RError>;
+    fn hmeanstd(self) -> Result<MStats,RError<&'static str>>;
         // where Self: std::marker::Sized { bail!("hmeanstd not implemented for this type")}
     /// Weighted harmonic mean
-    fn hwmean(self) -> Result<f64,RError>; 
+    fn hwmean(self) -> Result<f64,RError<&'static str>>; 
         // where Self: std::marker::Sized { bail!("hwmean not implemented for this type")}
     /// Weighted harmonic mean and standard deviation 
-    fn hwmeanstd(self) -> Result<MStats,RError>;
+    fn hwmeanstd(self) -> Result<MStats,RError<&'static str>>;
        // where Self: std::marker::Sized { bail!("hwgmeanstd not implemented for this type")}
     /// Geometric mean
-    fn gmean(self) -> Result<f64,RError>;
+    fn gmean(self) -> Result<f64,RError<&'static str>>;
         // where Self: std::marker::Sized { bail!("gmean not implemented for this type")}
     /// Geometric mean and standard deviation ratio
-    fn gmeanstd(self) -> Result<MStats,RError>;
+    fn gmeanstd(self) -> Result<MStats,RError<&'static str>>;
         // where Self: std::marker::Sized { bail!("gmeanstd not implemented for this type")}
     /// Weighed geometric mean
-    fn gwmean(self) -> Result<f64,RError>; 
+    fn gwmean(self) -> Result<f64,RError<&'static str>>; 
         // where Self: std::marker::Sized { bail!("gwmean not implemented for this type")}
     /// Weighted geometric mean and standard deviation ratio
-    fn gwmeanstd(self) -> Result<MStats,RError>;
+    fn gwmeanstd(self) -> Result<MStats,RError<&'static str>>;
         // where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
     /// Zero median data, obtained by subtracting the median
-    fn zeromedian(self) -> Result<Vec<f64>,RError>;
+    fn zeromedian(self) -> Vec<f64>;
        // where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
     /// Probability density function of a sorted slice
     fn pdf(self) -> Vec<f64>;
     /// Information (entropy) in nats
     fn entropy(self) -> f64;
     /// (Auto)correlation coefficient of pairs of successive values of (time series) variable.
-    fn autocorr(self) -> Result<f64,RError>; 
+    fn autocorr(self) -> Result<f64,RError<&'static str>>; 
     /// Linear transform to interval [0,1]
-    fn lintrans(self) -> Result<Vec<f64>,RError>;
+    fn lintrans(self) -> Result<Vec<f64>,RError<&'static str>>;
     /// Reconstructs the full symmetric matrix from its lower diagonal compact form
     fn symmatrix(self) -> Vec<Vec<f64>>;
     /// Cholesky decomposition of a positive definite matrix into LLt
-    fn cholesky(self) -> Result<Vec<f64>,RError>;
+    fn cholesky(self) -> Result<Vec<f64>,RError<&'static str>>;
+    // Inverts lower triangular matrix (self) by repeated forward substitutions
+    // fn invertl(self) -> Result<Vec<f64>,RError<& 'static str>>;
 }
 
 /// Vector Algebra on two vectors (represented here as generic slices).
@@ -194,6 +213,12 @@ pub trait Vecg {
     fn contribvec_oldpt(self,gm:&[f64],recips:f64) -> Vec<f64>;
     /// Contribution removing an existing p will make (as a negative number)
     fn contrib_oldpt(self,gm:&[f64],recips:f64) -> f64;  
+    /// Solves the system of linear equations Lx = b. L (self) is a lower triangular array   
+    fn forward_substitute<U>(self,b:&[U]) -> Result<Vec<f64>,RError<& 'static str>> 
+        where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
+    /// Leftmultiply (column) vector v by upper triangular matrix self
+    fn utriangmultv<U>(self,v:&[U]) -> Result<Vec<f64>,RError<&'static str>>
+        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U>;
 }
 
 /// Mutable operations on one generic slice. 
@@ -296,13 +321,12 @@ pub trait VecVec<T> {
 /// Methods applicable to slice of vectors of generic end type, plus one other argument
 /// of a similar kind
 pub trait VecVecg<T,U> { 
-
     /// Leftmultiply (column) vector v by matrix self
-    fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RError>;
+    fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RError<&'static str>>;
     /// Rightmultiply (row) vector v by matrix self
-    fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RError>;
+    fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RError<&'static str>>;
     /// Matrix multiplication self * m
-    fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RError>;
+    fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RError<&'static str>>;
     /// Weighted sum of nd points (or vectors)
     fn wsumv(self,ws: &[U]) -> Vec<f64>;
     /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points

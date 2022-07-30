@@ -184,6 +184,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.5** - Added some more matrix algebra. Added more informative `&'static str` payload error message to RError.
+
 * **Version 1.2.4** - Added Cholesky–Banachiewicz algorithm `cholesky` to trait `Statsg` for efficient matrix decomposition.
 
 * **Version 1.2.3** - Fixed `hwmeanstd`. Some more tidying up using RError. `Autocorr` and `lintrans` now also check their data and return `Result`. 
@@ -191,23 +193,3 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 1.2.2** - Introduced custom error RError, potentially returned by some methods of trait `Statsg`. Removed the dependency on crate `anyhow`.
 
 * **Version 1.2.1** - Code pruning - removed `wsortedcos` of questionable utility from trait `VecVecg`.
-
-* **Version 1.2.0** - Removed mistakenly included large file bloating the crate size.
-
-* **Version 1.1.9** - Added `pmedian` to `VecVec` trait. Similar to `gmedian` but iterates point-by-point. Is more accurate but slightly slower. Added dev-dependency `times` and used it in `timing_gm()` test in `tests/tests.rs` to compare execution times of some nd algorithms.
-
-* **Version 1.1.7** - Updated to the latest version of `indexvec v1.2.8`. Employed its fast `hashsort`. Readme rearrangement. Moved `msortf` to `indxvec::Mutops` trait as `mutsort()`. It now works on generic T end_types.
-
-* **Version 1.1.6** - Moved `contrib_vec_newp`, `contrib_newpt`, `contribvec.oldpt`, `contrib.oldpt` to more appropriate trait Vecg.
-
-* **Version 1.1.5** - Added `contribution` methods to `VecVec`: `contribvec_newp`, `contrib_newpt`, `contribvec.oldpt`, `contrib.oldpt`. Named according to whether they return a vector change to gm, or just a magnitude of change measure and whether it is a new point, or an existing point.
-
-* **Version 1.1.4** - Speedup: invented faster termination condition for gm algorithm! Generality: invented `contribution` measure for nd set points. Tidied up functions associated with gm. Deleted and added some.
-
-* **Version 1.1.3** - Added `quasimedian`, `gmerror`. Some more tidying up.
-
-* **Version 1.1.2** - Tidying up of methods in trait VecVec. Removed some, added some. Some preparations for parallelism.
-
-* **Version 1.1.1** - Crate size reduction. Some more code pruning, this time of methods in trait `Vecu8`, which are performed perfectly adequately by their generic counterparts in `Vecg`. Leaving only those with different u8 specific algorithms. 
-
-* **Version 1.1.0** - Big release. Added dependency on crate `medians` for fast 1D medians. Simplifications: subsumed module `mutstats.rs` into `mutvec.rs`. Removed traits `Mutstats` and `MutVecf64` and added their few methods to trait `MutVecg`. Added some more doc comments here. Generalisations: methods in `Vecg` and `MutVecg` now work on any type T of self and a potentially different type U for their argument. They should be called with the 'turbofish' syntax.

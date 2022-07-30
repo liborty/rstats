@@ -1,4 +1,6 @@
-use crate::{here,Stats,Vecg};
+// use core::slice::SlicePattern;
+
+use crate::{here,sumn,seqtosubs,error::RError,Stats,Vecg};
 use indxvec::{Indices,Vecops};
 
 impl<T> Vecg for &[T] 
@@ -234,10 +236,8 @@ impl<T> Vecg for &[T]
     fn mediancorr<U>(self, v: &[U]) -> f64
     where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {
         // let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
-        let zeroself = self.zeromedian()
-            .unwrap_or_else(|_| panic!("{} failed to find the median",here!()));
-        let zerov = v.zeromedian()
-            .unwrap_or_else(|_| panic!("{} failed to find the median",here!()));
+        let zeroself = self.zeromedian();
+        let zerov = v.zeromedian();
         zeroself.cosine(&zerov)
     }        
 
@@ -361,5 +361,49 @@ impl<T> Vecg for &[T]
         let recip = 1f64/mag; // first had to test for division by zero
         1_f64 / (recip - recips) 
         // self.contribvec_oldpt(gm,recips,p).vmag()
-    }   
+    } 
+
+    /// Solves the system of linear equations Lx = b, 
+    /// where L (self) is a lower triangular matrix in left to right 1d scan form   
+    fn forward_substitute<U>(self,b:&[U]) -> Result<Vec<f64>,RError<& 'static str>> 
+        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
+        let sl = self.len();
+        if sl < 3 { return Err(RError::NoDataError(&"forward-substitute needs at least three items"));};
+        // 2d matrix dimensions
+        let (n,c) = seqtosubs(sl);
+        if c != 0 { return Err(RError::DataError(&"forward_substitute needs a triangular matrix"));};
+        // dimensions/lengths mismatch
+        if n != b.len() { return Err(RError::DataError(&"forward_substitute mismatch of self and b dimension"));};
+        let mut res:Vec<f64> = Vec::with_capacity(n); // result of the same size and shape as b
+        res.push(f64::from(b[0])/f64::from(self[0])); 
+        for row in 1..n {
+            let mut sumtodiag = 0_f64;
+            let rowoffset = sumn(row);
+            for j in 0..row {  
+                sumtodiag += f64::from(self[rowoffset+j])*res[j];
+            };
+            res.push( ( f64::from(b[row]) - sumtodiag ) 
+            / f64::from(self[rowoffset+row]));  
+        };
+        Ok(res)   
+    }
+
+    /// Leftmultiply (column) vector v by upper triangular matrix self
+    fn utriangmultv<U>(self,v: &[U]) -> Result<Vec<f64>,RError<&'static str>>
+        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
+        let sl = self.len();
+        if sl < 1 { return Err(RError::NoDataError(&"utriangmultv needs at least one item"));};
+        // 2d matrix dimensions
+        let (n,c) = seqtosubs(sl);
+        if c != sl { return Err(RError::DataError(&"utriangmultv expects a triangular matrix"));};
+        if n != v.len() { return Err(RError::DataError(&"utriangmultv dimensions mismatch")); };
+        let mut res:Vec<f64> = vec![0_f64;n]; 
+        for row in 0..n {
+            for j in row..n {
+                res[row] += f64::from(self[sumn(row)+j])*f64::from(v[j])
+            };
+        };
+        Ok(res)
+    }
+
 }
