@@ -116,7 +116,10 @@ For more detailed comments, plus some examples, see the source. You may have to 
 ##  Auxiliary Functions
 
 * `i64tof64`: converts an i64 vector to f64, 
-* `sumn`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.).
+* `sumn`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.),
+* `seqtosubs(s:usize)` returns row,column subsripts to 2d matrix from 1d index into triangular matrix in scanning order,
+* `identity_lmatrix` generates identity lower triangular  matrix in scanning order.
+
 
 ## Trait Stats
 
