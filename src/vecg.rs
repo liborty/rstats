@@ -1,6 +1,6 @@
 // use core::slice::SlicePattern;
 
-use crate::{here,sumn,seqtosubs,error::RError,Stats,Vecg};
+use crate::{here,sumn,seqtosubs,error::RError,RE,Stats,Vecg};
 use indxvec::{Indices,Vecops};
 
 impl<T> Vecg for &[T] 
@@ -368,12 +368,12 @@ impl<T> Vecg for &[T]
     fn forward_substitute<U>(self,b:&[U]) -> Result<Vec<f64>,RError<& 'static str>> 
         where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
         let sl = self.len();
-        if sl < 3 { return Err(RError::NoDataError(&"forward-substitute needs at least three items"));};
+        if sl < 3 { return Err(RError::NoDataError("forward-substitute needs at least three items"));};
         // 2d matrix dimensions
         let (n,c) = seqtosubs(sl);
-        if c != 0 { return Err(RError::DataError(&"forward_substitute needs a triangular matrix"));};
+        if c != 0 { return Err(RError::DataError("forward_substitute needs a triangular matrix"));};
         // dimensions/lengths mismatch
-        if n != b.len() { return Err(RError::DataError(&"forward_substitute mismatch of self and b dimension"));};
+        if n != b.len() { return Err(RError::DataError("forward_substitute mismatch of self and b dimension"));};
         let mut res:Vec<f64> = Vec::with_capacity(n); // result of the same size and shape as b
         res.push(f64::from(b[0])/f64::from(self[0])); 
         for row in 1..n {
@@ -389,14 +389,14 @@ impl<T> Vecg for &[T]
     }
 
     /// Leftmultiply (column) vector v by upper triangular matrix self
-    fn utriangmultv<U>(self,v: &[U]) -> Result<Vec<f64>,RError<&'static str>>
+    fn utriangmultv<U>(self,v: &[U]) -> Result<Vec<f64>,RE>
         where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
         let sl = self.len();
-        if sl < 1 { return Err(RError::NoDataError(&"utriangmultv needs at least one item"));};
+        if sl < 1 { return Err(RError::NoDataError("utriangmultv needs at least one item"));};
         // 2d matrix dimensions
         let (n,c) = seqtosubs(sl);
-        if c != sl { return Err(RError::DataError(&"utriangmultv expects a triangular matrix"));};
-        if n != v.len() { return Err(RError::DataError(&"utriangmultv dimensions mismatch")); };
+        if c != sl { return Err(RError::DataError("utriangmultv expects a triangular matrix"));};
+        if n != v.len() { return Err(RError::DataError("utriangmultv dimensions mismatch")); };
         let mut res:Vec<f64> = vec![0_f64;n]; 
         for row in 0..n {
             for j in row..n {

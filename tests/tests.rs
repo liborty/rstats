@@ -1,5 +1,5 @@
 use indxvec::{printing::*, Indices, Vecops,Printing};
-use rstats::{error::RError,i64tof64, identity_lmatrix, Stats, VecVec, VecVecg, Vecg, Vecu8};
+use rstats::{RE, i64tof64, identity_lmatrix, Stats, VecVec, VecVecg, Vecg, Vecu8};
 use ran::{*,set_seeds};
 use medians::{Median};
 use times::{benchvvf64};
@@ -55,7 +55,7 @@ fn u8() {
 }
 
 #[test]
-fn fstats() -> Result<(),RError<& 'static str>> {
+fn fstats() -> Result<(),RE> {
     let v1 = vec![
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
     ];
@@ -105,7 +105,7 @@ fn fstats() -> Result<(),RError<& 'static str>> {
 }
 
 #[test]
-fn ustats() -> Result<(),RError<& 'static str>> { 
+fn ustats() -> Result<(),RE> { 
     set_seeds(1234567);
     let v1 = Rnum::newu8().ranv(20).getvu8(); 
     println!("\n{}", (&v1).gr());
@@ -124,7 +124,7 @@ fn ustats() -> Result<(),RError<& 'static str>> {
 
 #[test]
 /// &[i64] requires explicit recast
-fn intstats() -> Result<(),RError<& 'static str>> {
+fn intstats() -> Result<(),RE> {
     let v = vec![1_i64, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     let v1 = i64tof64(&v); // downcast to f64 here
@@ -143,7 +143,7 @@ fn intstats() -> Result<(),RError<& 'static str>> {
 
 #[test]
 /// Generic implementation
-fn genericstats() -> Result<(),RError<& 'static str>> {
+fn genericstats() -> Result<(),RE> {
     let v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?.gr());
@@ -211,8 +211,32 @@ fn trend() {
 }
 
 #[test]
-fn vecvec() -> Result<(),RError<& 'static str>> {
+fn matrices() -> Result<(),RE> {
     println!("5x5 identity lower triangular matrix:\n{}",identity_lmatrix(5).gr());
+    let d = 10_usize;
+    let n = 90_usize;
+    println!("Testing on a random set of {} points in {} dimensional space",n,d);
+    set_seeds(113);
+    let ru = Rnum::newu8();
+    let pts = ru.ranvv(d,n).getvvu8(); 
+    // println!("\nTest data:\n{}",pts.gr());
+    // let transppt = pts.transpose();
+    let median = pts.pmedian(EPS);    
+    let cov = pts.covar(&median);
+    let cholmat = cov.cholesky()?;
+    println!("\nCholesky L matrix size {}\n{}",cholmat.len(),cholmat.gr());
+    println!("\nCholesky L matrix solved:\n{}", cholmat
+        .forward_substitute(&[1.,0.,0.,0.,0.,0.,0.,0.,0.,0.])?.gr());
+    println!("\nCholesky L matrix solved:\n{}", cholmat
+        .forward_substitute(&[0.,1.,0.,0.,0.,0.,0.,0.,0.,0.])?.gr());
+    println!("\nCholesky L matrix solved:\n{}", cholmat
+        .forward_substitute(&[0.,0.,1.,0.,0.,0.,0.,0.,0.,0.])?.gr());
+    Ok(())
+}
+
+
+#[test]
+fn vecvec() -> Result<(),RE> {
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {} points in {} dimensional space",n,d);
@@ -232,8 +256,7 @@ fn vecvec() -> Result<(),RError<& 'static str>> {
     println!(
         "Correlations with outcomes:\n{}",
         transppt.correlations(&outcomes).gr()
-    );
-    
+    );    
     let (gm,_vsum,recips) = pts.gmparts(EPS);
     let (eccstd, eccmed, eccecc) = pts.eccinfo(&gm); 
     let medoid = &pts[eccecc.minindex];
@@ -242,15 +265,8 @@ fn vecvec() -> Result<(),RError<& 'static str>> {
     let gcentroid = pts.gcentroid();
     let acentroid = pts.acentroid();
     let firstp = pts.firstpoint();
-    let median = pts.gmedian(EPS);    
-
-    let cov = pts.covar(&acentroid);
-    let cholmat = cov.cholesky()?;
-    println!("\nCholesky L matrix size {}\n{}",cholmat.len(),cholmat.gr());
-    println!("\nCholesky L matrix solved:\n{}",
-        cholmat
-        .forward_substitute(&[1.,0.,0.,0.,0.,0.,0.,0.,0.,0.])?.gr());  
-    
+    let median = pts.gmedian(EPS);  
+  
     println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
     println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&outlier.tof64()).gr());    
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());

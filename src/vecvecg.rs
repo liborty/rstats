@@ -8,13 +8,13 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// Leftmultiply (column) vector v by matrix self
     fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RError<&'static str>> {
-        if self[0].len() != v.len() { return Err(RError::DataError(&"leftmultv dimensions mismatch")); };
+        if self[0].len() != v.len() { return Err(RError::DataError("leftmultv dimensions mismatch")); };
         Ok(self.iter().map(|s| s.dotp(v)).collect())
     }
 
     /// Rightmultiply (row) vector v by matrix self
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RError<&'static str>> {
-        if v.len() != self.len() { return Err(RError::DataError(&"rightmultv dimensions mismatch")); };
+        if v.len() != self.len() { return Err(RError::DataError("rightmultv dimensions mismatch")); };
         Ok(self.transpose().iter().map(|s| s.dotp(v)).collect())
     }
 
@@ -23,7 +23,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// and columns of m: `m.len()` do not match.
     /// Result dimensions are self.len() x m[0].len() 
     fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RError<&'static str>> {
-        if self[0].len() != m.len() { return Err(RError::DataError(&"matmult dimensions mismatch")); };
+        if self[0].len() != m.len() { return Err(RError::DataError("matmult dimensions mismatch")); };
         let mut res:Vec<Vec<f64>> = vec![Vec::new();self.len()];
         let mtr  = m.transpose();
         for (i,srow) in self.iter().enumerate() { 

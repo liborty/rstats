@@ -15,7 +15,7 @@ Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 Use in your source files any of the following structs, when needed:
 
 ```rust  
-use rstats::{error::RError, Mstats, MinMax, F64, Med};
+use rstats::{error::RError, RE, Mstats, MinMax, F64, Med};
 ```
 
 and any of the following rstats defined traits:
@@ -187,7 +187,17 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.5** - Added some more matrix algebra. Added more informative `&'static str` payload error message to RError.
+* **Version 1.2.6** - Added to crate type alias RE to shorten method headings returning RErrors carrying `&str` payloads. 
+
+```rust
+pub type RE = RError<&'static str>;
+``` 
+
+* **Version 1.2.5** - Added some more matrix algebra. Added generic payload `T` to RError: `RError<T>` to allow it to carry more information, eg.: 
+
+```rust 
+return Err(RError::ArithError("cholesky needs a positive definite matrix"));
+```
 
 * **Version 1.2.4** - Added Cholesky–Banachiewicz algorithm `cholesky` to trait `Statsg` for efficient matrix decomposition.
 
