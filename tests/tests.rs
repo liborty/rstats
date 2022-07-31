@@ -220,20 +220,21 @@ fn matrices() -> Result<(),RE> {
     let ru = Rnum::newu8();
     let pts = ru.ranvv(d,n).getvvu8(); 
     // println!("\nTest data:\n{}",pts.gr());
-    // let transppt = pts.transpose();
-    let median = pts.pmedian(EPS);    
-    let cov = pts.covar(&median);
+    // let transppt = pts.transpose();  
+    let cov = pts.covar(&pts.acentroid());
     let cholmat = cov.cholesky()?;
+    let invchol = cholmat.invertl()?;
     println!("\nCholesky L matrix size {}\n{}",cholmat.len(),cholmat.gr());
-    println!("\nCholesky L matrix solved:\n{}", cholmat
-        .forward_substitute(&[1.,0.,0.,0.,0.,0.,0.,0.,0.,0.])?.gr());
-    println!("\nCholesky L matrix solved:\n{}", cholmat
-        .forward_substitute(&[0.,1.,0.,0.,0.,0.,0.,0.,0.,0.])?.gr());
-    println!("\nCholesky L matrix solved:\n{}", cholmat
-        .forward_substitute(&[0.,0.,1.,0.,0.,0.,0.,0.,0.,0.])?.gr());
+    println!("\nCholesky L matrix inverted and transposed:\n{}", invchol.gr());
+    set_seeds(77777);
+    let pta = ru.ranv(d).getvu8();
+    let ptb = ru.ranv(d).getvu8();
+    let d = pta.vsub(&ptb);
+    println!("Difference vector:\n{}",d.gr());
+    println!("Euclidian distance {}\nMahalanobis distance {}",
+        pta.vdist(&ptb).gr(),invchol.mahalanobis(&d)?.gr());
     Ok(())
 }
-
 
 #[test]
 fn vecvec() -> Result<(),RE> {

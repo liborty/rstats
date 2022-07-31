@@ -145,8 +145,8 @@ pub trait Stats {
     fn symmatrix(self) -> Vec<Vec<f64>>;
     /// Cholesky decomposition of a positive definite matrix into LLt
     fn cholesky(self) -> Result<Vec<f64>,RE>;
-    // Inverts lower triangular matrix (self) by repeated forward substitutions
-    // fn invertl(self) -> Result<Vec<f64>,RError<& 'static str>>;
+    /// Inverts lower triangular matrix (self) by repeated forward substitutions
+    fn invertl(self) -> Result<Vec<Vec<f64>>,RE>;
 }
 
 /// Vector Algebra on two vectors (represented here as generic slices).
@@ -330,6 +330,8 @@ pub trait VecVecg<T,U> {
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RE>;
     /// Matrix multiplication self * m
     fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RE>;
+    /// Mahalanobis distance for difference vector d 
+    fn mahalanobis(self,d: &[U]) -> Result<f64,RE>;
     /// Weighted sum of nd points (or vectors)
     fn wsumv(self,ws: &[U]) -> Vec<f64>;
     /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points

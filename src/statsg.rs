@@ -1,4 +1,4 @@
-use crate::{ error::RError, RE, sumn, seqtosubs, MStats, Stats };
+use crate::{ error::RError, RE, sumn, seqtosubs, Vecg, MStats, Stats };
 // use anyhow::{ensure, Result};
 
 use indxvec::{Vecops};
@@ -480,28 +480,21 @@ impl<T> Stats for &[T]
         Ok(res)
     }
 
-    /*
-    /// Inverts lower triangular matrix (self) by repeated forward substitutions, 
-    /// where the matrix is in left to right 1d scan form   
-    fn invertl(self) -> Result<Vec<f64>,RE> {
+    /// Inverts lower triangular matrix (self) by repeated forward substitutions. 
+    /// The input matrix is in left to right 1d scan form   
+    fn invertl(self) -> Result<Vec<Vec<f64>>,RE> {
         let sl = self.len();
         if sl < 3 { return Err(RError::NoDataError("invertl needs at least three items"));};
         // 2d matrix dimensions
         let (n,c) = seqtosubs(sl);
         if c != 0 { return Err(RError::DataError("invertl needs a triangular matrix"));};
-        let mut res:Vec<f64> = Vec::with_capacity(sl); // result of the same size as self
+        let mut res:Vec<Vec<f64>> = Vec::new(); // result of the same size as self
         // res[0] = 1_f64/f64::from(self[0]); 
         for row in 0..n {
-            let b = vec![0_f64;n-row]; 
-            b[0] = 1_f64; // constructs columns of a unit matrix
-            res[row] = self.forward_substitute(&b)?;
-            let mut sumtodiag = 0_f64;
-            for j in sumn(row)..sumn(row+1) { 
-                sumtodiag += f64::from(self[j])*res[j];
+            let mut b = vec![0_f64;n]; 
+            b[row] = 1_f64; // constructs a column of a unit matrix
+            res.push(self.forward_substitute::<f64>(&b)?);
             };
-            res[row] = ( f64::from(b[row]) - sumtodiag ) / f64::from(self[sumn(row+1)]);  
-        };
         Ok(res)   
     }
-    */    
 }

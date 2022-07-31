@@ -6,7 +6,7 @@ use std::fmt::{Debug,Display};
 #[derive(Debug)]
 /// Custom RStats Error
 pub enum RError<T> where T:Sized+Debug {
-    /// Error indicating that an insufficient data has been supplied
+    /// Error indicating that insufficient data has been supplied
     NoDataError(T),
     /// Error indicating that a wrong kind/size of data has been supplied
     DataError(T),

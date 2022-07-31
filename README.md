@@ -15,19 +15,19 @@ Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 Use in your source files any of the following structs, when needed:
 
 ```rust  
-use rstats::{error::RError, RE, Mstats, MinMax, F64, Med};
+use rstats::{error::RError,RE,Mstats,MinMax,F64,Med};
 ```
 
 and any of the following rstats defined traits:
 
 ```rust 
-use rstats::{ Stats, Vecg, Vecu8, MutVecg, VecVec, VecVecg };
+use rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 ```
 
 and any of the following crate level helper functions:
 
 ```rust  
-use rstats::{i64tof64,sumn};
+use rstats::{i64tof64,sumn,seqtosubs,identity_lmatrix};
 ```
 
 The latest (nightly) version is always available in the github repository [rstats](https://github.com/liborty/rstats). Sometimes it may be a little ahead of the crates.io release versions.
@@ -104,6 +104,36 @@ The main constituent parts of Rstats are its traits. The selection of traits (to
 * `VecVecg`: methods for n vectors, plus another generic argument, e.g. vector of weights.
 
 In other words, the traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'. However, the vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end type `u8` and some that take mutable self. End type `f64` is most commonly used for the results.
+
+### Errors
+
+This crate produces custom errors `RError`:
+
+```rust
+pub enum RError<T> where T:Sized+Debug {
+    /// Error indicating that insufficient data has been supplied
+    NoDataError(T),
+    /// Error indicating that a wrong kind/size of data has been supplied
+    DataError(T),
+    /// Error indicating an invalid result, such as an attempt at division by zero
+    ArithError(T),
+    /// Other error converted to RError
+    OtherError(T)
+}
+```
+Each of its enum variants also carries a generic payload `T`. Most commonly this is a `&str` message giving more specific information, e.g.:
+
+```rust 
+return Err(RError::ArithError("cholesky needs a positive definite matrix"));
+```
+
+ There is a type alias shortening declarations needed for this, like: `Result<Vec<f64>,RE>`, where
+
+ ```rust
+pub type RE = RError<&'static str>;
+```
+
+More error checking will be added in later versions, where it makes sense. 
 
 ### Documentation
 
@@ -187,17 +217,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.6** - Added to crate type alias RE to shorten method headings returning RErrors carrying `&str` payloads. 
+* **Version 1.2.6** - Added test `matrices` specifically for matrix operations. Added type alias `RStats::RE` to shorten method headings returning `RErrors` that carry `&str` payloads (see subsection Errors above). 
 
-```rust
-pub type RE = RError<&'static str>;
-``` 
-
-* **Version 1.2.5** - Added some more matrix algebra. Added generic payload `T` to RError: `RError<T>` to allow it to carry more information, eg.: 
-
-```rust 
-return Err(RError::ArithError("cholesky needs a positive definite matrix"));
-```
+* **Version 1.2.5** - Added some more matrix algebra. Added generic payload `T` to RError: `RError<T>` to allow it to carry more information. 
 
 * **Version 1.2.4** - Added Cholesky–Banachiewicz algorithm `cholesky` to trait `Statsg` for efficient matrix decomposition.
 

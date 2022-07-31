@@ -1,4 +1,4 @@
-use crate::{error::RError,Stats,Vecg,MutVecg,VecVecg,VecVec};
+use crate::{error::RError,RE,Stats,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::{F64,Vecops,Indices};
 use medians::{Median};
 
@@ -7,13 +7,13 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     U: Copy+PartialOrd+std::fmt::Display,f64:From<U> {
 
     /// Leftmultiply (column) vector v by matrix self
-    fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RError<&'static str>> {
+    fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { return Err(RError::DataError("leftmultv dimensions mismatch")); };
         Ok(self.iter().map(|s| s.dotp(v)).collect())
     }
 
     /// Rightmultiply (row) vector v by matrix self
-    fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RError<&'static str>> {
+    fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if v.len() != self.len() { return Err(RError::DataError("rightmultv dimensions mismatch")); };
         Ok(self.transpose().iter().map(|s| s.dotp(v)).collect())
     }
@@ -22,13 +22,20 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Returns DataError if lengths of rows of self: `self[0].len()` 
     /// and columns of m: `m.len()` do not match.
     /// Result dimensions are self.len() x m[0].len() 
-    fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RError<&'static str>> {
+    fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RE> {
         if self[0].len() != m.len() { return Err(RError::DataError("matmult dimensions mismatch")); };
         let mut res:Vec<Vec<f64>> = vec![Vec::new();self.len()];
         let mtr  = m.transpose();
         for (i,srow) in self.iter().enumerate() { 
             mtr.iter().for_each(|mcolumn| { res[i].push(srow.dotp(mcolumn));}) };
         Ok(res)
+    }
+        
+    /// Mahalanobis distance for difference vector d.
+    /// Left multiplies by self matrix, which should be an upper triangular
+    /// full form of inverted triangular matrix L from `cholesky`.
+    fn mahalanobis(self,d: &[U]) -> Result<f64,RE> {
+        Ok(self.leftmultv(d)?.vmag())
     }
 
     /// Weighted sum of nd points (or vectors). 
