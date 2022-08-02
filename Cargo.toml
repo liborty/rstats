@@ -3,9 +3,7 @@ name = "rstats"
 version = "1.2.7"
 authors = ["Libor Spacek"]
 edition = "2021"
-description = "Statistics, Linear Algebra, Information Measures, Cholesky Matrix Decomposition, 
-Mahalanobis Distance, Multidimensional Data Analysis, Machine Learning and more"
-Statistics,  Algebra, Geometric Median, Data Analysis and Machine Learning"
+description = "Statistics, Linear Algebra, Information Measures, Cholesky Matrix Decomposition, Mahalanobis Distance, Multidimensional Data Analysis, Machine Learning and more"
 readme = "README.md"
 homepage = "https://github.com/liborty/rstats"
 repository = "https://github.com/liborty/rstats"
@@ -35,4 +33,4 @@ medians = "^1"
 
 [dev-dependencies]
 ran = "^1"
-times = "^0"
+times = "^1"
