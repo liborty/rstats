@@ -106,7 +106,7 @@ The main constituent parts of Rstats are its traits. The selection of traits (to
 
 In other words, the traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'. However, the vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end type `u8` and some that take mutable self. End type `f64` is most commonly used for the results.
 
-### Errors
+## Errors
 
 This crate produces custom errors `RError`:
 
@@ -136,7 +136,7 @@ pub type RE = RError<&'static str>;
 
 More error checking will be added in later versions, where it makes sense. 
 
-### Documentation
+## Documentation
 
 For more detailed comments, plus some examples, see the source. You may have to unclick the 'implementations on foreign types' somewhere near the bottom of the page in the rust docs to get to it.  (Since these traits are implemented over the pre-existing Rust Vec type).
 
@@ -168,6 +168,7 @@ Included in this trait are:
 * probability density function (pdf)
 * autocorrelation, entropy
 * linear transformation to [0,1],
+* cholesky matrix decomposition: M = L*U
 * other measures and vector algebra operators
 
 Note that fast implementation of 1d medians is as of version 1.1.0 in crate `medians`:  
@@ -184,8 +185,10 @@ This is because Rust is currently incapable of inferring the type ('the inferenc
 * Pearson's, Spearman's and Kendall's correlations,
 * `Median correlation`, which we define analogously to Pearson's, as cosine of an angle between two zero median vectors (instead of his zero mean vectors).
 * Joint pdf, joint entropy, statistical independence (based on mutual information).
+* `Contribution` measure of a point w.r.t gm
+* `Mahalanobis distance`
 
-This trait is unchecked (for speed), so some caution with data is advisable.
+The simpler methods of this trait are sometimes unchecked (for speed), so some caution with data is advisable.
 
 ## Trait MutVecg
 
@@ -214,7 +217,7 @@ Warning: trait VecVec is entirely unchecked, so check your data upfront.
 
 ## Trait VecVecg
 
-Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight).
+Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
 
