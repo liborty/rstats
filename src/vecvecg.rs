@@ -30,13 +30,6 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             mtr.iter().for_each(|mcolumn| { res[i].push(srow.dotp(mcolumn));}) };
         Ok(res)
     }
-        
-    /// Mahalanobis distance for difference vector d.
-    /// Left multiplies by self matrix, which should be an upper triangular
-    /// full form of inverted triangular matrix L from `cholesky`.
-    fn mahalanobis(self,d: &[U]) -> Result<f64,RE> {
-        Ok(self.leftmultv(d)?.vmag())
-    }
 
     /// Weighted sum of nd points (or vectors). 
     /// Weights are associated with points, not coordinates

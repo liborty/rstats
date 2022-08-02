@@ -405,5 +405,13 @@ impl<T> Vecg for &[T]
         };
         Ok(res)
     }
+            
+    /// Mahalanobis scaled magnitude of vector d:
+    /// self is a precomputed lower triagonal matrix L, as produced by `cholesky`.
+    /// d * inverse(C) * d
+    fn mahalanobis<U>(self,d:&[U]) -> Result<f64,RE> 
+    where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
+        Ok(self.forward_substitute(d)?.vmag())
+    }
 
 }

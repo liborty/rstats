@@ -5,8 +5,7 @@
 [<img alt="crates.io" src="https://img.shields.io/crates/d/rstats?logo=rust">](https://crates.io/crates/rstats)
 [<img alt="docs.rs" src="https://img.shields.io/docsrs/rstats?logo=rust">](https://docs.rs/rstats)
 
-Statistics, Vector Algebra, Information Measures,
-Matrix Decomposition, Multidimensional Data Analysis, Machine Learning and more ...
+Statistics, Linear Algebra, Information Measures, Cholesky Matrix Decomposition, Mahalanobis Distance, Multidimensional Data Analysis, Machine Learning and more ...
 
 ## Usage
 
@@ -41,25 +40,25 @@ cargo test --release -- --test-threads=1 --nocapture --color always
 
 ## Introduction
 
-`Rstats` is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Big Data Analysis. It uses `non analytical statistics`, where the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the data, not from some assumed distributions.
+`Rstats` is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Big Data Analysis. Several branches of mathematics: statistics, linear algebra, information theory and set theory are combined in this one consistent package, based on the fact that they all operate on the same objects: `Vecs` of data items.
 
-This crate begins with basic statistical measures and vector algebra, which provide self-contained tools for the machine learning (ML) multidimensional algorithms but can also be used in their own right.
+`RStats` begins with basic statistical measures and vector algebra, which provide self-contained basic tools for the machine learning (ML) multidimensional (nd) algorithms but can also be used in their own right. `Non analytical statistics` is used, whereby the `random variables` are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the data, not from some assumed distributions.
 
-Our treatment of multidimensional sets of points (vectors) is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
+Our treatment of multidimensional sets of points (nd vectors) is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
 
-* `median correlation`- in one dimension (1d), our `mediancorr` method is to replace *Pearson's correlation*. We define *median correlation*  as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
+* `median correlation`- in one dimension (1d), our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
 
-* `gmedian` - fast multidimensional *geometric median (gm)* algorithm.
+* `gmedian and pmedian` - fast multidimensional `geometric median (gm)` algorithms.
 
-* `madgm` - generalisation of robust data spread estimator known as 'MAD' (median of absolute deviations from median),  from 1d to nd. 
+* `madgm` - generalisation to nd of robust data spread estimator known as `MAD` (median of absolute deviations from median). 
 
-* `contribution` - of a point to an nd set. Defined as gm displacement if the point was added/removed. Related to the point's radius but not the same, as it depends on all the points.
+* `contribution` - of a point to an nd set. Defined as gm displacement if the point was added/removed. Related to the point's radius (distance from gm) but not the same, as it depends on all the other points as well.
 
-* `comediance` - instead of covariance (matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus *zero median vectors* are replacing *zero mean vectors* in covariance calculations.
+* `comediance` - instead of covariance (matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero median vectors` are replacing `zero mean vectors` in covariance calculations.
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-In n dimensions (nd), many authors  'cheat' by using *quasi medians* (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are even slower to compute than our gm.
+In n dimensions (nd), many authors  'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are even much slower to compute than our gm.
 
 *Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by their rotation.*
 
@@ -86,9 +85,11 @@ In contrast, analyses based on the true geometric median (gm) are axis (rotation
 
 * `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
 
-* `MADGM` (median of distances from gm). This is a generalisation of `MAD` (median of absolute differences) measure from 1d to nd. It is a robust measure of nd data spread.
+* `MADGM` (median of distances from gm). This is our generalisation of `MAD` (median of absolute differences) measure from 1d to nd. It is a robust measure of nd data spread.
 
-* `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors. By Cholesky singular value decomposition of this positive definite matrix, it is possible to calculate *Mahalanobis distance* (weighted distace, where the weights are derived from the shape of the data points cloud). 
+* `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors.
+
+* `Mahalanobis Distance` as a weighted distace, where the weights are derived from the axis of variation of the nd data points cloud. Efficient Cholesky singular (eigen) value decomposition of the covariance/comediance positive definite matrix is used.
 
 * `Contribution`: one of the questions of interest to Machine Learning (ML) is how to quantify the significance of the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define `the contribution` of a point as the change to gm caused by adding/deleting that point. Generally more outlying points make greater contributions but not as much as is the case with means. The contribution depends on the arrangement of other set points as well.
 
@@ -216,6 +217,8 @@ Warning: trait VecVec is entirely unchecked, so check your data upfront.
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight).
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.7** - Added efficient `mahalanobis` distance and its test.
 
 * **Version 1.2.6** - Added test `matrices` specifically for matrix operations. Added type alias `RStats::RE` to shorten method headings returning `RErrors` that carry `&str` payloads (see subsection Errors above). 
 

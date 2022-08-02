@@ -1,6 +1,6 @@
 #![warn(missing_docs)]
-//! Statistics, Vector Algebra, Information Measures,
-//! Matrix Decomposition, Multidimensional Data Analysis, Machine Learning.
+//! Statistics, Linear Algebra, Information Measures, Cholesky Matrix Decomposition, 
+//! Mahalanobis Distance, Multidimensional Data Analysis, Machine Learning and more ...
 
 /// Custom error RError
 pub mod error;
@@ -145,8 +145,6 @@ pub trait Stats {
     fn symmatrix(self) -> Vec<Vec<f64>>;
     /// Cholesky decomposition of a positive definite matrix into LLt
     fn cholesky(self) -> Result<Vec<f64>,RE>;
-    /// Inverts lower triangular matrix (self) by repeated forward substitutions
-    fn invertl(self) -> Result<Vec<Vec<f64>>,RE>;
 }
 
 /// Vector Algebra on two vectors (represented here as generic slices).
@@ -221,6 +219,9 @@ pub trait Vecg {
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Leftmultiply (column) vector v by upper triangular matrix self
     fn utriangmultv<U>(self,v:&[U]) -> Result<Vec<f64>,RE>
+        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U>;
+    /// Mahalanobis scaled magnitude of difference vector d 
+    fn mahalanobis<U>(self,d: &[U]) -> Result<f64,RE>
         where U: Copy+PartialOrd+std::fmt::Display, f64:From<U>;
 }
 
@@ -330,8 +331,6 @@ pub trait VecVecg<T,U> {
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RE>;
     /// Matrix multiplication self * m
     fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RE>;
-    /// Mahalanobis distance for difference vector d 
-    fn mahalanobis(self,d: &[U]) -> Result<f64,RE>;
     /// Weighted sum of nd points (or vectors)
     fn wsumv(self,ws: &[U]) -> Vec<f64>;
     /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points

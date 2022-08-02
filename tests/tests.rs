@@ -212,27 +212,30 @@ fn trend() {
 
 #[test]
 fn matrices() -> Result<(),RE> {
-    println!("5x5 identity lower triangular matrix:\n{}",identity_lmatrix(5).gr());
+    println!("5x5 identity lower triangular matrix in scan order:\n{}",identity_lmatrix(5).gr());
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {} points in {} dimensional space",n,d);
     set_seeds(113);
-    let ru = Rnum::newu8();
-    let pts = ru.ranvv(d,n).getvvu8(); 
+    let ru = Rnum::newf64();
+    let pts = ru.ranvv_in(d,n,0.0,4.0).getvvf64(); 
     // println!("\nTest data:\n{}",pts.gr());
     // let transppt = pts.transpose();  
-    let cov = pts.covar(&pts.acentroid());
-    let cholmat = cov.cholesky()?;
-    let invchol = cholmat.invertl()?;
-    println!("\nCholesky L matrix size {}\n{}",cholmat.len(),cholmat.gr());
-    println!("\nCholesky L matrix inverted and transposed:\n{}", invchol.gr());
-    set_seeds(77777);
-    let pta = ru.ranv(d).getvu8();
-    let ptb = ru.ranv(d).getvu8();
+    let cov = pts.covar(&pts.pmedian(EPS));
+    println!("Triangular comediance matrix in scan order, size {}:\n{}",cov.len(),cov.gr());
+    let cholmat = cov.cholesky()?; 
+    println!("\nCholesky L matrix, size {}:\n{}",cholmat.len(),cholmat.gr());
+    // set_seeds(77777);
+    let pta = ru.ranv(d).getvf64();
+    let ptb = ru.ranv(d).getvf64();
     let d = pta.vsub(&ptb);
-    println!("Difference vector:\n{}",d.gr());
-    println!("Euclidian distance {}\nMahalanobis distance {}",
-        pta.vdist(&ptb).gr(),invchol.mahalanobis(&d)?.gr());
+    let dmag = d.vmag();
+    let mahamag =cholmat.mahalanobis(&d)?;
+    println!("Test vector d = a-b:\n{}",d.gr());
+    println!("Euclidian magnitude   {GR}{:>8.4}{UN}\
+        \nMahalanobis magnitude {GR}{:>8.4}{UN}\
+        \nScale factor: {GR}{:>0.8}{UN}",
+        dmag,mahamag,mahamag/dmag);
     Ok(())
 }
 

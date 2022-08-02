@@ -1,14 +1,16 @@
 [package]
 name = "rstats"
-version = "1.2.6"
+version = "1.2.7"
 authors = ["Libor Spacek"]
 edition = "2021"
-description = "Statistical Measures, Vector Algebra, Geometric Median, Data Analysis and Machine Learning"
+description = "Statistics, Linear Algebra, Information Measures, Cholesky Matrix Decomposition, 
+Mahalanobis Distance, Multidimensional Data Analysis, Machine Learning and more"
+Statistics,  Algebra, Geometric Median, Data Analysis and Machine Learning"
 readme = "README.md"
 homepage = "https://github.com/liborty/rstats"
 repository = "https://github.com/liborty/rstats"
 license = "Apache-2.0"
-keywords = ["machine-learning","statistics","vector-algebra","geometric-median","data-analysis"]
+keywords = ["machine-learning","statistics","linear-algebra","geometric-median","data-analysis"]
 categories = ["science","mathematics","algorithms","visualization","rust-patterns"]
 include = [
     "src/lib.rs",
