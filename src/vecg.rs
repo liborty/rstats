@@ -408,12 +408,14 @@ impl<T> Vecg for &[T]
             
     /// Mahalanobis scaled magnitude M(d) of vector d:
     /// self is a precomputed lower triagonal matrix L, as produced by `cholesky`
-    /// from covariance/comediance positive definite matrix.
+    /// from covariance/comediance positive definite matrix C = LU.
     /// M(d) = sqrt(d^T (C)^(-1) d) = sqrt(d^T (LU)^(-1) d) = sqrt(d^T U^(-1)L^(-1) d)
     /// Now putting Lx = d and solving for x by forward substitution,
     /// we obtain L^(-1)Lx = x = L^(-1)d.
-    /// Therefore, simply taking the magnitude |x| is the same as the above definition of M(d),
-    /// without having to left multiply and right multiply matrices and take the square root.
+    /// Simply taking the magnitude |x| is the same as the above definition of M(d),
+    /// without having to right multiply and left multiply
+    /// by inverted matrices and take the square root. 
+    /// Also, we stay in the compact triangular form through the whole process, from C to M(d).
     fn mahalanobis<U>(self,d:&[U]) -> Result<f64,RE> 
         where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
         Ok(self.forward_substitute(d)?.vmag())
