@@ -429,15 +429,17 @@ impl<T> Stats for &[T]
 
     /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
     /// as produced by covar, covone, wcovar
-    fn symmatrix(self) -> Vec<Vec<f64>> {        
-        let (n,_) = seqtosubs(self.len());
+    fn symmatrix(self) -> Result<Vec<Vec<f64>>,RE> {        
+        let (n,c) = seqtosubs(self.len());
+        // input is not a triangular number, is of wrong size
+        if c != 0 { return Err(RError::DataError("symmatrix takes a triangular matrix")); }; 
         let mut mat = vec![vec![0_f64;n];n]; // create the square matrix 
         self.iter().enumerate().for_each(|(i,&s)| {
             let (row,column) = seqtosubs(i);
-            if row < column { mat[column][row] = f64::from(s) as f64; }; // symmetrical reflection
+            if row > column { mat[column][row] = f64::from(s) as f64; }; // symmetrical reflection
             // also set values in lower triangular region, including the diagonal
             mat[row][column] = f64::from(s); } ); 
-        mat
+        Ok(mat)
     }    
     
     /// Efficient Cholesky-Banachiewicz matrix decomposition into `LL^T`,

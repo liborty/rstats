@@ -221,6 +221,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.8** - Fixed a silly bug in `symmatrix` and made it return Result.
+
 * **Version 1.2.7** - Added efficient `mahalanobis` distance and its test.
 
 * **Version 1.2.6** - Added test `matrices` specifically for matrix operations. Added type alias `RStats::RE` to shorten method headings returning `RErrors` that carry `&str` payloads (see subsection Errors above). 

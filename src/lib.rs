@@ -142,7 +142,7 @@ pub trait Stats {
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Result<Vec<f64>,RE>;
     /// Reconstructs the full symmetric matrix from its lower diagonal compact form
-    fn symmatrix(self) -> Vec<Vec<f64>>;
+    fn symmatrix(self) -> Result<Vec<Vec<f64>>,RE>;
     /// Cholesky decomposition of a positive definite matrix into LLt
     fn cholesky(self) -> Result<Vec<f64>,RE>;
 }
