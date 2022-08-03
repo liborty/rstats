@@ -89,9 +89,9 @@ In contrast, analyses based on the true geometric median (gm) are axis (rotation
 
 * `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors.
 
-* `Mahalanobis Distance` as a weighted distace, where the weights are derived from the axis of variation of the nd data points cloud. Efficient Cholesky singular (eigen) value decomposition of the covariance/comediance positive definite matrix is used.
+* `Mahalanobis Distance` is a weighted distace, where the weights are derived from the axis of variation of the nd data points cloud. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method  decomposes the covariance/comediance positive definite matrix S into a product of two triangular matrices: S = LU. See more explanations in the code.
 
-* `Contribution`: one of the questions of interest to Machine Learning (ML) is how to quantify the significance of the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define `the contribution` of a point as the change to gm caused by adding/deleting that point. Generally more outlying points make greater contributions but not as much as is the case with means. The contribution depends on the arrangement of other set points as well.
+* `Contribution`: one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point as the change to gm caused by adding/deleting that point. Generally, outlying points make greater contributions to the gm but not as much as they would to the centroid. The contribution depends not only on the radius of the example in question but also on the radii of all other (existing) examples.
 
 ## Implementation
 
@@ -104,31 +104,33 @@ The main constituent parts of Rstats are its traits. The selection of traits (to
 * `VecVec`: methods operating on n vectors, 
 * `VecVecg`: methods for n vectors, plus another generic argument, e.g. vector of weights.
 
-In other words, the traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'. However, the vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end type `u8` and some that take mutable self. End type `f64` is most commonly used for the results.
+In other words, the traits and their methods operate on arguments of their required categories. In classical statistical terminology, the main categories correspond to the number of 'random variables'.
+
+The vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end type `u8` and some that take mutable self. End type `f64` is most commonly used for the results.
 
 ## Errors
 
-This crate produces custom errors `RError`:
+RStats crate produces custom errors `RError`:
 
 ```rust
 pub enum RError<T> where T:Sized+Debug {
-    /// Error indicating that insufficient data has been supplied
+    /// Insufficient data
     NoDataError(T),
-    /// Error indicating that a wrong kind/size of data has been supplied
+    /// Wrong kind/size of data
     DataError(T),
-    /// Error indicating an invalid result, such as an attempt at division by zero
+    /// Invalid result, such as prevented division by zero
     ArithError(T),
     /// Other error converted to RError
     OtherError(T)
 }
 ```
-Each of its enum variants also carries a generic payload `T`. Most commonly this is a `&str` message giving more specific information, e.g.:
+Each of its enum variants also carries a generic payload `T`. Most commonly this will be simply a `&'static str` message giving more specific information, e.g.:
 
 ```rust 
 return Err(RError::ArithError("cholesky needs a positive definite matrix"));
 ```
 
- There is a type alias shortening declarations needed for this, like: `Result<Vec<f64>,RE>`, where
+ There is a type alias shortening return declarations to, e.g.: `Result<Vec<f64>,RE>`, where
 
  ```rust
 pub type RE = RError<&'static str>;
