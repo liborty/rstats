@@ -1,6 +1,6 @@
 // use core::slice::SlicePattern;
 
-use crate::{here,sumn,seqtosubs,error::RError,RE,Stats,Vecg};
+use crate::{sumn,seqtosubs,error::RError,RE,Stats,Vecg};
 use indxvec::{Indices,Vecops};
 
 impl<T> Vecg for &[T] 
@@ -179,10 +179,12 @@ impl<T> Vecg for &[T]
     }
 
     /// Joint probability density function of two pairwise matched slices 
-    fn jointpdf<U>(self,v:&[U]) -> Vec<f64>
+    fn jointpdf<U>(self,v:&[U]) -> Result<Vec<f64>,RE> 
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {     
         let n = self.len();
-        if v.len() != n { panic!("{} argument vectors must be of equal length!",here!()) }; 
+        if v.len() != n { 
+            return Err(RError::DataError("{jointpdf argument vectors must be of equal length!"));
+            }; 
         let nf = n as f64;              
         let mut res:Vec<f64> = Vec::new();
         // collect successive pairs, upgrading all end types to common f64
@@ -199,29 +201,29 @@ impl<T> Vecg for &[T]
                 count = 1_usize; // reset counter
             } else { count += 1; }); 
         res.push((count as f64)/nf);  // flush the rest!
-        res
+        Ok(res)
     } 
 
     /// Joint entropy of two sets of the same length
-    fn jointentropy<U>(self, v:&[U]) -> f64
+    fn jointentropy<U>(self, v:&[U]) -> Result<f64,RE>
     where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {
-        let jpdf = self.jointpdf(v);
-        jpdf.iter().map(|&x| -x*(x.ln()) ).sum() 
+        let jpdf = self.jointpdf(v)?;
+        Ok(jpdf.iter().map(|&x|-x*(x.ln())).sum()) 
     }
 
     /// Dependence of &[T] &[U] variables in the range [0,1]
     /// returns 0 iff they are statistically component wise independent
     /// returns 1 when they are identical or all their values are unique
-    fn dependence<U>(self, v:&[U]) -> f64
+    fn dependence<U>(self, v:&[U]) -> Result<f64,RE>
     where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {   
-        (self.entropy() + v.entropy())/self.jointentropy(v)-1.0 
+        Ok((self.entropy() + v.entropy())/self.jointentropy(v)?-1.0) 
     }
 
     /// Independence of &[T] &[U] variables in the range [0,1]
     /// returns 1 iff they are statistically component wise independent
-    fn independence<U>(self, v:&[U]) -> f64
+    fn independence<U>(self, v:&[U]) -> Result<f64,RE>
     where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {   
-        2.0 * self.jointentropy(v) / (self.entropy() + v.entropy())-1.0
+        Ok(2.0 * self.jointentropy(v)? / (self.entropy() + v.entropy())-1.0)
     }
 
     /// We define median based correlation as cosine of an angle between two
@@ -326,10 +328,10 @@ impl<T> Vecg for &[T]
     }
 
     /// Change to gm that adding point p will cause
-    fn contribvec_newpt(self,gm:&[f64],recips:f64) -> Vec<f64>{
+    fn contribvec_newpt(self,gm:&[f64],recips:f64) -> Vec<f64> {
         let dv = self.vsub::<f64>(gm);
         let mag = dv.vmag();
-        if !mag.is_normal() { panic!("{}, point is too close to gm!",here!() ); }; 
+        if !mag.is_normal() { return dv; }; 
         let recip = 1f64/mag; // first had to test for division by zero
         // adding new unit vector (to approximate zero vector)
         dv.smult::<f64>(recip/(recips+recip)) // to unit v. and scaling by new sum of reciprocals 
@@ -338,17 +340,16 @@ impl<T> Vecg for &[T]
     /// Magnitude of change to gm that adding point p will cause
     fn contrib_newpt(self,gm:&[f64],recips:f64) -> f64 {
         let mag = self.vdist::<f64>(gm);
-        if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); }; 
+        if !mag.is_normal() { return 0_f64; }; 
         let recip = 1f64/mag; // first had to test for division by zero
         1_f64 / (recips + recip)
-        //self.contribvec_newpt(gm,recips,p).vmag()
     }    
     
     /// Contribution an existing set point p has made to the gm
     fn contribvec_oldpt(self,gm:&[f64],recips:f64) -> Vec<f64> {
         let dv = self.vsub::<f64>(gm);
         let mag = dv.vmag();
-        if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); };
+        if !mag.is_normal() { return dv; };
         let recip = 1f64/mag; // first had to test for division by zero 
         dv.smult::<f64>(recip/(recip - recips)) // scaling
     }
@@ -357,7 +358,7 @@ impl<T> Vecg for &[T]
     /// Is a negative number
     fn contrib_oldpt(self,gm:&[f64],recips:f64) -> f64 {
         let mag = self.vdist::<f64>(gm);
-        if !mag.is_normal() { panic!("{}, point p is too close to gm!",here!() ); }; 
+        if !mag.is_normal() { return 0_f64; }; 
         let recip = 1f64/mag; // first had to test for division by zero
         1_f64 / (recip - recips) 
         // self.contribvec_oldpt(gm,recips,p).vmag()
@@ -407,16 +408,15 @@ impl<T> Vecg for &[T]
     }
             
     /// Mahalanobis scaled magnitude M(d) of vector d:
-    /// self is a precomputed lower triagonal matrix L, as produced by `cholesky`
-    /// from covariance/comediance positive definite matrix C = LU.
-    /// M(d) = sqrt(d^T (C)^(-1) d) = sqrt(d^T (LU)^(-1) d) = sqrt(d^T U^(-1)L^(-1) d)
-    /// Now putting Lx = d and solving for x by forward substitution, we obtain x = L^(-1)d.
-    /// Simply taking the magnitude |x| is the same as the above definition of M(d),
-    /// without having to right multiply and left multiply by inverted matrices and take the square root. 
-    /// Also, we stay in the compact triangular form through the whole process, from C to M(d).
+    /// self is a precomputed lower triagonal matrix L, as returned by `cholesky`
+    /// from covariance/comediance positive definite matrix C = LL'.
+    /// M(d) = sqrt(d'inv(C)d) = sqrt(d'inv(LL')d) = sqrt(d'inv(L')inv(L)d), 
+    /// where ' denotes transpose and inv denotes inverse.
+    /// Putting Lx = d and solving for x by forward substitution, we obtain x = inv(L)d
+    ///  => M(d) = sqrt(x'x) = |x|. 
+    /// We stay in the compact triangular, from C to M(d).
     fn mahalanobis<U>(self,d:&[U]) -> Result<f64,RE> 
         where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
         Ok(self.forward_substitute(d)?.vmag())
     }
-
 }

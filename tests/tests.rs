@@ -9,7 +9,7 @@ pub const EPS: f64 = 1e-3;
 #[cfg(test)]
 
 #[test]
-fn u8() {
+fn u8() -> Result<(),RE> {
     let v1 = vec![
         1_u8, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6,
     ];
@@ -26,9 +26,9 @@ fn u8() {
     println!("Entropyu8 v1:\t{}", v1.entropyu8().gr());
     println!("Entropy v2:\t{}", v2.entropy().gr()); // generic
     println!("Entropyu8 v2:\t{}", v2.entropyu8().gr()); // u8 
-    println!("Joint Entropy:  {}", v1.jointentropy(&v2).gr());
+    println!("Joint Entropy:  {}", v1.jointentropy(&v2)?.gr());
     println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2).gr());
-    println!("Dependence:   {}", v1.dependence(&v2).gr()); // generic
+    println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
     println!("Dependenceu8: {}", v1.dependenceu8(&v2).gr()); // u8 
     let med =  v1.as_slice().median();
     println!("Median v1:    {} +-{}",med.gr(),v1.mad(med).gr());
@@ -46,12 +46,13 @@ fn u8() {
     let trpt = pt.transpose();
     println!(
         "Column Dependencies:\n{}",
-        trpt.crossfeatures(|v1, v2| v1.dependence(v2)).gr()
+        trpt.crossfeatures(|v1, v2| v1.dependence(v2))?.gr()
     );
     println!(
         "Column Correlations:\n{}",
-        trpt.crossfeatures(|v1, v2| v1.mediancorr(v2)).gr()
+        trpt.crossfeatures(|v1, v2| Ok(v1.mediancorr(v2)))?.gr()
     ); 
+    Ok(())
 }
 
 #[test]
@@ -77,8 +78,8 @@ fn fstats() -> Result<(),RE> {
     println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
     println!("Euclid's dist:\t{}", v2.vdist(&v1).gr());
     println!("Cityblock dist:\t{}", v2.cityblockd(&v1).gr());
-    println!("Joint Entropy:  {}", v1.jointentropy(&v2).gr());
-    println!("Dependence:\t{}", v1.dependence(&v2).gr()); // generic
+    println!("Joint Entropy:  {}", v1.jointentropy(&v2)?.gr());
+    println!("Dependence:\t{}", v1.dependence(&v2)?.gr()); // generic
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
@@ -95,11 +96,11 @@ fn fstats() -> Result<(),RE> {
     let trpt = pt.transpose();
     println!(
         "Column Dependencies:\n{}",
-        trpt.crossfeatures(|v1, v2| v1.dependence(v2)).gr()
+        trpt.crossfeatures(|v1, v2| v1.dependence(v2))?.gr()
     );
     println!(
         "Column Correlations:\n{}",
-        trpt.crossfeatures(|v1, v2| v1.mediancorr(v2)).gr()
+        trpt.crossfeatures(|v1, v2| Ok(v1.mediancorr(v2)))?.gr()
     );
     Ok(())
 }
@@ -158,7 +159,7 @@ fn genericstats() -> Result<(),RE> {
 }
 
 #[test]
-fn vecg() {
+fn vecg() -> Result<(),RE> {
     let v1 = vec![
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 10., 10., 13., 14., 15.,
     ];
@@ -181,9 +182,9 @@ fn vecg() {
     println!("Arc area:\t\t{}", v1.varc(&v2).gr());
     println!("Entropy v1:\t\t{}", v1.entropy().gr());
     println!("Entropy v2:\t\t{}", v2.entropy().gr());
-    println!("Joint Entropy:\t\t{}", v1.jointentropy(&v2).gr());
-    println!("Dependence:\t\t{}", v1.dependence(&v2).gr());
-    println!("Independence:\t\t{}", v1.independence(&v2).gr());
+    println!("Joint Entropy:\t\t{}", v1.jointentropy(&v2)?.gr());
+    println!("Dependence:\t\t{}", v1.dependence(&v2)?.gr());
+    println!("Independence:\t\t{}", v1.independence(&v2)?.gr());
     println!("Cosine:\t\t\t{}", v1.cosine(&v2).gr());
     println!("Cosine of ranks:\t{}",
         v1.rank(true)
@@ -195,7 +196,8 @@ fn vecg() {
     println!("[1,2,3].kron(&[4,5]):\t{}", [1, 2, 3].kron(&[4, 5]).gr());
     let outerp = [1, 2, 3].outer(&[4, 5]);
     println!("[1,2,3].outer(&[4,5]):\n{}", outerp.gr());
-    // println!("Transposed: "); printvv([1,2,3].outer(&[4,5,6,7]).transpose()); 
+    // println!("Transposed: "); printvv([1,2,3].outer(&[4,5,6,7]).transpose());
+    Ok(()) 
 }
 
 #[test]
@@ -255,7 +257,7 @@ fn vecvec() -> Result<(),RE> {
     let transppt = pts.transpose();
     println!(
         "\nDependencies of outcomes:\n{}",
-        transppt.dependencies(&outcomes).gr()
+        transppt.dependencies(&outcomes)?.gr()
     );
     println!(
         "Correlations with outcomes:\n{}",
@@ -349,7 +351,7 @@ const CLOSURESU8:[fn(&[Vec<f64>]);4] = [
 fn timing_gm() {
     set_seeds(7777777777_u64);   // intialise random numbers generator
     // Rnum encapsulates the type of the data items
-   benchvvf64(Rnum::newf64(),100,5,10,&NAMES,&CLOSURESU8); 
+   benchvvf64(Rnum::newf64(),100,4,10,&NAMES,&CLOSURESU8); 
 }
 
 #[test]

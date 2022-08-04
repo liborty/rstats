@@ -191,13 +191,17 @@ pub trait Vecg {
     /// Outer product of two vectors 
     fn outer<U>(self, m:&[U]) -> Vec<Vec<f64>> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Joint probability density function 
-    fn jointpdf<U>(self,v:&[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;     
+    fn jointpdf<U>(self,v:&[U]) -> Result<Vec<f64>,RE>  
+        where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;     
     /// Joint entropy of &[T],&[U] in nats (units of e)
-    fn jointentropy<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
+    fn jointentropy<U>(self, v:&[U]) -> Result<f64,RE>
+        where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Statistical pairwise dependence of &[T] &[U] variables in the range [0,1] 
-    fn dependence<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;   
+    fn dependence<U>(self, v:&[U]) -> Result<f64,RE>
+        where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;   
     /// Statistical pairwise independence in the range [0,1] based on joint entropy
-    fn independence<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
+    fn independence<U>(self, v:&[U]) -> Result<f64,RE>
+        where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Pearson's correlation.  
     fn correlation<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Median based correlation
@@ -207,7 +211,7 @@ pub trait Vecg {
     /// Spearman rho correlation.
     fn spearmancorr<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Change to gm that adding point p will cause
-    fn contribvec_newpt(self,gm:&[f64],recips:f64) -> Vec<f64>;
+    fn contribvec_newpt(self,gm:&[f64],recips:f64) -> Vec<f64>; 
     /// Magnitude of change to gm that adding point p will cause
     fn contrib_newpt(self,gm:&[f64],recips:f64) -> f64;
     /// Contribution an existing set point p has made to the gm
@@ -277,7 +281,7 @@ pub trait VecVec<T> {
     /// Independence (component wise) of a set of vectors.
     fn dependencen(self) -> f64; 
     /// Flattened lower triangular relations matrix between columns of self 
-    fn crossfeatures(self,f:fn(&[T],&[T])->f64) -> Vec<f64>;
+    fn crossfeatures(self,f:fn(&[T],&[T])->Result<f64,RE>) -> Result<Vec<f64>,RE>;
     /// Sum of nd points (or vectors)
     fn sumv(self) -> Vec<f64>; 
     /// Arithmetic Centre = euclidian mean of a set of points
@@ -342,7 +346,7 @@ pub trait VecVecg<T,U> {
     /// Transform nd data to zeromedian for 
     fn zerogm(self, gm: &[f64]) -> Vec<Vec<f64>>; 
     /// Dependencies of vector m on each vector in self
-    fn dependencies(self, m: &[U]) -> Vec<f64>;
+    fn dependencies(self, m: &[U]) -> Result<Vec<f64>,RE>;
     /// (Median) correlations of m with each vector in self
     fn correlations(self, m: &[U]) -> Vec<f64>;
     /// Sum of distances from arbitrary point (v) to all the points in self      

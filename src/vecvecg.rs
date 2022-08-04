@@ -82,9 +82,11 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Dependencies of m on each vector in self
     /// m is typically a vector of outcomes.
     /// Factors out the entropy of m to save repetition of work
-    fn dependencies(self, m: &[U]) -> Vec<f64> {  
+    fn dependencies(self, m: &[U]) -> Result<Vec<f64>,RE> {  
         let entropym = m.entropy();
-        self.iter().map(|s| (entropym + s.entropy())/s.jointentropy(m)-1.0).collect::<Vec<f64>>()
+        return self.iter().map(|s| -> Result<f64,RE> {  
+            Ok((entropym + s.entropy())/
+            s.jointentropy(m)?-1.0)}).collect() 
     }
 
     /// (Median) correlations of m with each vector in self
@@ -92,7 +94,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn correlations(self, m: &[U]) -> Vec<f64> {
         let mm = m.median(); // ignore quartile fields 
         let unitzerom =  m.sadd(-mm).vunit();
-        self.iter().map(|s|{ 
+        self.iter().map(|s| { 
             let ms = s.as_slice().median();   
             s.sadd(-ms).vunit().dotp(&unitzerom)
         }).collect::<Vec<f64>>()

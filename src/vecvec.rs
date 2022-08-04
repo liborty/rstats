@@ -1,6 +1,6 @@
 use std::iter::FromIterator;
 
-use crate::{ MStats, MinMax, MutVecg, Stats, Vecg, VecVec, VecVecg};
+use crate::{ RE, MStats, MinMax, MutVecg, Stats, Vecg, VecVec, VecVecg};
 use indxvec::{here,F64,Vecops};
 use medians::{Med,Median};
 
@@ -68,15 +68,16 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// such as dependencies or correlations.
     /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2))` 
     /// computes median correlations between all column vectors (features) in pts. 
-    fn crossfeatures(self,f:fn(&[T],&[T])->f64) -> Vec<f64> {
+    fn crossfeatures(self,f:fn(&[T],&[T])->Result<f64,RE>) -> Result<Vec<f64>,RE> {
         let n = self.len(); // number of the vector(s)
         let mut codp:Vec<f64> = Vec::with_capacity((n+1)*n/2); // results 
-        self.iter().enumerate().for_each(|(i,v)| 
+        for (i,v) in self.iter().enumerate() {
             // its dependencies up to and including the diagonal
-            self.iter().take(i+1).for_each(|vj| { 
-                codp.push(f(v,vj)); 
-                }));  
-        codp
+            for vj in self.iter().take(i+1) { 
+                codp.push(f(v,vj)?); 
+            };
+        };
+        Ok(codp)
     }
 
     /// Sum of nd points (or vectors)
@@ -205,8 +206,8 @@ impl<T> VecVec<T> for &[Vec<T>]
 
     /// Geometric median's estimated error
     fn gmerror(self,g:&[f64]) -> f64 {
-        let (gm,_,_) = self.nxnonmember(g);
-        gm.vdistsq::<f64>(g)
+        let (gm,_,_) = self.nxnonmember(g); 
+        gm.vdist::<f64>(g)
     }
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
