@@ -211,7 +211,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64 {     
-        let devs:Vec<f64> = self.iter().map(|v| v.wvdist(ws,wgm)).collect();
+        let devs:Vec<f64> = self.iter().zip(ws).map(|(v,w)| f64::from(*w)*v.vdist(wgm)).collect();
         devs.as_slice().median()
     }
 
