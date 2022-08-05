@@ -27,9 +27,9 @@ fn u8() -> Result<(),RE> {
     println!("Entropy v2:\t{}", v2.entropy().gr()); // generic
     println!("Entropyu8 v2:\t{}", v2.entropyu8().gr()); // u8 
     println!("Joint Entropy:  {}", v1.jointentropy(&v2)?.gr());
-    println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2).gr());
+    println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2)?.gr());
     println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
-    println!("Dependenceu8: {}", v1.dependenceu8(&v2).gr()); // u8 
+    println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8 
     let med =  v1.as_slice().median();
     println!("Median v1:    {} +-{}",med.gr(),v1.mad(med).gr());
     println!("{}",v1.medinfo());   
@@ -68,9 +68,9 @@ fn fstats() -> Result<(),RE> {
     println!("Geometric mean:\t{}", v1.gmean()?.gr());
     println!("Harmonic mean:\t{}", v1.hmean()?.gr());
     println!("Magnitude:\t{}", v1.vmag().gr());
-    println!("Arithmetic {}", v1.ameanstd()?.gr());
-    println!("Geometric  {}", v1.gmeanstd()?.gr());
-    println!("Harmonic   {}", v1.hmeanstd()?.gr());
+    println!("Arithmetic {}", v1.ameanstd()?);
+    println!("Geometric  {}", v1.gmeanstd()?);
+    println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
     let med =  v1.as_slice().median();
     println!("Median:\t\t{} +- {}",med.gr(),v1.mad(med).gr());
@@ -111,13 +111,13 @@ fn ustats() -> Result<(),RE> {
     let v1 = Rnum::newu8().ranv(20).getvu8(); 
     println!("\n{}", (&v1).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
-    println!("Arithmetic mean:{}", v1.amean()?.gr());
-    println!("Geometric mean:\t{}", v1.gmean()?.gr());
-    println!("Harmonic mean:\t{}", v1.hmean()?.gr());
-    println!("Magnitude:\t{}", v1.vmag());
-    println!("Arithmetic {}", v1.ameanstd()?.gr());
-    println!("Geometric  {}", v1.gmeanstd()?.gr());
-    println!("Harmonic   {}", v1.hmeanstd()?.gr());
+    println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
+    println!("Geometric mean:  {GR}{:>14.10}{UN}", v1.gmean()?);
+    println!("Harmonic mean:   {GR}{:>14.10}{UN}", v1.hmean()?);
+    println!("Magnitude:       {GR}{:>14.10}{UN}", v1.vmag());
+    println!("Arithmetic {}", v1.ameanstd()?);
+    println!("Geometric  {}", v1.gmeanstd()?);
+    println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
     println!("{}\n", v1.as_slice().medinfo());
     Ok(())
@@ -250,8 +250,8 @@ fn vecvec() -> Result<(),RE> {
     let ru = Rnum::newu8();
     let pts = ru.ranvv(d,n).getvvu8(); 
     // println!("\nTest data:\n{}",pts.gr());
-    println!("Set joint entropy: {}", pts.jointentropyn().gr());
-    println!("Set dependence:    {}", pts.dependencen().gr());
+    println!("Set joint entropy: {}", pts.jointentropyn()?.gr());
+    println!("Set dependence:    {}", pts.dependencen()?.gr());
     // println!("\nTest outcomes:\n{}",pts.gr());  
     let outcomes = ru.ranv(n).getvu8();
     let transppt = pts.transpose();
@@ -361,7 +361,7 @@ fn geometric_medians() {
     let d = 1000_usize;
     set_seeds(7777777);
     println!(
-        "{} medians of {} points in {} dimensions", ITERATIONS, n, d
+        "{} repeats of {} points in {} dimensions", ITERATIONS, n, d
     );
     let mut sumg = 0_f64; 
     let mut sump = 0_f64; 
@@ -379,8 +379,8 @@ fn geometric_medians() {
         gm = pts.acentroid();
         summ += pts.gmerror(&gm);
     }
-    println!( "Pmedian      err: {GR}{:.5e}{UN}", sump);
-    println!( "Gmedian      err: {GR}{:.5e}{UN}", sumg);
-    println!( "Acentroid    err: {GR}{:.5e}{UN}", summ);
-    println!( "Quasi median err: {GR}{:.5e}{UN}", sumq);
+    println!( "Pmedian      total error: {GR}{:.5e}{UN}", sump);
+    println!( "Gmedian      total error: {GR}{:.5e}{UN}", sumg);
+    println!( "Acentroid    total error: {GR}{:.5e}{UN}", summ);
+    println!( "Quasi median total errot: {GR}{:.5e}{UN}", sumq);
 }

@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
-use crate::{ RE, MStats, MinMax, MutVecg, Stats, Vecg, VecVec, VecVecg};
-use indxvec::{here,F64,Vecops};
+use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec, VecVecg};
+use indxvec::{F64,Vecops};
 use medians::{Med,Median};
 
 impl<T> VecVec<T> for &[Vec<T>] 
@@ -23,10 +23,11 @@ impl<T> VecVec<T> for &[Vec<T>]
     }
 
     /// Joint probability density function of n matched slices of the same length
-    fn jointpdfn(self) -> Vec<f64> {  
+    fn jointpdfn(self) -> Result<Vec<f64>,RE> {  
         let d = self[0].len(); // their common dimensionality (length)
         for v in self.iter().skip(1) {
-            if v.len() != d { panic!("{} all vectors must be of equal length!",here!()) }; 
+            if v.len() != d { 
+                return Err(RError::DataError("jointpdfn: all vectors must be of equal length!")); }; 
         }
         let mut res:Vec<f64> = Vec::with_capacity(d);
         let mut tuples = self.transpose();
@@ -44,20 +45,20 @@ impl<T> VecVec<T> for &[Vec<T>]
             } 
             else { count += 1; } );        
         res.push((count as f64)/df);  // flush the rest!
-        res
+        Ok(res)
     } 
 
     /// Joint entropy of vectors of the same length
-    fn jointentropyn(self) -> f64 {
-        let jpdf = self.jointpdfn(); 
-        jpdf.iter().map(|&x| -x*(x.ln())).sum() 
+    fn jointentropyn(self) -> Result<f64,RE> {
+        let jpdf = self.jointpdfn()?; 
+        Ok(jpdf.iter().map(|&x| -x*(x.ln())).sum()) 
     }
 
     /// Dependence (component wise) of a set of vectors.
     /// i.e. `dependencen` returns 0 iff they are statistically independent
     /// bigger values when they are dependent
-    fn dependencen(self) -> f64 { 
-        self.iter().map(|v| v.entropy()).sum::<f64>()/self.jointentropyn() - 1.0
+    fn dependencen(self) -> Result<f64,RE> { 
+        Ok(self.iter().map(|v| v.entropy()).sum::<f64>()/self.jointentropyn()? - 1.0)
     } 
 
     /// Flattened lower triangular part of a symmetric matrix for column vectors in self.

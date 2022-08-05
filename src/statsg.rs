@@ -94,8 +94,8 @@ impl<T> Stats for &[T]
             })
             .sum::<f64>()/nf; 
         Ok(MStats {
-            mean,
-            std: (sx2/nf - mean.powi(2)).sqrt()
+            centre: mean,
+            dispersion: (sx2/nf - mean.powi(2)).sqrt()
         })
     }
 
@@ -137,7 +137,7 @@ impl<T> Stats for &[T]
         let mut sx2 = 0_f64;
         let mut w = 0_f64; // descending linear weights
         let nf = sumn(n) as f64;
-        let mean = self
+        let centre = self
             .iter()
             .map(|&x| {
                 let fx = f64::from(x);
@@ -147,7 +147,7 @@ impl<T> Stats for &[T]
                 wx
             })
             .sum::<f64>()/ nf;
-        Ok(MStats { mean,std:(sx2 / nf - mean.powi(2)).sqrt()})
+        Ok(MStats { centre, dispersion:(sx2 / nf - centre.powi(2)).sqrt()})
     }
 
     /// Harmonic mean of an f64 slice.
@@ -194,8 +194,8 @@ impl<T> Stats for &[T]
             }; 
         let recipmean = sx/nf;
         Ok(MStats {
-            mean: 1.0/recipmean,
-            std: ((sx2/nf-recipmean.powi(2))/(recipmean.powi(4))/nf).sqrt()
+            centre: 1.0/recipmean,
+            dispersion: ((sx2/nf-recipmean.powi(2))/(recipmean.powi(4))/nf).sqrt()
         })
     }
     /// Linearly weighted harmonic mean of an f64 slice.    
@@ -247,8 +247,8 @@ impl<T> Stats for &[T]
             }; 
         let recipmean = sx/nf; 
         Ok(MStats {
-            mean: 1.0/recipmean,
-            std: ((sx2/nf-recipmean.powi(2))/(recipmean.powi(4))/nf).sqrt()
+            centre: 1.0/recipmean,
+            dispersion: ((sx2/nf-recipmean.powi(2))/(recipmean.powi(4))/nf).sqrt()
         })
     }
 
@@ -300,8 +300,8 @@ impl<T> Stats for &[T]
         }
         sum /= n as f64;
         Ok(MStats {
-            mean: sum.exp(),
-            std: (sx2 / (n as f64) - sum.powi(2)).sqrt().exp(),
+            centre: sum.exp(),
+            dispersion: (sx2 / (n as f64) - sum.powi(2)).sqrt().exp(),
         })
     }
 
@@ -359,8 +359,8 @@ impl<T> Stats for &[T]
         let nf = sumn(n) as f64;
         sum /= nf;
         Ok(MStats {
-            mean: sum.exp(),
-            std: (sx2 as f64 / nf - sum.powi(2)).sqrt().exp(),
+            centre: sum.exp(),
+            dispersion: (sx2 as f64 / nf - sum.powi(2)).sqrt().exp(),
         })
     }
 

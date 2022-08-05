@@ -18,25 +18,9 @@ pub mod vecvec;
 pub mod vecvecg;
 
 // reexporting useful related methods
-pub use indxvec::{MinMax,F64,Printing,printing::*,here};
-pub use medians::{Med,Median};
+pub use indxvec::{MinMax,F64,Printing,printing::*};
+pub use medians::{Med,MStats,Median};
 use crate::error::RError;
-
-/// Holds measures of central tendency and spread.
-/// For example, geometric mean and standard deviation ratio.
-/// Usually some kind of mean and its associated standard deviation.
-#[derive(Default)]
-pub struct MStats {
-    /// central tendency - a mean of some kind (geometric, arithmetic, harmonic...)
-    pub mean: f64,
-    /// measure of data spread, typically standard deviation
-    pub std: f64
-}
-impl std::fmt::Display for MStats {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "mean±std: {GR}{}±{}{UN}", self.mean, self.std)
-    }
-}
 
 // Auxiliary Functions
 
@@ -260,13 +244,13 @@ pub trait Vecu8 {
     /// Joint probability density function (here just co-occurence counts) 
     /// of paired values in two vectors of bytes of the same length.
     /// Needs n^2 x 32bits of memory. 
-    fn jointpdfu8(self, v:&[u8]) -> Vec<Vec<u32>>;
+    fn jointpdfu8(self, v:&[u8]) -> Result<Vec<Vec<u32>>,RE>;
     /// Joint entropy of &[u8],&[u8] (in nats)
-    fn jointentropyu8(self, v:&[u8]) -> f64;
+    fn jointentropyu8(self, v:&[u8]) -> Result<f64,RE>;
     /// Statistical pairwise dependence of two &[u8] variables in the range [0,1] 
-    fn dependenceu8(self, v:&[u8]) -> f64;   
+    fn dependenceu8(self, v:&[u8]) -> Result<f64,RE>;   
     /// Independence in the range [1,2] of two &[u8] variables 
-    fn independenceu8(self, v:&[u8]) -> f64;
+    fn independenceu8(self, v:&[u8]) -> Result<f64,RE>;
 }
 
 /// Methods applicable to a slice of vectors of generic end type.
@@ -275,11 +259,11 @@ pub trait VecVec<T> {
     /// Transpose slice of vecs like a classical array
     fn transpose(self) -> Vec<Vec<T>>;
     /// Joint probability density function of n matched slices of the same length
-    fn jointpdfn(self) -> Vec<f64>;
+    fn jointpdfn(self) -> Result<Vec<f64>,RE>;
     /// Joint entropy between a set of vectors of the same length
-    fn jointentropyn(self) -> f64;
+    fn jointentropyn(self) -> Result<f64,RE>;
     /// Independence (component wise) of a set of vectors.
-    fn dependencen(self) -> f64; 
+    fn dependencen(self) -> Result<f64,RE>; 
     /// Flattened lower triangular relations matrix between columns of self 
     fn crossfeatures(self,f:fn(&[T],&[T])->Result<f64,RE>) -> Result<Vec<f64>,RE>;
     /// Sum of nd points (or vectors)

@@ -14,19 +14,13 @@ Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 Use in your source files any of the following structs, when needed:
 
 ```rust  
-use rstats::{error::RError,RE,Mstats,MinMax,F64,Med};
+use rstats::{RE,Mstats,MinMax,F64,Med};
 ```
 
 and any of the following rstats defined traits:
 
 ```rust 
 use rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
-```
-
-and any of the following crate level helper functions:
-
-```rust  
-use rstats::{i64tof64,sumn,seqtosubs,identity_lmatrix};
 ```
 
 The latest (nightly) version is always available in the github repository [rstats](https://github.com/liborty/rstats). Sometimes it may be a little ahead of the crates.io release versions.
@@ -144,14 +138,14 @@ For more detailed comments, plus some examples, see the source. You may have to 
 
 ## Struct
 
-* `struct MStats` holds the central tendency, e.g. mean, and spread, e.g. standard deviation.
+* `struct MStats` holds the central tendency, e.g. some kind of mean or median, and dispersion, e.g. standard deviation or MAD.
 
 ##  Auxiliary Functions
 
 * `i64tof64`: converts an i64 vector to f64, 
 * `sumn`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.),
-* `seqtosubs(s:usize)` returns row,column subsripts to 2d matrix from 1d index into triangular matrix in scanning order,
-* `identity_lmatrix` generates identity lower triangular  matrix in scanning order.
+* `seqtosubs` returns row,column subsripts to 2d matrix from 1d flat index into a triangular matrix in scanning order.
+* `identity_lmatrix` generates lower triangular identity matrix in flat scanning order.
 
 
 ## Trait Stats
@@ -160,7 +154,7 @@ One dimensional statistical measures implemented for all numeric end types.
 
 Its methods operate on one slice of generic data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of the data in slice `s`.
-Some of these methods are checked and will report all kinds of errors, such as an empty input. This means you have to apply to their results `?`, `.unwrap()` or something better.
+These methods are checked and will report RError(s), such as an empty input. This means you have to apply `?` to their results to pass the errors up, or explicitly match them to take recovery actions.
 
 Included in this trait are:
 
@@ -170,11 +164,11 @@ Included in this trait are:
 * probability density function (pdf)
 * autocorrelation, entropy
 * linear transformation to [0,1],
-* cholesky matrix decomposition: M = L*U
+* cholesky matrix decomposition: M = LL' (where ' denotes a transpose).
 * other measures and vector algebra operators
 
-Note that fast implementation of 1d medians is as of version 1.1.0 in crate `medians`:  
-`use medians::{Med,Median};`
+Note that fast implementation of 1d medians is as of version 1.1.0 in crate `medians`.  
+
 
 ## Trait Vecg
 
@@ -222,6 +216,8 @@ Warning: trait VecVec is entirely unchecked, so check your data upfront.
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.9** - More RError forwarding. Removed all deliberate panics.
 
 * **Version 1.2.8** - Fixed a silly bug in `symmatrix` and made it return Result.
 
