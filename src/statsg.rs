@@ -60,7 +60,7 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.as_slice().amean().unwrap(),7.5_f64);
+    /// assert_eq!(v1.amean().unwrap(),7.5_f64);
     /// ```
     fn amean(self) -> Result<f64,RE> {
         let n = self.len();
@@ -74,9 +74,9 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let res = v1.as_slice().ameanstd().unwrap();
-    /// assert_eq!(res.mean,7.5_f64);
-    /// assert_eq!(res.std,4.031128874149275_f64);
+    /// let res = v1.ameanstd().unwrap();
+    /// assert_eq!(res.centre,7.5_f64);
+    /// assert_eq!(res.dispersion,4.031128874149275_f64);
     /// ```
     fn ameanstd(self) -> Result<MStats,RE> {
         let n = self.len();
@@ -105,7 +105,7 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.as_slice().awmean().unwrap(),9.666666666666666_f64);
+    /// assert_eq!(v1.awmean().unwrap(),9.666666666666666_f64);
     /// ```
     fn awmean(self) -> Result<f64,RE> {
         let n = self.len();
@@ -125,9 +125,9 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let res = v1.as_slice().awmeanstd().unwrap();
-    /// assert_eq!(res.mean,9.666666666666666_f64);
-    /// assert_eq!(res.std,3.399346342395192_f64);
+    /// let res = v1.awmeanstd().unwrap();
+    /// assert_eq!(res.centre,9.666666666666666_f64);
+    /// assert_eq!(res.dispersion,3.399346342395192_f64);
     /// ```
     fn awmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();
@@ -153,7 +153,7 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.as_slice().hmean().unwrap(),4.305622526633627_f64);
+    /// assert_eq!(v1.hmean().unwrap(),4.305622526633627_f64);
     /// ```
     fn hmean(self) -> Result<f64,RE> {
         let n = self.len();
@@ -173,9 +173,9 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let res = v1.as_slice().hmeanstd().unwrap();
-    /// assert_eq!(res.mean,4.305622526633627_f64);
-    /// assert_eq!(res.std,1.1996764516690959_f64);
+    /// let res = v1.hmeanstd().unwrap();
+    /// assert_eq!(res.centre,4.305622526633627_f64);
+    /// assert_eq!(res.dispersion,1.1996764516690959_f64);
     /// ```
     fn hmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();
@@ -203,7 +203,7 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.as_slice().hwmean().unwrap(),7.5_f64);
+    /// assert_eq!(v1.hwmean().unwrap(),7.5_f64);
     /// ```
     fn hwmean(self) -> Result<f64,RE> {
         let n = self.len();
@@ -225,9 +225,9 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let res = v1.as_slice().hmeanstd().unwrap();
-    /// assert_eq!(res.mean,4.305622526633627_f64);
-    /// assert_eq!(res.std,1.1996764516690959_f64);
+    /// let res = v1.hmeanstd().unwrap();
+    /// assert_eq!(res.centre,4.305622526633627_f64);
+    /// assert_eq!(res.dispersion,1.1996764516690959_f64);
     /// ```
     fn hwmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();
@@ -259,7 +259,7 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.as_slice().gmean().unwrap(),6.045855171418503_f64);
+    /// assert_eq!(v1.gmean().unwrap(),6.045855171418503_f64);
     /// ```
     fn gmean(self) -> Result<f64,RE> {
         let n = self.len();
@@ -280,9 +280,9 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let res = v1.as_slice().gmeanstd().unwrap();
-    /// assert_eq!(res.mean,6.045855171418503_f64);
-    /// assert_eq!(res.std,2.1084348239406303_f64);
+    /// let res = v1.gmeanstd().unwrap();
+    /// assert_eq!(res.centre,6.045855171418503_f64);
+    /// assert_eq!(res.dispersion,2.1084348239406303_f64);
     /// ```
     fn gmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();
@@ -314,7 +314,7 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// assert_eq!(v1.as_slice().gwmean().unwrap(),8.8185222496341_f64);
+    /// assert_eq!(v1.gwmean().unwrap(),8.8185222496341_f64);
     /// ```
     fn gwmean(self) -> Result<f64,RE> {
         let n = self.len();
@@ -336,9 +336,9 @@ impl<T> Stats for &[T]
     /// ```
     /// use rstats::Stats;
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let res = v1.as_slice().gwmeanstd().unwrap();
-    /// assert_eq!(res.mean,8.8185222496341_f64);
-    /// assert_eq!(res.std,1.626825493266009_f64);
+    /// let res = v1.gwmeanstd().unwrap();
+    /// assert_eq!(res.centre,8.8185222496341_f64);
+    /// assert_eq!(res.dispersion,1.626825493266009_f64);
     /// ```
     fn gwmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();

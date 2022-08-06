@@ -173,7 +173,7 @@ Note that fast implementation of 1d medians is as of version 1.1.0 in crate `med
 ## Trait Vecg
 
 Generic vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimensionality). It may be necessary to invoke some using the 'turbofish' `::<type>` syntax to indicate the type U of the supplied argument, e.g.:  
-`datavec.as_slice().methodname::<f64>(arg)`  
+`datavec.methodname::<f64>(arg)`  
 This is because Rust is currently incapable of inferring the type ('the inference bug').
 
 * Vector additions, subtractions and products (scalar, kronecker, outer),
@@ -216,6 +216,8 @@ Warning: trait VecVec is entirely unchecked, so check your data upfront.
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.10** - Minor: corrected some examples, removed all unnecessary `.as_slice()` conversions.
 
 * **Version 1.2.9** - More RError forwarding. Removed all deliberate panics.
 

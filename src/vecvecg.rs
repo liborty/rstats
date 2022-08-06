@@ -95,7 +95,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         let mm = m.median(); // ignore quartile fields 
         let unitzerom =  m.sadd(-mm).vunit();
         self.iter().map(|s| { 
-            let ms = s.as_slice().median();   
+            let ms = s.median();   
             s.sadd(-ms).vunit().dotp(&unitzerom)
         }).collect::<Vec<f64>>()
     }
@@ -212,7 +212,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator.
     /// Here the weights are associated with the dimensions, not the points!
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64 {  
-        self.iter().map(|v| v.wvdist(ws,wgm)).collect::<Vec<f64>>().as_slice().median() 
+        self.iter().map(|v| v.wvdist(ws,wgm)).collect::<Vec<f64>>().median() 
     }
 
     /// Covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -284,7 +284,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         for i in 0..d { // cross multiplaying the components
             for j in 0..i+1 { // in this order so as to save memory
                 let thisproduct:Vec<f64> = zs.iter().map(|v| v[i]*v[j]).collect(); 
-                com.push(thisproduct.as_slice().median());
+                com.push(thisproduct.median());
             }
         }
         com
@@ -307,7 +307,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         for i in 0..d { // cross multiplaying the components
             for j in 0..i+1 { // in this order so as to save memory
                 let thisproduct:Vec<f64> = zs.iter().zip(ws).map(|(v,&w)| f64::from(w)*v[i]*v[j]).collect();  
-                com.push(thisproduct.as_slice().median()/wmean);
+                com.push(thisproduct.median()/wmean);
             }
         };
         com

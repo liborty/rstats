@@ -7,7 +7,7 @@ use medians::{Med,Median};
 impl<T> VecVec<T> for &[Vec<T>] 
     where T: Copy+PartialOrd+std::fmt::Display,f64:From<T> {
 
-    /// Transpose vec of vecs as a matrix
+    /// Transpose vec of vecs matrix
     fn transpose(self) -> Vec<Vec<T>> {
         let n = self.len();
         let d = self[0].len();
@@ -201,7 +201,7 @@ impl<T> VecVec<T> for &[Vec<T>]
     fn quasimedian(self) -> Vec<f64> {
         self.transpose()
             .iter()
-            .map(|p| p.as_slice().median())
+            .map(|p| p.median())
             .collect()
     }
 
@@ -214,7 +214,7 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> f64 {     
         let devs:Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
-        devs.as_slice().median()    
+        devs.median()    
     }
 
     /// Proportions of points along each +/-axis (hemisphere)

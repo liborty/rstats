@@ -30,7 +30,7 @@ fn u8() -> Result<(),RE> {
     println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2)?.gr());
     println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
     println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8 
-    let med =  v1.as_slice().median();
+    let med =  v1.median();
     println!("Median v1:    {} +-{}",med.gr(),v1.mad(med).gr());
     println!("{}",v1.medinfo());   
     let d = 5_usize;
@@ -72,7 +72,7 @@ fn fstats() -> Result<(),RE> {
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
-    let med =  v1.as_slice().median();
+    let med =  v1.median();
     println!("Median:\t\t{} +- {}",med.gr(),v1.mad(med).gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
     println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
@@ -119,7 +119,7 @@ fn ustats() -> Result<(),RE> {
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
-    println!("{}\n", v1.as_slice().medinfo());
+    println!("{}\n", v1.medinfo());
     Ok(())
 }
 
@@ -138,7 +138,7 @@ fn intstats() -> Result<(),RE> {
     println!("Geometric  {}", v1.gmeanstd()?.gr());
     println!("Harmonic   {}", v1.hmeanstd()?.gr());
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
-    println!("{}\n", v1.as_slice().medinfo());
+    println!("{}\n", v1.medinfo());
     Ok(())
 }
 
@@ -154,7 +154,7 @@ fn genericstats() -> Result<(),RE> {
     println!("Weighted Geom.\t{}", v.gwmeanstd()?.gr());
     println!("Weighted Harm.\t{}", v.hwmeanstd()?.gr());
     println!("Autocorrelation:{}", v.autocorr()?.gr());
-    println!("{}\n", &v.as_slice().medinfo());
+    println!("{}\n", &v.medinfo());
     Ok(())
 }
 
@@ -283,7 +283,7 @@ fn vecvec() -> Result<(),RE> {
     let md = dists.minmax(); 
     println!("\nMedoid and Outlier Total Distances:\n{}", md);
     println!("Total Distances {}", dists.ameanstd()?.gr());
-    println!("Total distances {}", dists.as_slice().medinfo());
+    println!("Total distances {}", dists.medinfo());
     println!("GM's total distances:\t{}", pts.distsum(&median).gr()); 
     println!("ACentroid's total distances:\t{}",pts.distsum(&acentroid).gr());
     println!("HCentroid's total distances:\t{}",pts.distsum(&hcentroid).gr());

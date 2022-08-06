@@ -256,7 +256,7 @@ pub trait Vecu8 {
 /// Methods applicable to a slice of vectors of generic end type.
 /// Operations on a whole set of multidimensional vectors.
 pub trait VecVec<T> {
-    /// Transpose slice of vecs like a classical array
+    /// Transpose slice of vecs matrix
     fn transpose(self) -> Vec<Vec<T>>;
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE>;
