@@ -335,10 +335,8 @@ pub trait VecVecg<T,U> {
     fn distsum(self, v: &[U]) -> f64;
     /// Individual distances from any point v (typically not in self) to all the points in self.    
     fn dists(self, v: &[U]) -> Vec<f64>;
-    /// Weighted radii (eccentricity) magnitudes to all member points from the Geometric Median.
-    fn wradii(self, ws: &[U], gm:&[f64]) -> Vec<f64>; 
-    /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
-    fn wsortedeccs(self,ws:&[U],gm:&[f64]) -> (Vec<f64>,Vec<f64>) where F64:From<T>; 
+    /// Weighted sorted weighted radii magnitudes, normalised
+    fn wsortedrads(self, ws: &[U], gm: &[f64]) -> Vec<f64>; 
     /// Like wgmparts, except only does one iteration from any non-member point g
     fn wnxnonmember(self, ws:&[U], g:&[f64]) -> (Vec<f64>,Vec<f64>,f64); 
     /// The weighted geometric median to accuracy eps 

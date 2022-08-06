@@ -1,5 +1,5 @@
 use crate::{error::RError,RE,Stats,Vecg,MutVecg,VecVecg,VecVec};
-use indxvec::{Vecops,Indices};
+use indxvec::{Vecops};
 use medians::Median;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
@@ -114,29 +114,13 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         self.iter().map(|p| p.vdist(v)).sum::<f64>()
     }
 
-    /// Weighted radii (eccentricity) magnitudes to all member points from the Geometric Median.
-    fn wradii(self, ws: &[U], gm:&[f64]) -> Vec<f64> { 
-        self.iter().zip(ws).map(|(s,&w)| f64::from(w)*s.vdist::<f64>(gm)).collect::<Vec<f64>>()
+    /// Sorted weighted radii (eccentricity) magnitudes to all member points from the Geometric Median.
+    fn wsortedrads(self, ws: &[U], gm:&[f64]) -> Vec<f64> {
+        let wnorm = ws.len() as f64 / ws.iter().map(|&w|f64::from(w)).sum::<f64>(); 
+        self.iter().zip(ws).map(|(s,&w)| wnorm*f64::from(w)*s.vdist::<f64>(gm))
+        .collect::<Vec<f64>>()
+        .sorth(true)
     } 
-
-    /// Sorted eccentricities magnitudes (radii), w.r.t. weighted geometric median.
-    /// associated cummulative probability density function in [0,1] of the weights.
-    fn wsortedeccs(self, ws: &[U], gm: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
-        let mut eccs = Vec::with_capacity(self.len()); 
-        // collect true eccentricities magnitudes
-        for v in self { eccs.push(v.vdist::<f64>(gm)) }
-        // create sort index of the eccs
-        let index = eccs.hashsort_indexed();
-        // pick the associated points weights in the order of the sorted eccs
-        let weights = index.unindex(ws,true);
-        let sumw = weights.iter().map(|&w|f64::from(w)).sum::<f64>();
-        let mut accum = 0_f64;
-        // accummulate the probabilities in [0,1]
-        let probs = weights.iter().map(|&w| {
-            accum += f64::from(w);
-            accum / sumw }).collect::<Vec<f64>>();     
-        ( index.unindex(&eccs, true), probs )
-    }
 
     /// Like wgmparts, except only does one iteration from any non-member point g
     fn wnxnonmember(self, ws:&[U], g:&[f64]) -> (Vec<f64>,Vec<f64>,f64) {

@@ -266,15 +266,14 @@ fn vecvec() -> Result<(),RE> {
         "Correlations with outcomes:\n{}",
         transppt.correlations(&outcomes).gr()
     );    
-    let (gm,_vsum,recips) = pts.gmparts(EPS);
-    let (eccstd, eccmed, eccecc) = pts.eccinfo(&gm); 
+    let (median,_vsum,recips) = pts.gmparts(EPS);
+    let (eccstd, eccmed, eccecc) = pts.eccinfo(&median); 
     let medoid = &pts[eccecc.minindex];
     let outlier = &pts[eccecc.maxindex];
     let hcentroid = pts.hcentroid();
     let gcentroid = pts.gcentroid();
     let acentroid = pts.acentroid();
-    let firstp = pts.firstpoint();
-    let median = pts.gmedian(EPS);  
+    let firstp = pts.firstpoint(); 
   
     println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
     println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&outlier.tof64()).gr());    
@@ -328,16 +327,15 @@ fn vecvec() -> Result<(),RE> {
         seccs[uqcnt - 1].gr()
     );
 
-    println!("\nContribution of adding acentroid:   {}",acentroid.contrib_newpt(&gm,recips).gr() );
-    println!("Contribution of adding gcentroid:   {}",gcentroid.contrib_newpt(&gm,recips).gr() );
-    println!("Contribution of removing outlier:  {}",outlier.contrib_oldpt(&gm,recips).gr() );
-    let contribs = pts.iter().map(|p| p.contrib_oldpt(&gm, recips)).collect::<Vec<f64>>();
+    println!("\nContribution of adding acentroid:   {}",acentroid.contrib_newpt(&median,recips).gr() );
+    println!("Contribution of adding gcentroid:   {}",gcentroid.contrib_newpt(&median,recips).gr() );
+    println!("Contribution of removing outlier:  {}",outlier.contrib_oldpt(&median,recips).gr() );
+    let contribs = pts.iter().map(|p| p.contrib_oldpt(&median,recips)).collect::<Vec<f64>>();
     println!("\nContributions of Data Points, Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
-    // create pretend median of medians
-    // let medmed = vec![0.5_f64;n];
-    // let (se, cpdf) =
-    //  pt.wsortedcos(&medmed,&medmed.vunit(), &weights);
-    //  println!("Sorted coses:\n{}\ncpdf:\n{}\n",se),cpdf));
+    let weights:Vec<usize> = Vec::from_iter(0..n);
+    let fweights = weights.indx_to_f64(); 
+    let wmedian = pts.wgmedian(&fweights,EPS);
+    println!("Sorted weighted rads:\n{}",pts.wsortedrads(&fweights,&wmedian).gr());
     Ok(())
 }
 
