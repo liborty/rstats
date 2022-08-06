@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
 use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec, VecVecg};
-use indxvec::{F64,Vecops};
+use indxvec::{Vecops};
 use medians::{Med,Median};
 
 impl<T> VecVec<T> for &[Vec<T>] 
@@ -182,18 +182,18 @@ impl<T> VecVec<T> for &[Vec<T>]
         eccs
     }
 
-    /// Exact radii (eccentricity) vectors to all member points from the Geometric Median.
+    /// Exact radii (eccentricity) magnitudes for all member points from the Geometric Median.
     /// More accurate and usually faster as well than the approximate `eccentricities` above,
     /// especially when there are many points.
-    fn exacteccs(self, gm:&[f64]) -> Vec<Vec<f64>> { 
-        self.iter().map(|s| s.vsub::<f64>(gm)).collect::<Vec<Vec<f64>>>()
+    fn radii(self, gm:&[f64]) -> Vec<f64> { 
+        self.iter().map(|s| s.vdist::<f64>(gm)).collect::<Vec<f64>>()
     } 
 
-    /// Mean and Std (in MStats struct), Median info (in Med struct), Median and Outlier (in MinMax struct) 
-    /// of scalar eccentricities of points in self.
+    /// Arith mean and std (in MStats struct), Median info (in Med struct), Medoid and Outlier (in MinMax struct) 
+    /// of scalar radii (eccentricities) of points in self.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
     fn eccinfo(self, gm:&[f64]) -> (MStats, Med, MinMax<f64>) where Vec<f64>:FromIterator<f64> {
-        let rads:Vec<f64> = self.iter().map(|v| gm.vdist(v)).collect();
+        let rads:Vec<f64> = self.radii(gm);
         (rads.ameanstd().unwrap(),rads.medinfo(),rads.minmax())
     }
 
@@ -232,16 +232,7 @@ impl<T> VecVec<T> for &[Vec<T>]
         }
         hemis.iter_mut().for_each(|hem| *hem /= nf );
         hemis
-    }    
-     
-    /// GM and sorted eccentricities magnitudes.
-    /// Describing a set of points `self` in n dimensions
-    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64> where F64:From<T> { 
-        let mut eccs = Vec::with_capacity(self.len()); 
-        // collect raw ecentricities magnitudes
-        for v in self { eccs.push(v.vdist::<f64>(gm)) }
-        eccs.sorth(ascending) // latest hash sort from indxvec
-    }
+    } 
 
     /// Initial (first) point for geometric medians.
     fn firstpoint(self) -> Vec<f64> {

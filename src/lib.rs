@@ -289,8 +289,8 @@ pub trait VecVec<T> {
     /// Estimated eccentricity vectors from each member point
     fn eccentricities(self) -> Vec<Vec<f64>>;
     /// Exact eccentricity vectors to each member point by using the gm 
-    fn exacteccs(self, gm:&[f64]) -> Vec<Vec<f64>>; 
-    /// Median and quartiles of radii (new robust measure of spread of a multivariate sample)
+    fn radii(self, gm:&[f64]) -> Vec<f64>; 
+    /// Arith mean and std (in MStats struct), Median info (in Med struct), Medoid and Outlier (in MinMax struct) 
     fn eccinfo(self, gm:&[f64]) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
     /// Quasi median, recommended only for comparison purposes
     fn quasimedian(self) -> Vec<f64>;
@@ -300,8 +300,6 @@ pub trait VecVec<T> {
     fn madgm(self, gm: &[f64]) -> f64;
     /// Proportions of points found along each axis
     fn tukeyvec(self, gm: &[f64]) -> Vec<f64>;
-    /// Returns sorted eccentricities magnitudes
-    fn sortedeccs(self, ascending:bool, gm:&[f64]) -> Vec<f64> where F64:From<T>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Point-by-point geometric median
@@ -337,6 +335,8 @@ pub trait VecVecg<T,U> {
     fn distsum(self, v: &[U]) -> f64;
     /// Individual distances from any point v (typically not in self) to all the points in self.    
     fn dists(self, v: &[U]) -> Vec<f64>;
+    /// Weighted radii (eccentricity) magnitudes to all member points from the Geometric Median.
+    fn wradii(self, ws: &[U], gm:&[f64]) -> Vec<f64>; 
     /// ( wgm, sorted eccentricities magnitudes, associated cpdf )
     fn wsortedeccs(self,ws:&[U],gm:&[f64]) -> (Vec<f64>,Vec<f64>) where F64:From<T>; 
     /// Like wgmparts, except only does one iteration from any non-member point g

@@ -1,5 +1,5 @@
 use crate::{error::RError,RE,Stats,Vecg,MutVecg,VecVecg,VecVec};
-use indxvec::{F64,Vecops,Indices};
+use indxvec::{Vecops,Indices};
 use medians::Median;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
@@ -114,9 +114,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         self.iter().map(|p| p.vdist(v)).sum::<f64>()
     }
 
+    /// Weighted radii (eccentricity) magnitudes to all member points from the Geometric Median.
+    fn wradii(self, ws: &[U], gm:&[f64]) -> Vec<f64> { 
+        self.iter().zip(ws).map(|(s,&w)| f64::from(w)*s.vdist::<f64>(gm)).collect::<Vec<f64>>()
+    } 
+
     /// Sorted eccentricities magnitudes (radii), w.r.t. weighted geometric median.
     /// associated cummulative probability density function in [0,1] of the weights.
-    fn wsortedeccs(self, ws: &[U], gm: &[f64]) -> ( Vec<f64>,Vec<f64> ) where F64:From<T> { 
+    fn wsortedeccs(self, ws: &[U], gm: &[f64]) -> ( Vec<f64>,Vec<f64> ) { 
         let mut eccs = Vec::with_capacity(self.len()); 
         // collect true eccentricities magnitudes
         for v in self { eccs.push(v.vdist::<f64>(gm)) }

@@ -11,17 +11,17 @@ pub const EPS: f64 = 1e-3;
 #[test]
 fn u8() -> Result<(),RE> {
     let v1 = vec![
-        1_u8, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6,
+        1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6,
     ];
     println!("\nv1: {}", (&v1).gr());
     let v2 = vec![
-        1_u8, 2, 2, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2,
+        1_u8,2,2,3,3,3,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,
     ];
     println!("v2: {}", (&v2).gr());
-    println!("v1*v2:\t{}",v1.dotp(&v2).gr());
     println!("v1+v2: {}",v1.vadd(&v2).gr());   
     println!("v1-v2: {}",v1.vsub(&v2).gr());    
     println!("Lexical order v1<v2: {}", (v1 < v2).gr());
+    println!("v1*v2:\t{}",v1.dotp(&v2).gr());
     println!("Entropy v1:\t{}", v1.entropy().gr());
     println!("Entropyu8 v1:\t{}", v1.entropyu8().gr());
     println!("Entropy v2:\t{}", v2.entropy().gr()); // generic
@@ -30,9 +30,9 @@ fn u8() -> Result<(),RE> {
     println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2)?.gr());
     println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
     println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8 
-    let med =  v1.median();
-    println!("Median v1:    {} +-{}",med.gr(),v1.mad(med).gr());
-    println!("{}",v1.medinfo());   
+    println!("Median v1: {}",v1.medstats());
+    println!("Median v2: {}",v2.medstats());
+    println!("v1 {}",v1.medinfo());   
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
@@ -64,22 +64,20 @@ fn fstats() -> Result<(),RE> {
     let v2 = v1.revs();
     println!("{}", (&v2).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
-    println!("Arithmetic mean:{}", v1.amean()?.gr());
     println!("Geometric mean:\t{}", v1.gmean()?.gr());
     println!("Harmonic mean:\t{}", v1.hmean()?.gr());
     println!("Magnitude:\t{}", v1.vmag().gr());
     println!("Arithmetic {}", v1.ameanstd()?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
+    println!("Median     {}", v1.medstats());
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
-    let med =  v1.median();
-    println!("Median:\t\t{} +- {}",med.gr(),v1.mad(med).gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
-    println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
-    println!("Euclid's dist:\t{}", v2.vdist(&v1).gr());
-    println!("Cityblock dist:\t{}", v2.cityblockd(&v1).gr());
+    println!("Entropy 2:\t{}", v2.entropy().gr()); // generic 
     println!("Joint Entropy:  {}", v1.jointentropy(&v2)?.gr());
     println!("Dependence:\t{}", v1.dependence(&v2)?.gr()); // generic
+    println!("Euclidean dist:\t{}", v2.vdist(&v1).gr());
+    println!("Cityblock dist:\t{}", v2.cityblockd(&v1).gr());
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
@@ -112,10 +110,12 @@ fn ustats() -> Result<(),RE> {
     println!("\n{}", (&v1).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
     println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
+    println!("Median:          {GR}{:>14.10}{UN}", v1.median());   
     println!("Geometric mean:  {GR}{:>14.10}{UN}", v1.gmean()?);
     println!("Harmonic mean:   {GR}{:>14.10}{UN}", v1.hmean()?);
     println!("Magnitude:       {GR}{:>14.10}{UN}", v1.vmag());
     println!("Arithmetic {}", v1.ameanstd()?);
+    println!("Median     {}", v1.medstats());
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
@@ -130,13 +130,15 @@ fn intstats() -> Result<(),RE> {
     println!("\n{}", (&v).gr());
     let v1 = i64tof64(&v); // downcast to f64 here
     println!("Linear transform:\n{}",v1.lintrans()?.gr());
-    println!("Arithmetic mean:{}", v1.amean()?.gr());
+    println!("Arithmetic mean:{}",v1.amean()?.gr());
+    println!("Median:       {GR}{:>14.10}{UN}",v1.median());   
     println!("Geometric mean:\t{}", v1.gmean()?.gr());
     println!("Harmonic mean:\t{}", v1.hmean()?.gr());
     // println!("Magnitude:\t{}",v1.vmag()));
-    println!("Arithmetic {}", v1.ameanstd()?.gr());
-    println!("Geometric  {}", v1.gmeanstd()?.gr());
-    println!("Harmonic   {}", v1.hmeanstd()?.gr());
+    println!("Arithmetic {}", v1.ameanstd()?);
+    println!("Median     {}", v1.medstats());
+    println!("Geometric  {}", v1.gmeanstd()?);
+    println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
     println!("{}\n", v1.medinfo());
     Ok(())
@@ -148,6 +150,7 @@ fn genericstats() -> Result<(),RE> {
     let v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?.gr());
+    println!("Median\t\t{GR}{:>14.10}{UN}",v.medstats());
     println!("Geometric\t{}", v.gmeanstd()?.gr());
     println!("Harmonic\t{}", v.hmeanstd()?.gr());
     println!("Weighted Arit.\t{}", v.awmeanstd()?.gr());
@@ -169,8 +172,8 @@ fn vecg() -> Result<(),RE> {
     ];
     println!("v2: {}", (&v2).gr());
     println!("Lexical order v1<v2:\t{}", (v1 < v2).gr());
-    println!("Pearson's Correlation:\t{}", v1.correlation(&v2).gr());
     println!("Median Correlation:\t{}", v1.mediancorr(&v2).gr());
+    println!("Pearson's Correlation:\t{}", v1.correlation(&v2).gr());
     println!("Kendall's Correlation:\t{}", v1.kendalcorr(&v2).gr());
     println!("Spearman's Correlation:\t{}", v1.spearmancorr(&v2).gr());
     println!("Euclidian distance:\t{}", v1.vdist::<f64>(&v2).gr());
@@ -218,7 +221,7 @@ fn matrices() -> Result<(),RE> {
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {} points in {} dimensional space",n,d);
-    set_seeds(113);
+    set_seeds(1133);
     let ru = Rnum::newf64();
     let pts = ru.ranvv_in(d,n,0.0,4.0).getvvf64(); 
     // println!("\nTest data:\n{}",pts.gr());
@@ -284,27 +287,26 @@ fn vecvec() -> Result<(),RE> {
     println!("\nMedoid and Outlier Total Distances:\n{}", md);
     println!("Total Distances {}", dists.ameanstd()?.gr());
     println!("Total distances {}", dists.medinfo());
-    println!("GM's total distances:\t{}", pts.distsum(&median).gr()); 
-    println!("ACentroid's total distances:\t{}",pts.distsum(&acentroid).gr());
-    println!("HCentroid's total distances:\t{}",pts.distsum(&hcentroid).gr());
-    println!("GCentroid's total distances:\t{}",pts.distsum(&gcentroid).gr());
+    println!("GM's total distances:        {}", pts.distsum(&median).gr()); 
+    println!("ACentroid's total distances: {}",pts.distsum(&acentroid).gr());
+    println!("HCentroid's total distances: {}",pts.distsum(&hcentroid).gr());
+    println!("GCentroid's total distances: {}",pts.distsum(&gcentroid).gr());
  
     println!(
         "\nMedoid, outlier and radii summary:\n{}\nRadii {}\nRadii {}",
         eccecc, eccstd, eccmed
     );
-    let (ngm,_,_) = pts.nxnonmember(&median);
-    println!("MADGM: {}", pts.madgm(&median).gr());
-    println!("Median's error:      {GR}{:e}{UN}",ngm.vdist::<f64>(&median));
+    println!("Madgm:               {}", pts.madgm(&median).gr());
+    println!("Median's error:      {GR}{:e}{UN}",pts.gmerror(&median));
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());
     println!("Firstpoint's radius: {}", firstp.vdist(&median).gr());
     println!("Medoid's radius:     {}",medoid.vdist(&median).gr());
     println!("HCentroid's radius:  {}", hcentroid.vdist(&median).gr());
     println!("GCentroid's radius:  {}", gcentroid.vdist(&median).gr());
     println!("Outlier's radius:    {}",outlier.vdist(&median).gr()); 
-    println!("Outlier from Medoid: {}",outlier.vdist(medoid).gr());
+    println!("Outlier to Medoid:   {}",outlier.vdist(medoid).gr());
 
-    let seccs = pts.sortedeccs(true, &median);
+    let seccs = pts.radii(&median).sorth(true);
     // println!("\nSorted eccs: {}\n", seccs));
     let lqcnt = seccs.binsearch(eccmed.lq);
     println!(
