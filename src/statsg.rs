@@ -1,8 +1,6 @@
-use crate::{ error::RError, RE, sumn, seqtosubs, MStats, Stats };
-// use anyhow::{ensure, Result};
-
-use indxvec::{Vecops};
-use medians::{Median}; 
+use crate::{error::RError,RE,sumn,seqtosubs,MStats,Stats};
+use indxvec::Vecops;
+use medians::Median; 
 
 impl<T> Stats for &[T] 
     where T: Copy+PartialOrd+std::fmt::Display,f64:From<T> {  

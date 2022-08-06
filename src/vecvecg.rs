@@ -1,6 +1,6 @@
 use crate::{error::RError,RE,Stats,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::{F64,Vecops,Indices};
-use medians::{Median};
+use medians::Median;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
     where T: Copy+PartialOrd+std::fmt::Display,f64:From<T>, 
@@ -209,10 +209,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         }
     }
 
-    /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
-    fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64 {     
-        let devs:Vec<f64> = self.iter().zip(ws).map(|(v,w)| f64::from(*w)*v.vdist(wgm)).collect();
-        devs.as_slice().median()
+    /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator.
+    /// Here the weights are associated with the dimensions, not the points!
+    fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64 {  
+        self.iter().map(|v| v.wvdist(ws,wgm)).collect::<Vec<f64>>().as_slice().median() 
     }
 
     /// Covariance matrix for f64 vectors in self. Becomes comediance when 
