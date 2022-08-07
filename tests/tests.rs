@@ -251,7 +251,7 @@ fn vecvec() -> Result<(),RE> {
     println!("Testing on a random set of {} points in {} dimensional space",n,d);
     set_seeds(113);
     let ru = Rnum::newu8();
-    let pts = ru.ranvv(d,n).getvvu8(); 
+    let pts = ru.ranvv_in(d,n,0.,4.).getvvu8(); 
     // println!("\nTest data:\n{}",pts.gr());
     println!("Set joint entropy: {}", pts.jointentropyn()?.gr());
     println!("Set dependence:    {}", pts.dependencen()?.gr());
@@ -275,7 +275,7 @@ fn vecvec() -> Result<(),RE> {
     let acentroid = pts.acentroid();
     let firstp = pts.firstpoint(); 
   
-    println!("\nMean reciprocal to gm: {}",(recips/d as f64).gr() );
+    println!("\nMean reciprocal of radius: {}",(recips/d as f64).gr() );
     println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&outlier.tof64()).gr());    
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
     println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
@@ -284,7 +284,7 @@ fn vecvec() -> Result<(),RE> {
     let dists = pts.distsums();
     let md = dists.minmax(); 
     println!("\nMedoid and Outlier Total Distances:\n{}", md);
-    println!("Total Distances {}", dists.ameanstd()?.gr());
+    println!("Total Distances {}", dists.ameanstd()?);
     println!("Total distances {}", dists.medinfo());
     println!("GM's total distances:        {}", pts.distsum(&median).gr()); 
     println!("ACentroid's total distances: {}",pts.distsum(&acentroid).gr());
@@ -332,6 +332,7 @@ fn vecvec() -> Result<(),RE> {
     println!("Contribution of removing outlier:  {}",outlier.contrib_oldpt(&median,recips).gr() );
     let contribs = pts.iter().map(|p| p.contrib_oldpt(&median,recips)).collect::<Vec<f64>>();
     println!("\nContributions of Data Points, Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
+    
     let weights:Vec<usize> = Vec::from_iter(0..n);
     let fweights = weights.indx_to_f64(); 
     let wmedian = pts.wgmedian(&fweights,EPS);
