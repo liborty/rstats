@@ -276,7 +276,7 @@ fn vecvec() -> Result<(),RE> {
     let firstp = pts.firstpoint(); 
   
     println!("\nMean reciprocal of radius: {}",(recips/d as f64).gr() );
-    println!("Tukeyvec for outlier:\n{}",pts.tukeyvec(&outlier.tof64()).gr());    
+
     println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
     println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
     println!("Mag of Tukeyvec for outlier:   {}",pts.tukeyvec(&outlier.tof64()).vmag().gr());
@@ -307,11 +307,11 @@ fn vecvec() -> Result<(),RE> {
 
     let seccs = pts.radii(&median).sorth(true);
     // println!("\nSorted eccs: {}\n", seccs));
-    let lqcnt = seccs.binsearch(eccmed.lq);
+    let lqcnt = seccs.binsearch(&eccmed.lq,true);
     println!(
         "Inner quarter of points: {} within radius: {}",
-        lqcnt.gr(),
-        seccs[lqcnt - 1].gr()
+        lqcnt.start.gr(),
+        seccs[lqcnt.start - 1].gr()
     );
     let medcnt = pts.len()/2; 
     // seccs.binsearch(eccmed.median);
@@ -320,11 +320,11 @@ fn vecvec() -> Result<(),RE> {
         medcnt.gr(),
         seccs[medcnt - 1].gr()
     );
-    let uqcnt = seccs.binsearch(eccmed.uq);
+    let uqcnt = seccs.binsearch(&eccmed.uq,true);
     println!(
         "Inner three quarters:    {} within radius: {}",
-        uqcnt.gr(),
-        seccs[uqcnt - 1].gr()
+        uqcnt.start.gr(),
+        seccs[uqcnt.start - 1].gr()
     );
 
     println!("\nContribution of adding acentroid:   {}",acentroid.contrib_newpt(&median,recips).gr() );
@@ -336,6 +336,7 @@ fn vecvec() -> Result<(),RE> {
     let weights:Vec<usize> = Vec::from_iter(0..n);
     let fweights = weights.indx_to_f64(); 
     let wmedian = pts.wgmedian(&fweights,EPS);
+    println!("Raw rads \n:{}",pts.radii(&wmedian).gr());
     println!("Sorted weighted rads:\n{}",pts.wsortedrads(&fweights,&wmedian).gr());
     Ok(())
 }
