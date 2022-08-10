@@ -307,7 +307,7 @@ fn vecvec() -> Result<(),RE> {
 
     let seccs = pts.radii(&median).sorth(true);
     // println!("\nSorted eccs: {}\n", seccs));
-    let lqcnt = seccs.binsearch(&eccmed.lq,true);
+    let lqcnt = seccs.binsearch(&eccmed.lq);
     println!(
         "Inner quarter of points: {} within radius: {}",
         lqcnt.start.gr(),
@@ -320,7 +320,7 @@ fn vecvec() -> Result<(),RE> {
         medcnt.gr(),
         seccs[medcnt - 1].gr()
     );
-    let uqcnt = seccs.binsearch(&eccmed.uq,true);
+    let uqcnt = seccs.binsearch(&eccmed.uq);
     println!(
         "Inner three quarters:    {} within radius: {}",
         uqcnt.start.gr(),
@@ -333,11 +333,11 @@ fn vecvec() -> Result<(),RE> {
     let contribs = pts.iter().map(|p| p.contrib_oldpt(&median,recips)).collect::<Vec<f64>>();
     println!("\nContributions of Data Points, Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
     
-    let weights:Vec<usize> = Vec::from_iter(0..n);
-    let fweights = weights.indx_to_f64(); 
-    let wmedian = pts.wgmedian(&fweights,EPS);
-    println!("Raw rads \n:{}",pts.radii(&wmedian).gr());
-    println!("Sorted weighted rads:\n{}",pts.wsortedrads(&fweights,&wmedian).gr());
+    //let weights:Vec<usize> = Vec::from_iter(0..n);
+    //let fweights = weights.indx_to_f64(); 
+    //let wmedian = pts.wgmedian(&fweights,EPS);
+    //println!("Raw rads \n:{}",pts.radii(&wmedian).gr());
+    //println!("Sorted weighted rads:\n{}",pts.wsortedrads(&fweights,&wmedian).gr());
     Ok(())
 }
 
