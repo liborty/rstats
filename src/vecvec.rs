@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
 use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec};
-use indxvec::{Vecops};
+use indxvec::{Vecops,Mutops};
 use medians::{Med,Median};
 
 impl<T> VecVec<T> for &[Vec<T>] 
@@ -215,6 +215,24 @@ impl<T> VecVec<T> for &[Vec<T>]
     fn madgm(self, gm: &[f64]) -> f64 {     
         let devs:Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
         devs.median()    
+    }
+
+    /// Selects convex hull points out of all zero median/mean points in self
+    fn convex_hull(self) -> Vec<usize> {
+        let mut convindex:Vec<usize> = Vec::new();
+        let radii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
+        let mut radindex = radii.hashsort_indexed(); // ascending radii
+        radindex.mutrevs(); // made into descending
+        convindex.push(radindex[0]); // begin from the outlier
+        for &idx in radindex.iter().skip(1) {
+            let mut passed = true;
+            for &ci in &convindex { 
+                let dotp = self[ci].dotp(&self[idx]); 
+                if dotp >= radii[idx] { passed = false; break; };  
+                }; 
+            if passed { convindex.push(idx); };
+        };
+        convindex 
     }
 
     /// Initial (first) point for geometric medians.

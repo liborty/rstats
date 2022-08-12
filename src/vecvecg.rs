@@ -343,4 +343,5 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         };
         Ok(com)
     }
+ 
 }

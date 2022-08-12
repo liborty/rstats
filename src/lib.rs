@@ -298,6 +298,8 @@ pub trait VecVec<T> {
     fn gmerror(self,gm:&[f64]) -> f64;
     /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> f64;
+    /// Selects convex hull points out of all zero median/mean points in self
+    fn convex_hull(self) -> Vec<usize>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Point-by-point geometric median

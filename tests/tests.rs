@@ -334,6 +334,9 @@ fn vecvec() -> Result<(),RE> {
     let contribs = pts.iter().map(|p| p.contrib_oldpt(&median,recips)).collect::<Vec<f64>>();
     println!("\nContributions of Data Points, Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
     
+    let convex = pts.translate(&median)?.convex_hull();
+    println!("\nConvex hull {} points:\n{}",convex.len().gr(),convex.gr()); 
+
     //let weights:Vec<usize> = Vec::from_iter(0..n);
     //let fweights = weights.indx_to_f64(); 
     //let wmedian = pts.wgmedian(&fweights,EPS);
