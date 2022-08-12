@@ -118,7 +118,7 @@ pub enum RError<T> where T:Sized+Debug {
     OtherError(T)
 }
 ```
-Each of its enum variants also carries a generic payload `T`. Most commonly this will be simply a `&'static str` message giving more specific information, e.g.:
+Each of its enum variants also carries a generic payload `T`. Most commonly this will be simply a `&'static str` message giving more helpful explanation, e.g.:
 
 ```rust 
 return Err(RError::ArithError("cholesky needs a positive definite matrix"));
@@ -154,7 +154,7 @@ One dimensional statistical measures implemented for all numeric end types.
 
 Its methods operate on one slice of generic data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of the data in slice `s`.
-These methods are checked and will report RError(s), such as an empty input. This means you have to apply `?` to their results to pass the errors up, or explicitly match them to take recovery actions.
+These methods are checked and will report RError(s), such as an empty input. This means you have to apply `?` to their results to pass the errors up, or explicitly match them to take recovery actions, depending on the variant.
 
 Included in this trait are:
 
@@ -200,7 +200,7 @@ Some vector algebra as above that can be more efficient when the end type happen
 ## Trait VecVec
 
 Relationships between n vectors (in d dimensions).
-This general data domain is denoted here as (nd). It is in nd where the main original contribution of this library lies. True geometric median (gm) is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhoods of existing set points.
+This general data domain is denoted here as (nd). It is in nd where the main original contribution of this library lies. True geometric median (gm) is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhoods of existing set points. Its variant `pmedian` iterates point-by-point, which gives even better convergence.
 
 * centroid, medoid, outliers, gm
 * sums of distances, radius of a point (as its distance from gm)
@@ -209,13 +209,13 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 * multivariate trend (regression) between two sets of nd points,
 * covariance and comediance matrices.
 
-Warning: trait VecVec is entirely unchecked, so check your data upfront.
-
 ## Trait VecVecg
 
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.11** - Added more error checking, VecVecg trait is now fully checked, be prepared to append ? after many more method calls.
 
 * **Version 1.2.10** - Minor: corrected some examples, removed all unnecessary `.as_slice()` conversions.
 

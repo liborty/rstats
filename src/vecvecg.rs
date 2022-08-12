@@ -57,32 +57,45 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.
     /// This is a robust relationship between two unordered multidimensional sets.
-    /// The two sets have to be in the same space but can have different numbers of points.
-    fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Vec<f64> {
-        let mut m1 = self.gmedian(eps);       
-        m1.mutvsub::<f64>(&v.gmedian(eps));
-        m1
+    /// The two sets have to be in the same (dimensional) space but can have different numbers of points.
+    fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Result<Vec<f64>,RE> {
+        if self[0].len() != v[0].len() { return Err(RError::DataError("trend dimensions mismatch")); };
+        Ok(v.gmedian(eps).vsub::<f64>(&self.gmedian(eps)))
     }
 
-    /// Translates the whole set by subtracting vector m. Returns Vec of Vecs.
+    /// Translates the whole set by subtracting vector m.
     /// When m is set to the geometric median, this produces the zero median form.
     /// The geometric median is invariant with respect to rotation,
     /// unlike the often used mean (`acentroid` here), or the quasi median,
     /// both of which depend on the choice of axis.
-     fn translate(self, m: &[U]) -> Vec<Vec<f64>> {  
-        self.iter().map(|s| s.vsub(m)).collect()   
+     fn translate(self, m:&[U]) -> Result<Vec<Vec<f64>>,RE> { 
+        if self[0].len() != m.len() { return Err(RError::DataError("translate dimensions mismatch")); }; 
+        Ok(self.iter().map(|s| s.vsub(m)).collect())   
     }
 
-    /// Transforms nd data to zeromedian form
-    /// essentially the same as translate but specialised to f64 gms
-    fn zerogm(self, gm: &[f64]) -> Vec<Vec<f64>> {  
-        self.iter().map(|s| s.vsub::<f64>(gm)).collect()
-    }
-
+    /// Proportions of points along each +/-axis (hemisphere)
+    /// Excludes points that are perpendicular to it
+    fn tukeyvec(self, gm: &[U]) -> Result<Vec<f64>,RE> { 
+        let nf = self.len() as f64; 
+        let dims = self[0].len();
+        if dims != gm.len() { return Err(RError::DataError("tukeyvec dimensions mismatch")); }; 
+        let mut hemis = vec![0_f64; 2*dims]; 
+        for s in self { 
+            let zerogm = s.vsub(gm);
+            for (i,&component) in zerogm.iter().enumerate() {
+                if component > 0. { hemis[i] += 1. }
+                else if component < 0. { hemis[dims+i] += 1. };  
+            }
+        }
+        hemis.iter_mut().for_each(|hem| *hem /= nf );
+        Ok(hemis)
+    } 
+ 
     /// Dependencies of m on each vector in self
     /// m is typically a vector of outcomes.
     /// Factors out the entropy of m to save repetition of work
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>,RE> {  
+        if self[0].len() != m.len() { return Err(RError::DataError("dependencies dimensions mismatch")); }
         let entropym = m.entropy();
         return self.iter().map(|s| -> Result<f64,RE> {  
             Ok((entropym + s.entropy())/
@@ -91,18 +104,20 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// (Median) correlations of m with each vector in self
     /// Factors out the unit vector of m to save repetition of work
-    fn correlations(self, m: &[U]) -> Vec<f64> {
+    fn correlations(self, m: &[U]) -> Result<Vec<f64>,RE> {
+        if self[0].len() != m.len() { return Err(RError::DataError("correlations dimensions mismatch")); }
         let mm = m.median(); // ignore quartile fields 
         let unitzerom =  m.sadd(-mm).vunit();
-        self.iter().map(|s| { 
+        Ok (self.iter().map(|s| { 
             let ms = s.median();   
             s.sadd(-ms).vunit().dotp(&unitzerom)
-        }).collect::<Vec<f64>>()
+        }).collect::<Vec<f64>>())
     }
 
     /// Individual distances from any point v, typically not a member, to all the members of self.    
-    fn dists(self, v: &[U]) -> Vec<f64> {
-        self.iter().map(|p| p.vdist(v)).collect()
+    fn dists(self, v:&[U]) -> Result<Vec<f64>,RE> {
+        if self[0].len() != v.len() { return Err(RError::DataError("dists dimensions mismatch")); }
+        Ok(self.iter().map(|p| p.vdist(v)).collect())
     }
 
     /// Sum of distances from any single point v, typically not a member, 
@@ -110,20 +125,30 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Geometric Median (gm) is defined as the point which minimises this function.
     /// This is relatively expensive measure to compute.
     /// The radius (distance) from gm is far more efficient, once gm has been found.
-    fn distsum(self, v: &[U]) -> f64 {
-        self.iter().map(|p| p.vdist(v)).sum::<f64>()
+    fn distsum(self, v: &[U]) -> Result<f64,RE> {
+        if self[0].len() != v.len() { return Err(RError::DataError("distsum dimensions mismatch")); }
+        Ok(self.iter().map(|p| p.vdist(v)).sum::<f64>())
     }
 
     /// Sorted weighted radii (eccentricity) magnitudes to all member points from the Geometric Median.
-    fn wsortedrads(self, ws: &[U], gm:&[f64]) -> Vec<f64> {
+    fn wsortedrads(self, ws: &[U], gm:&[f64]) -> Result<Vec<f64>,RE> {
+        if self.len() != ws.len() { 
+            return Err(RError::DataError("wsortedrads self and ws lengths mismatch")); };
+        if self[0].len() != gm.len() { 
+            return Err(RError::DataError("wsortedrads self and gm dimensions mismatch")); };
         let wnorm = ws.len() as f64 / ws.iter().map(|&w|f64::from(w)).sum::<f64>(); 
-        self.iter().zip(ws).map(|(s,&w)| wnorm*f64::from(w)*s.vdist::<f64>(gm))
-        .collect::<Vec<f64>>()
-        .sorth(true)
+        Ok (self.iter().zip(ws).map(|(s,&w)| wnorm*f64::from(w)*s.vdist::<f64>(gm))
+            .collect::<Vec<f64>>()
+            .sorth(true)
+        )
     } 
 
     /// Like wgmparts, except only does one iteration from any non-member point g
-    fn wnxnonmember(self, ws:&[U], g:&[f64]) -> (Vec<f64>,Vec<f64>,f64) {
+    fn wnxnonmember(self, ws:&[U], g:&[f64]) -> Result<(Vec<f64>,Vec<f64>,f64),RE> {
+        if self.len() != ws.len() { 
+            return Err(RError::DataError("wnxnonmember and ws lengths mismatch")); };
+        if self[0].len() != g.len() { 
+            return Err(RError::DataError("wnxnonmember self and gm dimensions mismatch")); };
         // vsum is the sum vector of unit vectors towards the points
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
@@ -137,13 +162,15 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                  recip += rec // add separately the reciprocals for final scaling   
             }
         }
-        ( vsum.iter().map(|vi| vi / recip).collect::<Vec<f64>>(),        
+        Ok(( vsum.iter().map(|vi| vi / recip).collect::<Vec<f64>>(),        
             vsum,
-            recip )
+            recip ))
     }    
 
     /// Weighted Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
-    fn wgmedian(self, ws:&[U], eps: f64) -> Vec<f64> { 
+    fn wgmedian(self, ws:&[U], eps: f64) -> Result<Vec<f64>,RE> { 
+        if self.len() != ws.len() { 
+            return Err(RError::DataError("wgmedian and ws lengths mismatch")); };
         let mut g = self.acentroid(); // start iterating from the Centre 
         let mut recsum = 0f64;
         loop { // vector iteration till accuracy eps is exceeded  
@@ -162,14 +189,16 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             }
             nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);       
             // eprintln!("recsum {}, nextrecsum {} diff {}",recsum,nextrecsum,nextrecsum-recsum);
-            if nextrecsum-recsum < eps { return nextg };  // termination test
+            if nextrecsum-recsum < eps { return Ok(nextg) };  // termination test
             g = nextg;
             recsum = nextrecsum;            
         }
     }
     
     /// Like `gmedian` but returns also the sum of unit vecs and the sum of reciprocals. 
-    fn wgmparts(self, ws:&[U], eps: f64) -> (Vec<f64>,Vec<f64>,f64) { 
+    fn wgmparts(self, ws:&[U], eps: f64) -> Result<(Vec<f64>,Vec<f64>,f64),RE> { 
+        if self.len() != ws.len() { 
+            return Err(RError::DataError("wgmparts and ws lengths mismatch")); };
         let mut g = self.acentroid(); // start iterating from the Centre
         let mut recsum = 0f64; 
         loop { // vector iteration till accuracy eps is exceeded  
@@ -187,11 +216,11 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 } // else simply ignore this point should its distance from g be zero
             }
             if nextrecsum-recsum < eps { 
-                return (
+                return Ok((
                     nextg.iter().map(|&gi| gi/nextrecsum).collect::<Vec<f64>>(),
                     nextg,
                     nextrecsum
-                ); }; // termination        
+                )); }; // termination        
             nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
             g = nextg;
             recsum = nextrecsum;            
@@ -200,8 +229,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator.
     /// Here the weights are associated with the dimensions, not the points!
-    fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64 {  
-        self.iter().map(|v| v.wvdist(ws,wgm)).collect::<Vec<f64>>().median() 
+    fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
+        if self.len() != ws.len() { 
+            return Err(RError::DataError("wgmadgm and ws lengths mismatch")); }; 
+        Ok(self.iter().map(|v| v.wvdist(ws,wgm)).collect::<Vec<f64>>().median()) 
     }
 
     /// Covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -211,12 +242,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// The indexing is always in this order: (row,column) (left to right, top to bottom).
     /// The items are flattened into a single vector in this order.
     /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
-    fn covar(self, m:&[U]) -> Vec<f64> {
+    fn covar(self, mid:&[U]) -> Result<Vec<f64>,RE> {
         let d = self[0].len(); // dimension of the vector(s)
+        if d != mid.len() { 
+            return Err(RError::DataError("covar self and mid dimensions mismatch")); }; 
         let mut cov:Vec<f64> = vec![0_f64; (d+1)*d/2]; // flat lower triangular results array  
         for thisp in self { // adding up covars for all the points
             let mut covsub = 0_usize; // subscript into the flattened array cov
-            let vm = thisp.vsub(m);  // zero mean vector
+            let vm = thisp.vsub(mid);  // zero mean vector
             vm.iter().enumerate().for_each(|(i,thisc)| 
                 // its products up to and including the diagonal (itself)
                 vm.iter().take(i+1).for_each(|vmi| { 
@@ -227,7 +260,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         // now compute the means and return
         let lf = self.len() as f64;
         cov.iter_mut().for_each(|c| *c /= lf); 
-        cov
+        Ok(cov)
     }
  
     /// Weighted covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -237,9 +270,12 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// The indexing is always in this order: (row,column) (left to right, top to bottom).
     /// The items are flattened into a single vector in this order.
     /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
-    fn wcovar(self, ws:&[U], m:&[f64]) -> Vec<f64> {
+    fn wcovar(self, ws:&[U], m:&[f64]) -> Result<Vec<f64>,RE> {
         let n = self[0].len(); // dimension of the vector(s)
-        // let mut covs:Vec<Vec<f64>> = Vec::new();
+        if n != m.len() { 
+            return Err(RError::DataError("wcovar self and m dimensions mismatch")); }; 
+        if self.len() != ws.len() { 
+            return Err(RError::DataError("wcovar self and ws lengths mismatch")); }; 
         let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array
         let mut wsum = 0_f64;
         self.iter().zip(ws).for_each(|(selfh,&wsh)| { // adding up covars for all the points
@@ -254,7 +290,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         });
         // now compute the means and return
         cov.mutsmult::<f64>(1_f64/wsum); 
-        cov
+        Ok(cov)
     }
 
     /// Covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -266,8 +302,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
     /// Similar to `covar` above but instead of averaging the covariances over n points, 
     /// their medians are returned.
-    fn comed(self, m:&[U]) -> Vec<f64> { // m should be the median here 
+    fn comed(self, m:&[U]) -> Result<Vec<f64>,RE> { // m should be the median here 
         let d = self[0].len(); // dimension of the vector(s)
+        if d != m.len() { 
+            return Err(RError::DataError("comed self and m dimensions mismatch")); }; 
         let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2); // result vec flat lower triangular array 
         let zs:Vec<Vec<f64>> = self.iter().map(|s| s.vsub(m)).collect(); // zero median vectors
         for i in 0..d { // cross multiplaying the components
@@ -276,7 +314,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 com.push(thisproduct.median());
             }
         }
-        com
+        Ok(com)
     }
 
     /// Covariance matrix for weighted f64 vectors in self. Becomes comediance when 
@@ -288,8 +326,12 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
     /// Similar to `wcovar` above but instead of averaging the covariances over n points, 
     /// their median is returned.
-    fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64> { // m should be the median here 
+    fn wcomed(self, ws:&[U], m:&[f64]) -> Result<Vec<f64>,RE> { // m should be the median here 
         let d = self[0].len(); // dimension of the vector(s)
+        if d != m.len() { 
+            return Err(RError::DataError("wcomed self and m dimensions mismatch")); }; 
+        if self.len() != ws.len() { 
+            return Err(RError::DataError("wcomed self and ws lengths mismatch")); }; 
         let zs:Vec<Vec<f64>> = self.iter().map(|s| s.vsub(m)).collect(); // zero median vectors
         let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2); // result vec flat lower triangular array 
         let wmean = ws.iter().map(|&w| f64::from(w)).sum::<f64>()/(self.len() as f64); 
@@ -299,6 +341,6 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 com.push(thisproduct.median()/wmean);
             }
         };
-        com
+        Ok(com)
     }
 }

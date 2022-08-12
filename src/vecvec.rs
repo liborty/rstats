@@ -1,6 +1,6 @@
 use std::iter::FromIterator;
 
-use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec, VecVecg};
+use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec};
 use indxvec::{Vecops};
 use medians::{Med,Median};
 
@@ -216,23 +216,6 @@ impl<T> VecVec<T> for &[Vec<T>]
         let devs:Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
         devs.median()    
     }
-
-    /// Proportions of points along each +/-axis (hemisphere)
-    /// Excludes points that are perpendicular to it
-    fn tukeyvec(self, gm: &[f64]) -> Vec<f64> { 
-        let nf = self.len() as f64; 
-        let dims = self[0].len();
-        let mut hemis = vec![0_f64; 2*dims];       
-        let zerogm = self.zerogm(gm);
-        for v in zerogm {   
-            for (i,&component) in v.iter().enumerate() {
-                if component > 0. { hemis[i] += 1. }
-                else if component < 0. { hemis[dims+i] += 1. };  
-            }
-        }
-        hemis.iter_mut().for_each(|hem| *hem /= nf );
-        hemis
-    } 
 
     /// Initial (first) point for geometric medians.
     fn firstpoint(self) -> Vec<f64> {

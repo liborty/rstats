@@ -298,8 +298,6 @@ pub trait VecVec<T> {
     fn gmerror(self,gm:&[f64]) -> f64;
     /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> f64;
-    /// Proportions of points found along each axis
-    fn tukeyvec(self, gm: &[f64]) -> Vec<f64>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Point-by-point geometric median
@@ -322,37 +320,37 @@ pub trait VecVecg<T,U> {
     /// Weighted Arithmetic Centre = weighted euclidian mean of a set of points
     fn wacentroid(self,ws: &[U]) -> Vec<f64>;
     /// Trend between two sets
-    fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Vec<f64>;
+    fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Result<Vec<f64>,RE>;
     /// Subtract m from all points - e.g. transform to zero median form
-    fn translate(self, m: &[U]) -> Vec<Vec<f64>>;
-    /// Transform nd data to zeromedian for 
-    fn zerogm(self, gm: &[f64]) -> Vec<Vec<f64>>; 
-    /// Dependencies of vector m on each vector in self
+    fn translate(self,m: &[U]) -> Result<Vec<Vec<f64>>,RE>; 
+    /// Proportions of points along each +/-axis (hemisphere)
+    fn tukeyvec(self, gm: &[U]) -> Result<Vec<f64>,RE>;
+    /// Dependencies of vector m on each vector in self 
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>,RE>;
     /// (Median) correlations of m with each vector in self
-    fn correlations(self, m: &[U]) -> Vec<f64>;
+    fn correlations(self, m: &[U]) -> Result<Vec<f64>,RE>;
     /// Sum of distances from arbitrary point (v) to all the points in self      
-    fn distsum(self, v: &[U]) -> f64;
+    fn distsum(self, v: &[U]) -> Result<f64,RE>;
     /// Individual distances from any point v (typically not in self) to all the points in self.    
-    fn dists(self, v: &[U]) -> Vec<f64>;
+    fn dists(self, v:&[U]) -> Result<Vec<f64>,RE>;
     /// Weighted sorted weighted radii magnitudes, normalised
-    fn wsortedrads(self, ws: &[U], gm: &[f64]) -> Vec<f64>; 
+    fn wsortedrads(self, ws: &[U], gm: &[f64]) -> Result<Vec<f64>,RE>; 
     /// Like wgmparts, except only does one iteration from any non-member point g
-    fn wnxnonmember(self, ws:&[U], g:&[f64]) -> (Vec<f64>,Vec<f64>,f64); 
+    fn wnxnonmember(self, ws:&[U], g:&[f64]) -> Result<(Vec<f64>,Vec<f64>,f64),RE>; 
     /// The weighted geometric median to accuracy eps 
-    fn wgmedian(self, ws: &[U], eps: f64) -> Vec<f64>;
+    fn wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>,RE>;
     /// Like `wgmedian` but returns also the sum of unit vecs and the sum of reciprocals. 
-    fn wgmparts(self, ws:&[U],eps: f64) -> (Vec<f64>,Vec<f64>,f64);
+    fn wgmparts(self, ws:&[U],eps: f64) -> Result<(Vec<f64>,Vec<f64>,f64),RE>;
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
-    fn wmadgm(self, ws: &[U], wgm: &[f64]) -> f64;     
+    fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE>;     
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
-    fn covar(self, med:&[U]) -> Vec<f64>;  
+    fn covar(self, med:&[U]) -> Result<Vec<f64>,RE>;  
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
-    fn wcovar(self, ws:&[U], m:&[f64]) -> Vec<f64>;
+    fn wcovar(self, ws:&[U], m:&[f64]) -> Result<Vec<f64>,RE>;
     /// Flattened comediance matrix for f64 vectors in self.
     /// Similar to `covar` above but medians instead of means are returned.
-    fn comed(self, m:&[U]) -> Vec<f64>;
+    fn comed(self, m:&[U]) -> Result<Vec<f64>,RE>;
     /// Flatteened comediance matrix for weighted f64 vectors.
     /// Similar to `wcovar` above but medians instead of means are returned.
-    fn wcomed(self, ws:&[U], m:&[f64]) -> Vec<f64>;
+    fn wcomed(self, ws:&[U], m:&[f64]) -> Result<Vec<f64>,RE>;
 }

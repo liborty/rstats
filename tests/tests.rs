@@ -38,9 +38,9 @@ fn u8() -> Result<(),RE> {
     println!("Testing on a random set of {} points in {} d space:", n, d);
     set_seeds(77777);
     let pt = Rnum::newu8().ranvv(d, n).getvvu8();
-    let cov = pt.covar(&pt.acentroid());
+    let cov = pt.covar(&pt.acentroid())?;
     println!("Covariances:\n{}", cov.gr());
-    let com = pt.covar(&pt.gmedian(EPS));
+    let com = pt.covar(&pt.gmedian(EPS))?;
     println!("Comediances:\n{}", com.gr());
     println!("Their Distance: {}", cov.vdist(&com).gr());
     let trpt = pt.transpose();
@@ -82,14 +82,14 @@ fn fstats() -> Result<(),RE> {
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
     let pt = Rnum::newf64().ranvv(d, n).getvvf64();
-    println!("Classical Covariances:\n{}", pt.covar(&pt.acentroid()).gr());
+    println!("Classical Covariances:\n{}", pt.covar(&pt.acentroid())?.gr());
     println!(
         "Covariances of zero median data:\n{}",
-        pt.covar(&pt.gmedian(EPS)).gr()
+        pt.covar(&pt.gmedian(EPS))?.gr()
     );
     println!(
         "Comediances:\n{}",
-        pt.comed(&pt.gmedian(EPS)).gr()
+        pt.comed(&pt.gmedian(EPS))?.gr()
     );
     let trpt = pt.transpose();
     println!(
@@ -206,13 +206,14 @@ fn vecg() -> Result<(),RE> {
 #[test]
 /// Trend between two data sets in space of the same dimensions but
 /// numbers of points can differ
-fn trend() {
+fn trend() -> Result<(),RE> {
     let d = 7_usize;
     set_seeds(777);
     let rf64 = Rnum::newf64(); 
     let pts1 = rf64.ranvv(d, 37).getvvf64();
-    let pts2 = rf64.ranvv(d, 33).getvvf64();
-    println!("\nTrend vector:\n{}\n", pts1.trend(EPS, pts2).gr());
+    let pts2 = rf64.ranvv(d, 50).getvvf64();
+    println!("\nTrend vector:\n{}\n", pts1.trend(EPS, pts2)?.gr());
+    Ok(())
 }
 
 #[test]
@@ -226,7 +227,7 @@ fn matrices() -> Result<(),RE> {
     let pts = ru.ranvv_in(d,n,0.0,4.0).getvvf64(); 
     // println!("\nTest data:\n{}",pts.gr());
     // let transppt = pts.transpose();  
-    let cov = pts.covar(&pts.pmedian(EPS));
+    let cov = pts.covar(&pts.pmedian(EPS))?;
     println!("Triangular comediance matrix in scan order, size {}:\n{}",cov.len(),cov.gr());
     let cholmat = cov.cholesky()?; 
     println!("\nCholesky L matrix, size {}:\n{}",cholmat.len(),cholmat.gr());
@@ -264,7 +265,7 @@ fn vecvec() -> Result<(),RE> {
     );
     println!(
         "Correlations with outcomes:\n{}",
-        transppt.correlations(&outcomes).gr()
+        transppt.correlations(&outcomes)?.gr()
     );    
     let (median,_vsum,recips) = pts.gmparts(EPS);
     let (eccstd, eccmed, eccecc) = pts.eccinfo(&median); 
@@ -277,19 +278,19 @@ fn vecvec() -> Result<(),RE> {
   
     println!("\nMean reciprocal of radius: {}",(recips/d as f64).gr() );
 
-    println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median).vmag().gr());
-    println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid).vmag().gr());
-    println!("Mag of Tukeyvec for outlier:   {}",pts.tukeyvec(&outlier.tof64()).vmag().gr());
+    println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median)?.vmag().gr());
+    println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid)?.vmag().gr());
+    println!("Mag of Tukeyvec for outlier:   {}",pts.tukeyvec(&outlier.tof64())?.vmag().gr());
     // let testvec = ru.ranv(d).getvu8();
     let dists = pts.distsums();
     let md = dists.minmax(); 
     println!("\nMedoid and Outlier Total Distances:\n{}", md);
     println!("Total Distances {}", dists.ameanstd()?);
     println!("Total distances {}", dists.medinfo());
-    println!("GM's total distances:        {}", pts.distsum(&median).gr()); 
-    println!("ACentroid's total distances: {}",pts.distsum(&acentroid).gr());
-    println!("HCentroid's total distances: {}",pts.distsum(&hcentroid).gr());
-    println!("GCentroid's total distances: {}",pts.distsum(&gcentroid).gr());
+    println!("GM's total distances:        {}", pts.distsum(&median)?.gr()); 
+    println!("ACentroid's total distances: {}",pts.distsum(&acentroid)?.gr());
+    println!("HCentroid's total distances: {}",pts.distsum(&hcentroid)?.gr());
+    println!("GCentroid's total distances: {}",pts.distsum(&gcentroid)?.gr());
  
     println!(
         "\nMedoid, outlier and radii summary:\n{}\nRadii {}\nRadii {}",
