@@ -220,15 +220,17 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// Selects convex hull points out of all zero median/mean points in self
     fn convex_hull(self) -> Vec<usize> {
         let mut convindex:Vec<usize> = Vec::new();
-        let radii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let mut radindex = radii.hashsort_indexed(); // ascending radii
-        radindex.mutrevs(); // made into descending
+        let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
+        let mut radindex = sqradii.hashsort_indexed(); // ascending radii
+        radindex.mutrevs(); // make them descending
+        // shorter alternative but we need explicit sqradii below
+        // let radindex = self.keyindex(|s| s.vmagsq(),false); 
         convindex.push(radindex[0]); // begin from the outlier
         for &idx in radindex.iter().skip(1) {
             let mut passed = true;
             for &ci in &convindex { 
                 let dotp = self[ci].dotp(&self[idx]); 
-                if dotp >= radii[idx] { passed = false; break; };  
+                if dotp >= sqradii[idx] { passed = false; break; };  
                 }; 
             if passed { convindex.push(idx); };
         };

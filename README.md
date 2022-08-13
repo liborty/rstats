@@ -215,6 +215,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.12** - Updated dependency `indxvec v1.3.4'.
+
 * **Version 1.2.11** - Added `convex_hull` to trait VecVec. Added more error checking: VecVecg trait is now fully checked, be prepared to append `?` after most method calls.
 
 * **Version 1.2.10** - Minor: corrected some examples, removed all unnecessary `.as_slice()` conversions.

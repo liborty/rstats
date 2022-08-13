@@ -18,7 +18,7 @@ pub mod vecvec;
 pub mod vecvecg;
 
 // reexporting useful related methods
-pub use indxvec::{MinMax,F64,Printing,printing::*};
+pub use indxvec::{MinMax,Printing,printing::*};
 pub use medians::{Med,MStats,Median};
 use crate::error::RError;
 
@@ -291,7 +291,8 @@ pub trait VecVec<T> {
     /// Exact eccentricity vectors to each member point by using the gm 
     fn radii(self, gm:&[f64]) -> Vec<f64>; 
     /// Arith mean and std (in MStats struct), Median info (in Med struct), Medoid and Outlier (in MinMax struct) 
-    fn eccinfo(self, gm:&[f64]) -> (MStats,Med,MinMax<f64>) where Vec<f64>:FromIterator<f64>;
+    fn eccinfo(self, gm:&[f64]) -> (MStats,Med,MinMax<f64>) 
+        where Vec<f64>:FromIterator<f64>;
     /// Quasi median, recommended only for comparison purposes
     fn quasimedian(self) -> Vec<f64>;
     /// Geometric median estimate's error
