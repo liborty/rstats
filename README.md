@@ -5,7 +5,7 @@
 [<img alt="crates.io" src="https://img.shields.io/crates/d/rstats?logo=rust">](https://crates.io/crates/rstats)
 [<img alt="docs.rs" src="https://img.shields.io/docsrs/rstats?logo=rust">](https://docs.rs/rstats)
 
-Statistics, Linear Algebra, Information Measures, Cholesky Matrix Decomposition, Mahalanobis Distance, Multidimensional Data Analysis, Machine Learning and more ...
+Statistics, Linear Algebra, Information Measures, Machine Learning, Data Analysis, Cholesky Matrix Decomposition, Mahalanobis Distance,   Convex Hull and more ...
 
 ## Usage
 
@@ -14,7 +14,7 @@ Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 Use in your source files any of the following structs, when needed:
 
 ```rust  
-use rstats::{RE,Mstats,MinMax,F64,Med};
+use rstats::{RE,Mstats,MinMax,Med};
 ```
 
 and any of the following rstats defined traits:
@@ -34,25 +34,29 @@ cargo test --release -- --test-threads=1 --nocapture --color always
 
 ## Introduction
 
-`Rstats` is primarily about characterising multidimensional sets of points, with applications to Machine Learning and Big Data Analysis. Several branches of mathematics: statistics, linear algebra, information theory and set theory are combined in this one consistent package, based on the fact that they all operate on the same objects: `Vecs` of data items.
+`Rstats` is primarily about characterising sets of n points, each represented as a `Vec`, in space of `d` dimensions (where d is `vec.len()`). It has applications mostly in Machine Learning and Data Analysis. 
 
-`RStats` begins with basic statistical measures and vector algebra, which provide self-contained basic tools for the machine learning (ML) multidimensional (nd) algorithms but can also be used in their own right. `Non analytical statistics` is used, whereby the `random variables` are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the data, not from some assumed distributions.
+Several branches of mathematics: statistics, linear algebra, information theory and set theory are combined in this one consistent crate, based on the fact that they all operate on these same objects. The only difference being that an ordering of their components is sometimes assumed (linear algebra, set theory) and sometimes it is not (statistics, information theory, set theory).
 
-Our treatment of multidimensional sets of points (nd vectors) is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
+`RStats` begins with basic statistical measures and vector algebra, which provide self-contained tools for the machine learning (ML) multidimensional algorithms but can also be used in their own right. 
 
-* `median correlation`- in one dimension (1d), our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as cosine of an angle between two zero median vectors (instead of Pearson's zero mean vectors).
+`Non analytical statistics` is preferred, whereby the `random variables` are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the data, not from some assumed distributions.
+
+Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
+
+* `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as cosine of an angle between two zero median samples (instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of our thinking of a sample as a vector in d dimensional space. 
 
 * `gmedian and pmedian` - fast multidimensional `geometric median (gm)` algorithms.
 
-* `madgm` - generalisation to nd of robust data spread estimator known as `MAD` (median of absolute deviations from median). 
+* `madgm` - generalisation to `nd` of a robust data spread estimator known as `MAD` (median of absolute deviations from median). 
 
-* `contribution` - of a point to an nd set. Defined as gm displacement if the point was added/removed. Related to the point's radius (distance from gm) but not the same, as it depends on all the other points as well.
+* `contribution` - of a point to an nd set. Defined as a magnitude of gm adjustment, when the point is added to the set. It is related to the point's radius (distance from the gm) but not the same, as it depends on the radii of all the other points as well.
 
 * `comediance` - instead of covariance (matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero median vectors` are replacing `zero mean vectors` in covariance calculations.
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-In n dimensions (nd), many authors  'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are even much slower to compute than our gm.
+In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are also much slower to compute than our gm.
 
 *Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by their rotation.*
 
@@ -63,29 +67,31 @@ In contrast, analyses based on the true geometric median (gm) are axis (rotation
 #### Including some new definitions for sets of nd points, i.e. n points in d dimensional space
 
 * `Median correlation` between
- two 1d vectors. We define it analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson 'normalises' by subtracting the mean from all components, we subtract the median.
+ two samples. We define it analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson 'normalises' by subtracting the mean from all components, we subtract the median.
 
-* `Centroid/Centre/Mean` is the (generally non member) nd point that minimises the sum of *squares* of distances to all other member points. Thus it is susceptible to outliers. Specifically, it is the n-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
+* `Centroid/Centre/Mean` of an nd set. It is the (generally non member) point that minimises its sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the d-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
 
-* `Quasi/Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are 1-d medians along each axis). It is a mistaken concept which we do not recommend using.
+* `Quasi/Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are  medians along each axis). It is a mistaken concept which we do not recommend using.
 
 * `Tukey Median` is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but only partially implemented here by `tukeyvec`, as its advantages over the geometric median are not clear.
 
-* `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all members. This is the one we want. It is much less susceptible to outliers than centroid. In addition, unlike quasi median, `gm` is rotation independent.
+* `Median or the true geometric median (gm)`, is the point (generally non member), which minimises the sum of distances to all member points. This is the one we want. It is much less susceptible to outliers than the centroid. In addition, unlike quasi median, `gm` is rotation independent.
 
 * `Medoid` is the member of the set with the least sum of distances to all other members. Equivalently, the member which is the nearest to the `gm`.
 
 * `Outlier` is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm`.
 
+* `Convex Hull` is the subset consisting of selected points p, such that no other member points lie outside the plane through p and normal to its radius vector. The remaining points are the `internal` points.
+
 * `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
 
-* `MADGM` (median of distances from gm). This is our generalisation of `MAD` (median of absolute differences) measure from 1d to nd. It is a robust measure of nd data spread.
+* `MADGM` (median of distances from gm). This is our generalisation of `MAD` (median of absolute differences) measure from one dimension to any number of dimensions (d>1). It is a robust measure of nd data spread.
 
 * `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors.
 
-* `Mahalanobis Distance` is a weighted distace, where the weights are derived from the axis of variation of the nd data points cloud. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method  decomposes the covariance/comediance positive definite matrix S into a product of two triangular matrices: S = LU. See more explanations in the code.
+* `Mahalanobis Distance` is a weighted distace, where the weights are derived from the axis of variation of the nd data points cloud. Thus distances in the directions in which there are few points are penalised (increased) and vice versa. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method decomposes the covariance/comediance positive definite matrix S into a product of two triangular matrices: S = LL'. See more details in the code comments.
 
-* `Contribution`: one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point as the change to gm caused by adding/deleting that point. Generally, outlying points make greater contributions to the gm but not as much as they would to the centroid. The contribution depends not only on the radius of the example in question but also on the radii of all other (existing) examples.
+* `Contribution`: one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point as the magnitude of adjustment to gm caused by adding that point. Generally, outlying points make greater contributions to the gm but not as much as they would to the centroid. The contribution depends not only on the radius of the example point in question but also on the radii of all other (existing) examples.
 
 ## Implementation
 
@@ -208,12 +214,17 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 * transformation to zero geometric median data,
 * multivariate trend (regression) between two sets of nd points,
 * covariance and comediance matrices.
+* convex hull points
 
 ## Trait VecVecg
 
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.14** - Readme clarifications. Added `radius` to `VecVec.
+
+* **Version 1.2.13** - Added `normalize` and `wvmean`.
 
 * **Version 1.2.12** - Updated dependency `indxvec v1.3.4'.
 

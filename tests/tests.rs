@@ -296,6 +296,9 @@ fn vecvec() -> Result<(),RE> {
         "\nMedoid, outlier and radii summary:\n{}\nRadii {}\nRadii {}",
         eccecc, eccstd, eccmed
     );
+    let radsindex = pts.radii(&median).hashsort_indexed();
+    println!("Radii ratio:\t {GR}{}{UN}",
+        pts.radius(radsindex[0],&median)?/pts.radius(radsindex[radsindex.len()-1],&median)?);
     println!("Madgm:               {}", pts.madgm(&median).gr());
     println!("Median's error:      {GR}{:e}{UN}",pts.gmerror(&median));
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());
@@ -335,7 +338,11 @@ fn vecvec() -> Result<(),RE> {
     println!("\nContributions of Data Points, Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
     
     let convex = pts.translate(&median)?.convex_hull();
-    println!("\nConvex hull {} points:\n{}",convex.len().gr(),convex.gr()); 
+    let innerrad = pts.radius(*convex.last().unwrap(),&median)?;
+    let outerrad = pts.radius(*convex.first().unwrap(),&median)?;
+    println!("\nConvex hull has {} points:\n{}",convex.len().gr(),convex.yl()); 
+    println!( "Convex hull radii minindex: {} maxindex: {} radii ratio: {}", 
+        convex.last().unwrap().yl(), convex.first().unwrap().yl(), (innerrad/outerrad).gr() );        
 
     //let weights:Vec<usize> = Vec::from_iter(0..n);
     //let fweights = weights.indx_to_f64(); 

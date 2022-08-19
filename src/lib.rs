@@ -129,6 +129,8 @@ pub trait Stats {
     fn symmatrix(self) -> Result<Vec<Vec<f64>>,RE>;
     /// Cholesky decomposition of a positive definite matrix into LLt
     fn cholesky(self) -> Result<Vec<f64>,RE>;
+    /// Householder reflection
+    fn house_reflector(self) -> Vec<f64>;
 }
 
 /// Vector Algebra on two vectors (represented here as generic slices).
@@ -150,6 +152,8 @@ pub trait Vecg {
     fn vadd<U>(self, v:&[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Euclidian distance 
     fn vdist<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
+    /// Weighted arithmetic mean of `self:&[T]`, scaled by `ws:&[U]`
+    fn wvmean<U>(self,ws:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Weighted distance of self:&[T],weighted by ws:&[U],to v:&[V] 
     fn wvdist<U,V>(self, ws:&[U],v:&[V]) -> f64
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>, V: Copy, f64:From<V>;
@@ -211,6 +215,8 @@ pub trait Vecg {
     /// Mahalanobis scaled magnitude of difference vector d 
     fn mahalanobis<U>(self,d: &[U]) -> Result<f64,RE>
         where U: Copy+PartialOrd+std::fmt::Display, f64:From<U>;
+            /// Householder reflect
+    fn house_reflect(self,x:&[f64]) -> Vec<f64>;
 }
 
 /// Mutable operations on one generic slice. 
@@ -258,6 +264,8 @@ pub trait Vecu8 {
 pub trait VecVec<T> {
     /// Transpose slice of vecs matrix
     fn transpose(self) -> Vec<Vec<T>>;
+    /// Normalize columns, so that they are all unit vectors
+    fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>>; 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE>;
     /// Joint entropy between a set of vectors of the same length
@@ -288,7 +296,9 @@ pub trait VecVec<T> {
     fn nxnonmember(self, g:&[f64]) -> (Vec<f64>,Vec<f64>,f64);
     /// Estimated eccentricity vectors from each member point
     fn eccentricities(self) -> Vec<Vec<f64>>;
-    /// Exact eccentricity vectors to each member point by using the gm 
+    /// Radius of a point specified by its subscript.    
+    fn radius(self, i:usize, gm:&[f64]) -> Result<f64,RE>;
+    /// Exact radii vectors to each member point by using the gm 
     fn radii(self, gm:&[f64]) -> Vec<f64>; 
     /// Arith mean and std (in MStats struct), Median info (in Med struct), Medoid and Outlier (in MinMax struct) 
     fn eccinfo(self, gm:&[f64]) -> (MStats,Med,MinMax<f64>) 
@@ -333,11 +343,11 @@ pub trait VecVecg<T,U> {
     /// (Median) correlations of m with each vector in self
     fn correlations(self, m: &[U]) -> Result<Vec<f64>,RE>;
     /// Sum of distances from arbitrary point (v) to all the points in self      
-    fn distsum(self, v: &[U]) -> Result<f64,RE>;
+    fn distsum(self, v:&[U]) -> Result<f64,RE>;
     /// Individual distances from any point v (typically not in self) to all the points in self.    
     fn dists(self, v:&[U]) -> Result<Vec<f64>,RE>;
     /// Weighted sorted weighted radii magnitudes, normalised
-    fn wsortedrads(self, ws: &[U], gm: &[f64]) -> Result<Vec<f64>,RE>; 
+    fn wsortedrads(self, ws:&[U], gm:&[f64]) -> Result<Vec<f64>,RE>; 
     /// Like wgmparts, except only does one iteration from any non-member point g
     fn wnxnonmember(self, ws:&[U], g:&[f64]) -> Result<(Vec<f64>,Vec<f64>,f64),RE>; 
     /// The weighted geometric median to accuracy eps 

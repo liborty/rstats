@@ -22,6 +22,11 @@ impl<T> VecVec<T> for &[Vec<T>]
         transp   
     }
 
+    /// Normalize columns, so that they are all unit vectors
+    fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>> { 
+        data.transpose().iter().map(|v| v.vunit()).collect::<Vec<Vec<f64>>>().transpose()
+    }
+
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE> {  
         let d = self[0].len(); // their common dimensionality (length)
@@ -182,6 +187,12 @@ impl<T> VecVec<T> for &[Vec<T>]
         eccs
     }
 
+    /// Radius of a point specified by its subscript.    
+    fn radius(self, i:usize, gm:&[f64]) -> Result<f64,RE> {
+        if i > self.len() { return Err(RError::DataError("radius: invalid subscript")); }
+        Ok(self[i].vdist::<f64>(gm))
+    }
+
     /// Exact radii (eccentricity) magnitudes for all member points from the Geometric Median.
     /// More accurate and usually faster as well than the approximate `eccentricities` above,
     /// especially when there are many points.
@@ -247,12 +258,12 @@ impl<T> VecVec<T> for &[Vec<T>]
                 let rec = 1.0_f64/(mag.sqrt());
                 // the sum of reciprocals of magnitudes for the final scaling  
                 rsum += rec;
-                // so not using simply .unitv 
-                vsum.mutvadd::<f64>(&p.smult::<f64>(rec)) // add all unit vectors
+                // add this unit vector to their sum
+                vsum.mutvadd::<f64>(&p.smult::<f64>(rec)) 
             }
         }
         vsum.mutsmult::<f64>(1.0/rsum); // scale by the sum of reciprocals
-        vsum
+        vsum // good initial gm
     }    
     
     /// Next approximate gm computed from a member point  

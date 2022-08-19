@@ -79,6 +79,19 @@ impl<T> Vecg for &[T]
             .sqrt()
     }
 
+    /// Weighted arithmetic mean of `self:&[T]`, scaled by `ws:&[U]`
+    fn wvmean<U>(self,ws:&[U]) -> f64
+        where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {
+        let mut wsum:f64 = 0.;
+        let mut sum:f64 = 0.;
+        for (&s,&w) in self.iter().zip(ws) { 
+            let fw = f64::from(w);
+            sum += fw*(f64::from(s));
+            wsum += fw;
+        };
+        sum/wsum
+    } 
+
     /// Weighted distance of `self:&[T]` to `v:&[V]`, scaled by `ws:&[U]`
     /// allows all three to be of different types 
     fn wvdist<U,V>(self,ws:&[U],v:&[V]) -> f64
@@ -419,4 +432,10 @@ impl<T> Vecg for &[T]
         where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
         Ok(self.forward_substitute(d)?.vmag())
     }
+
+    /// Householder reflect
+    fn house_reflect(self,x:&[f64]) -> Vec<f64> {
+        x.vsub::<f64>(&self.smult::<f64>(x.dotp(self)))
+    }
+
 }
