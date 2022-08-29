@@ -27,6 +27,21 @@ impl<T> Vecg for &[T]
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {
         self.iter().zip(v).map(|(&xi, &vi)| f64::from(xi)*f64::from(vi)).sum::<f64>()
     }
+
+    /// Product with Tukeyvec of hemispheric counts. Self is unitised, only using its direction. 
+    /// It should have had subtracted the same reference point as was used in the construction of tukeyvec,
+    /// typically the geometric median.
+    /// Similar result could be obtained by projecting onto it all points but that is much slower.
+    fn dottukey(self, tukey:&[f64]) -> Result<f64,RE> {
+        let dims = self.len();
+        if 2*dims != tukey.len() { return Err(RError::DataError("{dottukey: tukey vec must have double the dimensions!")); }
+        let mut ressum = 0_f64;
+        for (i,&scomp) in self.vunit().iter().enumerate() {
+            if scomp > 0_f64 { ressum += scomp*tukey[i]; continue };
+            if scomp < 0_f64 { ressum -= scomp*tukey[dims+i]; };
+        }
+        Ok(ressum)
+    }   
     
     /// Cosine of angle between the two slices. 
     /// Done in one iteration for efficiency.

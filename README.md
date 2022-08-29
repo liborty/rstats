@@ -25,7 +25,7 @@ use rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 
 The latest (nightly) version is always available in the github repository [rstats](https://github.com/liborty/rstats). Sometimes it may be a little ahead of the crates.io release versions.
 
-It is highly recommended to read and run `tests/tests.rs`, which shows examples of usage.
+It is highly recommended to read and run [tests.rs](https://github.com/liborty/rstats/blob/master/tests/tests.rs) from the github repository as examples of usage.
 To run all the tests, use single thread in order to produce the results in the right order:
 
 ```bash  
@@ -222,9 +222,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.14** - Readme clarifications. Added `radius` to `VecVec.
-
-* **Version 1.2.13** - Added `normalize` and `wvmean`.
+* **Version 1.2.13** - Updated dependency to `indxvec v1.4.2`. Added `normalize` and `wvmean`. Added `radius` to `VecVec`. Added `wtukeyvec` a `dottukey`. Removed bulky test/tests.rs from the crate, get them from the github repository. Householder decomposition/orthogonalization is 'to do'.
 
 * **Version 1.2.12** - Updated dependency `indxvec v1.3.4'.
 

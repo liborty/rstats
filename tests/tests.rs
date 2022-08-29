@@ -1,38 +1,37 @@
-use indxvec::{printing::*, Indices, Vecops,Printing};
-use rstats::{RE, i64tof64, identity_lmatrix, Stats, VecVec, VecVecg, Vecg, Vecu8};
-use ran::{*,set_seeds};
-use medians::{Median};
-use times::{benchvvf64};
+use indxvec::{printing::*, Indices, Printing, Vecops};
+use medians::Median;
+use ran::{set_seeds, *};
+use rstats::{i64tof64, identity_lmatrix, Stats, VecVec, VecVecg, Vecg, Vecu8, RE};
+use times::benchvvf64;
 
 pub const EPS: f64 = 1e-3;
 
 #[cfg(test)]
-
 #[test]
-fn u8() -> Result<(),RE> {
+fn u8() -> Result<(), RE> {
     let v1 = vec![
-        1_u8,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6,
+        1_u8, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6,
     ];
     println!("\nv1: {}", (&v1).gr());
     let v2 = vec![
-        1_u8,2,2,3,3,3,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,
+        1_u8, 2, 2, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2,
     ];
     println!("v2: {}", (&v2).gr());
-    println!("v1+v2: {}",v1.vadd(&v2).gr());   
-    println!("v1-v2: {}",v1.vsub(&v2).gr());    
+    println!("v1+v2: {}", v1.vadd(&v2).gr());
+    println!("v1-v2: {}", v1.vsub(&v2).gr());
     println!("Lexical order v1<v2: {}", (v1 < v2).gr());
-    println!("v1*v2:\t{}",v1.dotp(&v2).gr());
+    println!("v1*v2:\t{}", v1.dotp(&v2).gr());
     println!("Entropy v1:\t{}", v1.entropy().gr());
     println!("Entropyu8 v1:\t{}", v1.entropyu8().gr());
     println!("Entropy v2:\t{}", v2.entropy().gr()); // generic
-    println!("Entropyu8 v2:\t{}", v2.entropyu8().gr()); // u8 
+    println!("Entropyu8 v2:\t{}", v2.entropyu8().gr()); // u8
     println!("Joint Entropy:  {}", v1.jointentropy(&v2)?.gr());
     println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2)?.gr());
     println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
-    println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8 
-    println!("Median v1: {}",v1.medstats());
-    println!("Median v2: {}",v2.medstats());
-    println!("v1 {}",v1.medinfo());   
+    println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8
+    println!("Median v1: {}", v1.medstats());
+    println!("Median v2: {}", v2.medstats());
+    println!("v1 {}", v1.medinfo());
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
@@ -51,12 +50,12 @@ fn u8() -> Result<(),RE> {
     println!(
         "Column Correlations:\n{}",
         trpt.crossfeatures(|v1, v2| Ok(v1.mediancorr(v2)))?.gr()
-    ); 
+    );
     Ok(())
 }
 
 #[test]
-fn fstats() -> Result<(),RE> {
+fn fstats() -> Result<(), RE> {
     let v1 = vec![
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
     ];
@@ -73,7 +72,7 @@ fn fstats() -> Result<(),RE> {
     println!("Median     {}", v1.medstats());
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
-    println!("Entropy 2:\t{}", v2.entropy().gr()); // generic 
+    println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
     println!("Joint Entropy:  {}", v1.jointentropy(&v2)?.gr());
     println!("Dependence:\t{}", v1.dependence(&v2)?.gr()); // generic
     println!("Euclidean dist:\t{}", v2.vdist(&v1).gr());
@@ -82,15 +81,15 @@ fn fstats() -> Result<(),RE> {
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
     let pt = Rnum::newf64().ranvv(d, n).getvvf64();
-    println!("Classical Covariances:\n{}", pt.covar(&pt.acentroid())?.gr());
+    println!(
+        "Classical Covariances:\n{}",
+        pt.covar(&pt.acentroid())?.gr()
+    );
     println!(
         "Covariances of zero median data:\n{}",
         pt.covar(&pt.gmedian(EPS))?.gr()
     );
-    println!(
-        "Comediances:\n{}",
-        pt.comed(&pt.gmedian(EPS))?.gr()
-    );
+    println!("Comediances:\n{}", pt.comed(&pt.gmedian(EPS))?.gr());
     let trpt = pt.transpose();
     println!(
         "Column Dependencies:\n{}",
@@ -104,13 +103,13 @@ fn fstats() -> Result<(),RE> {
 }
 
 #[test]
-fn ustats() -> Result<(),RE> { 
+fn ustats() -> Result<(), RE> {
     set_seeds(1234567);
-    let v1 = Rnum::newu8().ranv(20).getvu8(); 
+    let v1 = Rnum::newu8().ranv(20).getvu8();
     println!("\n{}", (&v1).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
     println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
-    println!("Median:          {GR}{:>14.10}{UN}", v1.median());   
+    println!("Median:          {GR}{:>14.10}{UN}", v1.median());
     println!("Geometric mean:  {GR}{:>14.10}{UN}", v1.gmean()?);
     println!("Harmonic mean:   {GR}{:>14.10}{UN}", v1.hmean()?);
     println!("Magnitude:       {GR}{:>14.10}{UN}", v1.vmag());
@@ -125,13 +124,13 @@ fn ustats() -> Result<(),RE> {
 
 #[test]
 /// &[i64] requires explicit recast
-fn intstats() -> Result<(),RE> {
+fn intstats() -> Result<(), RE> {
     let v = vec![1_i64, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     let v1 = i64tof64(&v); // downcast to f64 here
-    println!("Linear transform:\n{}",v1.lintrans()?.gr());
-    println!("Arithmetic mean:{}",v1.amean()?.gr());
-    println!("Median:       {GR}{:>14.10}{UN}",v1.median());   
+    println!("Linear transform:\n{}", v1.lintrans()?.gr());
+    println!("Arithmetic mean:{}", v1.amean()?.gr());
+    println!("Median:       {GR}{:>14.10}{UN}", v1.median());
     println!("Geometric mean:\t{}", v1.gmean()?.gr());
     println!("Harmonic mean:\t{}", v1.hmean()?.gr());
     // println!("Magnitude:\t{}",v1.vmag()));
@@ -146,11 +145,11 @@ fn intstats() -> Result<(),RE> {
 
 #[test]
 /// Generic implementation
-fn genericstats() -> Result<(),RE> {
+fn genericstats() -> Result<(), RE> {
     let v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?.gr());
-    println!("Median\t\t{GR}{:>14.10}{UN}",v.medstats());
+    println!("Median\t\t{GR}{:>14.10}{UN}", v.medstats());
     println!("Geometric\t{}", v.gmeanstd()?.gr());
     println!("Harmonic\t{}", v.hmeanstd()?.gr());
     println!("Weighted Arit.\t{}", v.awmeanstd()?.gr());
@@ -162,7 +161,7 @@ fn genericstats() -> Result<(),RE> {
 }
 
 #[test]
-fn vecg() -> Result<(),RE> {
+fn vecg() -> Result<(), RE> {
     let v1 = vec![
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 10., 10., 13., 14., 15.,
     ];
@@ -189,27 +188,29 @@ fn vecg() -> Result<(),RE> {
     println!("Dependence:\t\t{}", v1.dependence(&v2)?.gr());
     println!("Independence:\t\t{}", v1.independence(&v2)?.gr());
     println!("Cosine:\t\t\t{}", v1.cosine(&v2).gr());
-    println!("Cosine of ranks:\t{}",
+    println!(
+        "Cosine of ranks:\t{}",
         v1.rank(true)
             .indx_to_f64()
             .cosine(&v2.rank(true).indx_to_f64())
-            .gr() );
+            .gr()
+    );
     println!("Cos Similarity [0,1]:\t{}", v1.vsim(&v2).gr());
     println!("Cos Dissimilarity:\t{}", v1.vdisim(&v2).gr());
     println!("[1,2,3].kron(&[4,5]):\t{}", [1, 2, 3].kron(&[4, 5]).gr());
     let outerp = [1, 2, 3].outer(&[4, 5]);
     println!("[1,2,3].outer(&[4,5]):\n{}", outerp.gr());
     // println!("Transposed: "); printvv([1,2,3].outer(&[4,5,6,7]).transpose());
-    Ok(()) 
+    Ok(())
 }
 
 #[test]
 /// Trend between two data sets in space of the same dimensions but
 /// numbers of points can differ
-fn trend() -> Result<(),RE> {
+fn trend() -> Result<(), RE> {
     let d = 7_usize;
     set_seeds(777);
-    let rf64 = Rnum::newf64(); 
+    let rf64 = Rnum::newf64();
     let pts1 = rf64.ranvv(d, 37).getvvf64();
     let pts2 = rf64.ranvv(d, 50).getvvf64();
     println!("\nTrend vector:\n{}\n", pts1.trend(EPS, pts2)?.gr());
@@ -217,46 +218,67 @@ fn trend() -> Result<(),RE> {
 }
 
 #[test]
-fn matrices() -> Result<(),RE> {
-    println!("5x5 identity lower triangular matrix in scan order:\n{}",identity_lmatrix(5).gr());
+fn matrices() -> Result<(), RE> {
+    println!(
+        "5x5 identity lower triangular matrix in scan order:\n{}",
+        identity_lmatrix(5).gr()
+    );
     let d = 10_usize;
     let n = 90_usize;
-    println!("Testing on a random set of {} points in {} dimensional space",n,d);
+    println!(
+        "Testing on a random set of {} points in {} dimensional space",
+        n, d
+    );
     set_seeds(1133);
     let ru = Rnum::newf64();
-    let pts = ru.ranvv_in(d,n,0.0,4.0).getvvf64(); 
+    let pts = ru.ranvv_in(d, n, 0.0, 4.0).getvvf64();
     // println!("\nTest data:\n{}",pts.gr());
-    // let transppt = pts.transpose();  
+    // let transppt = pts.transpose();
     let cov = pts.covar(&pts.pmedian(EPS))?;
-    println!("Triangular comediance matrix in scan order, size {}:\n{}",cov.len(),cov.gr());
-    let cholmat = cov.cholesky()?; 
-    println!("\nCholesky L matrix, size {}:\n{}",cholmat.len(),cholmat.gr());
+    println!(
+        "Triangular comediance matrix in scan order, size {}:\n{}",
+        cov.len(),
+        cov.gr()
+    );
+    let cholmat = cov.cholesky()?;
+    println!(
+        "\nCholesky L matrix, size {}:\n{}",
+        cholmat.len(),
+        cholmat.gr()
+    );
     // set_seeds(77777);
     let pta = ru.ranv(d).getvf64();
     let ptb = ru.ranv(d).getvf64();
     let d = pta.vsub(&ptb);
     let dmag = d.vmag();
-    let mahamag =cholmat.mahalanobis(&d)?;
-    println!("Test vector d = a-b:\n{}",d.gr());
-    println!("Euclidian magnitude   {GR}{:>8.4}{UN}\
+    let mahamag = cholmat.mahalanobis(&d)?;
+    println!("Test vector d = a-b:\n{}", d.gr());
+    println!(
+        "Euclidian magnitude   {GR}{:>8.4}{UN}\
         \nMahalanobis magnitude {GR}{:>8.4}{UN}\
         \nScale factor: {GR}{:>0.8}{UN}",
-        dmag,mahamag,mahamag/dmag);
+        dmag,
+        mahamag,
+        mahamag / dmag
+    );
     Ok(())
 }
 
 #[test]
-fn vecvec() -> Result<(),RE> {
+fn vecvec() -> Result<(), RE> {
     let d = 10_usize;
     let n = 90_usize;
-    println!("Testing on a random set of {} points in {} dimensional space",n,d);
+    println!(
+        "Testing on a random set of {} points in {} dimensional space",
+        n, d
+    );
     set_seeds(113);
     let ru = Rnum::newu8();
-    let pts = ru.ranvv_in(d,n,0.,4.).getvvu8(); 
+    let pts = ru.ranvv_in(d, n, 0., 4.).getvvu8();
     // println!("\nTest data:\n{}",pts.gr());
     println!("Set joint entropy: {}", pts.jointentropyn()?.gr());
     println!("Set dependence:    {}", pts.dependencen()?.gr());
-    // println!("\nTest outcomes:\n{}",pts.gr());  
+    // println!("\nTest outcomes:\n{}",pts.gr());
     let outcomes = ru.ranv(n).getvu8();
     let transppt = pts.transpose();
     println!(
@@ -266,48 +288,71 @@ fn vecvec() -> Result<(),RE> {
     println!(
         "Correlations with outcomes:\n{}",
         transppt.correlations(&outcomes)?.gr()
-    );    
-    let (median,_vsum,recips) = pts.gmparts(EPS);
-    let (eccstd, eccmed, eccecc) = pts.eccinfo(&median); 
+    );
+    let (median, _vsum, recips) = pts.gmparts(EPS);
+    let (eccstd, eccmed, eccecc) = pts.eccinfo(&median);
     let medoid = &pts[eccecc.minindex];
     let outlier = &pts[eccecc.maxindex];
     let hcentroid = pts.hcentroid();
     let gcentroid = pts.gcentroid();
     let acentroid = pts.acentroid();
-    let firstp = pts.firstpoint(); 
-  
-    println!("\nMean reciprocal of radius: {}",(recips/d as f64).gr() );
+    let firstp = pts.firstpoint();
 
-    println!("Magnitude of Tukey vec for gm: {}",pts.tukeyvec(&median)?.vmag().gr());
-    println!("Mag of Tukeyvec for acentroid: {}",pts.tukeyvec(&acentroid)?.vmag().gr());
-    println!("Mag of Tukeyvec for outlier:   {}",pts.tukeyvec(&outlier.tof64())?.vmag().gr());
+    println!("\nMean reciprocal of radius: {}", (recips / d as f64).gr());
+
+    println!(
+        "Magnitude of Tukey vec for gm: {}",
+        pts.tukeyvec(&median)?.vmag().gr()
+    );
+    println!(
+        "Mag of Tukeyvec for acentroid: {}",
+        pts.tukeyvec(&acentroid)?.vmag().gr()
+    );
+    println!(
+        "Mag of Tukeyvec for outlier:   {}",
+        pts.tukeyvec(&outlier.tof64())?.vmag().gr()
+    );
     // let testvec = ru.ranv(d).getvu8();
     let dists = pts.distsums();
-    let md = dists.minmax(); 
+    let md = dists.minmax();
     println!("\nMedoid and Outlier Total Distances:\n{}", md);
     println!("Total Distances {}", dists.ameanstd()?);
     println!("Total distances {}", dists.medinfo());
-    println!("GM's total distances:        {}", pts.distsum(&median)?.gr()); 
-    println!("ACentroid's total distances: {}",pts.distsum(&acentroid)?.gr());
-    println!("HCentroid's total distances: {}",pts.distsum(&hcentroid)?.gr());
-    println!("GCentroid's total distances: {}",pts.distsum(&gcentroid)?.gr());
- 
+    println!(
+        "GM's total distances:        {}",
+        pts.distsum(&median)?.gr()
+    );
+    println!(
+        "ACentroid's total distances: {}",
+        pts.distsum(&acentroid)?.gr()
+    );
+    println!(
+        "HCentroid's total distances: {}",
+        pts.distsum(&hcentroid)?.gr()
+    );
+    println!(
+        "GCentroid's total distances: {}",
+        pts.distsum(&gcentroid)?.gr()
+    );
+
     println!(
         "\nMedoid, outlier and radii summary:\n{}\nRadii {}\nRadii {}",
         eccecc, eccstd, eccmed
     );
     let radsindex = pts.radii(&median).hashsort_indexed();
-    println!("Radii ratio:\t {GR}{}{UN}",
-        pts.radius(radsindex[0],&median)?/pts.radius(radsindex[radsindex.len()-1],&median)?);
+    println!(
+        "Radii ratio:\t {GR}{}{UN}",
+        pts.radius(radsindex[0], &median)? / pts.radius(radsindex[radsindex.len() - 1], &median)?
+    );
     println!("Madgm:               {}", pts.madgm(&median).gr());
-    println!("Median's error:      {GR}{:e}{UN}",pts.gmerror(&median));
+    println!("Median's error:      {GR}{:e}{UN}", pts.gmerror(&median));
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());
     println!("Firstpoint's radius: {}", firstp.vdist(&median).gr());
-    println!("Medoid's radius:     {}",medoid.vdist(&median).gr());
+    println!("Medoid's radius:     {}", medoid.vdist(&median).gr());
     println!("HCentroid's radius:  {}", hcentroid.vdist(&median).gr());
     println!("GCentroid's radius:  {}", gcentroid.vdist(&median).gr());
-    println!("Outlier's radius:    {}",outlier.vdist(&median).gr()); 
-    println!("Outlier to Medoid:   {}",outlier.vdist(medoid).gr());
+    println!("Outlier's radius:    {}", outlier.vdist(&median).gr());
+    println!("Outlier to Medoid:   {}", outlier.vdist(medoid).gr());
 
     let seccs = pts.radii(&median).sorth(true);
     // println!("\nSorted eccs: {}\n", seccs));
@@ -317,7 +362,7 @@ fn vecvec() -> Result<(),RE> {
         lqcnt.start.gr(),
         seccs[lqcnt.start - 1].gr()
     );
-    let medcnt = pts.len()/2; 
+    let medcnt = pts.len() / 2;
     // seccs.binsearch(eccmed.median);
     println!(
         "Inner half of points:    {} within radius: {}",
@@ -331,40 +376,115 @@ fn vecvec() -> Result<(),RE> {
         seccs[uqcnt.start - 1].gr()
     );
 
-    println!("\nContribution of adding acentroid:   {}",acentroid.contrib_newpt(&median,recips).gr() );
-    println!("Contribution of adding gcentroid:   {}",gcentroid.contrib_newpt(&median,recips).gr() );
-    println!("Contribution of removing outlier:  {}",outlier.contrib_oldpt(&median,recips).gr() );
-    let contribs = pts.iter().map(|p| p.contrib_oldpt(&median,recips)).collect::<Vec<f64>>();
-    println!("\nContributions of Data Points, Summary:\n{}\n{}\n{}",contribs.minmax(),contribs.ameanstd().unwrap(),contribs.medinfo());
-    
-    let convex = pts.translate(&median)?.convex_hull();
-    let innerrad = pts.radius(*convex.last().unwrap(),&median)?;
-    let outerrad = pts.radius(*convex.first().unwrap(),&median)?;
-    println!("\nConvex hull has {} points:\n{}",convex.len().gr(),convex.yl()); 
-    println!( "Convex hull radii minindex: {} maxindex: {} radii ratio: {}", 
-        convex.last().unwrap().yl(), convex.first().unwrap().yl(), (innerrad/outerrad).gr() );        
-
-    //let weights:Vec<usize> = Vec::from_iter(0..n);
-    //let fweights = weights.indx_to_f64(); 
-    //let wmedian = pts.wgmedian(&fweights,EPS);
-    //println!("Raw rads \n:{}",pts.radii(&wmedian).gr());
-    //println!("Sorted weighted rads:\n{}",pts.wsortedrads(&fweights,&wmedian).gr());
+    println!(
+        "\nContribution of adding acentroid:   {}",
+        acentroid.contrib_newpt(&median, recips).gr()
+    );
+    println!(
+        "Contribution of adding gcentroid:   {}",
+        gcentroid.contrib_newpt(&median, recips).gr()
+    );
+    println!(
+        "Contribution of removing outlier:  {}",
+        outlier.contrib_oldpt(&median, recips).gr()
+    );
+    let contribs = pts
+        .iter()
+        .map(|p| p.contrib_oldpt(&median, recips))
+        .collect::<Vec<f64>>();
+    println!(
+        "\nContributions of Data Points, Summary:\n{}\n{}\n{}",
+        contribs.minmax(),
+        contribs.ameanstd().unwrap(),
+        contribs.medinfo()
+    );
     Ok(())
 }
 
-const NAMES:[&str;4] = [ "gmedian","pmedian","quasimedian","acentroid" ];
+#[test]
+fn hull() -> Result<(), RE> {
+    let d = 10_usize;
+    let n = 100_usize;
+    println!(
+        "Testing on a random set of {} points in {} dimensional space",
+        n, d
+    );
+    // set_seeds(113);
+    let rf = Rnum::newf64();
+    let pts = rf.ranvv(d, n).getvvf64();
+    let wts = rf.ranv_in(n,0.,100.).getvf64();
+    let median = pts.wgmedian(&wts,EPS)?;
+    let hullidx = pts.translate(&median)?.convex_hull();
+    let hull = hullidx.unindex(&pts,true);
+    let hullwts = hullidx.unindex(&wts,true);
+    let outerrad = hull.first().unwrap().vdist(&median);      // pts.radius(*hullidx.first().unwrap(), &median)?;
+    let innerrad = hull.last().unwrap().vdist(&median);       // pts.radius(*hullidx.last().unwrap(), &median)?;
 
-const CLOSURESU8:[fn(&[Vec<f64>]);4] = [
-    |v:&[_]| { v.gmedian(EPS); }, 
-    |v:&[_]| { v.pmedian(EPS); }, 
-    |v:&[_]| { v.quasimedian(); },
-    |v:&[_]| { v.acentroid(); } ];
+    println!(
+        "\nConvex hull has {}/{} points:\n{}",
+        hull.len().gr(),
+        pts.len().gr(),
+        hullidx.yl()
+    );
+    println!(
+        "Convex hull radii min/max ratio: {}",    
+        (innerrad / outerrad).gr()
+    );
+    println!(
+        "Convex hull MADGM: {}",
+        hull.madgm(&median).gr()
+    );
+    let tukeyvec = hull.wtukeyvec(&hullwts, &median)?;
+    println!(
+        "Convex hull tukeyvec: {}", tukeyvec.gr() );    
+    println!(
+        "Dottukey mapped: {}",
+        hullidx.iter().map(|&hi| pts[hi].vsub(&median).dottukey(&tukeyvec).unwrap() ).collect::<Vec<f64>>().gr() 
+    );
+
+    Ok(())
+}
+
+
+#[test]
+fn householder() {
+    let v = [12., 6., -4.];
+    println!("{}", v.house_reflector().house_reflect(&v).gr());
+    /* let a = vec![
+        vec![35, 1, 6, 26, 19, 24],
+        vec![3, 32, 7, 21, 23, 25],
+        vec![31, 9, 2, 22, 27, 20],
+        vec![8, 28, 33, 17, 10, 15],
+        vec![30, 5, 34, 12, 14, 16],
+        vec![4, 36, 29, 13, 18, 11],
+    ];
+    let (u, r) = a.house_ur(); 
+    println!("house_ur u and r {}\n{}", u.gr(), r.gr());
+    */
+}
+
+const NAMES: [&str; 4] = ["gmedian", "pmedian", "quasimedian", "acentroid"];
+
+const CLOSURESU8: [fn(&[Vec<f64>]); 4] = [
+    |v: &[_]| {
+        v.gmedian(EPS);
+    },
+    |v: &[_]| {
+        v.pmedian(EPS);
+    },
+    |v: &[_]| {
+        v.quasimedian();
+    },
+    |v: &[_]| {
+        v.acentroid();
+    },
+];
 
 #[test]
 fn timing_gm() {
-    set_seeds(7777777777_u64);   // intialise random numbers generator
-    // Rnum encapsulates the type of the data items
-   benchvvf64(Rnum::newf64(),100,4,10,&NAMES,&CLOSURESU8); 
+    set_seeds(7777777777_u64); // intialise random numbers generator
+                               // Rnum encapsulates the type of the data items
+    benchvvf64(Rnum::newf64(), 100, 4, 10, &NAMES, &CLOSURESU8);
 }
 
 #[test]
@@ -373,27 +493,25 @@ fn geometric_medians() {
     let n = 100_usize;
     let d = 1000_usize;
     set_seeds(7777777);
-    println!(
-        "{} repeats of {} points in {} dimensions", ITERATIONS, n, d
-    );
-    let mut sumg = 0_f64; 
-    let mut sump = 0_f64; 
-    let mut sumq = 0_f64; 
-    let mut summ = 0_f64; 
+    println!("{} repeats of {} points in {} dimensions", ITERATIONS, n, d);
+    let mut sumg = 0_f64;
+    let mut sump = 0_f64;
+    let mut sumq = 0_f64;
+    let mut summ = 0_f64;
     let mut gm: Vec<f64>;
-     for _i in 1..ITERATIONS { 
+    for _i in 1..ITERATIONS {
         let pts = Rnum::newf64().ranvv(d, n).getvvf64();
         gm = pts.gmedian(EPS);
         sumg += pts.gmerror(&gm);
         gm = pts.pmedian(EPS);
-        sump += pts.gmerror(&gm);    
-        gm = pts.quasimedian(); 
+        sump += pts.gmerror(&gm);
+        gm = pts.quasimedian();
         sumq += pts.gmerror(&gm);
         gm = pts.acentroid();
         summ += pts.gmerror(&gm);
     }
-    println!( "Pmedian      total error: {GR}{:.5e}{UN}", sump);
-    println!( "Gmedian      total error: {GR}{:.5e}{UN}", sumg);
-    println!( "Acentroid    total error: {GR}{:.5e}{UN}", summ);
-    println!( "Quasi median total errot: {GR}{:.5e}{UN}", sumq);
+    println!("Pmedian      total error: {GR}{:.5e}{UN}", sump);
+    println!("Gmedian      total error: {GR}{:.5e}{UN}", sumg);
+    println!("Acentroid    total error: {GR}{:.5e}{UN}", summ);
+    println!("Quasi median total errot: {GR}{:.5e}{UN}", sumq);
 }

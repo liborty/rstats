@@ -58,7 +58,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.
     /// This is a robust relationship between two unordered multidimensional sets.
     /// The two sets have to be in the same (dimensional) space but can have different numbers of points.
-    fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Result<Vec<f64>,RE> {
+    fn trend(self, eps:f64, v:Vec<Vec<U>>) -> Result<Vec<f64>,RE> {
         if self[0].len() != v[0].len() { return Err(RError::DataError("trend dimensions mismatch")); };
         Ok(v.gmedian(eps).vsub::<f64>(&self.gmedian(eps)))
     }
@@ -75,26 +75,29 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// Proportions of points along each +/-axis (hemisphere)
     /// Excludes points that are perpendicular to it
-    fn tukeyvec(self, gm: &[U]) -> Result<Vec<f64>,RE> { 
-        let nf = self.len() as f64; 
+    fn wtukeyvec(self, ws:&[U], gm:&[f64]) -> Result<Vec<f64>,RE> { 
+        let mut wsum = 0_f64; 
         let dims = self[0].len();
-        if dims != gm.len() { return Err(RError::DataError("tukeyvec dimensions mismatch")); }; 
+        if dims != gm.len() { return Err(RError::DataError("wtukeyvec dimensions mismatch")); }; 
+        if self.len() != ws.len() { return Err(RError::DataError("wtukeyvec weights number mismatch")); }; 
         let mut hemis = vec![0_f64; 2*dims]; 
-        for s in self { 
+        for (s,&w) in self.iter().zip(ws) { 
+            let wf = f64::from(w);
+            wsum += wf;
             let zerogm = s.vsub(gm);
             for (i,&component) in zerogm.iter().enumerate() {
-                if component > 0. { hemis[i] += 1. }
-                else if component < 0. { hemis[dims+i] += 1. };  
+                if component > 0. { hemis[i] += wf }
+                else if component < 0. { hemis[dims+i] += wf };  
             }
         }
-        hemis.iter_mut().for_each(|hem| *hem /= nf );
+        hemis.iter_mut().for_each(|hem| *hem /= wsum );
         Ok(hemis)
     } 
- 
+
     /// Dependencies of m on each vector in self
     /// m is typically a vector of outcomes.
     /// Factors out the entropy of m to save repetition of work
-    fn dependencies(self, m: &[U]) -> Result<Vec<f64>,RE> {  
+    fn dependencies(self, m:&[U]) -> Result<Vec<f64>,RE> {  
         if self[0].len() != m.len() { return Err(RError::DataError("dependencies dimensions mismatch")); }
         let entropym = m.entropy();
         return self.iter().map(|s| -> Result<f64,RE> {  

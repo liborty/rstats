@@ -1,6 +1,6 @@
 use std::iter::FromIterator;
 
-use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec};
+use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec };
 use indxvec::{Vecops,Mutops};
 use medians::{Med,Median};
 
@@ -26,6 +26,27 @@ impl<T> VecVec<T> for &[Vec<T>]
     fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>> { 
         data.transpose().iter().map(|v| v.vunit()).collect::<Vec<Vec<f64>>>().transpose()
     }
+
+/* todo 
+    /// Householder's method returning matrices (U,R), where 
+    /// U are the reflector generators for use by house_apply.
+    /// R is the upper triangular decomposition factor. 
+    /// Works on columns, so self may need inverting first.
+    fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>) {
+        let n = self.len();
+        let m = self[0].len();
+        // convert-clone self into r
+        let mut r = self.iter().map(|s| s.tof64()).collect::<Vec<Vec<f64>>>();
+        let mut u = Vec::with_capacity(n);
+        for j in 0..min(n,m) {
+            let uvec = r[j][j..].house_reflector();
+            for rvec in r.iter_mut().take(n).skip(j) { *rvec = uvec.house_reflect(rvec); }; 
+            // for i in j+1..m { r[j][i] = 0.; };
+            u.push(uvec); 
+        }
+        (u,r)
+    }
+*/
 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE> {  
@@ -222,6 +243,24 @@ impl<T> VecVec<T> for &[Vec<T>]
         gm.vdist::<f64>(g)
     }
 
+    /// Proportions of points along each +/-axis (hemisphere)
+    /// Excludes points that are perpendicular to it
+    fn tukeyvec(self, gm:&[f64]) -> Result<Vec<f64>,RE> { 
+        let nf = self.len() as f64; 
+        let dims = self[0].len();
+        if dims != gm.len() { return Err(RError::DataError("tukeyvec dimensions mismatch")); }; 
+        let mut hemis = vec![0_f64; 2*dims]; 
+        for s in self { 
+            let zerogm = s.vsub::<f64>(gm);
+            for (i,&component) in zerogm.iter().enumerate() {
+                if component > 0. { hemis[i] += 1. }
+                else if component < 0. { hemis[dims+i] += 1. };  
+            }
+        }
+        hemis.iter_mut().for_each(|hem| *hem /= nf );
+        Ok(hemis)
+    }
+
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> f64 {     
         let devs:Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
@@ -229,21 +268,28 @@ impl<T> VecVec<T> for &[Vec<T>]
     }
 
     /// Selects convex hull points out of all zero median/mean points in self
+    /// Call as, e.g.: `let convex = points.translate(&median)?.convex_hull();`
+    /// Concavity at b is detected when projection of any existing convex hull 
+    /// point a onto candidate b, exceeds |b|.
+    /// a*b = |a|b|cos(θ) > |b|^2 => |a|cos(θ) > |b|, 
+    /// where |a|cos(θ) is the required projection.
+    /// The use of square magnitudes (|b|^2) 
+    /// saves first taking sqrt and then here dividing by |b|
     fn convex_hull(self) -> Vec<usize> {
         let mut convindex:Vec<usize> = Vec::new();
         let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let mut radindex = sqradii.hashsort_indexed(); // ascending radii
+        let mut radindex = sqradii.hashsort_indexed(); // ascending square radii
         radindex.mutrevs(); // make them descending
-        // shorter alternative but we need explicit sqradii below
-        // let radindex = self.keyindex(|s| s.vmagsq(),false); 
-        convindex.push(radindex[0]); // begin from the outlier
-        for &idx in radindex.iter().skip(1) {
-            let mut passed = true;
-            for &ci in &convindex { 
-                let dotp = self[ci].dotp(&self[idx]); 
-                if dotp >= sqradii[idx] { passed = false; break; };  
+        convindex.push(radindex[0]); // outlier is always in convex hull
+        // test all other points self[b], in descending order
+        let mut passed = true;
+        for &b in radindex.iter().skip(1) { 
+            // check against all previous convex hull members a
+            for &a in &convindex { 
+                let dotp = self[a].dotp(&self[b]); 
+                if dotp > sqradii[b] { passed = false; break; };  
                 }; 
-            if passed { convindex.push(idx); };
+            if passed { convindex.push(b); }; // add index b to the convex hull
         };
         convindex 
     }

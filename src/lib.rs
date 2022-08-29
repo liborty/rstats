@@ -142,6 +142,8 @@ pub trait Vecg {
      fn smult<U>(self, s:U) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Scalar product 
     fn dotp<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
+    /// Product with Tukeyvec of hemispheric counts. 
+    fn dottukey(self, tukey:&[f64]) -> Result <f64,RE>;  
     /// Cosine of angle between two slices
     fn cosine<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Vectors' subtraction (difference)
@@ -265,7 +267,9 @@ pub trait VecVec<T> {
     /// Transpose slice of vecs matrix
     fn transpose(self) -> Vec<Vec<T>>;
     /// Normalize columns, so that they are all unit vectors
-    fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>>; 
+    fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>>;
+    /// Householder's method returning matrices (U,R)
+    // fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>); 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE>;
     /// Joint entropy between a set of vectors of the same length
@@ -307,6 +311,8 @@ pub trait VecVec<T> {
     fn quasimedian(self) -> Vec<f64>;
     /// Geometric median estimate's error
     fn gmerror(self,gm:&[f64]) -> f64;
+    /// Proportions of points along each +/-axis (hemisphere)
+    fn tukeyvec(self, gm:&[f64]) -> Result<Vec<f64>,RE>; 
     /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> f64;
     /// Selects convex hull points out of all zero median/mean points in self
@@ -337,7 +343,7 @@ pub trait VecVecg<T,U> {
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self,m: &[U]) -> Result<Vec<Vec<f64>>,RE>; 
     /// Proportions of points along each +/-axis (hemisphere)
-    fn tukeyvec(self, gm: &[U]) -> Result<Vec<f64>,RE>;
+    fn wtukeyvec(self, ws:&[U], gm: &[f64]) -> Result<Vec<f64>,RE>;
     /// Dependencies of vector m on each vector in self 
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>,RE>;
     /// (Median) correlations of m with each vector in self
