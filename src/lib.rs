@@ -269,7 +269,7 @@ pub trait VecVec<T> {
     /// Normalize columns, so that they are all unit vectors
     fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>>;
     /// Householder's method returning matrices (U,R)
-    // fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>); 
+    fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>); 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE>;
     /// Joint entropy between a set of vectors of the same length
@@ -343,7 +343,7 @@ pub trait VecVecg<T,U> {
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self,m: &[U]) -> Result<Vec<Vec<f64>>,RE>; 
     /// Proportions of points along each +/-axis (hemisphere)
-    fn wtukeyvec(self, ws:&[U], gm: &[f64]) -> Result<Vec<f64>,RE>;
+    fn wtukeyvec(self, idx: &[usize], ws:&[U], gm:&[f64]) -> Result<Vec<f64>,RE>; 
     /// Dependencies of vector m on each vector in self 
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>,RE>;
     /// (Median) correlations of m with each vector in self

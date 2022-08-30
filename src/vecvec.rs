@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
 use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec };
-use indxvec::{Vecops,Mutops};
+use indxvec::{Vecops,Mutops,Printing};
 use medians::{Med,Median};
 
 impl<T> VecVec<T> for &[Vec<T>] 
@@ -27,26 +27,47 @@ impl<T> VecVec<T> for &[Vec<T>]
         data.transpose().iter().map(|v| v.vunit()).collect::<Vec<Vec<f64>>>().transpose()
     }
 
-/* todo 
+/* todo
+function [R,U] = house_qr(A)
+    % Householder reflections for QR decomposition.
+    % [R,U] = house_qr(A) returns
+    % R, the upper triangular factor, and
+    % U, the reflector generators for use by house_apply.    
+    H = @(u,x) x - u*(u'*x);
+    [m,n] = size(A);
+    U = zeros(m,n);
+    R = A;
+    for j = 1:min(m,n)
+        u = house_gen(R(j:m,j));
+        U(j:m,j) = u;
+        R(j:m,j:n) = H(u,R(j:m,j:n));
+        R(j+1:m,j) = 0;
+    end
+end
+*/
+
     /// Householder's method returning matrices (U,R), where 
     /// U are the reflector generators for use by house_apply.
     /// R is the upper triangular decomposition factor. 
     /// Works on columns, so self may need inverting first.
     fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>) {
-        let n = self.len();
-        let m = self[0].len();
+        let m = self.len();
+        let n = self[0].len();
         // convert-clone self into r
         let mut r = self.iter().map(|s| s.tof64()).collect::<Vec<Vec<f64>>>();
         let mut u = Vec::with_capacity(n);
-        for j in 0..min(n,m) {
-            let uvec = r[j][j..].house_reflector();
-            for rvec in r.iter_mut().take(n).skip(j) { *rvec = uvec.house_reflect(rvec); }; 
+        for j in 0..(n.min(m)) {
+            let uvec = r[j].get(0..n-j).unwrap().house_reflector(); // reflector 
+            for i in j..m {
+                r[i] = uvec.house_reflect(r[i].get(0..n-i).unwrap());  
+                println!("{}",r[i].gr()); 
+            }
             // for i in j+1..m { r[j][i] = 0.; };
             u.push(uvec); 
         }
         (u,r)
     }
-*/
+
 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE> {  

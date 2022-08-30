@@ -412,45 +412,51 @@ fn hull() -> Result<(), RE> {
     // set_seeds(113);
     let rf = Rnum::newf64();
     let pts = rf.ranvv(d, n).getvvf64();
-    let wts = rf.ranv_in(n,0.,100.).getvf64();
-    let median = pts.wgmedian(&wts,EPS)?;
-    let hullidx = pts.translate(&median)?.convex_hull();
-    let hull = hullidx.unindex(&pts,true);
-    let hullwts = hullidx.unindex(&wts,true);
-    let outerrad = hull.first().unwrap().vdist(&median);      // pts.radius(*hullidx.first().unwrap(), &median)?;
-    let innerrad = hull.last().unwrap().vdist(&median);       // pts.radius(*hullidx.last().unwrap(), &median)?;
+    let wts = rf.ranv_in(n, 0., 100.).getvf64();
+    let median = pts.wgmedian(&wts, EPS)?;
+    let zeropts = pts.translate(&median)?;
+    let hullidx = zeropts.convex_hull(); 
+    let outerrad = pts.radius(*hullidx.first().unwrap(), &median)?;
+    let innerrad = pts.radius(*hullidx.last().unwrap(), &median)?;
 
     println!(
         "\nConvex hull has {}/{} points:\n{}",
-        hull.len().gr(),
+        hullidx.len().gr(),
         pts.len().gr(),
         hullidx.yl()
     );
     println!(
-        "Convex hull radii min/max ratio: {}",    
+        "Convex hull radii min/max ratio: {}",
         (innerrad / outerrad).gr()
     );
-    println!(
-        "Convex hull MADGM: {}",
-        hull.madgm(&median).gr()
-    );
-    let tukeyvec = hull.wtukeyvec(&hullwts, &median)?;
-    println!(
-        "Convex hull tukeyvec: {}", tukeyvec.gr() );    
+    let tukeyvec = pts.wtukeyvec(&hullidx, &wts, &median)?;
+    println!("Convex hull tukeyvec: {}", tukeyvec.gr());
     println!(
         "Dottukey mapped: {}",
-        hullidx.iter().map(|&hi| pts[hi].vsub(&median).dottukey(&tukeyvec).unwrap() ).collect::<Vec<f64>>().gr() 
+        hullidx
+            .iter()
+            .map(|&hi| pts[hi].vsub(&median).dottukey(&tukeyvec).unwrap())
+            .collect::<Vec<f64>>()
+            .gr()
     );
+    let allptstukv = zeropts.wtukeyvec(&Vec::from_iter(0..zeropts.len()), &wts, &median)?;
+    println!("All points tukeyvec: {}", allptstukv.gr());
+    println!(
+        "Dottukey mapped: {}",
+        zeropts
+            .iter()
+            .map(|pt| pt.dottukey(&allptstukv).unwrap())
+            .collect::<Vec<f64>>()
+            .gr()
+    );
+
 
     Ok(())
 }
 
-
 #[test]
 fn householder() {
-    let v = [12., 6., -4.];
-    println!("{}", v.house_reflector().house_reflect(&v).gr());
-    /* let a = vec![
+    let a:&[Vec<i32>] = &[
         vec![35, 1, 6, 26, 19, 24],
         vec![3, 32, 7, 21, 23, 25],
         vec![31, 9, 2, 22, 27, 20],
@@ -458,9 +464,8 @@ fn householder() {
         vec![30, 5, 34, 12, 14, 16],
         vec![4, 36, 29, 13, 18, 11],
     ];
-    let (u, r) = a.house_ur(); 
-    println!("house_ur u and r {}\n{}", u.gr(), r.gr());
-    */
+    let (u, r) = a.house_ur();
+    println!("house_ur u and r {}\n{}", u.gr(), r.gr());    
 }
 
 const NAMES: [&str; 4] = ["gmedian", "pmedian", "quasimedian", "acentroid"];
