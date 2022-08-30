@@ -464,7 +464,7 @@ fn householder() {
         vec![30, 5, 34, 12, 14, 16],
         vec![4, 36, 29, 13, 18, 11],
     ];
-    let (u, r) = a.house_ur();
+    let (u, r) = a.transpose().house_ur();
     println!("house_ur u and r {}\n{}", u.gr(), r.gr());    
 }
 

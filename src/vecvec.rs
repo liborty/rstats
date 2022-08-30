@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
 use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec };
-use indxvec::{Vecops,Mutops,Printing};
+use indxvec::{Vecops,Mutops};
 use medians::{Med,Median};
 
 impl<T> VecVec<T> for &[Vec<T>] 
@@ -41,7 +41,7 @@ impl<T> VecVec<T> for &[Vec<T>]
             let uvec = r[j].get(0..n-j).unwrap().house_reflector(); // reflector 
             for i in j..m {
                 r[i] = uvec.house_reflect(r[i].get(0..n-i).unwrap());  
-                println!("{}",r[i].gr()); 
+                // println!("{}",r[i].gr()); 
             }
             // for i in j+1..m { r[j][i] = 0.; };
             u.push(uvec); 
