@@ -449,8 +449,9 @@ impl<T> Vecg for &[T]
     }
 
     /// Householder reflect
-    fn house_reflect(self,x:&[f64]) -> Vec<f64> {
-        x.vsub::<f64>(&self.smult::<f64>(x.dotp(self)))
+    fn house_reflect<U>(self,x:&[U]) -> Vec<f64>
+    where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
+        x.vsub(&self.smult(x.dotp(self)))
     }
 
 }

@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
 use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec };
-use indxvec::{Vecops,Mutops,Printing};
+use indxvec::{Vecops,Mutops};
 use medians::{Med,Median};
 
 impl<T> VecVec<T> for &[Vec<T>] 
@@ -27,23 +27,28 @@ impl<T> VecVec<T> for &[Vec<T>]
         data.transpose().iter().map(|v| v.vunit()).collect::<Vec<Vec<f64>>>().transpose()
     }
 
-    /// Householder's method returning matrices (U,R), where 
-    /// U are the reflector generators for use by house_apply.
+    /// Householder's method returning matrices (U',R'), where 
+    /// U are the reflector generators for use by house_uapply(m).
     /// R is the upper triangular decomposition factor. 
-    /// Works on columns, so self may need transposing first.
+    /// Works on columns, transposes self for convenience.
     fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>) {
-        let m = self.len();
-        let n = self[0].len();
-        let mnmin = n.min(m);
-        // convert-clone self into r
-        let mut r = self.iter().map(|s| s.tof64()).collect::<Vec<Vec<f64>>>();
-        let mut u = Vec::with_capacity(mnmin);
-        for j in 0..mnmin {
-            let uvec = r[j].get(j..n).unwrap().house_reflector(); // reflector   
-            for i in j..n { 
-                let rvec = uvec.house_reflect(&r[i].drain(j..n).collect::<Vec<f64>>());  
-                r[i].extend(rvec); 
+        let n = self.len();
+        let d = self[0].len();
+        let min = d.min(n);
+        let mut r = Vec::with_capacity(d);
+        for i in 0..d { // transpose and convert to f64
+            let mut column = Vec::with_capacity(n);
+            for v in self { column.push(f64::from(v[i])); }
+            r.push(column);
+        } 
+        let mut u = Vec::with_capacity(min);
+        for j in 0..min {
+            let uvec = r[j].get(j..d).unwrap().house_reflector(); // reflector   
+            for rlast in r.iter_mut().take(d).skip(j) { 
+                let rvec = uvec.house_reflect::<f64>(&rlast.drain(j..d).collect::<Vec<f64>>());  
+                rlast.extend(rvec); 
             };
+            // set to zeros what ought to be zeros
             let mut zerovec:Vec<f64> = (0..j).map(|_dummy|0.0).collect();
             zerovec.extend(uvec);
             u.push(zerovec);
@@ -52,6 +57,15 @@ impl<T> VecVec<T> for &[Vec<T>]
         (u,r)
     }
 
+    /// Householder's Q*M matrix product without explicitly computing Q 
+    fn house_uapply(self,m:Self) -> Vec<Vec<f64>> {
+        // let (u, _) = self.house_ur();
+        let mut qm = m.iter().map(|mvec| mvec.tof64()).collect::<Vec<Vec<f64>>>(); 
+        for uvec in self {
+            qm.iter_mut().for_each(|qvec| *qvec = uvec.house_reflect::<f64>(qvec)) 
+        }
+        qm
+    }
 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE> {  

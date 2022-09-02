@@ -1,7 +1,7 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::Median;
 use ran::{set_seeds, *};
-use rstats::{i64tof64, identity_lmatrix, Stats, VecVec, VecVecg, Vecg, Vecu8, RE};
+use rstats::{i64tof64, identity_lmatrix, unit_matrix, Stats, VecVec, VecVecg, Vecg, Vecu8, RE};
 use times::benchvvf64;
 
 pub const EPS: f64 = 1e-3;
@@ -455,17 +455,23 @@ fn hull() -> Result<(), RE> {
 }
 
 #[test]
-fn householder() {
-    let a:&[Vec<i32>] = &[
-        vec![35, 1, 6, 26, 19, 24],
-        vec![3, 32, 7, 21, 23, 25],
-        vec![31, 9, 2, 22, 27, 20],
-        vec![8, 28, 33, 17, 10, 15],
-        vec![30, 5, 34, 12, 14, 16],
-        vec![4, 36, 29, 13, 18, 11],
+fn householder() -> Result<(), RE> {
+    let a:&[Vec<f64>] = &[
+        vec![35., 1., 6., 26., 19., 24.],
+        vec![3., 32., 7., 21., 23., 25.],
+        vec![31., 9., 2., 22., 27., 20.],
+        vec![8., 28., 33., 17., 10., 15.],
+        vec![30., 5., 34., 12., 14., 16.],
+        vec![4., 36., 29., 13., 18., 11.],
     ];
-    let (u, r) = a.transpose().house_ur();
-    println!("house_ur u and r {}\n{}", u.gr(), r.gr());    
+    let atimesunit = a.matmult(&unit_matrix(a.len()))?;
+    println!("Matrix a:\n{}",atimesunit.gr());
+    let (u,r) = a.house_ur();
+    println!("house_ur u' and r' {}\n{}", u.gr(), r.gr());  
+    let q = u.house_uapply(&unit_matrix(u.len()));
+    println!("Q matrix\n{}\nOthogonality of Q check (Q'*Q = I):\n{}", q.gr(), q.transpose().matmult(&q)?.gr()); 
+    println!("Matrix a recreated:\n{}",q.matmult(&r.transpose())?.gr());
+    Ok(())   
 }
 
 const NAMES: [&str; 4] = ["gmedian", "pmedian", "quasimedian", "acentroid"];

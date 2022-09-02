@@ -152,7 +152,7 @@ For more detailed comments, plus some examples, see the source. You may have to 
 * `sumn`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.),
 * `seqtosubs` returns row,column subsripts to 2d matrix from 1d flat index into a triangular matrix in scanning order.
 * `identity_lmatrix` generates lower triangular identity matrix in flat scanning order.
-
+* `unit_matrix` full unit matrix
 
 ## Trait Stats
 
@@ -222,7 +222,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.14** - Householder's UR matrix decomposition.
+* **Version 1.2.14** - Householder's UR matrix decomposition and orthogonalization.
 
 * **Version 1.2.13** - Updated dependency to `indxvec v1.4.2`. Added `normalize` and `wvmean`. Added `radius` to `VecVec`. Added `wtukeyvec` a `dottukey`. Removed bulky test/tests.rs from the crate, get them from the github repository. Householder decomposition/orthogonalization is 'to do'.
 

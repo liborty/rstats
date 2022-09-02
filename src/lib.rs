@@ -56,6 +56,17 @@ pub fn identity_lmatrix(n:usize) -> Vec<f64> {
     res 
 }
 
+/// Generates full nxn unit (identity) matrix 
+pub fn unit_matrix(n:usize) -> Vec<Vec<f64>> {
+    let mut res:Vec<Vec<f64>> = Vec::with_capacity(n);
+    for i in 0..n { 
+        let mut row = vec![0.;n];
+        row[i] = 1.0;
+        res.push(row);
+    }
+    res 
+}
+
 /// Shorthand type for returned errors with message payload
 pub type RE = RError<&'static str>;
 
@@ -218,7 +229,8 @@ pub trait Vecg {
     fn mahalanobis<U>(self,d: &[U]) -> Result<f64,RE>
         where U: Copy+PartialOrd+std::fmt::Display, f64:From<U>;
             /// Householder reflect
-    fn house_reflect(self,x:&[f64]) -> Vec<f64>;
+    fn house_reflect<U>(self,x:&[U]) -> Vec<f64>
+        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U>;
 }
 
 /// Mutable operations on one generic slice. 
@@ -263,13 +275,15 @@ pub trait Vecu8 {
 
 /// Methods applicable to a slice of vectors of generic end type.
 /// Operations on a whole set of multidimensional vectors.
-pub trait VecVec<T> {
+pub trait VecVec<T> { 
     /// Transpose slice of vecs matrix
     fn transpose(self) -> Vec<Vec<T>>;
     /// Normalize columns, so that they are all unit vectors
     fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>>;
     /// Householder's method returning matrices (U,R)
     fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>); 
+    /// Householder's Q*M matrix product without explicitly computing Q 
+    fn house_uapply(self,m:Self) -> Vec<Vec<f64>>;
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE>;
     /// Joint entropy between a set of vectors of the same length
