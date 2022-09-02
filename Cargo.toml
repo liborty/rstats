@@ -27,8 +27,8 @@ include = [
 maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
-indxvec = "^1.4.2"
-medians = "^1"
+indxvec = "1.4.2"
+medians = "1.0.4"
 
 [dev-dependencies]
 ran = "^1"
