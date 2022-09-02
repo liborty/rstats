@@ -1,7 +1,7 @@
 use std::iter::FromIterator;
 
 use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec };
-use indxvec::{Vecops,Mutops};
+use indxvec::{Vecops,Mutops,Printing};
 use medians::{Med,Median};
 
 impl<T> VecVec<T> for &[Vec<T>] 
@@ -30,21 +30,24 @@ impl<T> VecVec<T> for &[Vec<T>]
     /// Householder's method returning matrices (U,R), where 
     /// U are the reflector generators for use by house_apply.
     /// R is the upper triangular decomposition factor. 
-    /// Works on columns, so self may need inverting first.
+    /// Works on columns, so self may need transposing first.
     fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>) {
         let m = self.len();
         let n = self[0].len();
+        let mnmin = n.min(m);
         // convert-clone self into r
         let mut r = self.iter().map(|s| s.tof64()).collect::<Vec<Vec<f64>>>();
-        let mut u = Vec::with_capacity(n);
-        for j in 0..(n.min(m)) {
-            let uvec = r[j].get(0..n-j).unwrap().house_reflector(); // reflector 
-            for i in j..m {
-                r[i] = uvec.house_reflect(r[i].get(0..n-i).unwrap());  
-                // println!("{}",r[i].gr()); 
-            }
-            // for i in j+1..m { r[j][i] = 0.; };
-            u.push(uvec); 
+        let mut u = Vec::with_capacity(mnmin);
+        for j in 0..mnmin {
+            let uvec = r[j].get(j..n).unwrap().house_reflector(); // reflector   
+            for i in j..n { 
+                let rvec = uvec.house_reflect(&r[i].drain(j..n).collect::<Vec<f64>>());  
+                r[i].extend(rvec); 
+            };
+            let mut zerovec:Vec<f64> = (0..j).map(|_dummy|0.0).collect();
+            zerovec.extend(uvec);
+            u.push(zerovec);
+            for rzero in r[j].iter_mut().skip(j+1) { *rzero = 0.; };
         }
         (u,r)
     }
