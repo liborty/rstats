@@ -11,14 +11,7 @@ license = "Apache-2.0"
 keywords = ["machine-learning","statistics","linear-algebra","geometric-median","data-analysis"]
 categories = ["science","mathematics","algorithms","visualization","rust-patterns"]
 include = [
-    "src/lib.rs",
-    "src/error.rs",
-    "src/mutvec.rs",
-    "src/statsg.rs", 
-    "src/vecg.rs",
-    "src/vecu8.rs",
-    "src/vecvec.rs",
-    "src/vecvecg.rs",
+    "src/*.rs", 
     "Cargo.toml",
     "README.md",
     "LICENSE"
@@ -27,9 +20,9 @@ include = [
 maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
-indxvec = "1.4.2"
-medians = "1.0.4"
+indxvec = "^1.4"
+medians = "^1.0"
 
 [dev-dependencies]
-ran = "^1"
-times = "^1"
+ran = "^1.0"
+times = "^1.0"
