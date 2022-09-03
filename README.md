@@ -225,7 +225,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.15** -
+* **Version 1.2.15** - Introducing `struct TriangMat`: better representation of triangular matrices.
 
 * **Version 1.2.14** - Householder's UR matrix decomposition and orthogonalization.
 

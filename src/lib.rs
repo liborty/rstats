@@ -16,6 +16,8 @@ pub mod mutvec;
 pub mod vecvec;
 /// Multidimensional operations on sets of vectors, with additional inputs
 pub mod vecvecg;
+/// Associated functions implemented for struct TriangMat
+pub mod triangmat;
 
 // reexporting useful related methods
 pub use indxvec::{MinMax,Printing,printing::*};
@@ -46,16 +48,6 @@ pub fn seqtosubs(s:usize) -> (usize,usize) {
     (row,column)
 }
 
-/// Generates an nxn identity matrix in lower triangular 1d scan form
-pub fn identity_lmatrix(n:usize) -> Vec<f64> {
-    let mut res = Vec::new();
-    for i in 0..n { 
-        for _ in 0..i { res.push(0_f64) };
-        res.push(1_f64);
-    }
-    res 
-}
-
 /// Generates full nxn unit (identity) matrix 
 pub fn unit_matrix(n:usize) -> Vec<Vec<f64>> {
     let mut res:Vec<Vec<f64>> = Vec::with_capacity(n);
@@ -69,6 +61,17 @@ pub fn unit_matrix(n:usize) -> Vec<Vec<f64>> {
 
 /// Shorthand type for returned errors with message payload
 pub type RE = RError<&'static str>;
+
+/// Compact Triangular Matrix 
+#[derive(Default,Clone)]
+pub struct TriangMat<T> {
+ /// Lower = true, Upper = false
+ pub lower: bool,
+ /// Number of rows (and columns)
+ pub rows: usize,
+ /// Packed 1d vector of data
+ pub data: Vec<T>
+} 
 
 // Traits
 

@@ -1,7 +1,7 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::Median;
 use ran::{set_seeds, *};
-use rstats::{i64tof64, identity_lmatrix, unit_matrix, Stats, VecVec, VecVecg, Vecg, Vecu8, RE};
+use rstats::{i64tof64, unit_matrix, TriangMat, Stats, VecVec, VecVecg, Vecg, Vecu8, RE};
 use times::benchvvf64;
 
 pub const EPS: f64 = 1e-3;
@@ -221,7 +221,7 @@ fn trend() -> Result<(), RE> {
 fn matrices() -> Result<(), RE> {
     println!(
         "5x5 identity lower triangular matrix in scan order:\n{}",
-        identity_lmatrix(5).gr()
+        TriangMat::<f64>::unit_lower(5)
     );
     let d = 10_usize;
     let n = 90_usize;
@@ -456,7 +456,7 @@ fn hull() -> Result<(), RE> {
 
 #[test]
 fn householder() -> Result<(), RE> {
-    let a:&[Vec<f64>] = &[
+    let a = &[
         vec![35., 1., 6., 26., 19., 24.],
         vec![3., 32., 7., 21., 23., 25.],
         vec![31., 9., 2., 22., 27., 20.],
