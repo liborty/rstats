@@ -5,7 +5,7 @@
 [<img alt="crates.io" src="https://img.shields.io/crates/d/rstats?logo=rust">](https://crates.io/crates/rstats)
 [<img alt="docs.rs" src="https://img.shields.io/docsrs/rstats?logo=rust">](https://docs.rs/rstats)
 
-Statistics, Linear Algebra, Information Measures, Machine Learning, Data Analysis, Cholesky Matrix Decomposition, Mahalanobis Distance,   Convex Hull and more ...
+Statistics, Linear Algebra, Information Measures, Machine Learning, Data Analysis, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder Decomposition, Convex Hull and more ...
 
 ## Usage
 
@@ -91,7 +91,10 @@ In contrast, analyses based on the true geometric median (gm) are axis (rotation
 
 * `Mahalanobis Distance` is a weighted distace, where the weights are derived from the axis of variation of the nd data points cloud. Thus distances in the directions in which there are few points are penalised (increased) and vice versa. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method decomposes the covariance/comediance positive definite matrix S into a product of two triangular matrices: S = LL'. See more details in the code comments.
 
-* `Contribution`: one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point as the magnitude of adjustment to gm caused by adding that point. Generally, outlying points make greater contributions to the gm but not as much as they would to the centroid. The contribution depends not only on the radius of the example point in question but also on the radii of all other (existing) examples.
+* `Contribution` One of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point as the magnitude of adjustment to gm caused by adding that point. Generally, outlying points make greater contributions to the gm but not as much as they would to the centroid. The contribution depends not only on the radius of the example point in question but also on the radii of all other (existing) examples.
+
+* `Tukey Vector` Proportions of points in each hemisphere from gm. This is a useful 'signature' of a data cloud. For a new point (that typically needs to be classified) we can then quickly determine whether it lies in a well populated direction. This could be done by projecting all the existing points on it but that is much slower, as there are many. Also, in keeping with the stability properties of medians, we are only using counts of points, not their distances.
+
 
 ## Implementation
 
@@ -221,6 +224,8 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.15** -
 
 * **Version 1.2.14** - Householder's UR matrix decomposition and orthogonalization.
 

@@ -474,9 +474,10 @@ fn householder() -> Result<(), RE> {
     Ok(())   
 }
 
-const NAMES: [&str; 4] = ["gmedian", "pmedian", "quasimedian", "acentroid"];
-
-const CLOSURESU8: [fn(&[Vec<f64>]); 4] = [
+#[test]
+fn timing_gm() {
+    const NAMES: [&str; 4] = ["gmedian", "pmedian", "quasimedian", "acentroid"];
+    const CLOSURESU8: [fn(&[Vec<f64>]); 4] = [
     |v: &[_]| {
         v.gmedian(EPS);
     },
@@ -490,12 +491,9 @@ const CLOSURESU8: [fn(&[Vec<f64>]); 4] = [
         v.acentroid();
     },
 ];
-
-#[test]
-fn timing_gm() {
     set_seeds(7777777777_u64); // intialise random numbers generator
-                               // Rnum encapsulates the type of the data items
-    benchvvf64(Rnum::newf64(), 100, 4, 10, &NAMES, &CLOSURESU8);
+    // Rnum specifies the type of the random numbers required
+    benchvvf64(Rnum::newf64(), 100, 1000..1500, 200, 10,&NAMES, &CLOSURESU8);
 }
 
 #[test]
