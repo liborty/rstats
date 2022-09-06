@@ -1,7 +1,7 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::Median;
 use ran::{set_seeds, *};
-use rstats::{i64tof64, unit_matrix, TriangMat, Stats, VecVec, VecVecg, Vecg, Vecu8, RE};
+use rstats::{i64tof64, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
 use times::benchvvf64;
 
 pub const EPS: f64 = 1e-3;
@@ -38,10 +38,10 @@ fn u8() -> Result<(), RE> {
     set_seeds(77777);
     let pt = Rnum::newu8().ranvv(d, n).getvvu8();
     let cov = pt.covar(&pt.acentroid())?;
-    println!("Covariances:\n{}", cov.gr());
+    println!("Covariances:\n{}", cov);
     let com = pt.covar(&pt.gmedian(EPS))?;
-    println!("Comediances:\n{}", com.gr());
-    println!("Their Distance: {}", cov.vdist(&com).gr());
+    println!("Comediances:\n{}", com);
+    println!("Their Distance: {}", cov.data.vdist(&com.data));
     let trpt = pt.transpose();
     println!(
         "Column Dependencies:\n{}",
@@ -218,11 +218,9 @@ fn trend() -> Result<(), RE> {
 }
 
 #[test]
-fn matrices() -> Result<(), RE> {
-    println!(
-        "5x5 identity lower triangular matrix in scan order:\n{}",
-        TriangMat::<f64>::unit_lower(5)
-    );
+fn triangmat() -> Result<(), RE> {
+    println!("\n{}", TriangMat::unit(5, true).gr());
+    println!("{}", TriangMat::unit(7, false).gr());
     let d = 10_usize;
     let n = 90_usize;
     println!(
@@ -235,17 +233,9 @@ fn matrices() -> Result<(), RE> {
     // println!("\nTest data:\n{}",pts.gr());
     // let transppt = pts.transpose();
     let cov = pts.covar(&pts.pmedian(EPS))?;
-    println!(
-        "Triangular comediance matrix in scan order, size {}:\n{}",
-        cov.len(),
-        cov.gr()
-    );
+    println!("Comediance matrix:\n{}", cov);
     let cholmat = cov.cholesky()?;
-    println!(
-        "\nCholesky L matrix, size {}:\n{}",
-        cholmat.len(),
-        cholmat.gr()
-    );
+    println!("Cholesky L matrix:\n{}", cholmat);
     // set_seeds(77777);
     let pta = ru.ranv(d).getvf64();
     let ptb = ru.ranv(d).getvf64();
@@ -415,7 +405,7 @@ fn hull() -> Result<(), RE> {
     let wts = rf.ranv_in(n, 0., 100.).getvf64();
     let median = pts.wgmedian(&wts, EPS)?;
     let zeropts = pts.translate(&median)?;
-    let hullidx = zeropts.convex_hull(); 
+    let hullidx = zeropts.convex_hull();
     let outerrad = pts.radius(*hullidx.first().unwrap(), &median)?;
     let innerrad = pts.radius(*hullidx.last().unwrap(), &median)?;
 
@@ -450,7 +440,6 @@ fn hull() -> Result<(), RE> {
             .gr()
     );
 
-
     Ok(())
 }
 
@@ -465,35 +454,47 @@ fn householder() -> Result<(), RE> {
         vec![4., 36., 29., 13., 18., 11.],
     ];
     let atimesunit = a.matmult(&unit_matrix(a.len()))?;
-    println!("Matrix a:\n{}",atimesunit.gr());
-    let (u,r) = a.house_ur();
-    println!("house_ur u' and r' {}\n{}", u.gr(), r.gr());  
+    println!("Matrix a:\n{}", atimesunit.gr());
+    let (u, r) = a.house_ur();
+    println!("house_ur u' and r' {}\n{}", u.gr(), r.gr());
     let q = u.house_uapply(&unit_matrix(u.len()));
-    println!("Q matrix\n{}\nOthogonality of Q check (Q'*Q = I):\n{}", q.gr(), q.transpose().matmult(&q)?.gr()); 
-    println!("Matrix a recreated:\n{}",q.matmult(&r.transpose())?.gr());
-    Ok(())   
+    println!(
+        "Q matrix\n{}\nOthogonality of Q check (Q'*Q = I):\n{}",
+        q.gr(),
+        q.transpose().matmult(&q)?.gr()
+    );
+    println!("Matrix a recreated:\n{}", q.matmult(&r.transpose())?.gr());
+    Ok(())
 }
 
 #[test]
 fn timing_gm() {
     const NAMES: [&str; 4] = ["gmedian", "pmedian", "quasimedian", "acentroid"];
     const CLOSURESU8: [fn(&[Vec<f64>]); 4] = [
-    |v: &[_]| {
-        v.gmedian(EPS);
-    },
-    |v: &[_]| {
-        v.pmedian(EPS);
-    },
-    |v: &[_]| {
-        v.quasimedian();
-    },
-    |v: &[_]| {
-        v.acentroid();
-    },
-];
+        |v: &[_]| {
+            v.gmedian(EPS);
+        },
+        |v: &[_]| {
+            v.pmedian(EPS);
+        },
+        |v: &[_]| {
+            v.quasimedian();
+        },
+        |v: &[_]| {
+            v.acentroid();
+        },
+    ];
     set_seeds(7777777777_u64); // intialise random numbers generator
-    // Rnum specifies the type of the random numbers required
-    benchvvf64(Rnum::newf64(), 100, 1000..1500, 200, 10,&NAMES, &CLOSURESU8);
+                               // Rnum specifies the type of the random numbers required
+    benchvvf64(
+        Rnum::newf64(),
+        100,
+        1000..1500,
+        200,
+        10,
+        &NAMES,
+        &CLOSURESU8,
+    );
 }
 
 #[test]

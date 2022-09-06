@@ -1,6 +1,6 @@
 // use core::slice::SlicePattern;
 
-use crate::{sumn,seqtosubs,error::RError,RE,Stats,Vecg};
+use crate::{error::RError,RE,Stats,Vecg, TriangMat};
 use indxvec::{Indices,Vecops};
 
 impl<T> Vecg for &[T] 
@@ -169,21 +169,17 @@ impl<T> Vecg for &[T]
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {
         (1.0-self.cosine(v))/2.0 }
 
-    /// Flattened lower triangular part of a covariance matrix. 
-    /// m can be either mean or median vector. 
-    /// Since covariance matrix is symmetric (positive semi definite), 
-    /// the upper triangular part can be trivially added for all j>i by: c(j,i) = c(i,j).
-    /// N.b. the indexing is always assumed to be in this order: row,column.
-    /// The items of the resulting lower triangular array c[i][j] are pushed flat
-    /// into a single vector in this double loop order: left to right, top to bottom 
-    fn covone<U>(self, m:&[U]) -> Vec<f64>
+    /// Lower triangular covariance matrix for a single vector. 
+    /// Where m is either mean or median vector (to be subtracted).
+    /// Covariance matrix is symmetric (positive semi definite). 
+    fn covone<U>(self, m:&[U]) -> TriangMat 
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> { 
         let mut cov:Vec<f64> = Vec::new(); // flat lower triangular result array
-        let vm = self.vsub(m); // zero mean vector
+        let vm = self.vsub(m); // zero mean/median vector
         vm.iter().enumerate().for_each(|(i,&thisc)|
             // generate its products up to and including the diagonal (itself)
             vm.iter().take(i+1).for_each(|&component| cov.push(thisc*component)) );
-        cov
+        TriangMat{ lower:true,symmetric:true, data:cov }
     }
 
     /// Kronecker product of two vectors.   
@@ -391,62 +387,6 @@ impl<T> Vecg for &[T]
         1_f64 / (recip - recips) 
         // self.contribvec_oldpt(gm,recips,p).vmag()
     } 
-
-    /// Solves the system of linear equations Lx = b, 
-    /// where L (self) is a lower triangular matrix in left to right 1d scan form   
-    fn forward_substitute<U>(self,b:&[U]) -> Result<Vec<f64>,RError<& 'static str>> 
-        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
-        let sl = self.len();
-        if sl < 3 { return Err(RError::NoDataError("forward-substitute needs at least three items"));};
-        // 2d matrix dimensions
-        let (n,c) = seqtosubs(sl);
-        if c != 0 { return Err(RError::DataError("forward_substitute needs a triangular matrix"));};
-        // dimensions/lengths mismatch
-        if n != b.len() { return Err(RError::DataError("forward_substitute mismatch of self and b dimension"));};
-        let mut res:Vec<f64> = Vec::with_capacity(n); // result of the same size and shape as b
-        res.push(f64::from(b[0])/f64::from(self[0])); 
-        for row in 1..n {
-            let mut sumtodiag = 0_f64;
-            let rowoffset = sumn(row);
-            for j in 0..row {  
-                sumtodiag += f64::from(self[rowoffset+j])*res[j];
-            };
-            res.push( ( f64::from(b[row]) - sumtodiag ) 
-            / f64::from(self[rowoffset+row]));  
-        };
-        Ok(res)   
-    }
-
-    /// Leftmultiply (column) vector v by upper triangular matrix self
-    fn utriangmultv<U>(self,v: &[U]) -> Result<Vec<f64>,RE>
-        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
-        let sl = self.len();
-        if sl < 1 { return Err(RError::NoDataError("utriangmultv needs at least one item"));};
-        // 2d matrix dimensions
-        let (n,c) = seqtosubs(sl);
-        if c != sl { return Err(RError::DataError("utriangmultv expects a triangular matrix"));};
-        if n != v.len() { return Err(RError::DataError("utriangmultv dimensions mismatch")); };
-        let mut res:Vec<f64> = vec![0_f64;n]; 
-        for row in 0..n {
-            for j in row..n {
-                res[row] += f64::from(self[sumn(row)+j])*f64::from(v[j])
-            };
-        };
-        Ok(res)
-    }
-            
-    /// Mahalanobis scaled magnitude M(d) of vector d:
-    /// self is a precomputed lower triagonal matrix L, as returned by `cholesky`
-    /// from covariance/comediance positive definite matrix C = LL'.
-    /// M(d) = sqrt(d'inv(C)d) = sqrt(d'inv(LL')d) = sqrt(d'inv(L')inv(L)d), 
-    /// where ' denotes transpose and inv denotes inverse.
-    /// Putting Lx = d and solving for x by forward substitution, we obtain x = inv(L)d
-    ///  => M(d) = sqrt(x'x) = |x|. 
-    /// We stay in the compact triangular, from C to M(d).
-    fn mahalanobis<U>(self,d:&[U]) -> Result<f64,RE> 
-        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
-        Ok(self.forward_substitute(d)?.vmag())
-    }
 
     /// Householder reflect
     fn house_reflect<U>(self,x:&[U]) -> Vec<f64>

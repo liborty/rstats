@@ -62,15 +62,24 @@ pub fn unit_matrix(n:usize) -> Vec<Vec<f64>> {
 /// Shorthand type for returned errors with message payload
 pub type RE = RError<&'static str>;
 
-/// Compact Triangular Matrix 
+/// Compact Triangular Matrix. 
+/// TriangMat is typically result of some matrix calculations, 
+/// so concrete end-type f64 is used for simplicity and accuracy.
+/// TriangMat with `lower == false` is a transposed upper triangular matrix.
+/// `symmetric == true` represents, without duplications, a symmetric matrix.
+/// The size of the implied square array, nxn, is not explicitly stored. 
+/// It is obtained by solving the quadratic equation, as:
+/// `n = ((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize;`
+/// where s = triangmat.len().
+/// or, converting the other way, `s = (n+1)*n/2;`
 #[derive(Default,Clone)]
-pub struct TriangMat<T> {
- /// Lower = true, Upper = false
+pub struct TriangMat {
+ /// True means Lower, false means upper
  pub lower: bool,
- /// Number of rows (and columns)
- pub rows: usize,
- /// Packed 1d vector of data
- pub data: Vec<T>
+ /// True means the implied matrix is symmetric
+ pub symmetric: bool,
+ /// Packed 1d vector of triangular matrix data, size (n+1)*n/2
+ pub data: Vec<f64>
 } 
 
 // Traits
@@ -141,8 +150,6 @@ pub trait Stats {
     fn lintrans(self) -> Result<Vec<f64>,RE>;
     /// Reconstructs the full symmetric matrix from its lower diagonal compact form
     fn symmatrix(self) -> Result<Vec<Vec<f64>>,RE>;
-    /// Cholesky decomposition of a positive definite matrix into LLt
-    fn cholesky(self) -> Result<Vec<f64>,RE>;
     /// Householder reflection
     fn house_reflector(self) -> Vec<f64>;
 }
@@ -189,7 +196,7 @@ pub trait Vecg {
     /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2
     fn vdisim<U>(self, v:&[U]) -> f64 where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Lower triangular part of a covariance matrix for a single f64 vector.
-    fn covone<U>(self, m:&[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
+    fn covone<U>(self, m:&[U]) -> TriangMat where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Kronecker product of two vectors 
     fn kron<U>(self, m:&[U]) -> Vec<f64> where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>; 
     /// Outer product of two vectors 
@@ -221,17 +228,8 @@ pub trait Vecg {
     /// Contribution an existing set point p has made to the gm
     fn contribvec_oldpt(self,gm:&[f64],recips:f64) -> Vec<f64>;
     /// Contribution removing an existing p will make (as a negative number)
-    fn contrib_oldpt(self,gm:&[f64],recips:f64) -> f64;  
-    /// Solves the system of linear equations Lx = b. L (self) is a lower triangular array   
-    fn forward_substitute<U>(self,b:&[U]) -> Result<Vec<f64>,RError<& 'static str>> 
-        where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
-    /// Leftmultiply (column) vector v by upper triangular matrix self
-    fn utriangmultv<U>(self,v:&[U]) -> Result<Vec<f64>,RE>
-        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U>;
-    /// Mahalanobis scaled magnitude of difference vector d 
-    fn mahalanobis<U>(self,d: &[U]) -> Result<f64,RE>
-        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U>;
-            /// Householder reflect
+    fn contrib_oldpt(self,gm:&[f64],recips:f64) -> f64; 
+    /// Householder reflect
     fn house_reflect<U>(self,x:&[U]) -> Vec<f64>
         where U: Copy+PartialOrd+std::fmt::Display, f64:From<U>;
 }
@@ -380,13 +378,13 @@ pub trait VecVecg<T,U> {
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE>;     
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
-    fn covar(self, med:&[U]) -> Result<Vec<f64>,RE>;  
+    fn covar(self, med:&[U]) -> Result<TriangMat,RE>;  
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
-    fn wcovar(self, ws:&[U], m:&[f64]) -> Result<Vec<f64>,RE>;
+    fn wcovar(self, ws:&[U], m:&[f64]) -> Result<TriangMat,RE>;
     /// Flattened comediance matrix for f64 vectors in self.
     /// Similar to `covar` above but medians instead of means are returned.
-    fn comed(self, m:&[U]) -> Result<Vec<f64>,RE>;
+    fn comed(self, m:&[U]) -> Result<TriangMat,RE>;
     /// Flatteened comediance matrix for weighted f64 vectors.
     /// Similar to `wcovar` above but medians instead of means are returned.
-    fn wcomed(self, ws:&[U], m:&[f64]) -> Result<Vec<f64>,RE>;
+    fn wcomed(self, ws:&[U], m:&[f64]) -> Result<TriangMat,RE>;
 }

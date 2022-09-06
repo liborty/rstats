@@ -439,47 +439,7 @@ impl<T> Stats for &[T]
             mat[row][column] = f64::from(s); } ); 
         Ok(mat)
     }    
-    
-    /// Efficient Cholesky-Banachiewicz matrix decomposition into `LL^T`,
-    /// where L is the returned lower triangular matrix. 
-    /// (The upper part, `L^T` can be trivially reconstructed by transposing L).
-    /// Expects as input a symmetric, square, positive definite matrix
-    /// in compact lower triangular 1d vector form, 
-    /// such as a covariance matrix produced here by `covar`.
-    /// The computations are all done on the compact form, 
-    /// making this implementation memory efficient for large (symmetric) matrices.
-    /// Reports errors if the above conditions are not satisfied.
-    fn cholesky(self) -> Result<Vec<f64>,RE> {
-        let sl = self.len();
-        // input not long enough to compute anything
-        if sl < 3 { return Err(RError::NoDataError("cholesky needs at least three Vec items")); };
-        // n is the dimension of the implied square matrix.
-        // Not needed as an extra argument. We compute it 
-        // by solving a quadratic equation in seqtosubs()
-        let (n,c) = seqtosubs(sl);
-        // input is not a triangular number, is of wrong size
-        if c != 0 { return Err(RError::DataError("cholesky needs a triangular matrix")); }; 
-        let mut res = vec![0.0; sl]; // result L is of the same size as the input
-        for i in 0..n {
-            let isub = i*(i+1)/2; // matrix row index to the compact vector index
-            for j in 0..(i+1){ // i+1 to include the diagonal
-                let jsub = j*(j+1)/2; // matrix column index to the compact vector index
-                let mut sum = 0.0;
-                for k in 0..j {
-                    sum += res[isub + k] * res[jsub + k];
-                }
-                let dif = f64::from(self[isub + j]) - sum;
-                res[isub + j] = if i == j { // diagonal elements
-                    // dif <= 0 means that the input matrix is not positive definite, 
-                    // or is ill-conditioned, so we return ArithError
-                    if dif <= 0_f64 { return Err(RError::ArithError("cholesky needs a positive definite matrix")); }; 
-                    dif.sqrt() } // passed, so enter real non-zero square root
-                else { dif / res[jsub + j] };
-            }
-        }
-        Ok(res)
-    }
-
+ 
     /// Householder reflector
     fn house_reflector(self) -> Vec<f64> {
         let norm = self.vmag();
