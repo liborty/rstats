@@ -14,7 +14,7 @@ Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 Use in your source files any of the following structs, when needed:
 
 ```rust  
-use rstats::{RE,Mstats,MinMax,Med};
+use rstats::{RE,TriangMat,Mstats,MinMax,Med};
 ```
 
 and any of the following rstats defined traits:
