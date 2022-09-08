@@ -39,15 +39,6 @@ pub fn i64tof64(s: &[i64]) -> Vec<f64> {
 /// to exclude the diagonal, use `sumn(n-1)`
 pub fn sumn(n: usize) -> usize { n * (n + 1) / 2 }
 
-/// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
-/// coordinates within a square lower triangular matrix.
-/// Enables memory efficient representation of such matrices as a flat vector.
-pub fn seqtosubs(s:usize) -> (usize,usize) {
-    let row = ((((8*s+1) as f64).sqrt() - 1.)/2.) as usize; // cast truncates, like .floor()
-    let column = s - row*(row+1)/2; // subtracting the previous triangular number
-    (row,column)
-}
-
 /// Generates full nxn unit (identity) matrix 
 pub fn unit_matrix(n:usize) -> Vec<Vec<f64>> {
     let mut res:Vec<Vec<f64>> = Vec::with_capacity(n);
@@ -74,8 +65,8 @@ pub type RE = RError<&'static str>;
 /// or, converting the other way, `s = (n+1)*n/2;`
 #[derive(Default,Clone)]
 pub struct TriangMat {
- /// True means Lower, false means upper
- pub lower: bool,
+ /// Trans, true means transposed, or upper
+ pub trans: bool,
  /// True means the implied matrix is symmetric
  pub symmetric: bool,
  /// Packed 1d vector of triangular matrix data, size (n+1)*n/2
@@ -147,9 +138,7 @@ pub trait Stats {
     /// (Auto)correlation coefficient of pairs of successive values of (time series) variable.
     fn autocorr(self) -> Result<f64,RE>; 
     /// Linear transform to interval [0,1]
-    fn lintrans(self) -> Result<Vec<f64>,RE>;
-    /// Reconstructs the full symmetric matrix from its lower diagonal compact form
-    fn symmatrix(self) -> Result<Vec<Vec<f64>>,RE>;
+    fn lintrans(self) -> Result<Vec<f64>,RE>; 
     /// Householder reflection
     fn house_reflector(self) -> Vec<f64>;
 }
@@ -282,9 +271,7 @@ pub trait VecVec<T> {
     /// Normalize columns, so that they are all unit vectors
     fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>>;
     /// Householder's method returning matrices (U,R)
-    fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>); 
-    /// Householder's Q*M matrix product without explicitly computing Q 
-    fn house_uapply(self,m:Self) -> Vec<Vec<f64>>;
+    fn house_ur(self) -> (TriangMat,TriangMat); 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE>;
     /// Joint entropy between a set of vectors of the same length

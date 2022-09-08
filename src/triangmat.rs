@@ -1,5 +1,5 @@
-use crate::{sumn, RError, Stats, TriangMat, RE}; // RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec };
-pub use indxvec::{printing::*, Printing};
+use crate::{sumn, RError, Stats, TriangMat, Vecg, RE}; // MStats, MinMax, MutVecg, Stats, VecVec };
+pub use indxvec::{printing::*, Printing, Vecops};
 
 /// Display implementation for TriangMat
 /// Converts to, and displays, the full matrix form
@@ -9,7 +9,7 @@ impl std::fmt::Display for TriangMat {
         write!(
             f,
             "{YL}{} triangular {} matrix {dim}x{dim}:\n{}",
-            if self.lower { "Lower" } else { "Upper" },
+            if self.trans { "Upper" } else { "Lower" },
             if self.symmetric {
                 "symmetric"
             } else {
@@ -24,8 +24,21 @@ impl std::fmt::Display for TriangMat {
 /// End type is f64 here, as triangular matrices will be mostly computed,
 /// so we may as well keep it simple.    
 impl TriangMat {
+    /// Length of the data vec
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+    /// Empty TriangMat test
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
+    /// Square dimension (rows)
+    pub fn rows(&self) -> usize {
+        Self::rowcol(self.len()).0
+    }
+
     /// Generates new unit TriangMat matrix of size (n+1)*n/2
-    pub fn unit(n: usize, lower: bool) -> TriangMat {
+    pub fn unit(n: usize, trans: bool) -> TriangMat {
         let mut data = Vec::new();
         for i in 0..n {
             // fill with zeros before the diagonal
@@ -35,7 +48,7 @@ impl TriangMat {
             data.push(1_f64);
         }
         TriangMat {
-            lower,
+            trans,
             symmetric: true,
             data,
         }
@@ -49,21 +62,32 @@ impl TriangMat {
         (row, column)
     }
 
-    fn to_full(&self) -> Vec<Vec<f64>> {
+    /// Extract one row from TriangMat
+    pub fn row(&self, r: usize) -> Vec<f64> {
+        let idx = sumn(r);
+        self.data.get(idx..idx + r + 1).unwrap().to_vec()
+    }
+
+    /// Unpacks TriangMat to full matrix
+    pub fn to_full(&self) -> Vec<Vec<f64>> {
+        // full matrix dimension(s)
         let (n, _) = TriangMat::rowcol(self.data.len());
         let mut res = vec![vec!(0_f64; n); n];
-        for (i, &item) in self.data.iter().enumerate() {
-            let (row, col) = TriangMat::rowcol(i);
-            if row == col {
+        // function pointer for primitive filling actions, depending on the matrix properties
+        // properties get tested only once
+        let fill: fn(usize, usize, &mut Vec<Vec<f64>>, f64) = if self.symmetric {
+            |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
                 res[row][col] = item;
-                continue;
-            }; //diagonal
-            if self.lower || self.symmetric {
-                res[row][col] = item;
-            };
-            if !self.lower || self.symmetric {
                 res[col][row] = item;
-            };
+            }
+        } else if self.trans {
+            |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| res[col][row] = item
+        } else {
+            |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| res[row][col] = item
+        };
+        for (i, &item) in self.data.iter().enumerate() {
+            let (row, col) = Self::rowcol(i);
+            fill(row, col, &mut res, item);
         }
         res
     }
@@ -120,7 +144,7 @@ impl TriangMat {
             }
         }
         Ok(TriangMat {
-            lower: true,
+            trans: false,
             symmetric: false,
             data: res,
         })
@@ -179,6 +203,22 @@ impl TriangMat {
             res.push((f64::from(bitem) - sumtodiag) / self.data[rowoffset + row]);
         }
         Ok(res)
+    }
+
+    /// Householder's Q*M matrix product without explicitly computing Q
+    pub fn house_uapply<T>(self, m: &[Vec<T>]) -> Vec<Vec<f64>>
+    where
+        T: Copy + PartialOrd + std::fmt::Display,
+        f64: From<T>,
+    {
+        let u = self.to_full();
+        let mut qm = m.iter().map(|mvec| mvec.tof64()).collect::<Vec<Vec<f64>>>();
+        for i in 0..self.rows() {
+            let uvec = &u[i];
+            qm.iter_mut()
+                .for_each(|qvec| *qvec = uvec.house_reflect::<f64>(qvec))
+        }
+        qm
     }
 
     /* Leftmultiply (column) vector v by upper triangular matrix self

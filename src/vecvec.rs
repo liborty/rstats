@@ -1,6 +1,6 @@
 use std::iter::FromIterator;
 
-use crate::{ RE, RError, MStats, MinMax, MutVecg, Stats, Vecg, VecVec };
+use crate::{ sumn, RE, RError, MStats, TriangMat, MinMax, MutVecg, Stats, Vecg, VecVec };
 use indxvec::{Vecops,Mutops};
 use medians::{Med,Median};
 
@@ -27,11 +27,11 @@ impl<T> VecVec<T> for &[Vec<T>]
         data.transpose().iter().map(|v| v.vunit()).collect::<Vec<Vec<f64>>>().transpose()
     }
 
-    /// Householder's method returning matrices (U',R'), where 
+    /// Householder's method returning triangular matrices (U',R), where 
     /// U are the reflector generators for use by house_uapply(m).
     /// R is the upper triangular decomposition factor. 
-    /// Works on columns, transposes self for convenience.
-    fn house_ur(self) -> (Vec<Vec<f64>>,Vec<Vec<f64>>) {
+    /// Transposes self for convenience, so columns get treated as rows.
+    fn house_ur(self) -> (TriangMat,TriangMat) {
         let n = self.len();
         let d = self[0].len();
         let min = d.min(n);
@@ -41,31 +41,27 @@ impl<T> VecVec<T> for &[Vec<T>]
             for v in self { column.push(f64::from(v[i])); }
             r.push(column);
         } 
-        let mut u = Vec::with_capacity(min);
+        let mut ures = vec!(0.;sumn(min));
+        let mut rres = Vec::with_capacity(sumn(min));
         for j in 0..min {
             let uvec = r[j].get(j..d).unwrap().house_reflector(); // reflector   
             for rlast in r.iter_mut().take(d).skip(j) { 
-                let rvec = uvec.house_reflect::<f64>(&rlast.drain(j..d).collect::<Vec<f64>>());  
-                rlast.extend(rvec); 
+                let rvec = uvec.house_reflect::<f64>(&rlast.drain(j..d).collect::<Vec<f64>>());
+                rlast.extend(rvec);
+                // drained, reflected with this uvec, and rebuilt, all remaining rows of r
             };
-            // set to zeros what ought to be zeros
-            let mut zerovec:Vec<f64> = (0..j).map(|_dummy|0.0).collect();
-            zerovec.extend(uvec);
-            u.push(zerovec);
-            for rzero in r[j].iter_mut().skip(j+1) { *rzero = 0.; };
+            // these uvecs are columns, so they must saved column-wise
+            for (row,&usave) in uvec.iter().enumerate() { 
+                ures[sumn(row+j)+j] = usave; // using triangular index
+            } 
+            // save completed `r[j]` components only up to and including the diagonal
+            // we are not even storing the rest, so no need to set those to zero
+            for &rsave in r[j].iter().take(j+1) { rres.push(rsave) };
         }
-        (u,r)
+        (TriangMat{trans:true,symmetric:false,data:ures},
+         TriangMat{trans:true,symmetric:false,data:rres})
     }
 
-    /// Householder's Q*M matrix product without explicitly computing Q 
-    fn house_uapply(self,m:Self) -> Vec<Vec<f64>> {
-        // let (u, _) = self.house_ur();
-        let mut qm = m.iter().map(|mvec| mvec.tof64()).collect::<Vec<Vec<f64>>>(); 
-        for uvec in self {
-            qm.iter_mut().for_each(|qvec| *qvec = uvec.house_reflect::<f64>(qvec)) 
-        }
-        qm
-    }
 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>,RE> {  

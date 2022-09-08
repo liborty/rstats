@@ -456,14 +456,15 @@ fn householder() -> Result<(), RE> {
     let atimesunit = a.matmult(&unit_matrix(a.len()))?;
     println!("Matrix a:\n{}", atimesunit.gr());
     let (u, r) = a.house_ur();
-    println!("house_ur u' and r' {}\n{}", u.gr(), r.gr());
-    let q = u.house_uapply(&unit_matrix(u.len()));
+    println!("house_ur U' {}", u);
+    println!("house_ur R  {}", r);
+    let q = u.house_uapply(&unit_matrix(a.len().min(a[0].len())));
     println!(
         "Q matrix\n{}\nOthogonality of Q check (Q'*Q = I):\n{}",
         q.gr(),
         q.transpose().matmult(&q)?.gr()
     );
-    println!("Matrix a recreated:\n{}", q.matmult(&r.transpose())?.gr());
+    println!("Matrix a = QR recreated:\n{}", q.matmult(&r.to_full())?.gr());
     Ok(())
 }
 

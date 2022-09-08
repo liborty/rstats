@@ -1,4 +1,4 @@
-use crate::{error::RError,RE,sumn,seqtosubs,Vecg,MutVecg,MStats,Stats};
+use crate::{error::RError,RE,sumn,Vecg,MutVecg,MStats,Stats};
 use indxvec::Vecops;
 use medians::Median; 
 
@@ -424,21 +424,6 @@ impl<T> Stats for &[T]
         if range == 0_f64 { return  Err(RError::ArithError("lintrans self has zero range")); };
         Ok(self.iter().map(|&x|(f64::from(x)-f64::from(mm.min))/range).collect())        
     }
-
-    /// Reconstructs the full symmetric square matrix from its lower diagonal compact form,
-    /// as produced by covar, covone, wcovar
-    fn symmatrix(self) -> Result<Vec<Vec<f64>>,RE> {        
-        let (n,c) = seqtosubs(self.len());
-        // input is not a triangular number, is of wrong size
-        if c != 0 { return Err(RError::DataError("symmatrix takes a triangular matrix")); }; 
-        let mut mat = vec![vec![0_f64;n];n]; // create the square matrix 
-        self.iter().enumerate().for_each(|(i,&s)| {
-            let (row,column) = seqtosubs(i);
-            if row > column { mat[column][row] = f64::from(s) as f64; }; // symmetrical reflection
-            // also set values in lower triangular region, including the diagonal
-            mat[row][column] = f64::from(s); } ); 
-        Ok(mat)
-    }    
  
     /// Householder reflector
     fn house_reflector(self) -> Vec<f64> {

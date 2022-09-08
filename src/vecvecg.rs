@@ -264,7 +264,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         // now compute the means and return
         let lf = self.len() as f64;
         cov.iter_mut().for_each(|c| *c /= lf); 
-        Ok(TriangMat{lower:true,symmetric:true,data:cov})
+        Ok(TriangMat{trans:false,symmetric:true,data:cov})
     }
  
     /// Weighted covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -294,7 +294,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         });
         // now compute the means and return
         cov.mutsmult::<f64>(1_f64/wsum); 
-        Ok(TriangMat{lower:true,symmetric:true,data:cov})
+        Ok(TriangMat{trans:false,symmetric:true,data:cov})
     }
 
     /// Covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -318,7 +318,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 com.push(thisproduct.median());
             }
         }
-        Ok(TriangMat{lower:true,symmetric:true,data:com})
+        Ok(TriangMat{trans:false,symmetric:true,data:com})
     }
 
     /// Covariance matrix for weighted f64 vectors in self. Becomes comediance when 
@@ -345,7 +345,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 com.push(thisproduct.median()/wmean);
             }
         };
-        Ok(TriangMat{lower:true,symmetric:true,data:com})
+        Ok(TriangMat{trans:false,symmetric:true,data:com})
     }
  
 }

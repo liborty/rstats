@@ -5,7 +5,7 @@
 [<img alt="crates.io" src="https://img.shields.io/crates/d/rstats?logo=rust">](https://crates.io/crates/rstats)
 [<img alt="docs.rs" src="https://img.shields.io/docsrs/rstats?logo=rust">](https://docs.rs/rstats)
 
-Statistics, Linear Algebra, Information Measures, Machine Learning, Data Analysis, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder Decomposition, Convex Hull and more ...
+Statistics, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder Matrix Decomposition, Information Measures, Machine Learning, Data Analysis, Geometric Median, Convex Hull and more ...
 
 ## Usage
 
@@ -145,16 +145,25 @@ More error checking will be added in later versions, where it makes sense.
 
 For more detailed comments, plus some examples, see the source. You may have to unclick the 'implementations on foreign types' somewhere near the bottom of the page in the rust docs to get to it.  (Since these traits are implemented over the pre-existing Rust Vec type).
 
-## Struct
+## Structs
 
-* `struct MStats` holds the central tendency, e.g. some kind of mean or median, and dispersion, e.g. standard deviation or MAD.
+### `struct MStats` 
+holds the central tendency, e.g. some kind of mean or median, and dispersion, e.g. standard deviation or MAD.
+
+### `struct TriangMat` 
+holds lower/upper triangular symmetric/non-symmetric matrix in compact form that avoids zeros and duplications. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on TriangMag, in module `triangmag.rs`, such as:
+
+* **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes a transpose), used by:
+* **Mahalanobis Distance**
+* **Householder UR** (M = QR) matrix decomposition
+
+Also, there are some methods implemented for `VecVecg` that produce `TriangMat`, specifically the covariance/comedience calculations: `covar`,`wcovar`,`comed` and `wcomed`. Their results will be typically used by `mahalanobis`.
+
 
 ##  Auxiliary Functions
 
 * `i64tof64`: converts an i64 vector to f64, 
 * `sumn`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.),
-* `seqtosubs` returns row,column subsripts to 2d matrix from 1d flat index into a triangular matrix in scanning order.
-* `identity_lmatrix` generates lower triangular identity matrix in flat scanning order.
 * `unit_matrix` full unit matrix
 
 ## Trait Stats
@@ -173,7 +182,6 @@ Included in this trait are:
 * probability density function (pdf)
 * autocorrelation, entropy
 * linear transformation to [0,1],
-* cholesky matrix decomposition: M = LL' (where ' denotes a transpose).
 * other measures and vector algebra operators
 
 Note that fast implementation of 1d medians is as of version 1.1.0 in crate `medians`.  
@@ -191,7 +199,6 @@ This is because Rust is currently incapable of inferring the type ('the inferenc
 * `Median correlation`, which we define analogously to Pearson's, as cosine of an angle between two zero median vectors (instead of his zero mean vectors).
 * Joint pdf, joint entropy, statistical independence (based on mutual information).
 * `Contribution` measure of a point w.r.t gm
-* `Mahalanobis distance`
 
 The simpler methods of this trait are sometimes unchecked (for speed), so some caution with data is advisable.
 
@@ -224,6 +231,8 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.16** - TriangMat developed. Methods working with triangular matrices are now implemented for this struct.
 
 * **Version 1.2.15** - Introducing `struct TriangMat`: better representation of triangular matrices.
 
