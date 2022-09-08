@@ -99,7 +99,7 @@ impl TriangMat {
     /// The computations are all done on the compact form,
     /// making this implementation memory efficient for large (symmetric) matrices.
     /// Reports errors if the above conditions are not satisfied.
-    pub fn cholesky(self) -> Result<TriangMat, RE> {
+    pub fn cholesky(&self) -> Result<TriangMat, RE> {
         let sl = self.data.len();
         // input not long enough to compute anything
         if sl < 3 {
@@ -158,7 +158,7 @@ impl TriangMat {
     /// Putting Lx = d and solving for x by forward substitution, we obtain x = inv(L)d
     ///  => M(d) = sqrt(x'x) = |x|.
     /// We stay in the compact triangular, from C to M(d).
-    pub fn mahalanobis<U>(self, d: &[U]) -> Result<f64, RE>
+    pub fn mahalanobis<U>(&self, d: &[U]) -> Result<f64, RE>
     where
         U: Copy + PartialOrd + std::fmt::Display,
         f64: From<U>,
@@ -168,7 +168,7 @@ impl TriangMat {
 
     /// Solves the system of linear equations Lx = b,
     /// where L (self) is a lower triangular matrix in left to right 1d scan form   
-    fn forward_substitute<U>(self, b: &[U]) -> Result<Vec<f64>, RError<&'static str>>
+    fn forward_substitute<U>(&self, b: &[U]) -> Result<Vec<f64>, RError<&'static str>>
     where
         U: Copy + PartialOrd + std::fmt::Display,
         f64: From<U>,
@@ -206,7 +206,7 @@ impl TriangMat {
     }
 
     /// Householder's Q*M matrix product without explicitly computing Q
-    pub fn house_uapply<T>(self, m: &[Vec<T>]) -> Vec<Vec<f64>>
+    pub fn house_uapply<T>(&self, m: &[Vec<T>]) -> Vec<Vec<f64>>
     where
         T: Copy + PartialOrd + std::fmt::Display,
         f64: From<T>,
