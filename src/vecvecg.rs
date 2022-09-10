@@ -75,20 +75,22 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// Proportions of points along each +/-axis (hemisphere)
     /// Excludes points that are perpendicular to it
-    /// Uses only the points from the given index
-    fn wtukeyvec(self, idx: &[usize], ws:&[U], gm:&[f64]) -> Result<Vec<f64>,RE> { 
+    /// Uses only the points specified in idx (e.g. the convex hull).
+    /// Self should normally be zero mean/median vectors, 
+    /// e.g. `self.translate(&median)`
+    fn wtukeyvec(self, idx: &[usize], ws:&[U]) -> Result<Vec<f64>,RE> { 
         let mut wsum = 0_f64; 
         let dims = self[0].len();
-        if dims != gm.len() { return Err(RError::DataError("wtukeyvec dimensions mismatch")); }; 
         if self.len() != ws.len() { return Err(RError::DataError("wtukeyvec weights number mismatch")); }; 
         let mut hemis = vec![0_f64; 2*dims]; 
         for &i in idx.iter() { 
             let wf = f64::from(ws[i]);
             wsum += wf;
-            let zerogm = self[i].vsub::<f64>(gm);
-            for (j,&component) in zerogm.iter().enumerate() {
-                if component > 0. { hemis[j] += wf }
-                else if component < 0. { hemis[dims+j] += wf };  
+            // let zerogm = self[i].vsub::<f64>(gm);
+            for (j,&component) in self[i].iter().enumerate() {
+                let cf = f64::from(component);
+                if cf > 0. { hemis[j] += wf }
+                else if cf < 0. { hemis[dims+j] += wf };  
             }
         }
         hemis.iter_mut().for_each(|hem| *hem /= wsum );

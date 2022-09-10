@@ -260,16 +260,18 @@ impl<T> VecVec<T> for &[Vec<T>]
 
     /// Proportions of points along each +/-axis (hemisphere)
     /// Excludes points that are perpendicular to it
-    fn tukeyvec(self, gm:&[f64]) -> Result<Vec<f64>,RE> { 
+    /// Self should normally be zero mean/median vectors, 
+    /// e.g. `self.translate(&median)`
+    fn tukeyvec(self) -> Result<Vec<f64>,RE> { 
+        if self.is_empty() { return Err(RError::NoDataError("tukeyvec given no data")); }; 
         let nf = self.len() as f64; 
         let dims = self[0].len();
-        if dims != gm.len() { return Err(RError::DataError("tukeyvec dimensions mismatch")); }; 
-        let mut hemis = vec![0_f64; 2*dims]; 
-        for s in self { 
-            let zerogm = s.vsub::<f64>(gm);
-            for (i,&component) in zerogm.iter().enumerate() {
-                if component > 0. { hemis[i] += 1. }
-                else if component < 0. { hemis[dims+i] += 1. };  
+       let mut hemis = vec![0_f64; 2*dims]; 
+        for s in self {  
+            for (i,&component) in s.iter().enumerate() {
+                let cf = f64::from(component);
+                if cf > 0. { hemis[i] += 1. }
+                else if cf < 0. { hemis[dims+i] += 1. };  
             }
         }
         hemis.iter_mut().for_each(|hem| *hem /= nf );

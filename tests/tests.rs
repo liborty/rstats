@@ -234,14 +234,14 @@ fn triangmat() -> Result<(), RE> {
     // let transppt = pts.transpose();
     let cov = pts.covar(&pts.pmedian(EPS))?;
     println!("Comediance matrix:\n{}", cov);
-    let cholmat = cov.cholesky()?;
-    println!("Cholesky L matrix:\n{}", cholmat);
+    let chol = cov.cholesky()?;
+    println!("Cholesky L matrix:\n{}", chol);
     // set_seeds(77777);
     let pta = ru.ranv(d).getvf64();
     let ptb = ru.ranv(d).getvf64();
     let d = pta.vsub(&ptb);
     let dmag = d.vmag();
-    let mahamag = cholmat.mahalanobis(&d)?;
+    let mahamag = chol.mahalanobis(&d)?;
     println!("Test vector d = a-b:\n{}", d.gr());
     println!(
         "Euclidian magnitude   {GR}{:>8.4}{UN}\
@@ -292,15 +292,15 @@ fn vecvec() -> Result<(), RE> {
 
     println!(
         "Magnitude of Tukey vec for gm: {}",
-        pts.tukeyvec(&median)?.vmag().gr()
+        pts.translate(&median)?.tukeyvec()?.vmag().gr()
     );
     println!(
         "Mag of Tukeyvec for acentroid: {}",
-        pts.tukeyvec(&acentroid)?.vmag().gr()
+        pts.translate(&acentroid)?.tukeyvec()?.vmag().gr()
     );
     println!(
         "Mag of Tukeyvec for outlier:   {}",
-        pts.tukeyvec(&outlier.tof64())?.vmag().gr()
+        pts.translate(outlier)?.tukeyvec()?.vmag().gr()
     );
     // let testvec = ru.ranv(d).getvu8();
     let dists = pts.distsums();
@@ -419,7 +419,8 @@ fn hull() -> Result<(), RE> {
         "Convex hull radii min/max ratio: {}",
         (innerrad / outerrad).gr()
     );
-    let tukeyvec = pts.wtukeyvec(&hullidx, &wts, &median)?;
+    let tukeyvec = zeropts
+        .wtukeyvec(&hullidx, &wts)?;
     println!("Convex hull tukeyvec: {}", tukeyvec.gr());
     println!(
         "Dottukey mapped: {}",
@@ -429,7 +430,7 @@ fn hull() -> Result<(), RE> {
             .collect::<Vec<f64>>()
             .gr()
     );
-    let allptstukv = zeropts.wtukeyvec(&Vec::from_iter(0..zeropts.len()), &wts, &median)?;
+    let allptstukv = zeropts.wtukeyvec(&Vec::from_iter(0..zeropts.len()), &wts)?;
     println!("All points tukeyvec: {}", allptstukv.gr());
     println!(
         "Dottukey mapped: {}",

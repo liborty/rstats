@@ -314,7 +314,7 @@ pub trait VecVec<T> {
     /// Geometric median estimate's error
     fn gmerror(self,gm:&[f64]) -> f64;
     /// Proportions of points along each +/-axis (hemisphere)
-    fn tukeyvec(self, gm:&[f64]) -> Result<Vec<f64>,RE>; 
+    fn tukeyvec(self) -> Result<Vec<f64>,RE>; 
     /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> f64;
     /// Selects convex hull points out of all zero median/mean points in self
@@ -345,7 +345,7 @@ pub trait VecVecg<T,U> {
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self,m: &[U]) -> Result<Vec<Vec<f64>>,RE>; 
     /// Proportions of points along each +/-axis (hemisphere)
-    fn wtukeyvec(self, idx: &[usize], ws:&[U], gm:&[f64]) -> Result<Vec<f64>,RE>; 
+    fn wtukeyvec(self, idx: &[usize], ws:&[U]) -> Result<Vec<f64>,RE>; 
     /// Dependencies of vector m on each vector in self 
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>,RE>;
     /// (Median) correlations of m with each vector in self
