@@ -213,8 +213,7 @@ impl TriangMat {
     {
         let u = self.to_full();
         let mut qm = m.iter().map(|mvec| mvec.tof64()).collect::<Vec<Vec<f64>>>();
-        for i in 0..self.rows() {
-            let uvec = &u[i];
+        for uvec in u.iter().take(self.rows()) {
             qm.iter_mut()
                 .for_each(|qvec| *qvec = uvec.house_reflect::<f64>(qvec))
         }
