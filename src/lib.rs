@@ -58,13 +58,13 @@ pub type RE = RError<&'static str>;
 /// Compact Triangular Matrix.
 /// TriangMat is typically result of some matrix calculations,
 /// so concrete end-type f64 is used for simplicity and accuracy.
-/// TriangMat with `lower == false` is a transposed upper triangular matrix.
-/// `symmetric == true` represents, without duplications, a symmetric matrix.
+/// TriangMat with `.trans == true` is a transposed upper triangular matrix.
+/// `.symmetric == true` represents, without duplications, a symmetric matrix.
 /// The size of the implied square array, nxn, is not explicitly stored.
-/// It is obtained by solving the quadratic equation, as:
-/// `n = ((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize;`
-/// where s = triangmat.len().
-/// or, converting the other way, `s = (n+1)*n/2;`
+/// It is obtained by solving the quadratic equation:
+/// `((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize;`
+/// where `s = triangmat.len()`.
+/// Converting the other way: `s = (n+1)*n/2;`
 #[derive(Default, Clone)]
 pub struct TriangMat {
     /// Trans, true means transposed, or upper (data is not moved)
