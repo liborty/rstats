@@ -75,20 +75,6 @@ pub struct TriangMat {
     pub data: Vec<f64>,
 }
 
-/// Classical 2d rectangular matrix with computed index to a single Vec holding the data.
-/// For symmetric matrices use more memory efficient TriangMat.
-#[derive(Default, Clone)]
-pub struct Mat {
-    /// Number of columns (size of rows)
-    pub cols: usize,    
-    /// Number of rows (size of columns)
-    pub rows: usize,
-    /// True means transposed but data is not moved
-    pub trans: bool,
-    /// Packed 1d vector of triangular matrix data, size cols x rows
-    pub data: Vec<f64>,
-}
-
 // Traits
 
 /// Statistical measures of a single variable (one generic vector of data) and
@@ -438,9 +424,11 @@ pub trait VecVec<T> {
 /// Methods applicable to slice of vectors of generic end type, plus one other argument
 /// of a similar kind
 pub trait VecVecg<T, U> {
-    /// Leftmultiply (column) vector v by matrix self
+    /// Leftmultiply (column) vector v by (rows of) matrix self
     fn leftmultv(self, v: &[U]) -> Result<Vec<f64>, RE>;
-    /// Rightmultiply (row) vector v by matrix self
+    /// Dot product with a column c of matrix self
+    fn columnp(self,c: usize,v: &[U]) -> f64; 
+    /// Rightmultiply (row) vector v by (columns of) matrix self
     fn rightmultv(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// Matrix multiplication self * m
     fn matmult(self, m: &[Vec<U>]) -> Result<Vec<Vec<f64>>, RE>;

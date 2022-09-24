@@ -6,16 +6,21 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     where T: Copy+PartialOrd+std::fmt::Display,f64:From<T>, 
     U: Copy+PartialOrd+std::fmt::Display,f64:From<U> {
 
-    /// Leftmultiply (column) vector v by matrix self
+    /// Leftmultiply (column) vector v by (rows of) matrix self
     fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { return Err(RError::DataError("leftmultv dimensions mismatch")); };
         Ok(self.iter().map(|s| s.dotp(v)).collect())
     }
 
-    /// Rightmultiply (row) vector v by matrix self
+    /// Dot product of v with column c of matrix self 
+    fn columnp(self,c: usize,v: &[U]) -> f64 {
+        v.iter().enumerate().map(|(i,&num)| f64::from(num)*f64::from(self[i][c])).sum()        
+    }
+
+    /// Rightmultiply (row) vector v by columns of matrix self
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
-        if v.len() != self.len() { return Err(RError::DataError("rightmultv dimensions mismatch")); };
-        Ok(self.transpose().iter().map(|s| s.dotp(v)).collect())
+        if v.len() != self.len() { return Err(RError::DataError("rightmultv dimensions mismatch")); }; 
+        Ok(self[0].iter().enumerate().map(|(c,_)| self.columnp(c,v) ).collect())  
     }
 
     /// Rectangular Matrices multiplication: self * m.
@@ -23,12 +28,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// and columns of m: `m.len()` do not match.
     /// Result dimensions are self.len() x m[0].len() 
     fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RE> {
-        if self[0].len() != m.len() { return Err(RError::DataError("matmult dimensions mismatch")); };
-        let mut res:Vec<Vec<f64>> = vec![Vec::new();self.len()];
-        let mtr  = m.transpose();
-        for (i,srow) in self.iter().enumerate() { 
-            mtr.iter().for_each(|mcolumn| { res[i].push(srow.dotp(mcolumn));}) };
-        Ok(res)
+        if self[0].len() != m.len() { return Err(RError::DataError("matmult dimensions mismatch")); }; 
+        Ok(self.iter().map(|srow| 
+            m[0].iter().enumerate().map(|(colnum,_)| m.columnp(colnum,srow) ).collect()
+            ).collect::<Vec<Vec<f64>>>()) 
     }
 
     /// Weighted sum of nd points (or vectors). 

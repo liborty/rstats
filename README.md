@@ -109,6 +109,8 @@ The main constituent parts of Rstats are its traits. The selection of traits (to
 
 In other words, the traits and their methods operate on arguments of their required categories. In classical statistical terminology, the main categories correspond to the number of 'random variables'.
 
+`Vec<Vec<T>>` type is used for full rectangular matrices, whereas `TriangMat` struct is used for symmetric and triangular matrices (to save memory).
+
 The vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end type `u8` and some that take mutable self. End type `f64` is most commonly used for the results.
 
 ## Errors
@@ -231,6 +233,8 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.17** - Rectangular matrices (as `Vec<Vec<T>>`): multiplications made more efficient. Added `mat` test to tests.rs.
 
 * **Version 1.2.16** - TriangMat developed. Methods working with triangular matrices are now implemented for this struct.
 

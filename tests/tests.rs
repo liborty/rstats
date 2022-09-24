@@ -255,6 +255,30 @@ fn triangmat() -> Result<(), RE> {
 }
 
 #[test]
+fn mat() -> Result<(), RE> { 
+    let d = 10_usize;
+    let n = 12_usize;
+    println!(
+        "Testing on a random set of {} points in {} dimensional space",
+        n, d
+    );
+    set_seeds(1133);
+    let ru = Rnum::newf64();
+    let m = ru.ranvv(d, n).getvvf64();
+    println!("\nTest matrix M:\n{}",m.gr());
+    let t = m.transpose();
+    println!("\nTransposed matrix T:\n{}",t.gr());
+    let v = ru.ranv(d).getvf64();
+    println!("\nVector V:\n{}",v.gr()); 
+    println!("\nMV:\n{}",m.leftmultv(&v)?.gr());  
+    println!("\nVT:\n{}",t.rightmultv(&v)?.gr()); 
+    println!("\nMT:\n{}",t.matmult(&m)?.gr());
+    println!("\nTM:\n{}",m.matmult(&t)?.gr());                
+    Ok(())
+}
+
+
+#[test]
 fn vecvec() -> Result<(), RE> {
     let d = 10_usize;
     let n = 90_usize;
