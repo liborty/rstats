@@ -150,14 +150,14 @@ impl TriangMat {
         })
     }
 
-    /// Mahalanobis scaled magnitude M(d) of vector d:
-    /// self is a precomputed lower triagonal matrix L, as returned by `cholesky`
+    /// Mahalanobis scaled magnitude m(d) of vector d.
+    /// Self is a precomputed lower triangular matrix L, as returned by `cholesky`
     /// from covariance/comediance positive definite matrix C = LL'.
-    /// M(d) = sqrt(d'inv(C)d) = sqrt(d'inv(LL')d) = sqrt(d'inv(L')inv(L)d),
-    /// where ' denotes transpose and inv denotes inverse.
-    /// Putting Lx = d and solving for x by forward substitution, we obtain x = inv(L)d
-    ///  => M(d) = sqrt(x'x) = |x|.
-    /// We stay in the compact triangular, from C to M(d).
+    /// `m(d) = sqrt(d'inv(C)d) = sqrt(d'inv(LL')d) = sqrt(d'inv(L')inv(L)d)`,
+    /// where ' denotes transpose and `inv()` denotes inverse.
+    /// Putting Lx = d and solving for x by forward substitution, we obtain `x = inv(L)d`
+    /// ` => m(d) = sqrt(x'x) = |x|`.
+    /// We stay in the compact triangular form all the way from C to m(d).
     pub fn mahalanobis<U>(&self, d: &[U]) -> Result<f64, RE>
     where
         U: Copy + PartialOrd + std::fmt::Display,
@@ -166,8 +166,8 @@ impl TriangMat {
         Ok(self.forward_substitute(d)?.vmag())
     }
 
-    /// Solves the system of linear equations Lx = b,
-    /// where L (self) is a lower triangular matrix in left to right 1d scan form   
+    /// Solves for x the system of linear equations Lx = b,
+    /// where L (self) is a lower triangular matrix.   
     fn forward_substitute<U>(&self, b: &[U]) -> Result<Vec<f64>, RError<&'static str>>
     where
         U: Copy + PartialOrd + std::fmt::Display,
