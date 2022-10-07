@@ -4,6 +4,7 @@
 [<img alt="crates.io" src="https://img.shields.io/crates/v/rstats?logo=rust">](https://crates.io/crates/rstats)
 [<img alt="crates.io" src="https://img.shields.io/crates/d/rstats?logo=rust">](https://crates.io/crates/rstats)
 [<img alt="docs.rs" src="https://img.shields.io/docsrs/rstats?logo=rust">](https://docs.rs/rstats)
+[![Actions Status](https://github.com/liborty/rstats/workflows/compiles/badge.svg)](https://github.com/liborty/rstats/actions)
 
 Statistics, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder Matrix Decomposition, Information Measures, Machine Learning, Data Analysis, Geometric Median, Convex Hull and more ...
 
