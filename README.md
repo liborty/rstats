@@ -235,6 +235,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.18** - Updated dependency `ran v1.0.4`. Added github action `cargo check`.
+
 * **Version 1.2.17** - Rectangular matrices (as `Vec<Vec<T>>`): multiplications made more efficient. Added `mat` test to tests.rs.
 
 * **Version 1.2.16** - TriangMat developed. Methods working with triangular matrices are now implemented for this struct.

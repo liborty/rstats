@@ -36,7 +36,7 @@ fn u8() -> Result<(), RE> {
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
     set_seeds(77777);
-    let pt = Rnum::newu8().ranvv(d, n).getvvu8();
+    let pt = Rnum::newu8().ranvv(d, n).unwrap().getvvu8().unwrap();
     let cov = pt.covar(&pt.acentroid())?;
     println!("Covariances:\n{}", cov);
     let com = pt.covar(&pt.gmedian(EPS))?;
@@ -80,7 +80,7 @@ fn fstats() -> Result<(), RE> {
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {} points in {} d space:", n, d);
-    let pt = Rnum::newf64().ranvv(d, n).getvvf64();
+    let pt = Rnum::newf64().ranvv(d, n).unwrap().getvvf64().unwrap();
     println!(
         "Classical Covariances:\n{}",
         pt.covar(&pt.acentroid())?.gr()
@@ -105,7 +105,7 @@ fn fstats() -> Result<(), RE> {
 #[test]
 fn ustats() -> Result<(), RE> {
     set_seeds(1234567);
-    let v1 = Rnum::newu8().ranv(20).getvu8();
+    let v1 = Rnum::newu8().ranv(20).unwrap().getvu8().unwrap();
     println!("\n{}", (&v1).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
     println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
@@ -211,8 +211,8 @@ fn trend() -> Result<(), RE> {
     let d = 7_usize;
     set_seeds(777);
     let rf64 = Rnum::newf64();
-    let pts1 = rf64.ranvv(d, 37).getvvf64();
-    let pts2 = rf64.ranvv(d, 50).getvvf64();
+    let pts1 = rf64.ranvv(d, 37).unwrap().getvvf64().unwrap();
+    let pts2 = rf64.ranvv(d, 50).unwrap().getvvf64().unwrap();
     println!("\nTrend vector:\n{}\n", pts1.trend(EPS, pts2)?.gr());
     Ok(())
 }
@@ -229,7 +229,7 @@ fn triangmat() -> Result<(), RE> {
     );
     set_seeds(1133);
     let ru = Rnum::newf64();
-    let pts = ru.ranvv_in(d, n, 0.0, 4.0).getvvf64();
+    let pts = ru.ranvv_in(d, n, 0.0, 4.0).unwrap().getvvf64().unwrap();
     // println!("\nTest data:\n{}",pts.gr());
     // let transppt = pts.transpose();
     let cov = pts.covar(&pts.pmedian(EPS))?;
@@ -237,8 +237,8 @@ fn triangmat() -> Result<(), RE> {
     let chol = cov.cholesky()?;
     println!("Cholesky L matrix:\n{}", chol);
     // set_seeds(77777);
-    let pta = ru.ranv(d).getvf64();
-    let ptb = ru.ranv(d).getvf64();
+    let pta = ru.ranv(d).unwrap().getvf64().unwrap();
+    let ptb = ru.ranv(d).unwrap().getvf64().unwrap();
     let d = pta.vsub(&ptb);
     let dmag = d.vmag();
     let mahamag = chol.mahalanobis(&d)?;
@@ -264,11 +264,11 @@ fn mat() -> Result<(), RE> {
     );
     set_seeds(1133);
     let ru = Rnum::newf64();
-    let m = ru.ranvv(d, n).getvvf64();
+    let m = ru.ranvv(d, n).unwrap().getvvf64().unwrap();
     println!("\nTest matrix M:\n{}",m.gr());
     let t = m.transpose();
     println!("\nTransposed matrix T:\n{}",t.gr());
-    let v = ru.ranv(d).getvf64();
+    let v = ru.ranv(d).unwrap().getvf64().unwrap();
     println!("\nVector V:\n{}",v.gr()); 
     println!("\nMV:\n{}",m.leftmultv(&v)?.gr());  
     println!("\nVT:\n{}",t.rightmultv(&v)?.gr()); 
@@ -288,12 +288,12 @@ fn vecvec() -> Result<(), RE> {
     );
     set_seeds(113);
     let ru = Rnum::newu8();
-    let pts = ru.ranvv_in(d, n, 0., 4.).getvvu8();
+    let pts = ru.ranvv_in(d, n, 0., 4.).unwrap().getvvu8().unwrap();
     // println!("\nTest data:\n{}",pts.gr());
     println!("Set joint entropy: {}", pts.jointentropyn()?.gr());
     println!("Set dependence:    {}", pts.dependencen()?.gr());
     // println!("\nTest outcomes:\n{}",pts.gr());
-    let outcomes = ru.ranv(n).getvu8();
+    let outcomes = ru.ranv(n).unwrap().getvu8().unwrap();
     let transppt = pts.transpose();
     println!(
         "\nDependencies of outcomes:\n{}",
@@ -425,8 +425,8 @@ fn hull() -> Result<(), RE> {
     );
     // set_seeds(113);
     let rf = Rnum::newf64();
-    let pts = rf.ranvv(d, n).getvvf64();
-    let wts = rf.ranv_in(n, 0., 100.).getvf64();
+    let pts = rf.ranvv(d, n).unwrap().getvvf64().unwrap();
+    let wts = rf.ranv_in(n, 0., 100.).getvf64().unwrap();
     let median = pts.wgmedian(&wts, EPS)?;
     let zeropts = pts.translate(&median)?;
     let hullidx = zeropts.convex_hull();
@@ -536,7 +536,7 @@ fn geometric_medians() {
     let mut summ = 0_f64;
     let mut gm: Vec<f64>;
     for _i in 1..ITERATIONS {
-        let pts = Rnum::newf64().ranvv(d, n).getvvf64();
+        let pts = Rnum::newf64().ranvv(d, n).unwrap().getvvf64().unwrap();
         gm = pts.gmedian(EPS);
         sumg += pts.gmerror(&gm);
         gm = pts.pmedian(EPS);

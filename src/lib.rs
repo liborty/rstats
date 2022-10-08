@@ -24,6 +24,9 @@ use crate::error::RError;
 pub use indxvec::{printing::*, MinMax, Printing};
 pub use medians::{MStats, Med, Median};
 
+/// Shorthand type for returned errors with message payload
+pub type RE = RError<&'static str>;
+
 // Auxiliary Functions
 
 /// Data of end type `i64` has to be explicitly converted to `f64` (`as f64` does not work).
@@ -51,9 +54,6 @@ pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
     }
     res
 }
-
-/// Shorthand type for returned errors with message payload
-pub type RE = RError<&'static str>;
 
 /// Compact Triangular Matrix.
 /// TriangMat is typically result of some matrix calculations,
