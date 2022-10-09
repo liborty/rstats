@@ -3,8 +3,6 @@
 [<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/liborty/Rstats/HEAD?logo=github">](https://github.com/liborty/Rstats)
 [![Actions Status](https://github.com/liborty/Rstats/workflows/compilation/badge.svg)](https://github.com/liborty/Rstats/actions)
 [<img alt="crates.io" src="https://img.shields.io/crates/v/Rstats?logo=rust">](https://crates.io/crates/rstats)
-[<img alt="docs.rs" src="https://img.shields.io/docsrs/Rstats?logo=rust">](https://docs.rs/rstats/latest/rstats)
-
 
 Statistics, Information Measures, Vector Algebra, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder QR Decomposition, Multidimensional Data Analysis, Geometric Median, Convex Hull, Machine Learning ...
 
@@ -63,6 +61,10 @@ In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians alon
 *Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by rotation.*
 
 In contrast, analyses based on the true geometric median (`gm`) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its weighted version `wgmedian`, in traits `vecvec` and `vecvecg` respectively.
+
+## Additional Documentation
+
+For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rstats/latest/rstats). You may have to unclick the 'implementations on foreign types' somewhere near the bottom of the page (as these traits are implemented directly over 'out of this crate' Rust `Vec` type).
 
 ## Terminology
 
@@ -150,10 +152,6 @@ pub type RE = RError<String>;
 ```
 
 More error checking may be added in later versions, where it makes sense. 
-
-## Documentation
-
-For more detailed comments, plus some examples, see the source. You may have to unclick the 'implementations on foreign types' somewhere near the bottom of the page in the rust docs to get to it.  (Since these traits are implemented over the pre-existing Rust Vec type).
 
 ## Structs
 
