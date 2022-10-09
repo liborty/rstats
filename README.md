@@ -1,33 +1,32 @@
 # Rstats
 
-[<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/liborty/rstats/HEAD?logo=github">](https://github.com/liborty/rstats)
-[<img alt="crates.io" src="https://img.shields.io/crates/v/rstats?logo=rust">](https://crates.io/crates/rstats)
-[<img alt="crates.io" src="https://img.shields.io/crates/d/rstats?logo=rust">](https://crates.io/crates/rstats)
-[<img alt="docs.rs" src="https://img.shields.io/docsrs/rstats?logo=rust">](https://docs.rs/rstats)
-[![Actions Status](https://github.com/liborty/rstats/workflows/compilation/badge.svg)](https://github.com/liborty/rstats/actions)
+[<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/liborty/Rstats/HEAD?logo=github">](https://github.com/liborty/Rstats)
+[<img alt="crates.io" src="https://img.shields.io/crates/v/Rstats?logo=rust">](https://crates.io/crates/Rstats)
+[<img alt="crates.io" src="https://img.shields.io/crates/d/Rstats?logo=rust">](https://crates.io/crates/Rstats)
+[<img alt="docs.rs" src="https://img.shields.io/docsrs/Rstats?logo=rust">](https://docs.rs/Rstats)
+[![Actions Status](https://github.com/liborty/Rstats/workflows/compilation/badge.svg)](https://github.com/liborty/Rstats/actions)
 
-Statistics, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder Matrix Decomposition, Information Measures, Machine Learning, Data Analysis, Geometric Median, Convex Hull and more ...
+Statistics, Information Measures, Vector Algebra, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder QR Decomposition, Multidimensional Data Analysis, Geometric Median, Convex Hull, Machine Learning ...
 
 ## Usage
 
-Insert `rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
+Insert `Rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 
-Use in your source files any of the following structs, when needed:
+Use in your source files any of the following structs, as and when needed:
 
 ```rust  
-use rstats::{RE,TriangMat,Mstats,MinMax,Med};
+use Rstats::{RE,TriangMat,Mstats,MinMax,Med};
 ```
 
-and any of the following rstats defined traits:
+and any of the following traits:
 
 ```rust 
-use rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
+use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 ```
 
-The latest (nightly) version is always available in the github repository [rstats](https://github.com/liborty/rstats). Sometimes it may be a little ahead of the crates.io release versions.
+The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be in some details a little ahead of the crates.io release versions.
 
-It is highly recommended to read and run [tests.rs](https://github.com/liborty/rstats/blob/master/tests/tests.rs) from the github repository as examples of usage.
-To run all the tests, use single thread in order to produce the results in the right order:
+It is highly recommended to read and run [tests.rs](https://github.com/liborty/Rstats/blob/master/tests/tests.rs) from the github repository as examples of usage. To run all the tests, use a single thread in order to print the results in the right order:
 
 ```bash  
 cargo test --release -- --test-threads=1 --nocapture --color always
@@ -35,33 +34,35 @@ cargo test --release -- --test-threads=1 --nocapture --color always
 
 ## Introduction
 
-`Rstats` is primarily about characterising sets of n points, each represented as a `Vec`, in space of `d` dimensions (where d is `vec.len()`). It has applications mostly in Machine Learning and Data Analysis. 
+`Rstats` has a small footprint. Nonetheless the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional `nd` analysis, i.e. characterising sets of n points in space of d dimensions.
 
-Several branches of mathematics: statistics, linear algebra, information theory and set theory are combined in this one consistent crate, based on the fact that they all operate on these same objects. The only difference being that an ordering of their components is sometimes assumed (linear algebra, set theory) and sometimes it is not (statistics, information theory, set theory).
+Several branches of mathematics: statistics, information theory, set theory and linear algebra are combined in this one consistent crate, based on the abstraction that they all operate on the same data objects (here Rust Vecs). The only difference being that an ordering of their components is sometimes assumed (in linear algebra, set theory) and sometimes it is not (in statistics, information theory, set theory).
 
-`RStats` begins with basic statistical measures and vector algebra, which provide self-contained tools for the machine learning (ML) multidimensional algorithms but can also be used in their own right. 
+`Rstats` begins with basic statistical measures, information measures,  vector algebra and linear algebra. These provide self-contained tools for the multidimensional algorithms but are also useful in their own right.
 
-`Non analytical statistics` is preferred, whereby the `random variables` are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the data, not from some assumed distributions.
+`Non analytical statistics` is preferred, whereby the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the data, not from some assumed distributions.
+
+`Linear algebra` uses by default `Vec<Vec<T>>`: a generic data structure capable of representing irregular matrices. Also, `struct TriangMat` is defined and used for symmetric and triangular matrices (for efficiency reasons).
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
 
-* `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as cosine of an angle between two zero median samples (instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of our thinking of a sample as a vector in d dimensional space. 
+* `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as cosine of an angle between two zero median samples (instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of thinking of a sample as a vector in d dimensional space. 
 
 * `gmedian and pmedian` - fast multidimensional `geometric median (gm)` algorithms.
 
 * `madgm` - generalisation to `nd` of a robust data spread estimator known as `MAD` (median of absolute deviations from median). 
 
-* `contribution` - of a point to an nd set. Defined as a magnitude of gm adjustment, when the point is added to the set. It is related to the point's radius (distance from the gm) but not the same, as it depends on the radii of all the other points as well.
+* `contribution` - of a point to an `nd` set. Defined as a magnitude of `gm` adjustment, when the point is added to the set. It is related to the point's radius (distance from the `gm`) but not the same, as it depends on the radii of all the other points as well.
 
-* `comediance` - instead of covariance (matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero median vectors` are replacing `zero mean vectors` in covariance calculations.
+* `comediance` - instead of covariance (triangular matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero median vectors` are replacing `zero mean vectors` in covariance calculations.
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are also much slower to compute than our gm.
+In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are also much slower to compute than our `gm`.
 
-*Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by their rotation.*
+*Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by rotation.*
 
-In contrast, analyses based on the true geometric median (gm) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its weighted version `wgmedian`, in traits `vecvec` and `vecvecg` respectively.
+In contrast, analyses based on the true geometric median (`gm`) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its weighted version `wgmedian`, in traits `vecvec` and `vecvecg` respectively.
 
 ## Terminology
 
@@ -82,41 +83,41 @@ In contrast, analyses based on the true geometric median (gm) are axis (rotation
 
 * `Outlier` is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm`.
 
-* `Convex Hull` is the subset consisting of selected points p, such that no other member points lie outside the plane through p and normal to its radius vector. The remaining points are the `internal` points.
+* `Convex Hull` is the subset consisting of selected points p, such that no other member points lie outside the plane through p and normal to its radius vector. The points that do not satisfy this condition are the `internal` points.
 
 * `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
 
-* `MADGM` (median of distances from gm). This is our generalisation of `MAD` (median of absolute differences) measure from one dimension to any number of dimensions (d>1). It is a robust measure of nd data spread.
+* `MADGM` (median of distances from `gm`). This is our generalisation of `MAD` (median of absolute differences) measure from one dimension to any number of dimensions (d>1). It is a robust measure of `nd` data spread.
 
-* `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it,  instead of zero mean vectors.
+* `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it (instead of zero mean vectors).
 
-* `Mahalanobis Distance` is a weighted distace, where the weights are derived from the axis of variation of the nd data points cloud. Thus distances in the directions in which there are few points are penalised (increased) and vice versa. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method decomposes the covariance/comediance positive definite matrix S into a product of two triangular matrices: S = LL'. See more details in the code comments.
+* `Mahalanobis Distance` is a weighted distace, where the weights are derived from the axis of variation of the `nd` data points cloud. Thus distances in the directions in which there are few points are penalised (increased) and vice versa. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method decomposes the covariance or comediance positive definite matrix S into a product of two triangular matrices: S = LL'. For more details see the comments in the source code.
 
-* `Contribution` One of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large nd set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point as the magnitude of adjustment to gm caused by adding that point. Generally, outlying points make greater contributions to the gm but not as much as they would to the centroid. The contribution depends not only on the radius of the example point in question but also on the radii of all other (existing) examples.
+* `Contribution` One of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point as the magnitude of adjustment to `gm` caused by adding that point. Generally, outlying points make greater contributions to the `gm` but not as much as they would to the centroid. The contribution depends not only on the radius of the example point in question but also on the radii of all other existing example points.
 
-* `Tukey Vector` Proportions of points in each hemisphere from gm. This is a useful 'signature' of a data cloud. For a new point (that typically needs to be classified) we can then quickly determine whether it lies in a well populated direction. This could be done by projecting all the existing points on it but that is much slower, as there are many. Also, in keeping with the stability properties of medians, we are only using counts of points, not their distances.
+* `Tukey Vector` Proportions of points in each hemisphere from gm. This is a useful 'signature' of a data cloud. For a new point (that typically needs to be classified) we can then quickly determine whether it lies in a well populated direction. This could also be done by projecting all the existing points on its unit radius vector but that would be much slower, as there are many points. Also, in keeping with the stability properties of medians, we are only using counts of points in the hemispheres, not their distances.
 
 
 ## Implementation
 
-The main constituent parts of Rstats are its traits. The selection of traits (to import) is primarily determined by the types of objects to be handled. These are mostly vectors of arbitrary length (dimensionality). The main traits are implementing methods applicable to:
+The main constituent parts of Rstats are its traits. The selection of traits (to `use`) is primarily determined by the types of objects handled. These are mostly vectors of arbitrary length/dimensionality (`d`). The main traits are implementing methods applicable to:
 
 * `Stats`: a single vector (of numbers),
 * `Vecg`: methods (of vector algebra) operating on two vectors, e.g. scalar product
-* `Vecu8`: some special methods for end-type u8
+* `Vecu8`: some specialized methods for end-type `u8`
 * `MutVecg`: some of the above methods, mutating self
 * `VecVec`: methods operating on n vectors, 
 * `VecVecg`: methods for n vectors, plus another generic argument, e.g. vector of weights.
 
 In other words, the traits and their methods operate on arguments of their required categories. In classical statistical terminology, the main categories correspond to the number of 'random variables'.
 
-`Vec<Vec<T>>` type is used for full rectangular matrices, whereas `TriangMat` struct is used for symmetric and triangular matrices (to save memory).
+`Vec<Vec<T>>` type is used for full rectangular matrices (could also be irregular), whereas `TriangMat` struct is used specifically for symmetric and triangular matrices (to save memory).
 
-The vectors' end types (for the actual data) are mostly generic: usually some numeric type. There are also some traits specialised for input end type `u8` and some that take mutable self. End type `f64` is most commonly used for the results.
+The vectors' end types (of the actual data) are mostly generic: usually some numeric type. End type `f64` is mostly used for the computed results.
 
 ## Errors
 
-RStats crate produces custom errors `RError`:
+`Rstats` crate produces custom errors `RError`:
 
 ```rust
 pub enum RError<T> where T:Sized+Debug {
@@ -142,7 +143,13 @@ return Err(RError::ArithError("cholesky needs a positive definite matrix"));
 pub type RE = RError<&'static str>;
 ```
 
-More error checking will be added in later versions, where it makes sense. 
+Where formatted payloads, including values of some variables are desired, this could be changed to:
+
+ ```rust
+pub type RE = RError<String>;
+```
+
+More error checking may be added in later versions, where it makes sense. 
 
 ## Documentation
 
@@ -151,7 +158,7 @@ For more detailed comments, plus some examples, see the source. You may have to 
 ## Structs
 
 ### `struct MStats` 
-holds the central tendency, e.g. some kind of mean or median, and dispersion, e.g. standard deviation or MAD.
+holds the central tendency of `1d` data, e.g. some kind of mean or median, and its dispersion measure, e.g. standard deviation or MAD.
 
 ### `struct TriangMat` 
 holds lower/upper triangular symmetric/non-symmetric matrix in compact form that avoids zeros and duplications. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on TriangMag, in module `triangmag.rs`, such as:
@@ -161,7 +168,6 @@ holds lower/upper triangular symmetric/non-symmetric matrix in compact form that
 * **Householder UR** (M = QR) matrix decomposition
 
 Also, there are some methods implemented for `VecVecg` that produce `TriangMat`, specifically the covariance/comedience calculations: `covar`,`wcovar`,`comed` and `wcomed`. Their results will be typically used by `mahalanobis`.
-
 
 ##  Auxiliary Functions
 
@@ -259,7 +265,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 1.2.7** - Added efficient `mahalanobis` distance and its test.
 
-* **Version 1.2.6** - Added test `matrices` specifically for matrix operations. Added type alias `RStats::RE` to shorten method headings returning `RErrors` that carry `&str` payloads (see subsection Errors above). 
+* **Version 1.2.6** - Added test `matrices` specifically for matrix operations. Added type alias `Rstats::RE` to shorten method headings returning `RErrors` that carry `&str` payloads (see subsection Errors above). 
 
 * **Version 1.2.5** - Added some more matrix algebra. Added generic payload `T` to RError: `RError<T>` to allow it to carry more information. 
 
