@@ -26,6 +26,8 @@ It is highly recommended to read and run [tests.rs](https://github.com/liborty/R
 cargo test --release -- --test-threads=1 --nocapture --color always
 ```
 
+Alternatively, just get a quick idea of the methods provided and their usage, you can now read the output of this `cargo test`, produced by an [automated test run](https://github.com/liborty/rstats/actions). There are test logs for each new push to this  repository. Unclick the latest (top) one, then `Rstats` and then `Run cargo test` ... The badge at the top of this document lights up green when all the tests have passed.
+
 ## Introduction
 
 `Rstats` has a small footprint. Nonetheless the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional `nd` analysis, i.e. characterising sets of n points in space of d dimensions.
@@ -234,6 +236,8 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.19** - Presentation only: github actions now run automatically the full battery of `cargo test`. Detailed and informative tests output can be seen in the github actions log and overall success is indicated by the green badge at the head of this readme file.
 
 * **Version 1.2.18** - Updated dependency `ran v1.0.4`. Added github action `cargo check`.
 
