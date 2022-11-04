@@ -25,7 +25,7 @@ pub use indxvec::{printing::*, MinMax, Printing};
 pub use medians::{MStats, Med, Median};
 
 /// Shorthand type for returned errors with message payload
-pub type RE = RError<&'static str>;
+pub type RE = RError<String>;
 
 // Auxiliary Functions
 
@@ -54,6 +54,12 @@ pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
     }
     res
 }
+
+/// Own struct for Vec<T> - can be used for convenience
+//#[derive(Default, Clone)]
+//pub struct V<T> {
+//    pub v: Vec<T>,
+//}
 
 /// Compact Triangular Matrix.
 /// TriangMat is typically result of some matrix calculations,
@@ -130,7 +136,7 @@ pub trait Stats {
     fn gwmeanstd(self) -> Result<MStats, RE>;
     // where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
     /// Zero median data, obtained by subtracting the median
-    fn zeromedian(self) -> Vec<f64>;
+    fn zeromedian(self) -> Result<Vec<f64>,RE>;
     // where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
     /// Probability density function of a sorted slice
     fn pdf(self) -> Vec<f64>;
@@ -140,6 +146,8 @@ pub trait Stats {
     fn autocorr(self) -> Result<f64, RE>;
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Result<Vec<f64>, RE>;
+    /// Temporal function linearly (backwards) weighted approx. derivative at the last point
+    fn dfdt(self) -> f64;
     /// Householder reflection
     fn house_reflector(self) -> Vec<f64>;
 }
@@ -278,7 +286,7 @@ pub trait Vecg {
         U: Copy + PartialOrd + Into<U> + std::fmt::Display,
         f64: From<U>;
     /// Median based correlation
-    fn mediancorr<U>(self, v: &[U]) -> f64
+    fn mediancorr<U>(self, v: &[U]) -> Result<f64,RE>
     where
         U: Copy + PartialOrd + Into<U> + std::fmt::Display,
         f64: From<U>;
@@ -400,17 +408,16 @@ pub trait VecVec<T> {
     /// Exact radii vectors to each member point by using the gm
     fn radii(self, gm: &[f64]) -> Vec<f64>;
     /// Arith mean and std (in MStats struct), Median info (in Med struct), Medoid and Outlier (in MinMax struct)
-    fn eccinfo(self, gm: &[f64]) -> (MStats, Med, MinMax<f64>)
-    where
-        Vec<f64>: FromIterator<f64>;
+    fn eccinfo(self, gm: &[f64]) -> Result<(MStats, Med, MinMax<f64>), RE>
+    where Vec<f64>: FromIterator<f64>;
     /// Quasi median, recommended only for comparison purposes
-    fn quasimedian(self) -> Vec<f64>;
+    fn quasimedian(self) -> Result<Vec<f64>,RE>;
     /// Geometric median estimate's error
     fn gmerror(self, gm: &[f64]) -> f64;
     /// Proportions of points along each +/-axis (hemisphere)
     fn tukeyvec(self) -> Result<Vec<f64>, RE>;
     /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
-    fn madgm(self, gm: &[f64]) -> f64;
+    fn madgm(self, gm: &[f64]) -> Result<f64,RE>;
     /// Selects convex hull points out of all zero median/mean points in self
     fn convex_hull(self) -> Vec<usize>;
     /// New algorithm for geometric median, to accuracy eps    

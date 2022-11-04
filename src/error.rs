@@ -2,6 +2,8 @@ use std::fmt;
 use std::error::Error;
 use std::thread::AccessError;
 use std::fmt::{Debug,Display};
+use ran::RanError;
+use medians::MedError;
 
 #[derive(Debug)]
 /// Custom RStats Error
@@ -28,10 +30,23 @@ impl<T> fmt::Display for RError<T> where T:Sized+Debug+Display {
         }
     }
 }
+/// Automatically converting any RanError to RError::OtherError
+impl From<RanError<String>> for RError<String> {
+    fn from(e: RanError<String>) -> Self {
+        RError::OtherError(format!("RanError: {}",e))
+    }
+}
+
+/// Automatically converting any RanError to RError::OtherError
+impl From<MedError<String>> for RError<String> {
+    fn from(e: MedError<String>) -> Self {
+        RError::OtherError(format!("MedError: {}",e))
+    }
+}
 
 /// Example 'From' implementation for converting to RError
-impl From<AccessError> for RError<& 'static str> {
-    fn from(_: AccessError) -> Self {
-        RError::OtherError("AccessError")
+impl From<AccessError> for RError<String> {
+    fn from(e: AccessError) -> Self {
+        RError::OtherError(format!("AccessError: {}",e))
     }
 }

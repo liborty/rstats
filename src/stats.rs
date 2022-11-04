@@ -25,21 +25,21 @@ impl<T> Stats for &[T]
 
     /// Vector with reciprocal components
     fn vreciprocal(self) -> Result<Vec<f64>,RE> {
-        if self.is_empty() { return  Err(RError::NoDataError("empty self vec"))  };
+        if self.is_empty() { return  Err(RError::NoDataError("empty self vec".to_owned()))  };
         for &component in self {
            let c = f64::from(component); 
-           if !c.is_normal() { return Err(RError::ArithError("no reciprocal with zero component")); }; 
+           if !c.is_normal() { return Err(RError::ArithError("no reciprocal with zero component".to_owned())); }; 
         }     
         Ok( self.iter().map(|&x| 1.0/(f64::from(x))).collect() )     
     }
 
     /// Vector with inverse magnitude
     fn vinverse(self) -> Result<Vec<f64>,RE> {
-        if self.is_empty() { return  Err(RError::NoDataError("empty self vec"))  };
+        if self.is_empty() { return  Err(RError::NoDataError("empty self vec".to_owned()))  };
         let mag = self.vmagsq();
         if mag > 0.0 {  
             Ok( self.iter().map(|&x| f64::from(x)/mag).collect() ) }
-        else { Err(RError::DataError("no inverse of zero vector magnitude")) }    
+        else { Err(RError::DataError("no inverse of zero vector magnitude".to_owned())) }    
     }
 
     // negated vector (all components swap sign)
@@ -66,7 +66,7 @@ impl<T> Stats for &[T]
         let n = self.len();
         if n > 0 {
             Ok(self.iter().map(|&x| f64::from(x)).sum::<f64>() / (n as f64)) }
-        else { Err(RError::NoDataError("empty self vec")) }    
+        else { Err(RError::NoDataError("empty self vec".to_owned())) }    
     }
 
     /// Arithmetic mean and (population) standard deviation 
@@ -80,7 +80,7 @@ impl<T> Stats for &[T]
     /// ```
     fn ameanstd(self) -> Result<MStats,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); };
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); };
         let nf = n as f64;
         let mut sx2 = 0_f64;
         let mean = self
@@ -109,7 +109,7 @@ impl<T> Stats for &[T]
     /// ```
     fn awmean(self) -> Result<f64,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); };
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); };
         let mut iw = 0_f64; // descending linear weights
         Ok(self.iter()
             .map(|&x| {
@@ -131,7 +131,7 @@ impl<T> Stats for &[T]
     /// ```
     fn awmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); }; 
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); }; 
         let mut sx2 = 0_f64;
         let mut w = 0_f64; // descending linear weights
         let nf = sumn(n) as f64;
@@ -157,11 +157,11 @@ impl<T> Stats for &[T]
     /// ```
     fn hmean(self) -> Result<f64,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); };    
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); };    
         let mut sum = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero")); };      
+            if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero".to_owned())); };      
             sum += 1.0 / fx
         }
         Ok(n as f64 / sum)
@@ -179,13 +179,13 @@ impl<T> Stats for &[T]
     /// ```
     fn hmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); };
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); };
         let nf = n as f64;
         let mut sx2 = 0_f64;        
         let mut sx = 0_f64;
         for &x in self { 
             let fx = f64::from(x);
-            if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero")); };   
+            if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero".to_owned())); };   
             let rx = 1_f64/fx;  // work with reciprocals
             sx2 += rx*rx;
             sx += rx;   
@@ -207,12 +207,12 @@ impl<T> Stats for &[T]
     /// ```
     fn hwmean(self) -> Result<f64,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); };
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); };
         let mut sum = 0_f64;
         let mut w = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero")); };
+            if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero".to_owned())); };
             w += 1_f64;
             sum += w / fx;
         }
@@ -231,7 +231,7 @@ impl<T> Stats for &[T]
     /// ```
     fn hwmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); };
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); };
         let nf = sumn(n) as f64;
         let mut sx2 = 0_f64;
         let mut sx = 0_f64;
@@ -239,7 +239,7 @@ impl<T> Stats for &[T]
         for &x in self {
                 w += 1_f64;
                 let fx = f64::from(x);
-                if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero")); };
+                if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero".to_owned())); };
                 sx += w/fx;  // work with reciprocals
                 sx2 += w/(fx*fx);
             }; 
@@ -263,11 +263,11 @@ impl<T> Stats for &[T]
     /// ```
     fn gmean(self) -> Result<f64,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); }; 
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); }; 
         let mut sum = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            if !fx.is_normal() { return Err(RError::ArithError("gmean attempt to take ln of zero")); };        
+            if !fx.is_normal() { return Err(RError::ArithError("gmean attempt to take ln of zero".to_owned())); };        
             sum += fx.ln()
         }
         Ok((sum / (n as f64)).exp())
@@ -286,12 +286,12 @@ impl<T> Stats for &[T]
     /// ```
     fn gmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); }; 
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); }; 
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            if !fx.is_normal() { return Err(RError::ArithError("gmeanstd attempt to take ln of zero")); };
+            if !fx.is_normal() { return Err(RError::ArithError("gmeanstd attempt to take ln of zero".to_owned())); };
             let lx = fx.ln();
             sum += lx;
             sx2 += lx * lx
@@ -318,12 +318,12 @@ impl<T> Stats for &[T]
     /// ```
     fn gwmean(self) -> Result<f64,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); }; 
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); }; 
         let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            if !fx.is_normal() { return Err(RError::ArithError("gwmean attempt to take ln of zero")); }; 
+            if !fx.is_normal() { return Err(RError::ArithError("gwmean attempt to take ln of zero".to_owned())); }; 
             w += 1_f64;
             sum += w * fx.ln();
 
@@ -342,13 +342,13 @@ impl<T> Stats for &[T]
     /// ```
     fn gwmeanstd(self) -> Result<MStats,RE> {
         let n = self.len();
-        if n == 0 { return Err(RError::NoDataError("empty self vec")); }; 
+        if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); }; 
         let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
             let fx = f64::from(x);
-            if !fx.is_normal() { return Err(RError::ArithError("gwmeanstd attempt to take ln of zero")); }; 
+            if !fx.is_normal() { return Err(RError::ArithError("gwmeanstd attempt to take ln of zero".to_owned())); }; 
             let lnx = fx.ln();
             w += 1_f64;
             sum += w * lnx;
@@ -364,9 +364,9 @@ impl<T> Stats for &[T]
 
     /// Zero median data produced by subtracting the median.
     /// Analogous to zero mean data when subtracting the mean.
-    fn zeromedian(self) -> Vec<f64> {
-        let median = self.median(); 
-        self.iter().map(|&s| f64::from(s)-median).collect()
+    fn zeromedian(self) -> Result<Vec<f64>,RE> {
+        let median = self.median()?; 
+        Ok(self.iter().map(|&s| f64::from(s)-median).collect())
     }
 
     /// Probability density function of a sorted slice with repeats. 
@@ -402,7 +402,7 @@ impl<T> Stats for &[T]
     fn autocorr(self) -> Result<f64,RE> {
         let (mut sx, mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64, 0_f64);
         let n = self.len();
-        if n < 2 { return Err(RError::NoDataError("autocorr needs a Vec of at least two items")); }; 
+        if n < 2 { return Err(RError::NoDataError("autocorr needs a Vec of at least two items".to_owned())); }; 
         let mut x = f64::from(self[0]);    
         self.iter().skip(1).for_each(|&si| {
             let y = f64::from(si);
@@ -421,8 +421,22 @@ impl<T> Stats for &[T]
     fn lintrans(self) -> Result<Vec<f64>,RE> {
         let mm = self.minmax();
         let range = f64::from(mm.max)-f64::from(mm.min);
-        if range == 0_f64 { return  Err(RError::ArithError("lintrans self has zero range")); };
+        if range == 0_f64 { return  Err(RError::ArithError("lintrans self has zero range".to_owned())); };
         Ok(self.iter().map(|&x|(f64::from(x)-f64::from(mm.min))/range).collect())        
+    }
+
+    /// Linearly (backwards) weighted approx. time derivative at the last point
+    fn dfdt(self) -> f64 {
+        let len = self.len();
+        if len < 2 { return 0_f64 };
+        let mut weight = 0_f64;
+        let last = f64::from(self[len-1]);
+        let mut sig = 0_f64;
+        for &x in self.iter().take(len-1) {
+            weight += 1_f64;
+            sig += weight*(last-f64::from(x))
+        } 
+        2.0*sig/((weight+1.0)*weight)
     }
  
     /// Householder reflector

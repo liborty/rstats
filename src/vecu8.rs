@@ -24,7 +24,8 @@ impl Vecu8 for &[u8] {
     fn jointpdfu8(self, v:&[u8]) -> Result<Vec<Vec<u32>>,RE> {  
         let n = self.len();
         if v.len() != n { 
-            return Err(RError::DataError("jointpdfu8 argument vectors must be of equal length!")); }    
+            return Err(RError::DataError(
+                "jointpdfu8 argument vectors must be of equal length!".to_owned())); }    
         let mut res:Vec<Vec<u32>> = vec![vec![0_u32;256];256]; 
         self.iter().zip(v).for_each(|(&si,&vi)| res[si as usize][vi as usize] += 1 ); 
         Ok(res)

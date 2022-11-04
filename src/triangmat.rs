@@ -103,9 +103,10 @@ impl TriangMat {
         let sl = self.data.len();
         // input not long enough to compute anything
         if sl < 3 {
-            return Err(RError::NoDataError(
-                "cholesky needs at least three Vec items",
-            ));
+            return Err(RError::NoDataError(format!(
+                "cholesky needs at least three TriangMat items: {}",
+                self
+            )));
         };
         // n is the dimension of the implied square matrix.
         // Not needed as an extra argument. We compute it
@@ -113,7 +114,9 @@ impl TriangMat {
         let (n, c) = TriangMat::rowcol(sl);
         // input is not a triangular number, is of wrong size
         if c != 0 {
-            return Err(RError::DataError("cholesky needs a triangular matrix"));
+            return Err(RError::DataError(
+                "cholesky needs a triangular matrix".to_owned(),
+            ));
         };
         let mut res = vec![0.0; sl]; // result L is of the same size as the input
         for i in 0..n {
@@ -131,9 +134,10 @@ impl TriangMat {
                     // dif <= 0 means that the input matrix is not positive definite,
                     // or is ill-conditioned, so we return ArithError
                     if dif <= 0_f64 {
-                        return Err(RError::ArithError(
-                            "cholesky needs a positive definite matrix",
-                        ));
+                        return Err(RError::ArithError(format!(
+                            "cholesky needs a positive definite matrix {}",
+                            dif
+                        )));
                     };
                     dif.sqrt()
                 }
@@ -168,7 +172,7 @@ impl TriangMat {
 
     /// Solves for x the system of linear equations Lx = b,
     /// where L (self) is a lower triangular matrix.   
-    fn forward_substitute<U>(&self, b: &[U]) -> Result<Vec<f64>, RError<&'static str>>
+    fn forward_substitute<U>(&self, b: &[U]) -> Result<Vec<f64>, RE>
     where
         U: Copy + PartialOrd + std::fmt::Display,
         f64: From<U>,
@@ -176,20 +180,20 @@ impl TriangMat {
         let sl = self.data.len();
         if sl < 3 {
             return Err(RError::NoDataError(
-                "forward-substitute needs at least three items",
+                "forward-substitute needs at least three items".to_owned(),
             ));
         };
         // 2d matrix dimensions
         let (n, c) = TriangMat::rowcol(sl);
         if c != 0 {
             return Err(RError::DataError(
-                "forward_substitute needs a triangular matrix",
+                "forward_substitute needs a triangular matrix".to_owned(),
             ));
         };
         // dimensions/lengths mismatch
         if n != b.len() {
             return Err(RError::DataError(
-                "forward_substitute mismatch of self and b dimension",
+                "forward_substitute mismatch of self and b dimension".to_owned(),
             ));
         };
         let mut res: Vec<f64> = Vec::with_capacity(n); // result of the same size and shape as b

@@ -34,7 +34,8 @@ impl<T> Vecg for &[T]
     /// Similar result could be obtained by projecting onto it all points but that is much slower.
     fn dottukey(self, tukey:&[f64]) -> Result<f64,RE> {
         let dims = self.len();
-        if 2*dims != tukey.len() { return Err(RError::DataError("{dottukey: tukey vec must have double the dimensions!")); }
+        if 2*dims != tukey.len() { 
+            return Err(RError::DataError("{dottukey: tukey vec must have double the dimensions!".to_owned())); }
         let mut ressum = 0_f64;
         for (i,&scomp) in self.vunit().iter().enumerate() {
             if scomp > 0_f64 { ressum += scomp*tukey[i]; continue };
@@ -207,7 +208,7 @@ impl<T> Vecg for &[T]
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {     
         let n = self.len();
         if v.len() != n { 
-            return Err(RError::DataError("{jointpdf argument vectors must be of equal length!"));
+            return Err(RError::DataError("{jointpdf argument vectors must be of equal length!".to_owned()));
             }; 
         let nf = n as f64;              
         let mut res:Vec<f64> = Vec::new();
@@ -259,12 +260,12 @@ impl<T> Vecg for &[T]
     /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
     /// assert_eq!(v1.correlation(&v2),-0.1076923076923077);
     /// ```
-    fn mediancorr<U>(self, v: &[U]) -> f64
+    fn mediancorr<U>(self, v: &[U]) -> Result<f64,RE>
     where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {
         // let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
-        let zeroself = self.zeromedian();
-        let zerov = v.zeromedian();
-        zeroself.cosine(&zerov)
+        let zeroself = self.zeromedian()?;
+        let zerov = v.zeromedian()?;
+        Ok(zeroself.cosine(&zerov))
     }        
 
     /// Pearson's (most common) correlation. 

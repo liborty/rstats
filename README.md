@@ -131,25 +131,22 @@ pub enum RError<T> where T:Sized+Debug {
     OtherError(T)
 }
 ```
-Each of its enum variants also carries a generic payload `T`. Most commonly this will be simply a `&'static str` message giving more helpful explanation, e.g.:
+Each of its enum variants also carries a generic payload `T`. Most commonly this will be a `String` message giving more helpful explanation, e.g.:
 
 ```rust 
-return Err(RError::ArithError("cholesky needs a positive definite matrix"));
+if dif <= 0_f64 {
+    return Err(RError::ArithError(format!(
+        "cholesky needs a positive definite matrix {}", dif )));
+};
 ```
+
+`format!(...)` is used to insert values of variables to the payload String, as shown. These potential errors are returned and can then be automatically converted (with `?`) to users' own errors. Some such conversions are implemented at the bottom of `errors.rs` file and used in `tests.rs`.
 
  There is a type alias shortening return declarations to, e.g.: `Result<Vec<f64>,RE>`, where
 
  ```rust
-pub type RE = RError<&'static str>;
-```
-
-Where formatted payloads, including values of some variables are desired, this could be changed to:
-
- ```rust
 pub type RE = RError<String>;
 ```
-
-More error checking may be added in later versions, where it makes sense. 
 
 ## Structs
 
@@ -236,6 +233,8 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.20** - Added `dfdt` to `Stats` trait (approximate weighted time derivative at the last vec point). Added automatic conversions (with `?`) of any potential errors returned from crates `ran`, `medians` and `times`, as now used in `tests.rs`.
 
 * **Version 1.2.19** - Presentation only: github actions now run automatically the full battery of `cargo test`. Detailed and informative tests output can be seen in the github actions log and overall success is indicated by the green badge at the head of this readme file.
 
