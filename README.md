@@ -154,13 +154,13 @@ pub type RE = RError<String>;
 holds the central tendency of `1d` data, e.g. some kind of mean or median, and its dispersion measure, e.g. standard deviation or MAD.
 
 ### `struct TriangMat` 
-holds lower/upper triangular symmetric/non-symmetric matrix in compact form that avoids zeros and duplications. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on TriangMag, in module `triangmag.rs`, such as:
+holds lower/upper triangular symmetric/non-symmetric matrix in compact form that avoids zeros and duplications. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
 
 * **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes a transpose), used by:
 * **Mahalanobis Distance**
 * **Householder UR** (M = QR) matrix decomposition
 
-Also, there are some methods implemented for `VecVecg` that produce `TriangMat`, specifically the covariance/comedience calculations: `covar`,`wcovar`,`comed` and `wcomed`. Their results will be typically used by `mahalanobis`.
+Also, there are some methods implemented for `VecVecg` that produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar`,`wcovar`,`comed` and `wcomed`. Their results will be typically used by `mahalanobis`.
 
 ##  Auxiliary Functions
 
@@ -174,33 +174,35 @@ One dimensional statistical measures implemented for all numeric end types.
 
 Its methods operate on one slice of generic data and take no arguments.
 For example, `s.amean()` returns the arithmetic mean of the data in slice `s`.
-These methods are checked and will report RError(s), such as an empty input. This means you have to apply `?` to their results to pass the errors up, or explicitly match them to take recovery actions, depending on the variant.
+These methods are checked and will report RError(s), such as an empty input. This means you have to apply `?` to their results to pass the errors up, or explicitly match them to take recovery actions, depending on the error variant.
 
 Included in this trait are:
 
 * means (arithmetic, geometric and harmonic),
 * standard deviations,
-* linearly weighted means (useful for time dependent data analysis),
+* linearly weighted means (useful for time analysis),
 * probability density function (pdf)
 * autocorrelation, entropy
 * linear transformation to [0,1],
 * other measures and vector algebra operators
 
-Note that fast implementation of 1d medians is as of version 1.1.0 in crate `medians`.  
+Note that fast implementation of 1d medians is, as of version 1.1.0, performed by crate `medians`.  
 
 
 ## Trait Vecg
 
-Generic vector algebra operations between two slices `&[T]`, `&[U]` of any length (dimensionality). It may be necessary to invoke some using the 'turbofish' `::<type>` syntax to indicate the type U of the supplied argument, e.g.:  
-`datavec.methodname::<f64>(arg)`  
-This is because Rust is currently incapable of inferring the type ('the inference bug').
+Generic vector algebra operations between two slices `&[T]`, `&[U]` of any (common) length  (dimensions). Note that it may be necessary to invoke some using the 'turbofish' `::<type>` syntax to indicate the type U of the supplied argument, e.g.: 
+`datavec.methodname::<f64>(arg)`. 
+This is because Rust is currently incapable of inferring its type ('the inference bug').
+
+Methods implemented by this trait:
 
 * Vector additions, subtractions and products (scalar, kronecker, outer),
 * Other relationships and measures of difference,
 * Pearson's, Spearman's and Kendall's correlations,
 * `Median correlation`, which we define analogously to Pearson's, as cosine of an angle between two zero median vectors (instead of his zero mean vectors).
 * Joint pdf, joint entropy, statistical independence (based on mutual information).
-* `Contribution` measure of a point w.r.t gm
+* `Contribution` measure of a point to geometric median
 
 The simpler methods of this trait are sometimes unchecked (for speed), so some caution with data is advisable.
 
@@ -234,7 +236,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.20** - Added `dfdt` to `Stats` trait (approximate weighted time derivative at the last vec point). Added automatic conversions (with `?`) of any potential errors returned from crates `ran`, `medians` and `times`, as now used in `tests.rs`.
+* **Version 1.2.20** - Added `dfdt` to `Stats` trait (approximate weighted time series derivative at the last point). Added automatic conversions (with `?`) of any potential errors returned from crates `ran`, `medians` and `times`. Now demonstrated in `tests.rs`.
 
 * **Version 1.2.19** - Presentation only: github actions now run automatically the full battery of `cargo test`. Detailed and informative tests output can be seen in the github actions log and overall success is indicated by the green badge at the head of this readme file.
 
