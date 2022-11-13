@@ -354,7 +354,7 @@ fn vecvec() -> Result<(), RE> {
         "\nMedoid, outlier and radii summary:\n{}\nRadii {}\nRadii {}",
         eccecc, eccstd, eccmed
     );
-    let radsindex = pts.radii(&median).hashsort_indexed();
+    let radsindex = pts.radii(&median).hashsort_indexed(&mut |x| *x);
     println!(
         "Radii ratio:\t {GR}{}{UN}",
         pts.radius(radsindex[0], &median)? / pts.radius(radsindex[radsindex.len() - 1], &median)?
@@ -369,7 +369,7 @@ fn vecvec() -> Result<(), RE> {
     println!("Outlier's radius:    {}", outlier.vdist(&median).gr());
     println!("Outlier to Medoid:   {}", outlier.vdist(medoid).gr());
 
-    let seccs = pts.radii(&median).sorth(true);
+    let seccs = pts.radii(&median).sorth(&mut |x| *x,true);
     // println!("\nSorted eccs: {}\n", seccs));
     let lqcnt = seccs.binsearch(&eccmed.lq);
     println!(

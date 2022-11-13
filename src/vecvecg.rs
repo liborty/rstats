@@ -149,7 +149,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         let wnorm = ws.len() as f64 / ws.iter().map(|&w|f64::from(w)).sum::<f64>(); 
         Ok (self.iter().zip(ws).map(|(s,&w)| wnorm*f64::from(w)*s.vdist::<f64>(gm))
             .collect::<Vec<f64>>()
-            .sorth(true)
+            .sorth(&mut |x| *x,true)
         )
     } 
 

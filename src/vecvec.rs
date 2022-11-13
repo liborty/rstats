@@ -352,7 +352,7 @@ where
     fn convex_hull(self) -> Vec<usize> {
         let mut convindex: Vec<usize> = Vec::new();
         let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let mut radindex = sqradii.hashsort_indexed(); // ascending square radii
+        let mut radindex = sqradii.hashsort_indexed(&mut |x| *x); // ascending square radii
         radindex.mutrevs(); // make them descending
         convindex.push(radindex[0]); // outlier is always in convex hull
                                      // test all other points self[b], in descending order
