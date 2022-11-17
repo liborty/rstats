@@ -28,6 +28,8 @@ cargo test --release -- --test-threads=1 --nocapture --color always
 
 Alternatively, just to get a quick idea of the methods provided and their usage, you can now read the output produced by an [automated test run](https://github.com/liborty/rstats/actions). There are test logs for each new push to this  repository. Unclick the latest (top) one, then `Rstats` and then `Run cargo test` ... The badge at the top of this document lights up green when all the tests have passed and clicking it gets you to these logs as well.
 
+Any compilation errors arising out of this crate indicate most likely that some of the dependencies have become out of date. Issuing `cargo update` command will usually fix this.
+
 ## Introduction
 
 `Rstats` has a small footprint. Nonetheless the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional `nd` analysis, i.e. characterising sets of n points in space of d dimensions.
