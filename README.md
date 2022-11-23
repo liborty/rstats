@@ -163,11 +163,11 @@ holds the central tendency of `1d` data, e.g. some kind of mean or median, and i
 ### `struct TriangMat` 
 holds lower/upper triangular symmetric/non-symmetric matrix in compact form that avoids zeros and duplications. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
 
-* **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes a transpose), used by:
+* **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes a transpose). This decomposition is used by `mahalanobis`.
 * **Mahalanobis Distance**
 * **Householder UR** (M = QR) matrix decomposition
 
-Also, there are some methods implemented for `VecVecg` that produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar`,`wcovar`,`comed` and `wcomed`. Their results will be typically used by `mahalanobis`.
+Also, some methods implemented for `VecVecg` produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar`,`wcovar`,`comed` and `wcomed`. Their results are positive definite. Whenever this condition is satisfied, then the most efficient Cholesky-Banachiewics decomposition is applicable.
 
 ##  Quantify Functions
 
@@ -175,14 +175,14 @@ All methods in `medians::Median` trait and some methods in `indxvec::Vecops` tra
 
 ### `noop`
 
-is a shorthand dummy function to supply to these methods, when the data is already of f64 end type. The second line is the full 'manual' equivalent version that can also be used:
+is a shorthand dummy function to supply to these methods, when the data is already of f64 end type. The second line is the full equivalent version that can also be used:
 
 ```rust
 &mut noop
 &mut |f:&f64| *f
 ```
 
-When T is a primitive (truncation) convertible type, such as i64,u64,usize, etc., use:
+When T is a primitive (truncation) convertible type, such as i64, u64, usize, etc., use:
 
 ```rust
 &mut |f:&T| *f as f64
@@ -190,19 +190,19 @@ When T is a primitive (truncation) convertible type, such as i64,u64,usize, etc.
 
 ### `fromop`
 
-When T is a type convertible by an existing `From` implementation and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in either one of these: 
+When T is a type convertible by an existing `From` implementation and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in one of these: 
 
 ```rust
 &mut fromop
 &mut |f:&T| f64::from(*f)
 ``` 
 
-All other cases were previously only possible with manual implementation written for the (global) From trait for each type T and each different conversion method, whereby the latter would conflict. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of one small inconvenience: using the above closures for the simple cases.
+All other cases were previously only possible with manual implementation written for the (global) From trait for each type T and each different conversion method, whereby the different conversions would conflict. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of one small inconvenience: using the above closures for the simple cases.
 
 ## Auxiliary Functions
 
-* `sumn`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (= n*(n+1)/2.),
-* `unit_matrix`: - generates full unit matrix
+* `sumn`: sum of the sequence `1..n = n*(n+1)/2`. It is also the size of a lower/upper triangular matrix, 
+* `unit_matrix`: - generates full unit matrix.
 
 ## Trait Stats
 
@@ -272,7 +272,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.21** - Updated dependency `medians` to v 2.0.2 and made the necessary compatibility changes (see Quantify Functions above). Moved all remaining methods to do with 1d medians from here to crate `medians`. Removed auxilliary function i64tof64, as it was a trivial mapping of `as f64`. Made `dfdt` smoothed and median based. 
+* **Version 1.2.21** - Updated dependency `medians` to v 2.0.2 and made the necessary compatibility changes (see Quantify Functions above). Moved all remaining methods to do with 1d medians from here to crate `medians`. Removed auxiliary function i64tof64, as it was a trivial mapping of `as f64`. Made `dfdt` smoothed and median based. 
 
 * **Version 1.2.20** - Added `dfdt` to `Stats` trait (approximate weighted time series derivative at the last point). Added automatic conversions (with `?`) of any potential errors returned from crates `ran`, `medians` and `times`. Now demonstrated in `tests.rs`.
 
