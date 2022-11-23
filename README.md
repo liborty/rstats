@@ -17,18 +17,23 @@ and any of the following traits:
 ```rust 
 use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 ```
+and any of the following auxiliary functions:
 
-The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be in some details a little ahead of the crates.io release versions.
+```rust
+use Rstats::{noop,fromop,sumn,unit_matrix};
+```
 
-It is highly recommended to read and run [tests.rs](https://github.com/liborty/Rstats/blob/master/tests/tests.rs) from the github repository as examples of usage. To run all the tests, use a single thread in order to print the results in the right order:
+The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be only in some details a little ahead of the crates.io release versions.
+
+It is highly recommended to read and run [tests.rs](https://github.com/liborty/Rstats/blob/master/tests/tests.rs) for examples of usage. To run all the tests, use a single thread in order to print the results in the right order:
 
 ```bash  
 cargo test --release -- --test-threads=1 --nocapture --color always
 ```
 
-Alternatively, just to get a quick idea of the methods provided and their usage, you can now read the output produced by an [automated test run](https://github.com/liborty/rstats/actions). There are test logs for each new push to this  repository. Unclick the latest (top) one, then `Rstats` and then `Run cargo test` ... The badge at the top of this document lights up green when all the tests have passed and clicking it gets you to these logs as well.
+Alternatively, just to get a quick idea of the methods provided and their usage, you can now read the output produced by an [automated test run](https://github.com/liborty/rstats/actions). There are test logs generated for each new push to the github repository. Click the latest (top) one, then `Rstats` and then `Run cargo test` ... The badge at the top of this document lights up green when all the tests have passed and clicking it gets you to these logs as well.
 
-Any compilation errors arising out of this crate indicate most likely that some of the dependencies have become out of date. Issuing `cargo update` command will usually fix this.
+Any compilation errors arising out of `rstats` crate indicate most likely that some of the dependencies have become out of date. Issuing `cargo update` command will usually fix this.
 
 ## Introduction
 
@@ -36,35 +41,35 @@ Any compilation errors arising out of this crate indicate most likely that some 
 
 Several branches of mathematics: statistics, information theory, set theory and linear algebra are combined in this one consistent crate, based on the abstraction that they all operate on the same data objects (here Rust Vecs). The only difference being that an ordering of their components is sometimes assumed (in linear algebra, set theory) and sometimes it is not (in statistics, information theory, set theory).
 
-`Rstats` begins with basic statistical measures, information measures,  vector algebra and linear algebra. These provide self-contained tools for the multidimensional algorithms but are also useful in their own right.
+`Rstats` begins with basic statistical measures, information measures, vector algebra and linear algebra. These provide self-contained tools for the multidimensional algorithms but are also useful in their own right.
 
-`Non analytical statistics` is preferred, whereby the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the data, not from some assumed distributions.
+`Non analytical (non parametric) statistics` is preferred, whereby the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the real data, not from some assumed distributions.
 
-`Linear algebra` uses by default `Vec<Vec<T>>`: a generic data structure capable of representing irregular matrices. Also, `struct TriangMat` is defined and used for symmetric and triangular matrices (for efficiency reasons).
+`Linear algebra` uses by default `Vec<Vec<T>>`, generic data structure capable of representing irregular matrices. Also, `struct TriangMat` is defined and used for symmetric and triangular matrices (for memory efficiency reasons).
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
 
-* `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as cosine of an angle between two zero median samples (instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of thinking of a sample as a vector in d dimensional space. 
+* `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as the cosine of an angle between two zero median samples (instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of thinking of a data sample as a vector in d dimensional space. 
 
 * `gmedian and pmedian` - fast multidimensional `geometric median (gm)` algorithms.
 
-* `madgm` - generalisation to `nd` of a robust data spread estimator known as `MAD` (median of absolute deviations from median). 
+* `madgm` - our generalisation to n dimensions of a robust data spread estimator known as `MAD` (median of absolute deviations from median). 
 
-* `contribution` - of a point to an `nd` set. Defined as a magnitude of `gm` adjustment, when the point is added to the set. It is related to the point's radius (distance from the `gm`) but not the same, as it depends on the radii of all the other points as well.
+* `contribution` - of a point to an `nd` set. Defined as a magnitude of `gm` adjustment caused by adding the point to the set. It is related to the point's radius (distance from the `gm`) but is not the same, as it depends on the radii of all the other points as well.
 
-* `comediance` - instead of covariance (triangular matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero median vectors` are replacing `zero mean vectors` in covariance calculations.
+* `comediance` - instead of covariance (triangular matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero median vectors` are replacing `zero mean vectors` in covariance calculations. The results are similar but more stable with respect to the outliers.
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are also much slower to compute than our `gm`.
+In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are also slower to compute than is our `gm`.
 
-*Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by rotation.*
+*Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by their rotation.*
 
 In contrast, analyses based on the true geometric median (`gm`) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its weighted version `wgmedian`, in traits `vecvec` and `vecvecg` respectively.
 
 ## Additional Documentation
 
-For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rstats/latest/rstats). You may have to unclick the 'implementations on foreign types' somewhere near the bottom of the page (as these traits are implemented directly over 'out of this crate' Rust `Vec` type).
+For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rstats/latest/rstats). You may have to go directlly to the modules source. These traits are implemented for  'out of this crate' rust `Vec` type and rust docs do not display 'implementations on foreign types' very well.
 
 ## Terminology
 
@@ -164,11 +169,40 @@ holds lower/upper triangular symmetric/non-symmetric matrix in compact form that
 
 Also, there are some methods implemented for `VecVecg` that produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar`,`wcovar`,`comed` and `wcomed`. Their results will be typically used by `mahalanobis`.
 
-##  Auxiliary Functions
+##  Quantify Functions
 
-* `i64tof64`: converts an i64 vector to f64, 
-* `sumn`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (n*(n+1)/2.),
-* `unit_matrix` full unit matrix
+All methods in `medians::Median` trait and some methods in `indxvec::Vecops` trait require explicit closure to tell them how to quantify any supplied (user) data of end type T into f64. Variety of different quantifying methods can then be dynamically employed. For example, in analysis of words (&str type), it can be the word length, or the numerical value of its first few  bytes, etc. Then we can sort them or find their means/medians/dispersions, under these different measures. We do not necessarily want to explicitly store all such quantifications (hashes), as data can be voluminous. Rather, we want to be able to compute them on demand.
+
+### `noop`
+
+is a shorthand dummy function to supply to these methods, when the data is already of f64 end type. The second line is the full 'manual' equivalent version that can also be used:
+
+```rust
+&mut noop
+&mut |f:&f64| *f
+```
+
+When T is a primitive (truncation) convertible type, such as i64,u64,usize, etc., use:
+
+```rust
+&mut |f:&T| *f as f64
+```
+
+### `fromop`
+
+When T is a type convertible by an existing `From` implementation and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in either one of these: 
+
+```rust
+&mut fromop
+&mut |f:&T| f64::from(*f)
+``` 
+
+All other cases were previously only possible with manual implementation written for the (global) From trait for each type T and each different conversion method, whereby the latter would conflict. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of one small inconvenience: using the above closures for the simple cases.
+
+## Auxiliary Functions
+
+* `sumn`: sum of a sequence 1..n, also the size of a lower/upper triangular matrix below/above the diagonal (= n*(n+1)/2.),
+* `unit_matrix`: - generates full unit matrix
 
 ## Trait Stats
 
@@ -237,6 +271,8 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.21** - Updated dependency `medians` to v 2.0.2 and made the necessary compatibility changes (see Quantify Functions above). Moved all remaining methods to do with 1d medians from here to crate `medians`. Removed auxilliary function i64tof64, as it was a trivial mapping of `as f64`. Made `dfdt` smoothed and median based. 
 
 * **Version 1.2.20** - Added `dfdt` to `Stats` trait (approximate weighted time series derivative at the last point). Added automatic conversions (with `?`) of any potential errors returned from crates `ran`, `medians` and `times`. Now demonstrated in `tests.rs`.
 

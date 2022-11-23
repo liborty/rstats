@@ -1,6 +1,6 @@
 use crate::{error::RError,RE,sumn,Vecg,MutVecg,MStats,Stats};
 use indxvec::Vecops;
-use medians::Median; 
+use medians::Median;
 
 impl<T> Stats for &[T] 
     where T: Copy+PartialOrd+std::fmt::Display,f64:From<T> {  
@@ -362,13 +362,6 @@ impl<T> Stats for &[T]
         })
     }
 
-    /// Zero median data produced by subtracting the median.
-    /// Analogous to zero mean data when subtracting the mean.
-    fn zeromedian(self) -> Result<Vec<f64>,RE> {
-        let median = self.median()?; 
-        Ok(self.iter().map(|&s| f64::from(s)-median).collect())
-    }
-
     /// Probability density function of a sorted slice with repeats. 
     /// Repeats are counted and removed
     fn pdf(self) -> Vec<f64> {     
@@ -425,18 +418,23 @@ impl<T> Stats for &[T]
         Ok(self.iter().map(|&x|(f64::from(x)-f64::from(mm.min))/range).collect())        
     }
 
-    /// Linearly (backwards) weighted approx. time derivative at the last point
-    fn dfdt(self) -> f64 {
+    /// Linearly weighted approximate time series derivative at the last point (present time).
+    /// Backwards linear weighted mean (half filter) minus the median.
+    /// Rising values return positive result and vice versa.
+    fn dfdt(self) -> Result<f64,RE> {
         let len = self.len();
-        if len < 2 { return 0_f64 };
-        let mut weight = 0_f64;
-        let last = f64::from(self[len-1]);
-        let mut sig = 0_f64;
-        for &x in self.iter().take(len-1) {
-            weight += 1_f64;
-            sig += weight*(last-f64::from(x))
+        if len < 2 { 
+            return Err(RError::NoDataError(
+                format!("dfdt time series too short: {}",len))); 
+            };
+        let mut weight = 0_f64; 
+        let mut sumwx = 0_f64;  
+        for &x in self.iter() {
+            let fx = f64::from(x);
+            weight += 1_f64; 
+            sumwx += weight*fx; 
         } 
-        2.0*sig/((weight+1.0)*weight)
+        Ok(sumwx/(sumn(len) as f64) - self.median(&mut|x|f64::from(*x))?)
     }
  
     /// Householder reflector

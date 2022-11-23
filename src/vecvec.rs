@@ -1,4 +1,4 @@
-use std::iter::FromIterator;
+use std::{iter::FromIterator};
 
 use crate::{sumn, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg, RE};
 use indxvec::{Mutops, Vecops};
@@ -134,15 +134,15 @@ where
     /// that is different features stored in columns of self.
     /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
     /// such as dependencies or correlations.
-    /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2))`
+    /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2, &mut noop)?)`
     /// computes median correlations between all column vectors (features) in pts.
-    fn crossfeatures(self, f: fn(&[T], &[T]) -> Result<f64, RE>) -> Result<Vec<f64>, RE> {
+    fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<Vec<f64>, RE> {
         let n = self.len(); // number of the vector(s)
         let mut codp: Vec<f64> = Vec::with_capacity((n + 1) * n / 2); // results
         for (i, v) in self.iter().enumerate() {
             // its dependencies up to and including the diagonal
             for vj in self.iter().take(i + 1) {
-                codp.push(f(v, vj)?);
+                codp.push(f(v, vj));
             }
         }
         Ok(codp)
@@ -292,14 +292,15 @@ where
         Vec<f64>: FromIterator<f64>,
     {
         let rads: Vec<f64> = self.radii(gm);
-        Ok((rads.ameanstd()?, rads.medinfo()?, rads.minmax()))
+        Ok((rads.ameanstd()?, rads.medinfo(&mut |f:&f64| *f)?, rads.minmax()))
     }
 
     /// Quasi median, recommended only for comparison purposes
+    /// Here only default f64::from() is supplied for conversion T -> f64
     fn quasimedian(self) -> Result<Vec<f64>,RE> {
         Ok( self.transpose()
             .iter()
-            .map(|p| p.median())
+            .map(|p| p.median(&mut |f:&T| f64::from(*f)))
             .collect::<Result<Vec<f64>,MedError<String>>>()?
         )
     }
@@ -338,7 +339,7 @@ where
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64,RE> {
         let devs: Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
-        Ok(devs.median()?)
+        Ok(devs.median(&mut |f:&f64| *f)?)
     }
 
     /// Selects convex hull points out of all zero median/mean points in self

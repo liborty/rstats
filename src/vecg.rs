@@ -251,22 +251,6 @@ impl<T> Vecg for &[T]
         Ok(2.0 * self.jointentropy(v)? / (self.entropy() + v.entropy())-1.0)
     }
 
-    /// We define median based correlation as cosine of an angle between two
-    /// zero median vectors (analogously to Pearson's zero mean vectors) 
-    /// # Example
-    /// ```
-    /// use rstats::Vecg;
-    /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
-    /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
-    /// assert_eq!(v1.correlation(&v2),-0.1076923076923077);
-    /// ```
-    fn mediancorr<U>(self, v: &[U]) -> Result<f64,RE>
-    where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> {
-        // let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
-        let zeroself = self.zeromedian()?;
-        let zerov = v.zeromedian()?;
-        Ok(zeroself.cosine(&zerov))
-    }        
 
     /// Pearson's (most common) correlation. 
     /// # Example

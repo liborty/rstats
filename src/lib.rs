@@ -19,22 +19,20 @@ pub mod vecvec;
 /// Multidimensional operations on sets of vectors, with additional inputs
 pub mod vecvecg;
 
-// reexporting useful related methods
 use crate::error::RError;
+// reexporting useful related methods
 pub use indxvec::{printing::*, MinMax, Printing};
-pub use medians::{MStats, Med, Median};
+pub use medians::{MedError, MStats, Med, Median};
 
 /// Shorthand type for returned errors with message payload
 pub type RE = RError<String>;
 
 // Auxiliary Functions
 
-/// Data of end type `i64` has to be explicitly converted to `f64` (`as f64` does not work).
-/// This is to raise awareness that in this conversion, some precision may be lost.
-/// This function lossily clone-converts a slice `&[i64]` to `Vec<f64>`.  
-pub fn i64tof64(s: &[i64]) -> Vec<f64> {
-    s.iter().map(|&x| x as f64).collect()
-}
+/// Convenience dummy function for quantify closure
+pub fn noop(f:&f64) -> f64 { *f }
+/// Convenience From quantification invocation
+pub fn fromop<T>(f:&T) -> f64 where T:Clone,f64:From<T> { f64::from(f.clone()) }
 
 /// Sum of natural numbers 1..n.
 /// Also the size of an upper or lower triangle
@@ -101,43 +99,28 @@ pub trait Stats {
     fn vunit(self) -> Vec<f64>;
     /// Arithmetic mean
     fn amean(self) -> Result<f64, RE>;
-    // where Self: std::marker::Sized { bail!("amean not implemented for this type")}
     /// Arithmetic mean and standard deviation
     fn ameanstd(self) -> Result<MStats, RE>;
-    // where Self: std::marker::Sized { bail!("ameanstd not implemented for this type")}
     /// Weighted arithmetic mean
     fn awmean(self) -> Result<f64, RE>;
-    // where Self: std::marker::Sized { bail!("awmean not implemented for this type")}
     /// Weighted arithmetic men and standard deviation
     fn awmeanstd(self) -> Result<MStats, RE>;
-    // where Self: std::marker::Sized { bail!("awmeanstd not implemented for this type")}
     /// Harmonic mean
     fn hmean(self) -> Result<f64, RE>;
-    // where Self: std::marker::Sized { bail!("hmean not implemented for this type")}
     /// Harmonic mean and experimental standard deviation
     fn hmeanstd(self) -> Result<MStats, RE>;
-    // where Self: std::marker::Sized { bail!("hmeanstd not implemented for this type")}
     /// Weighted harmonic mean
     fn hwmean(self) -> Result<f64, RE>;
-    // where Self: std::marker::Sized { bail!("hwmean not implemented for this type")}
     /// Weighted harmonic mean and standard deviation
     fn hwmeanstd(self) -> Result<MStats, RE>;
-    // where Self: std::marker::Sized { bail!("hwgmeanstd not implemented for this type")}
     /// Geometric mean
     fn gmean(self) -> Result<f64, RE>;
-    // where Self: std::marker::Sized { bail!("gmean not implemented for this type")}
     /// Geometric mean and standard deviation ratio
     fn gmeanstd(self) -> Result<MStats, RE>;
-    // where Self: std::marker::Sized { bail!("gmeanstd not implemented for this type")}
     /// Weighed geometric mean
     fn gwmean(self) -> Result<f64, RE>;
-    // where Self: std::marker::Sized { bail!("gwmean not implemented for this type")}
     /// Weighted geometric mean and standard deviation ratio
     fn gwmeanstd(self) -> Result<MStats, RE>;
-    // where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
-    /// Zero median data, obtained by subtracting the median
-    fn zeromedian(self) -> Result<Vec<f64>,RE>;
-    // where Self: std::marker::Sized { bail!("gwmeanstd not implemented for this type")}
     /// Probability density function of a sorted slice
     fn pdf(self) -> Vec<f64>;
     /// Information (entropy) in nats
@@ -146,8 +129,8 @@ pub trait Stats {
     fn autocorr(self) -> Result<f64, RE>;
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Result<Vec<f64>, RE>;
-    /// Temporal function linearly (backwards) weighted approx. derivative at the last point
-    fn dfdt(self) -> f64;
+    /// Linearly weighted approximate time series derivative at the last (present time) point.
+    fn dfdt(self) -> Result<f64,RE>;
     /// Householder reflection
     fn house_reflector(self) -> Vec<f64>;
 }
@@ -285,11 +268,6 @@ pub trait Vecg {
     where
         U: Copy + PartialOrd + Into<U> + std::fmt::Display,
         f64: From<U>;
-    /// Median based correlation
-    fn mediancorr<U>(self, v: &[U]) -> Result<f64,RE>
-    where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>;
     /// Kendall Tau-B correlation.
     fn kendalcorr<U>(self, v: &[U]) -> f64
     where
@@ -380,7 +358,7 @@ pub trait VecVec<T> {
     /// Independence (component wise) of a set of vectors.
     fn dependencen(self) -> Result<f64, RE>;
     /// Flattened lower triangular relations matrix between columns of self
-    fn crossfeatures(self, f: fn(&[T], &[T]) -> Result<f64, RE>) -> Result<Vec<f64>, RE>;
+    fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<Vec<f64>, RE>;
     /// Sum of nd points (or vectors)
     fn sumv(self) -> Vec<f64>;
     /// Arithmetic Centre = euclidian mean of a set of points

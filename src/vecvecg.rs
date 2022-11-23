@@ -1,6 +1,6 @@
-use crate::{error::RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
+use crate::{noop, fromop, error::RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::{Vecops};
-use medians::{Median,MedError};
+use medians::Median;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
     where T: Copy+PartialOrd+std::fmt::Display,f64:From<T>, 
@@ -115,13 +115,13 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// (Median) correlations of m with each vector in self
     /// Factors out the unit vector of m to save repetition of work
     fn correlations(self, m: &[U]) -> Result<Vec<f64>,RE> {
-        if self[0].len() != m.len() { return Err(RError::DataError("correlations dimensions mismatch".to_owned())); }
-        let mm = m.median()?; // ignore quartile fields 
-        let unitzerom =  m.sadd(-mm).vunit();
-        Ok (self.iter().map(|s| -> Result<f64,MedError<String>> { 
-            let ms = s.median()?;   
-            Ok(s.sadd(-ms).vunit().dotp(&unitzerom))
-        }).collect::<Result<Vec<f64>,MedError<String>>>()?)
+        if self[0].len() != m.len() { return Err(RError::DataError("correlations dimensions mismatch".to_owned())); } 
+        let unitzerom =  m.zeromedian( &mut fromop)?.vunit(); //|f:&U| f64::from(*f))?.vunit();
+        let mut res = Vec::new();
+        for s in self {
+            res.push(unitzerom.dotp(&s.zeromedian(&mut fromop)?.vunit())); // |f:&T|f64::from(*f))?.vunit()));
+        }
+        Ok(res) 
     }
 
     /// Individual distances from any point v, typically not a member, to all the members of self.    
@@ -149,7 +149,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         let wnorm = ws.len() as f64 / ws.iter().map(|&w|f64::from(w)).sum::<f64>(); 
         Ok (self.iter().zip(ws).map(|(s,&w)| wnorm*f64::from(w)*s.vdist::<f64>(gm))
             .collect::<Vec<f64>>()
-            .sorth(&mut |x| *x,true)
+            .sorth(&mut noop,true)
         )
     } 
 
@@ -242,7 +242,12 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
         if self.len() != ws.len() { 
             return Err(RError::DataError("wgmadgm and ws lengths mismatch".to_owned())); }; 
-        Ok(self.iter().map(|v| v.wvdist(ws,wgm)).collect::<Vec<f64>>().median()?) 
+        Ok( self
+            .iter()
+            .map(|v| v.wvdist(ws,wgm))
+            .collect::<Vec<f64>>()
+            .median(&mut|f:&f64|*f)?
+        ) 
     }
 
     /// Covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -321,7 +326,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         for i in 0..d { // cross multiplaying the components
             for j in 0..i+1 { // in this order so as to save memory
                 let thisproduct:Vec<f64> = zs.iter().map(|v| v[i]*v[j]).collect(); 
-                com.push(thisproduct.median()?);
+                com.push(thisproduct.median(&mut noop)?);
             }
         }
         Ok(TriangMat{trans:false,symmetric:true,data:com})
@@ -348,7 +353,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         for i in 0..d { // cross multiplaying the components
             for j in 0..i+1 { // in this order so as to save memory
                 let thisproduct:Vec<f64> = zs.iter().zip(ws).map(|(v,&w)| f64::from(w)*v[i]*v[j]).collect();  
-                com.push(thisproduct.median()?/wmean);
+                com.push(thisproduct.median(&mut noop)?/wmean);
             }
         };
         Ok(TriangMat{trans:false,symmetric:true,data:com})
