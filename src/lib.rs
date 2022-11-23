@@ -72,7 +72,7 @@ pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
 #[derive(Default, Clone)]
 pub struct TriangMat {
     /// Trans, true means transposed, or upper (data is not moved)
-    pub trans: bool,
+    pub transposed: bool,
     /// True means the implied full matrix is symmetric
     pub symmetric: bool,
     /// Packed 1d vector of triangular matrix data of size (n+1)*n/2

@@ -9,7 +9,7 @@ impl std::fmt::Display for TriangMat {
         write!(
             f,
             "{YL}{} triangular {} matrix {dim}x{dim}:\n{}",
-            if self.trans { "Upper" } else { "Lower" },
+            if self.transposed { "Upper" } else { "Lower" },
             if self.symmetric {
                 "symmetric"
             } else {
@@ -38,7 +38,7 @@ impl TriangMat {
     }
 
     /// Generates new unit TriangMat matrix of size (n+1)*n/2
-    pub fn unit(n: usize, trans: bool) -> TriangMat {
+    pub fn unit(n: usize, transposed: bool) -> TriangMat {
         let mut data = Vec::new();
         for i in 0..n {
             // fill with zeros before the diagonal
@@ -48,7 +48,7 @@ impl TriangMat {
             data.push(1_f64);
         }
         TriangMat {
-            trans,
+            transposed,
             symmetric: true,
             data,
         }
@@ -80,7 +80,7 @@ impl TriangMat {
                 res[row][col] = item;
                 res[col][row] = item;
             }
-        } else if self.trans {
+        } else if self.transposed {
             |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| res[col][row] = item
         } else {
             |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| res[row][col] = item
@@ -148,7 +148,7 @@ impl TriangMat {
             }
         }
         Ok(TriangMat {
-            trans: false,
+            transposed: false,
             symmetric: false,
             data: res,
         })

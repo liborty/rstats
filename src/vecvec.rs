@@ -71,12 +71,12 @@ where
         }
         (
             TriangMat {
-                trans: true,
+                transposed: true,
                 symmetric: false,
                 data: ures,
             },
             TriangMat {
-                trans: true,
+                transposed: true,
                 symmetric: false,
                 data: rres,
             },

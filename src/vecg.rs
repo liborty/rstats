@@ -180,7 +180,7 @@ impl<T> Vecg for &[T]
         vm.iter().enumerate().for_each(|(i,&thisc)|
             // generate its products up to and including the diagonal (itself)
             vm.iter().take(i+1).for_each(|&component| cov.push(thisc*component)) );
-        TriangMat{ trans:false,symmetric:true, data:cov }
+        TriangMat{ transposed:false,symmetric:true, data:cov }
     }
 
     /// Kronecker product of two vectors.   
