@@ -2,20 +2,19 @@ use crate::{sumn, RError, Stats, TriangMat, Vecg, RE}; // MStats, MinMax, MutVec
 pub use indxvec::{printing::*, Printing, Vecops};
 
 /// Display implementation for TriangMat
-/// Converts to, and displays, the full matrix form
 impl std::fmt::Display for TriangMat {
     fn fmt<'a>(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let dim = Self::rowcol(self.data.len()).0;
         write!(
             f,
             "{YL}{} triangular {} matrix {dim}x{dim}:\n{}",
-            if self.transposed { "Upper" } else { "Lower" },
+            if self.transposed { "upper transposed" } else { "lower" },
             if self.symmetric {
                 "symmetric"
             } else {
                 "non-symmetric"
             },
-            self.to_full().gr()
+            self.to_triangle().gr()
         )
     }
 }
@@ -67,6 +66,14 @@ impl TriangMat {
         let idx = sumn(r);
         self.data.get(idx..idx + r + 1).unwrap().to_vec()
     }
+
+    /// Unpacks flat TriangMat Vec to triangular Vec<Vec> form
+    pub fn to_triangle(&self) -> Vec<Vec<f64>> {
+        let (n, _) = TriangMat::rowcol(self.data.len());
+            let mut res = Vec::with_capacity(n);
+            for r in 0..n { res.push(self.row(r)); };  
+            res
+        }
 
     /// Unpacks TriangMat to full matrix
     pub fn to_full(&self) -> Vec<Vec<f64>> {

@@ -171,18 +171,18 @@ Also, some methods implemented for `VecVecg` produce `TriangMat` matrices, speci
 
 ##  Quantify Functions
 
-All methods in `medians::Median` trait and some methods in `indxvec::Vecops` trait require explicit closure to tell them how to quantify any supplied (user) data of end type T into f64. Variety of different quantifying methods can then be dynamically employed. For example, in analysis of words (&str type), it can be the word length, or the numerical value of its first few  bytes, etc. Then we can sort them or find their means/medians/dispersions, under these different measures. We do not necessarily want to explicitly store all such quantifications (hashes), as data can be voluminous. Rather, we want to be able to compute them on demand.
+Most methods in `medians::Median` trait and hashort methods in `indxvec` crate require explicit closure to tell them how to quantify into f64 user data of any end type T. Variety of different quantifying methods can then be dynamically employed. For example, in analysis of words (&str type), it can be the word length, or the numerical value of its first few bytes, etc. Then we can sort them or find their means/medians/dispersions under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute them on demand.
 
 ### `noop`
 
-is a shorthand dummy function to supply to these methods, when the data is already of f64 end type. The second line is the full equivalent version that can also be used:
+is a shorthand dummy function to supply to these methods, when the data is already of f64 end type. The second line is the full equivalent version that can be used instead:
 
 ```rust
 &mut noop
 &mut |f:&f64| *f
 ```
 
-When T is a primitive (truncation) convertible type, such as i64, u64, usize, etc., use:
+When T is a primitive type, such as i64, u64, usize, that can only be converted to f64 by explicit truncation, use:
 
 ```rust
 &mut |f:&T| *f as f64
@@ -196,6 +196,7 @@ When T is a type convertible by an existing `From` implementation and `f64:From<
 &mut fromop
 &mut |f:&T| f64::from(*f)
 ``` 
+This also works for 'smaller' primitive types.
 
 All other cases were previously only possible with manual implementation written for the (global) From trait for each type T and each different conversion method, whereby the different conversions would conflict. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of one small inconvenience: using the above closures for the simple cases.
 
@@ -271,6 +272,8 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.22** - Improved Display of TriangMat - it now prints just the actual triangular form. Other minor cosmetic improvements.
 
 * **Version 1.2.21** - Updated dependency `medians` to v 2.0.2 and made the necessary compatibility changes (see Quantify Functions above). Moved all remaining methods to do with 1d medians from here to crate `medians`. Removed auxiliary function i64tof64, as it was a trivial mapping of `as f64`. Made `dfdt` smoothed and median based. 
 

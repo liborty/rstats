@@ -1,7 +1,7 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::Median;
 use ran::{set_seeds, Rnum };
-use rstats::{noop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
+use rstats::{noop, fromop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
 use times::benchvvf64;
 
 pub const EPS: f64 = 1e-3;
@@ -98,7 +98,7 @@ fn fstats() -> Result<(), RE> {
     );
     println!(
         "Column Correlations:\n{}",
-        trpt.crossfeatures(|v1,v2| v1.mediancorr(v2,&mut |f:&f64| *f).expect("median corr: crossfeatures f64\n"))?.gr()
+        trpt.crossfeatures(|v1,v2| v1.mediancorr(v2,&mut noop).expect("median corr: crossfeatures f64\n"))?.gr()
     );
     Ok(())
 }
@@ -110,16 +110,16 @@ fn ustats() -> Result<(), RE> {
     println!("\n{}", (&v1).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
     println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
-    println!("Median:          {GR}{:>14.10}{UN}", v1.median(&mut |u:&u8| *u as f64)?);
+    println!("Median:          {GR}{:>14.10}{UN}", v1.median(&mut fromop)?);
     println!("Geometric mean:  {GR}{:>14.10}{UN}", v1.gmean()?);
     println!("Harmonic mean:   {GR}{:>14.10}{UN}", v1.hmean()?);
     println!("Magnitude:       {GR}{:>14.10}{UN}", v1.vmag());
     println!("Arithmetic {}", v1.ameanstd()?);
-    println!("Median     {}", v1.medstats(&mut |u:&u8| *u as f64)?);
+    println!("Median     {}", v1.medstats(&mut fromop)?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
-    println!("{}\n", v1.medinfo(&mut |u:&u8| *u as f64)?);
+    println!("{}\n", v1.medinfo(&mut fromop)?);
     Ok(())
 }
 
@@ -150,7 +150,7 @@ fn genericstats() -> Result<(), RE> {
     let mut v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?.gr());
-    println!("Median\t\t{GR}{:>14.10}{UN}", v.medstats(&mut |u:&i32| *u as f64)?);
+    println!("Median\t\t{GR}{:>14.10}{UN}", v.medstats(&mut fromop)?);
     println!("Geometric\t{}", v.gmeanstd()?.gr());
     println!("Harmonic\t{}", v.hmeanstd()?.gr());
     println!("Weighted Arit.\t{}", v.awmeanstd()?.gr());
@@ -160,7 +160,7 @@ fn genericstats() -> Result<(), RE> {
     println!("dfdt:\t\t {}", v.dfdt()?.gr());
     v.reverse();
     println!("rev dfdt:\t{}", v.dfdt()?.gr());      
-    println!("{}\n", &v.medinfo(&mut |u:&i32| *u as f64)?);
+    println!("{}\n", &v.medinfo(&mut fromop)?);
     Ok(())
 }
 
@@ -372,7 +372,7 @@ fn vecvec() -> Result<(), RE> {
     println!("Outlier's radius:    {}", outlier.vdist(&median).gr());
     println!("Outlier to Medoid:   {}", outlier.vdist(medoid).gr());
 
-    let seccs = pts.radii(&median).sorth(&mut |x| *x,true);
+    let seccs = pts.radii(&median).sorth(&mut noop,true);
     // println!("\nSorted eccs: {}\n", seccs));
     let lqcnt = seccs.binsearch(&eccmed.lq);
     println!(
