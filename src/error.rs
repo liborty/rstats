@@ -37,7 +37,7 @@ impl From<RanError<String>> for RError<String> {
     }
 }
 
-/// Automatically converting any RanError to RError::OtherError
+/// Automatically converting any MedError to RError::OtherError
 impl From<MedError<String>> for RError<String> {
     fn from(e: MedError<String>) -> Self {
         RError::OtherError(format!("MedError: {}",e))
