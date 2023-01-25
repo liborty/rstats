@@ -1,7 +1,7 @@
 use std::{iter::FromIterator};
 
-use crate::{sumn, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg, RE};
-use indxvec::{Mutops, Vecops};
+use crate::{sumn, RE, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg};
+use indxvec::Vecops;
 use medians::{Med, Median, MedError};
 
 impl<T> VecVec<T> for &[Vec<T>]
@@ -342,36 +342,41 @@ where
         Ok(devs.median(&mut |f:&f64| *f)?)
     }
 
-    /// Selects convex hull points out of all zero median/mean points in self
-    /// Call as, e.g.: `let convex = points.translate(&median)?.convex_hull();`
-    /// Concavity at b is detected when projection of any existing convex hull
-    /// point a onto candidate b, exceeds |b|.
-    /// a*b = |a|b|cos(θ) > |b|^2 => |a|cos(θ) > |b|,
-    /// where |a|cos(θ) is the required projection.
-    /// The use of square magnitudes (|b|^2)
-    /// saves first taking sqrt and then here dividing by |b|
-    fn convex_hull(self) -> Vec<usize> {
-        let mut convindex: Vec<usize> = Vec::new();
+    /// Collects indices of inner (or core) hull and outer hull, from zero median points.    
+    /// Vector b is not in outer hull, when there is any other point beyond the plane 
+    /// through 'b' and perpendicular to it (its defining plane). 
+    /// It is not in the inner hull, when it lies outside the defining plane of any other point. 
+    /// The testing is done efficiently against the existing hull points, in decreasing (increasing)
+    /// radius order. When projection of 'a' onto line from gm to 'b' exceeds |b|, then 'a' lies outside
+    /// the defining plane of 'b': `|a|cos(θ) > |b| => a*b > |b|^2` 
+    /// Thus working with square magnitudes (`|b|^2`) saves taking square roots and dividing the dot product by |b|.
+    fn hulls(self) -> (Vec<usize>,Vec<usize>) {  
         let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let mut radindex = sqradii.hashsort_indexed(&mut |x| *x); // ascending square radii
-        radindex.mutrevs(); // make them descending
-        convindex.push(radindex[0]); // outlier is always in convex hull
-                                     // test all other points self[b], in descending order
-        let mut passed = true;
-        for &b in radindex.iter().skip(1) {
-            // check against all previous convex hull members a
-            for &a in &convindex {
-                let dotp = self[a].dotp(&self[b]);
-                if dotp > sqradii[b] {
-                    passed = false;
-                    break;
+        let radindex = sqradii.hashsort_indexed(&mut |x| *x); // ascending square radii 
+        let mut innerindex: Vec<usize> = Vec::new();           
+        'candidate: for &b in &radindex { // test all points in ascending order 
+            for &a in &radindex {  // check against all points 'a' up to 'b'
+                if a == b { break; } // b can only be outside of a if a's magnitude is less
+                let dotp = self[a].dotp(&self[b]); 
+                if dotp > sqradii[a] { // b is outside of a
+                    continue 'candidate;
                 };
-            }
-            if passed {
-                convindex.push(b);
-            }; // add index b to the convex hull
+            } 
+            innerindex.push(b); // passed   
         }
-        convindex
+        // radindex.mutrevs(); // make them descending
+        let mut outerindex: Vec<usize> = Vec::new(); 
+        'outer: for &b in radindex.iter().rev() { // test all points, in descending order 
+            for &a in radindex.iter().rev() {
+                if a == b { break; } // a can only be outside of b for a's of greater magnitude
+                let dotp = self[a].dotp(&self[b]);
+                if dotp > sqradii[b] { // a is outside of b
+                    continue 'outer;
+                };
+            } 
+            outerindex.push(b); // passed 
+        }
+        (innerindex,outerindex)
     }
 
     /// Initial (first) point for geometric medians.

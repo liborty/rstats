@@ -54,7 +54,7 @@ impl<T> Stats for &[T]
         let m = 1.0 / self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>().sqrt();
         self.iter().map(|&x| m*(f64::from(x))).collect() 
     }
-
+    
     /// Arithmetic mean 
     /// # Example
     /// ```

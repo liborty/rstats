@@ -34,6 +34,12 @@ pub fn noop(f:&f64) -> f64 { *f }
 /// Convenience From quantification invocation
 pub fn fromop<T>(f:&T) -> f64 where T:Clone,f64:From<T> { f64::from(f.clone()) }
 
+/// Standard error: (value-centre)/dispersion
+/// for any measure of central tendency and dispersion
+pub fn st_error(val:f64,mstats:MStats) -> f64 {
+    (val-mstats.centre)/mstats.dispersion
+}
+
 /// Sum of natural numbers 1..n.
 /// Also the size of an upper or lower triangle
 /// of a square array (including the diagonal)
@@ -396,8 +402,8 @@ pub trait VecVec<T> {
     fn tukeyvec(self) -> Result<Vec<f64>, RE>;
     /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64,RE>;
-    /// Selects convex hull points out of all zero median/mean points in self
-    fn convex_hull(self) -> Vec<usize>;
+    /// Collects indices of outer and inner hull points, from zero median data
+    fn hulls(self) -> (Vec<usize>,Vec<usize>); 
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Point-by-point geometric median

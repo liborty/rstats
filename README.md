@@ -20,7 +20,7 @@ use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 and any of the following auxiliary functions:
 
 ```rust
-use Rstats::{noop,fromop,sumn,unit_matrix};
+use Rstats::{noop,fromop,sumn,st_error,unit_matrix};
 ```
 
 The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be only in some details a little ahead of the crates.io release versions.
@@ -69,7 +69,7 @@ In contrast, analyses based on the true geometric median (`gm`) are axis (rotati
 
 ## Additional Documentation
 
-For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rstats/latest/rstats). You may have to go directlly to the modules source. These traits are implemented for  'out of this crate' rust `Vec` type and rust docs do not display 'implementations on foreign types' very well.
+For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rstats/latest/rstats). You may have to go directly to the modules source. These traits are implemented for  'out of this crate' rust `Vec` type and rust docs do not display 'implementations on foreign types' very well.
 
 ## Terminology
 
@@ -78,7 +78,7 @@ For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rs
 * `Median correlation` between
  two samples. We define it analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson 'normalises' by subtracting the mean from all components, we subtract the median.
 
-* `Centroid/Centre/Mean` of an nd set. It is the (generally non member) point that minimises its sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the d-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
+* `Centroid/Centre/Mean` of an 'nd' set. It is the (generally non member) point that minimises its sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the d-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
 
 * `Quasi/Marginal Median` is the point minimising sums of distances separately in each dimension (its coordinates are  medians along each axis). It is a mistaken concept which we do not recommend using.
 
@@ -90,7 +90,10 @@ For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rs
 
 * `Outlier` is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm`.
 
-* `Convex Hull` is the subset consisting of selected points p, such that no other member points lie outside the plane through p and normal to its radius vector. The points that do not satisfy this condition are the `internal` points.
+* `Outer Hull` is a subset containing zero median member points p, such that no other points lie outside the normal plane through p. The points that do not satisfy this condition are the `internal` points.
+
+* `Inner Hull or Core` is a subset containing zero median member points p, such that none of the points lie outside (the normal planes through) any other.
+Note that in a highly dimensional space up to all points may belong to both hulls.
 
 * `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
 
@@ -195,14 +198,16 @@ When T is a type convertible by an existing `From` implementation and `f64:From<
 ```rust
 &mut fromop
 &mut |f:&T| f64::from(*f)
-``` 
+```
+
 This also works for 'smaller' primitive types.
 
 All other cases were previously only possible with manual implementation written for the (global) From trait for each type T and each different conversion method, whereby the different conversions would conflict. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of one small inconvenience: using the above closures for the simple cases.
 
 ## Auxiliary Functions
 
-* `sumn`: sum of the sequence `1..n = n*(n+1)/2`. It is also the size of a lower/upper triangular matrix, 
+* `sumn`: sum of the sequence `1..n = n*(n+1)/2`. It is also the size of a lower/upper triangular matrix.
+* `st_error`: standard error of a value, on the basis of any central tendency and dispersion measures.
 * `unit_matrix`: - generates full unit matrix.
 
 ## Trait Stats
@@ -273,9 +278,11 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.23** - `convex_hull => hulls`. Now computes both inner and outer hulls. See above for definitions. Also, added `st_error` to auxiliary functions.
+
 * **Version 1.2.22** - Improved Display of TriangMat - it now prints just the actual triangular form. Other minor cosmetic improvements.
 
-* **Version 1.2.21** - Updated dependency `medians` to v 2.0.2 and made the necessary compatibility changes (see Quantify Functions above). Moved all remaining methods to do with 1d medians from here to crate `medians`. Removed auxiliary function i64tof64, as it was a trivial mapping of `as f64`. Made `dfdt` smoothed and median based. 
+* **Version 1.2.21** - Updated dependency `medians` to v 2.0.2 and made the necessary compatibility changes (see Quantify Functions above). Moved all remaining methods to do with 1d medians from here to crate `medians`. Removed auxiliary function i64tof64, as it was a trivial mapping of `as f64`. Made `dfdt` smoothed and median based.
 
 * **Version 1.2.20** - Added `dfdt` to `Stats` trait (approximate weighted time series derivative at the last point). Added automatic conversions (with `?`) of any potential errors returned from crates `ran`, `medians` and `times`. Now demonstrated in `tests.rs`.
 

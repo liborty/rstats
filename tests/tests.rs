@@ -1,7 +1,7 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::Median;
 use ran::{set_seeds, Rnum };
-use rstats::{noop, fromop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
+use rstats::{st_error, noop, fromop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
 use times::benchvvf64;
 
 pub const EPS: f64 = 1e-3;
@@ -64,6 +64,9 @@ fn fstats() -> Result<(), RE> {
     let v2 = v1.revs();
     println!("{}", (&v2).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
+    println!("Standard arithmetic error of {}: {}",5.yl(),st_error(5.,v1.ameanstd()?).gr());
+    println!("Standard harmonic error of {}:\t {}",5.yl(),st_error(5.,v1.hmeanstd()?).gr());
+    println!("Standard median error of {}:\t{}",5.yl(),st_error(5.,v1.medstats(&mut noop)?).gr());
     println!("Geometric mean:\t{}", v1.gmean()?.gr());
     println!("Harmonic mean:\t{}", v1.hmean()?.gr());
     println!("Magnitude:\t{}", v1.vmag().gr());
@@ -421,7 +424,7 @@ fn vecvec() -> Result<(), RE> {
 
 #[test]
 fn hull() -> Result<(), RE> {
-    let d = 10_usize;
+    let d = 6_usize;
     let n = 100_usize;
     println!(
         "Testing on a random set of {} points in {} dimensional space",
@@ -433,26 +436,37 @@ fn hull() -> Result<(), RE> {
     let wts = rf.ranv_in(n, 0., 100.).getvf64()?;
     let median = pts.wgmedian(&wts, EPS)?;
     let zeropts = pts.translate(&median)?;
-    let hullidx = zeropts.convex_hull();
-    let outerrad = pts.radius(*hullidx.first().expect("Empty hullidx"), &median)?;
-    let innerrad = pts.radius(*hullidx.last().expect("Empty hullidx"), &median)?;
+    let (innerhull,outerhull) = zeropts.hulls();
+    let innerrad = pts.radius(*innerhull.last().expect("Empty hullidx"), &median)?;
+    let outerrad = pts.radius(*outerhull.last().expect("Empty hullidx"), &median)?;
 
     println!(
-        "\nConvex hull has {}/{} points:\n{}",
-        hullidx.len().gr(),
+        "\nInner hull has {}/{} points:\n{}",
+        innerhull.len().gr(),
         pts.len().gr(),
-        hullidx.yl()
+        innerhull.yl()
     );
     println!(
-        "Convex hull radii min/max ratio: {}",
-        (innerrad / outerrad).gr()
+        "Inner hull radii max/min ratio: {}",
+        (innerrad / pts.radius(*innerhull.first().expect("Empty hullidx"), &median)?).gr()
+    );
+
+    println!(
+        "\nOuter hull has {}/{} points:\n{}",
+        outerhull.len().gr(),
+        pts.len().gr(),
+        outerhull.yl()
+    );
+    println!(
+        "Outer hull radii max/min ratio: {}",
+        (pts.radius(*outerhull.first().expect("Empty hullidx"), &median)?/outerrad).gr()
     );
     let tukeyvec = zeropts
-        .wtukeyvec(&hullidx, &wts)?;
-    println!("Convex hull tukeyvec: {}", tukeyvec.gr());
+        .wtukeyvec(&innerhull, &wts)?;
+    println!("Inner hull tukeyvec: {}", tukeyvec.gr());
     println!(
         "Dottukey mapped: {}",
-        hullidx
+        innerhull
             .iter()
             .map(|&hi| pts[hi].vsub(&median).dottukey(&tukeyvec))
             .collect::<Result<Vec<f64>,RE>>()?
