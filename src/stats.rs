@@ -358,7 +358,7 @@ impl<T> Stats for &[T]
         sum /= nf;
         Ok(MStats {
             centre: sum.exp(),
-            dispersion: (sx2 as f64 / nf - sum.powi(2)).sqrt().exp(),
+            dispersion: (sx2 / nf - sum.powi(2)).sqrt().exp(),
         })
     }
 
