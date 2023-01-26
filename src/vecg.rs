@@ -7,6 +7,10 @@ impl<T> Vecg for &[T]
     where 
         T: Copy+PartialOrd+Into<T>+std::fmt::Display, f64:From<T> {
 
+    /// Standard error of self against geometric median and mad dispersion
+    fn st_error(self, gm:&[f64], mad:f64) -> Result<f64,RE> {
+        Ok(self.vdist::<f64>(gm)/mad)
+    }
      /// Scalar addition to a vector, creates new vec
      fn sadd<U>(self, s:U) -> Vec<f64> 
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> { 

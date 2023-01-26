@@ -34,7 +34,7 @@ pub fn noop(f:&f64) -> f64 { *f }
 /// Convenience From quantification invocation
 pub fn fromop<T>(f:&T) -> f64 where T:Clone,f64:From<T> { f64::from(f.clone()) }
 
-/// Standard error: (value-centre)/dispersion
+/// Standard error in 1d: (value-centre)/dispersion
 /// for any measure of central tendency and dispersion
 pub fn st_error(val:f64,mstats:MStats) -> f64 {
     (val-mstats.centre)/mstats.dispersion
@@ -144,6 +144,8 @@ pub trait Stats {
 /// Vector Algebra on two vectors (represented here as generic slices).
 /// Also included are scalar operations on the `self` vector.
 pub trait Vecg {
+    /// Standard error of self against geometric median and mad dispersion
+    fn st_error(self, gm:&[f64], mad:f64) -> Result<f64,RE>;
     /// Scalar addition to vector
     fn sadd<U>(self, s: U) -> Vec<f64>
     where
@@ -398,8 +400,9 @@ pub trait VecVec<T> {
     fn quasimedian(self) -> Result<Vec<f64>,RE>;
     /// Geometric median estimate's error
     fn gmerror(self, gm: &[f64]) -> f64;
-    /// Proportions of points along each +/-axis (hemisphere)
-    fn tukeyvec(self) -> Result<Vec<f64>, RE>;
+    /// Proportions of points in idx along each +/-axis (hemisphere)
+    /// Self will normally be zero median vectors 
+    fn tukeyvec(self, idx: &[usize]) -> Result<Vec<f64>,RE>; 
     /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64,RE>;
     /// Collects indices of outer and inner hull points, from zero median data

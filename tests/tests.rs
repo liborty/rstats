@@ -318,20 +318,21 @@ fn vecvec() -> Result<(), RE> {
     let gcentroid = pts.gcentroid();
     let acentroid = pts.acentroid();
     let firstp = pts.firstpoint();
+    let idx = Vec::from_iter(0..n);
 
     println!("\nMean reciprocal of radius: {}", (recips / d as f64).gr());
 
     println!(
         "Magnitude of Tukey vec for gm: {}",
-        pts.translate(&median)?.tukeyvec()?.vmag().gr()
+        pts.translate(&median)?.tukeyvec(&idx)?.vmag().gr()
     );
     println!(
         "Mag of Tukeyvec for acentroid: {}",
-        pts.translate(&acentroid)?.tukeyvec()?.vmag().gr()
+        pts.translate(&acentroid)?.tukeyvec(&idx)?.vmag().gr()
     );
     println!(
         "Mag of Tukeyvec for outlier:   {}",
-        pts.translate(outlier)?.tukeyvec()?.vmag().gr()
+        pts.translate(outlier)?.tukeyvec(&idx)?.vmag().gr()
     );
     // let testvec = ru.ranv(d).getvu8();
     let dists = pts.distsums();
@@ -423,8 +424,8 @@ fn vecvec() -> Result<(), RE> {
 }
 
 #[test]
-fn hull() -> Result<(), RE> {
-    let d = 6_usize;
+fn hulls() -> Result<(), RE> {
+    let d = 5_usize;
     let n = 100_usize;
     println!(
         "Testing on a random set of {} points in {} dimensional space",
@@ -433,12 +434,12 @@ fn hull() -> Result<(), RE> {
     // set_seeds(113);
     let rf = Rnum::newf64();
     let pts = rf.ranvv(d, n)?.getvvf64()?;
-    let wts = rf.ranv_in(n, 0., 100.).getvf64()?;
-    let median = pts.wgmedian(&wts, EPS)?;
+    // let wts = rf.ranv_in(n, 0., 100.).getvf64()?;
+    let median = pts.gmedian(EPS);
     let zeropts = pts.translate(&median)?;
     let (innerhull,outerhull) = zeropts.hulls();
-    let innerrad = pts.radius(*innerhull.last().expect("Empty hullidx"), &median)?;
-    let outerrad = pts.radius(*outerhull.last().expect("Empty hullidx"), &median)?;
+    let mad = pts.madgm(&median)?;
+    println!("\nMAD: {}",mad.gr());
 
     println!(
         "\nInner hull has {}/{} points:\n{}",
@@ -447,8 +448,11 @@ fn hull() -> Result<(), RE> {
         innerhull.yl()
     );
     println!(
-        "Inner hull radii max/min ratio: {}",
-        (innerrad / pts.radius(*innerhull.first().expect("Empty hullidx"), &median)?).gr()
+        "Inner hull min max radii: {} {}\nStandard errors:\t  {} {}",
+        zeropts[*innerhull.first().expect("Empty hullidx")].vmag().gr(), 
+        zeropts[*innerhull.last().expect("Empty hullidx")].vmag().gr(),
+        pts[*innerhull.first().unwrap()].st_error(&median,mad)?.gr(),
+        pts[*innerhull.last().unwrap()].st_error(&median,mad)?.gr(),
     );
 
     println!(
@@ -458,12 +462,15 @@ fn hull() -> Result<(), RE> {
         outerhull.yl()
     );
     println!(
-        "Outer hull radii max/min ratio: {}",
-        (pts.radius(*outerhull.first().expect("Empty hullidx"), &median)?/outerrad).gr()
+        "Outer hull min max radii: {} {}\nStandard errors:\t  {} {}",
+        zeropts[*outerhull.first().expect("Empty hullidx")].vmag().gr(),
+        zeropts[*outerhull.last().expect("Empty hullidx")].vmag().gr(),
+        pts[*outerhull.first().unwrap()].st_error(&median,mad)?.gr(),
+        pts[*outerhull.last().unwrap()].st_error(&median,mad)?.gr(),
     );
     let tukeyvec = zeropts
-        .wtukeyvec(&innerhull, &wts)?;
-    println!("Inner hull tukeyvec: {}", tukeyvec.gr());
+        .tukeyvec(&innerhull)?;
+    println!("\nInner hull tukeyvec: {}", tukeyvec.gr());
     println!(
         "Dottukey mapped: {}",
         innerhull
@@ -472,7 +479,7 @@ fn hull() -> Result<(), RE> {
             .collect::<Result<Vec<f64>,RE>>()?
             .gr()
     );
-    let allptstukv = zeropts.wtukeyvec(&Vec::from_iter(0..zeropts.len()), &wts)?;
+    let allptstukv = zeropts.tukeyvec(&Vec::from_iter(0..zeropts.len()))?;
     println!("All points tukeyvec: {}", allptstukv.gr());
     println!(
         "Dottukey mapped: {}",

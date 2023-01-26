@@ -37,7 +37,7 @@ Any compilation errors arising out of `rstats` crate indicate most likely that s
 
 ## Introduction
 
-`Rstats` has a small footprint. Nonetheless the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional `nd` analysis, i.e. characterising sets of n points in space of d dimensions.
+`Rstats` has a small footprint. Only the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional `nd` analysis, i.e. characterising sets of n points in space of d dimensions.
 
 Several branches of mathematics: statistics, information theory, set theory and linear algebra are combined in this one consistent crate, based on the abstraction that they all operate on the same data objects (here Rust Vecs). The only difference being that an ordering of their components is sometimes assumed (in linear algebra, set theory) and sometimes it is not (in statistics, information theory, set theory).
 
@@ -49,11 +49,13 @@ Several branches of mathematics: statistics, information theory, set theory and 
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
 
-* `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as the cosine of an angle between two zero median samples (instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of thinking of a data sample as a vector in d dimensional space. 
+* `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as the cosine of an angle between two zero median samples (instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of interpreting a data sample of length d as a single point in d dimensional space (or vector).
 
 * `gmedian and pmedian` - fast multidimensional `geometric median (gm)` algorithms.
 
-* `madgm` - our generalisation to n dimensions of a robust data spread estimator known as `MAD` (median of absolute deviations from median). 
+* `madgm` - our generalization to n dimensions of a robust data spread estimator known as `MAD` (median of absolute deviations from median).
+
+* `standard error` - also generalized to `nd`. Here the role of the central tendency is taken by the `geometric median` and the spread by `madgm`. Thus a single scalar standard error is obtained in any number of dimensions.
 
 * `contribution` - of a point to an `nd` set. Defined as a magnitude of `gm` adjustment caused by adding the point to the set. It is related to the point's radius (distance from the `gm`) but is not the same, as it depends on the radii of all the other points as well.
 
@@ -270,13 +272,15 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 * transformation to zero geometric median data,
 * multivariate trend (regression) between two sets of nd points,
 * covariance and comediance matrices.
-* convex hull points
+* inner and outer hulls
 
 ## Trait VecVecg
 
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.24** - added `st_error` method to trait Vecg. It is a generalization of standard error to 'nd'. The central tendency is (usually) the geometric median and the spread is (usually) MADGM. Also tidied up `hulls`.
 
 * **Version 1.2.23** - `convex_hull => hulls`. Now computes both inner and outer hulls. See above for definitions. Also, added `st_error` to auxiliary functions.
 

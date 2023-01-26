@@ -87,7 +87,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         let dims = self[0].len();
         if self.len() != ws.len() { return Err(RError::DataError("wtukeyvec weights number mismatch".to_owned())); }; 
         let mut hemis = vec![0_f64; 2*dims]; 
-        for &i in idx.iter() { 
+        for &i in idx { 
             let wf = f64::from(ws[i]);
             wsum += wf;
             // let zerogm = self[i].vsub::<f64>(gm);

@@ -312,41 +312,38 @@ where
     }
 
     /// Proportions of points along each +/-axis (hemisphere)
-    /// Excludes points that are perpendicular to it
-    /// Self should normally be zero mean/median vectors,
+    /// Excludes points that are perpendicular to axis
+    /// Uses only the selected points specified in idx (e.g. the hull).
+    /// Self should normally be zero mean/median vectors, 
     /// e.g. `self.translate(&median)`
-    fn tukeyvec(self) -> Result<Vec<f64>, RE> {
+    fn tukeyvec(self, idx: &[usize]) -> Result<Vec<f64>,RE> {  
+        let dims = self[0].len();
         if self.is_empty() {
             return Err(RError::NoDataError("tukeyvec given no data".to_owned()));
-        };
-        let nf = self.len() as f64;
-        let dims = self[0].len();
-        let mut hemis = vec![0_f64; 2 * dims];
-        for s in self {
-            for (i, &component) in s.iter().enumerate() {
+        }; 
+        let mut hemis = vec![0_f64; 2*dims]; 
+        for &i in idx {  
+            for (j,&component) in self[i].iter().enumerate() {
                 let cf = f64::from(component);
-                if cf > 0. {
-                    hemis[i] += 1.
-                } else if cf < 0. {
-                    hemis[dims + i] += 1.
-                };
-            }
+                if cf > 0. { hemis[j] += 1. }
+                else if cf < 0. { hemis[dims+j] += 1. };  
+            };
         }
-        hemis.iter_mut().for_each(|hem| *hem /= nf);
+        hemis.iter_mut().for_each(|count| *count /= idx.len() as f64);
         Ok(hemis)
     }
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64,RE> {
-        let devs: Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
-        Ok(devs.median(&mut |f:&f64| *f)?)
+        let diffs: Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
+        Ok(diffs.median(&mut |f:&f64| *f)?)
     }
 
-    /// Collects indices of inner (or core) hull and outer hull, from zero median points.    
-    /// Vector b is not in outer hull, when there is any other point beyond the plane 
+    /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.    
+    /// Vector b is not in outer hull, when there is any other point behind the plane 
     /// through 'b' and perpendicular to it (its defining plane). 
-    /// It is not in the inner hull, when it lies outside the defining plane of any other point. 
-    /// The testing is done efficiently against the existing hull points, in decreasing (increasing)
+    /// 'b' is not in the inner hull, when it lies behind the defining plane of any other point. 
+    /// The testing is done against the existing hull points, in decreasing (increasing)
     /// radius order. When projection of 'a' onto line from gm to 'b' exceeds |b|, then 'a' lies outside
     /// the defining plane of 'b': `|a|cos(θ) > |b| => a*b > |b|^2` 
     /// Thus working with square magnitudes (`|b|^2`) saves taking square roots and dividing the dot product by |b|.
@@ -376,6 +373,7 @@ where
             } 
             outerindex.push(b); // passed 
         }
+        outerindex.reverse();
         (innerindex,outerindex)
     }
 
