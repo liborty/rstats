@@ -38,9 +38,9 @@ fn u8() -> Result<(), RE> {
     set_seeds(77777);
     let pt = Rnum::newu8().ranvv(d, n)?.getvvu8()?;
     let cov = pt.covar(&pt.acentroid())?;
-    println!("Covariances:\n{}", cov);
+    println!("Covariances:\n{cov}");
     let com = pt.covar(&pt.gmedian(EPS))?;
-    println!("Comediances:\n{}", com);
+    println!("Comediances:\n{com}");
     println!("Their Distance: {}", cov.data.vdist(&com.data));
     let trpt = pt.transpose();
     println!(
@@ -83,7 +83,7 @@ fn fstats() -> Result<(), RE> {
     println!("Cityblock dist:\t{}", v2.cityblockd(&v1).gr());
     let d = 5_usize;
     let n = 7_usize;
-    println!("Testing on a random set of {} points in {} d space:", n, d);
+    println!("Testing on a random set of {n} points in {d} d space:");
     let pt = Rnum::newf64().ranvv(d, n)?.getvvf64()?;
     println!(
         "Classical Covariances:\n{}",
@@ -182,7 +182,7 @@ fn vecg() -> Result<(), RE> {
     println!("Pearson's Correlation:\t{}", v1.correlation(&v2).gr());
     println!("Kendall's Correlation:\t{}", v1.kendalcorr(&v2).gr());
     println!("Spearman's Correlation:\t{}", v1.spearmancorr(&v2).gr());
-    println!("Euclidian distance:\t{}", v1.vdist::<f64>(&v2).gr());
+    println!("Euclidian distance:\t{}", v1.vdist(&v2).gr());
     println!("Cityblock distance:\t{}", v1.cityblockd(&v2).gr());
     println!("Vector difference: {}", v1.vsub(&v2).gr());
     println!("Vector sum: {}", v1.vadd(&v2).gr());
@@ -230,19 +230,16 @@ fn triangmat() -> Result<(), RE> {
     println!("{}", TriangMat::unit(7, false).gr());
     let d = 10_usize;
     let n = 90_usize;
-    println!(
-        "Testing on a random set of {} points in {} dimensional space",
-        n, d
-    );
+    println!("Testing on a random set of {n} points in {d} dimensional space");
     set_seeds(1133);
     let ru = Rnum::newf64();
     let pts = ru.ranvv_in(d, n, 0.0, 4.0)?.getvvf64()?;
     // println!("\nTest data:\n{}",pts.gr());
     // let transppt = pts.transpose();
     let cov = pts.covar(&pts.pmedian(EPS))?;
-    println!("Comediance matrix:\n{}", cov);
+    println!("Comediance matrix:\n{cov}");
     let chol = cov.cholesky()?;
-    println!("Cholesky L matrix:\n{}", chol);
+    println!("Cholesky L matrix:\n{chol}");
     // set_seeds(77777);
     let pta = ru.ranv(d)?.getvf64()?;
     let ptb = ru.ranv(d)?.getvf64()?;
@@ -265,10 +262,7 @@ fn triangmat() -> Result<(), RE> {
 fn mat() -> Result<(), RE> { 
     let d = 10_usize;
     let n = 12_usize;
-    println!(
-        "Testing on a random set of {} points in {} dimensional space",
-        n, d
-    );
+    println!("Testing on a random set of {n} points in {d} dimensional space");
     set_seeds(1133);
     let ru = Rnum::newf64();
     let m = ru.ranvv(d, n)?.getvvf64()?;
@@ -289,10 +283,7 @@ fn mat() -> Result<(), RE> {
 fn vecvec() -> Result<(), RE> {
     let d = 10_usize;
     let n = 90_usize;
-    println!(
-        "Testing on a random set of {} points in {} dimensional space",
-        n, d
-    );
+    println!("Testing on a random set of {n} points in {d} dimensional space");
     set_seeds(113);
     let ru = Rnum::newu8();
     let pts = ru.ranvv_in(d, n, 0., 4.)?.getvvu8()?;
@@ -337,7 +328,7 @@ fn vecvec() -> Result<(), RE> {
     // let testvec = ru.ranv(d).getvu8();
     let dists = pts.distsums();
     let md = dists.minmax();
-    println!("\nMedoid and Outlier Total Distances:\n{}", md);
+    println!("\nMedoid and Outlier Total Distances:\n{md}");
     println!("Total Distances {}", dists.ameanstd()?);
     println!("Total distances {}", dists.medinfo(&mut noop)?);
     println!(
@@ -358,9 +349,7 @@ fn vecvec() -> Result<(), RE> {
     );
 
     println!(
-        "\nMedoid, outlier and radii summary:\n{}\nRadii {}\nRadii {}",
-        eccecc, eccstd, eccmed
-    );
+        "\nMedoid, outlier and radii summary:\n{eccecc}\nRadii {eccstd}\nRadii {eccmed}");
     let radsindex = pts.radii(&median).hashsort_indexed(&mut |x| *x);
     println!(
         "Radii ratio:\t {GR}{}{UN}",
@@ -428,9 +417,7 @@ fn hulls() -> Result<(), RE> {
     let d = 5_usize;
     let n = 100_usize;
     println!(
-        "Testing on a random set of {} points in {} dimensional space",
-        n, d
-    );
+        "Testing on a random set of {n} points in {d} dimensional space");
     // set_seeds(113);
     let rf = Rnum::newf64();
     let pts = rf.ranvv(d, n)?.getvvf64()?;
@@ -439,7 +426,7 @@ fn hulls() -> Result<(), RE> {
     let zeropts = pts.translate(&median)?;
     let (innerhull,outerhull) = zeropts.hulls();
     let mad = pts.madgm(&median)?;
-    println!("\nMAD: {}",mad.gr());
+    println!("\nMADGM: {}",mad.gr());
 
     println!(
         "\nInner hull has {}/{} points:\n{}",
@@ -451,7 +438,7 @@ fn hulls() -> Result<(), RE> {
         "Inner hull min max radii: {} {}\nStandard errors:\t  {} {}",
         zeropts[*innerhull.first().expect("Empty hullidx")].vmag().gr(), 
         zeropts[*innerhull.last().expect("Empty hullidx")].vmag().gr(),
-        pts[*innerhull.first().unwrap()].st_error(&median,mad)?.gr(),
+        (pts[*innerhull.first().unwrap()].vdist(&median)/mad).gr(),
         pts[*innerhull.last().unwrap()].st_error(&median,mad)?.gr(),
     );
 
@@ -506,8 +493,8 @@ fn householder() -> Result<(), RE> {
     let atimesunit = a.matmult(&unit_matrix(a.len()))?;
     println!("Matrix a:\n{}", atimesunit.gr());
     let (u, r) = a.house_ur();
-    println!("house_ur U' {}", u);
-    println!("house_ur R  {}", r);
+    println!("house_ur U' {u}");
+    println!("house_ur R  {r}");
     let q = u.house_uapply(&unit_matrix(a.len().min(a[0].len())));
     println!(
         "Q matrix\n{}\nOthogonality of Q check (Q'*Q = I):\n{}",
@@ -554,7 +541,7 @@ fn geometric_medians() -> Result<(),RE> {
     let n = 100_usize;
     let d = 1000_usize;
     set_seeds(7777777);
-    println!("{} repeats of {} points in {} dimensions", ITERATIONS, n, d);
+    println!("{ITERATIONS} repeats of {n} points in {d} dimensions");
     let mut sumg = 0_f64;
     let mut sump = 0_f64;
     let mut sumq = 0_f64;
@@ -571,9 +558,9 @@ fn geometric_medians() -> Result<(),RE> {
         gm = pts.acentroid();
         summ += pts.gmerror(&gm);
     }
-    println!("Pmedian      total error: {GR}{:.5e}{UN}", sump);
-    println!("Gmedian      total error: {GR}{:.5e}{UN}", sumg);
-    println!("Acentroid    total error: {GR}{:.5e}{UN}", summ);
-    println!("Quasi median total errot: {GR}{:.5e}{UN}", sumq);
+    println!("Pmedian      total error: {GR}{sump:.5e}{UN}");
+    println!("Gmedian      total error: {GR}{sumg:.5e}{UN}");
+    println!("Acentroid    total error: {GR}{summ:.5e}{UN}");
+    println!("Quasi median total error: {GR}{sumq:.5e}{UN}");
     Ok(())
 }

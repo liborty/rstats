@@ -425,7 +425,7 @@ impl<T> Stats for &[T]
         let len = self.len();
         if len < 2 { 
             return Err(RError::NoDataError(
-                format!("dfdt time series too short: {}",len))); 
+                format!("dfdt time series too short: {len}"))); 
             };
         let mut weight = 0_f64; 
         let mut sumwx = 0_f64;  

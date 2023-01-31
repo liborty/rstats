@@ -111,9 +111,7 @@ impl TriangMat {
         // input not long enough to compute anything
         if sl < 3 {
             return Err(RError::NoDataError(format!(
-                "cholesky needs at least three TriangMat items: {}",
-                self
-            )));
+                "cholesky needs at least three TriangMat items: {self}")));
         };
         // n is the dimension of the implied square matrix.
         // Not needed as an extra argument. We compute it
@@ -142,9 +140,7 @@ impl TriangMat {
                     // or is ill-conditioned, so we return ArithError
                     if dif <= 0_f64 {
                         return Err(RError::ArithError(format!(
-                            "cholesky needs a positive definite matrix {}",
-                            dif
-                        )));
+                            "cholesky needs a positive definite matrix {dif}")));
                     };
                     dif.sqrt()
                 }

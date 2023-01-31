@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "1.2.24"
+version = "1.2.25"
 authors = ["Libor Spacek"]
 edition = "2021"
 description = "Statistics, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder Decomposition, Hulls, Information Measures, Multidimensional Data Analysis, Machine Learning and more"
@@ -20,6 +20,8 @@ include = [
 maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
+duplicate = "0.4"
+rayon = "1.6"
 indxvec = "1.4"
 medians = "2.0" # {path = "../medians"} #  
 ran = "1.0" # {path = "../random"}
