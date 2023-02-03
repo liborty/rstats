@@ -2,35 +2,30 @@ use std::{iter::FromIterator};
 
 use crate::{sumn, RE, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg};
 use indxvec::Vecops;
-use medians::{Med, Median, MedError};
+use medians::{Med, Medianf64, Median, MedError};
+use rayon::prelude::*;
 
 impl<T> VecVec<T> for &[Vec<T>]
 where
-    T: Copy + PartialOrd + std::fmt::Display,
-    f64: From<T>,
+    T: Copy + PartialOrd + std::fmt::Display + Sync,
+    Vec<Vec<T>>: IntoParallelIterator,
+    Vec<T>: IntoParallelIterator,
+    f64: From<T>
 {
-    /// Transpose vec of vecs matrix
-    fn transpose(self) -> Vec<Vec<T>> {
-        let n = self.len();
-        let d = self[0].len();
-        let mut transp: Vec<Vec<T>> = Vec::with_capacity(d);
-        for i in 0..d {
-            let mut column = Vec::with_capacity(n);
-            for v in self {
-                column.push(v[i]);
-            }
-            transp.push(column); // column becomes row
-        }
-        transp
+
+    /// Selects a column by number
+    fn column(self,cnum:usize) -> Vec<f64> {
+        self.iter().map(|row| f64::from(row[cnum])).collect()
     }
 
-    /// Normalize columns, so that they are all unit vectors
-    fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>> {
-        data.transpose()
-            .iter()
-            .map(|v| v.vunit())
-            .collect::<Vec<Vec<f64>>>()
-            .transpose()
+    /// Transpose vec of vecs matrix
+    fn transpose(self) -> Vec<Vec<f64>> {
+        (0..self[0].len()).map(|cnum| self.column(cnum)).collect()
+    }
+
+    /// Normalize columns, so that they become unit row vectors
+    fn normalize(self) -> Vec<Vec<f64>> {
+        (0..self[0].len()).into_par_iter().map(|cnum| self.column(cnum).vunit()).collect() 
     }
 
     /// Householder's method returning triangular matrices (U',R), where
@@ -41,15 +36,7 @@ where
         let n = self.len();
         let d = self[0].len();
         let min = d.min(n);
-        let mut r = Vec::with_capacity(d);
-        for i in 0..d {
-            // transpose and convert to f64
-            let mut column = Vec::with_capacity(n);
-            for v in self {
-                column.push(f64::from(v[i]));
-            }
-            r.push(column);
-        }
+        let mut r = self.transpose();
         let mut ures = vec![0.; sumn(min)];
         let mut rres = Vec::with_capacity(sumn(min));
         for j in 0..min {
@@ -123,9 +110,10 @@ where
 
     /// Dependence (component wise) of a set of vectors.
     /// i.e. `dependencen` returns 0 iff they are statistically independent
-    /// bigger values when they are dependent
-    fn dependencen(self) -> Result<f64, RE> {
-        Ok(self.iter().map(|v| v.entropy()).sum::<f64>() / self.jointentropyn()? - 1.0)
+    /// bigger values when they are dependentent
+    fn dependencen(self) -> Result<f64, RE> { 
+        Ok((0..self.len()).into_par_iter().map(|i| self[i].entropy()).sum::<f64>()
+        / self.jointentropyn()? - 1.0)
     }
 
     /// Flattened lower triangular part of a symmetric matrix for column vectors in self.
@@ -298,9 +286,9 @@ where
     /// Quasi median, recommended only for comparison purposes
     /// Here only default f64::from() is supplied for conversion T -> f64
     fn quasimedian(self) -> Result<Vec<f64>,RE> {
-        Ok( self.transpose()
-            .iter()
-            .map(|p| p.median(&mut |f:&T| f64::from(*f)))
+        Ok( 
+            (0..self[0].len()).into_par_iter().map(|colnum|
+            self.column(colnum).medianf64())
             .collect::<Result<Vec<f64>,MedError<String>>>()?
         )
     }

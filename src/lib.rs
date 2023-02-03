@@ -59,12 +59,6 @@ pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
     res
 }
 
-/// Own struct for Vec<T> - can be used for convenience
-//#[derive(Default, Clone)]
-//pub struct V<T> {
-//    pub v: Vec<T>,
-//}
-
 /// Compact Triangular Matrix.
 /// TriangMat is typically result of some matrix calculations,
 /// so concrete end-type f64 is used for simplicity and accuracy.
@@ -146,6 +140,9 @@ pub trait Stats {
 pub trait Vecg {
     /// Standard error of self against geometric median and mad dispersion
     fn st_error(self, gm:&[f64], mad:f64) -> Result<f64,RE>;
+    /// Dot product of vector self with column c of matrix v 
+    fn columnp<U>(self,c: usize,v: &[Vec<U>]) -> f64 
+    where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
     /// Scalar addition to vector
     fn sadd<U>(self, s: U) -> Vec<f64>
     where
@@ -353,10 +350,12 @@ pub trait Vecu8 {
 /// Methods applicable to a slice of vectors of generic end type.
 /// Operations on a whole set of multidimensional vectors.
 pub trait VecVec<T> {
+    /// Selects a column by number
+    fn column(self,cnum:usize) -> Vec<f64>;
     /// Transpose slice of vecs matrix
-    fn transpose(self) -> Vec<Vec<T>>;
+    fn transpose(self) -> Vec<Vec<f64>>;
     /// Normalize columns, so that they are all unit vectors
-    fn normalize(data: &[Vec<u8>]) -> Vec<Vec<f64>>;
+    fn normalize(self) -> Vec<Vec<f64>>;
     /// Householder's method returning matrices (U,R)
     fn house_ur(self) -> (TriangMat, TriangMat);
     /// Joint probability density function of n matched slices of the same length
@@ -420,8 +419,6 @@ pub trait VecVec<T> {
 pub trait VecVecg<T, U> {
     /// Leftmultiply (column) vector v by (rows of) matrix self
     fn leftmultv(self, v: &[U]) -> Result<Vec<f64>, RE>;
-    /// Dot product with a column c of matrix self
-    fn columnp(self,c: usize,v: &[U]) -> f64; 
     /// Rightmultiply (row) vector v by (columns of) matrix self
     fn rightmultv(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// Matrix multiplication self * m

@@ -11,6 +11,13 @@ impl<T> Vecg for &[T]
     fn st_error(self, gm:&[f64], mad:f64) -> Result<f64,RE> {
         Ok(self.vdist::<f64>(gm)/mad)
     }
+
+    /// Dot product of vector self with column c of matrix v 
+    fn columnp<U>(self,c: usize,v: &[Vec<U>]) -> f64 
+    where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> { 
+        self.iter().enumerate().map(|(i,&x)|(f64::from(x)*f64::from(v[i][c]))).sum()        
+    }
+
      /// Scalar addition to a vector, creates new vec
      fn sadd<U>(self, s:U) -> Vec<f64> 
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> { 

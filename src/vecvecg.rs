@@ -1,10 +1,15 @@
 use crate::{noop, fromop, error::RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
-use indxvec::{Vecops};
+use indxvec::Vecops;
 use medians::Median;
+use rayon::prelude::*;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
-    where T: Copy+PartialOrd+std::fmt::Display,f64:From<T>, 
-    U: Copy+PartialOrd+std::fmt::Display,f64:From<U> {
+    where T: Sync+Copy+PartialOrd+std::fmt::Display,f64:From<T>, 
+    Vec<Vec<T>>: IntoParallelIterator,
+    Vec<T>: IntoParallelIterator,
+    U: Sync+Copy+PartialOrd+std::fmt::Display,f64:From<U>,
+    Vec<Vec<U>>: IntoParallelIterator,
+    Vec<U>: IntoParallelIterator {
 
     /// Leftmultiply (column) vector v by (rows of) matrix self
     fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
@@ -13,15 +18,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         Ok(self.iter().map(|s| s.dotp(v)).collect())
     }
 
-    /// Dot product of v with column c of matrix self 
-    fn columnp(self,c: usize,v: &[U]) -> f64 {
-        v.iter().enumerate().map(|(i,&num)| f64::from(num)*f64::from(self[i][c])).sum()        
-    }
-
     /// Rightmultiply (row) vector v by columns of matrix self
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if v.len() != self.len() { return Err(RError::DataError("rightmultv dimensions mismatch".to_owned())); }; 
-        Ok(self[0].iter().enumerate().map(|(c,_)| self.columnp(c,v) ).collect())  
+        Ok((0..self[0].len()).map(|colnum| v.columnp(colnum,self)).collect())
     }
 
     /// Rectangular Matrices multiplication: self * m.
@@ -31,7 +31,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RE> {
         if self[0].len() != m.len() { return Err(RError::DataError("matmult dimensions mismatch".to_owned())); }; 
         Ok(self.iter().map(|srow| 
-            m[0].iter().enumerate().map(|(colnum,_)| m.columnp(colnum,srow) ).collect()
+            (0..m[0].len()).map(|colnum| srow.columnp(colnum,m)).collect()
             ).collect::<Vec<Vec<f64>>>()) 
     }
 
@@ -64,7 +64,8 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// The two sets have to be in the same (dimensional) space but can have different numbers of points.
     fn trend(self, eps:f64, v:Vec<Vec<U>>) -> Result<Vec<f64>,RE> {
         if self[0].len() != v[0].len() { return Err(RError::DataError("trend dimensions mismatch".to_owned())); };
-        Ok(v.gmedian(eps).vsub::<f64>(&self.gmedian(eps)))
+        let pair = rayon::join(||v.gmedian(eps),||self.gmedian(eps));
+        Ok(pair.0.vsub::<f64>(&pair.1))
     }
 
     /// Translates the whole set by subtracting vector m.

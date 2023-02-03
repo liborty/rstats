@@ -1,6 +1,6 @@
 # Rstats [<img alt="crates.io" src="https://img.shields.io/crates/v/Rstats?logo=rust">](https://crates.io/crates/rstats) [<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/liborty/Rstats/HEAD?logo=github">](https://github.com/liborty/Rstats) [![Actions Status](https://github.com/liborty/rstats/actions/workflows/tests.yml/badge.svg)](https://github.com/liborty/rstats/actions)
 
-Statistics, Information Measures, Vector Algebra, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder QR Decomposition, Multidimensional Data Analysis, Geometric Median, Hulls, Machine Learning ...
+Statistics, Information Measures, Vector Algebra, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder QR Decomposition, Multidimensional Data Analysis, Geometric Median, Hulls, Machine Learning, Multithreading ...
 
 ## Usage
 
@@ -279,6 +279,8 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.25** - added dependency on `rayon` crate which has somewhat increased the footprint but there will be significant speed ups due to parallel execution. Some have been introduced already.
 
 * **Version 1.2.24** - added `st_error` method to trait Vecg. It is a generalization of standard error to 'nd'. The central tendency is (usually) the geometric median and the spread is (usually) MADGM. Also tidied up `hulls`.
 

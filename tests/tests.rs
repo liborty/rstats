@@ -50,7 +50,7 @@ fn u8() -> Result<(), RE> {
     println!(
         "Column Correlations:\n{}",
         trpt.crossfeatures( |v1, v2| 
-            v1.mediancorr(v2, &mut |uf| *uf as f64 ).expect("median corr: crossfeatures u8\n"))?.gr()
+            v1.mediancorr(v2, &mut |uf| *uf ).expect("median corr: crossfeatures u8\n"))?.gr()
     );
     Ok(())
 }
