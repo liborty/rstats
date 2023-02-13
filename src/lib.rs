@@ -62,13 +62,19 @@ pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
 /// Compact Triangular Matrix.
 /// TriangMat is typically result of some matrix calculations,
 /// so concrete end-type f64 is used for simplicity and accuracy.
-/// TriangMat with `.transposed == true` is a transposed upper triangular matrix.
-/// `.symmetric == true` represents, without duplications, a symmetric matrix.
+/// data is of length n*(n+1)/2 instead of n*n, saving memory.
+/// `.kind == 0` means (normal) lower triangular matrix.  
+/// `.kind == 1` means antisymmetric square matrix.  
+/// `.kind == 2` means symmetric square matrix.  
+/// `.kind == 3` means upper triangular matrix (transposed lower).  
+/// `.kind == 4` means upper (transposed) antisymmetric.  
+/// `.kind == 5` is unnecessary, as transposed symmetric matrix is unchanged.  
+/// Simply adding (or subtracting) 3 to .kind implicitly transposes the matrix.
+/// `.kind > 2 are transposed variants, determined by kind % 3.
 /// The size of the implied full square matrix, nxn, is not explicitly stored.
 /// It is obtained by solving the quadratic equation:
 /// `((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize;`
-/// where `s = triangmat.len()`.
-/// Converting the other way: `s = (n+1)*n/2;`
+/// where `s = triangmat.len()` = n*(n+1)/2
 #[derive(Default, Clone)]
 pub struct TriangMat {
     /// Matrix kind encoding: 0=ordinary, 1=antisymmetric, 2=symmetric, +3=transposed

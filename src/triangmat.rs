@@ -41,7 +41,7 @@ impl TriangMat {
     }
 
     /// Generates new unit (symmetric) TriangMat matrix of size (n+1)*n/2
-    pub fn unit(n: usize) -> TriangMat {
+    pub fn unit(n: usize) -> Self {
         let mut data = Vec::new();
         for i in 0..n {
             // fill with zeros before the diagonal
@@ -61,6 +61,7 @@ impl TriangMat {
         (row, column)
     }
 
+
     /// Extract one row from TriangMat
     pub fn row(&self, r: usize) -> Vec<f64> {
         let idx = sumn(r);
@@ -75,6 +76,12 @@ impl TriangMat {
             res.push(self.row(r));
         }
         res
+    }
+
+    /// TriangMat trivial implicit transposition
+    pub fn transpose(&mut self) {
+        if self.kind > 2 { self.kind -= 3; }
+        else { self.kind += 3; }
     }
 
     /// Unpacks TriangMat to full matrix
@@ -120,7 +127,7 @@ impl TriangMat {
     /// The computations are all done on the compact form,
     /// making this implementation memory efficient for large (symmetric) matrices.
     /// Reports errors if the above conditions are not satisfied.
-    pub fn cholesky(&self) -> Result<TriangMat, RE> {
+    pub fn cholesky(&self) -> Result<Self, RE> {
         let sl = self.data.len();
         // input not long enough to compute anything
         if sl < 3 {
@@ -169,13 +176,13 @@ impl TriangMat {
         Ok(TriangMat { kind:0, data: res  })
     }
 
-    /// Mahalanobis scaled magnitude m(d) of vector d.
-    /// Self is a precomputed lower triangular matrix L, as returned by `cholesky`
+    /// Mahalanobis scaled magnitude m(d) of a (column) vector d.
+    /// Self is a decomposed lower triangular matrix L, as returned by `cholesky`
     /// from covariance/comediance positive definite matrix C = LL'.
     /// `m(d) = sqrt(d'inv(C)d) = sqrt(d'inv(LL')d) = sqrt(d'inv(L')inv(L)d)`,
     /// where ' denotes transpose and `inv()` denotes inverse.
     /// Putting Lx = d and solving for x by forward substitution, we obtain `x = inv(L)d`
-    /// ` => m(d) = sqrt(x'x) = |x|`.
+    /// substituting x into the above: `=> m(d) = sqrt(x'x) = |x|.
     /// We stay in the compact triangular form all the way from C to m(d).
     pub fn mahalanobis<U>(&self, d: &[U]) -> Result<f64, RE>
     where

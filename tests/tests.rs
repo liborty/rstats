@@ -227,8 +227,10 @@ fn triangmat() -> Result<(), RE> {
     // let transppt = pts.transpose();
     let cov = pts.covar(&pts.pmedian(EPS))?;
     println!("Comediance matrix:\n{cov}");
-    let chol = cov.cholesky()?;
-    println!("Cholesky L matrix:\n{chol}");
+    let mut chol = cov.cholesky()?;
+    println!("Cholesky L matrix:\n{chol}"); 
+    chol.transpose();   
+    println!("L matrix trivially transposed:\n{}",chol.to_full().gr());
     // set_seeds(77777);
     let pta = ru.ranv(d)?.getvf64()?;
     let ptb = ru.ranv(d)?.getvf64()?;
