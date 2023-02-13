@@ -14,9 +14,10 @@ use Rstats::{RE,TriangMat,Mstats,MinMax,Med};
 
 and any of the following traits:
 
-```rust 
+```rust
 use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 ```
+
 and any of the following auxiliary functions:
 
 ```rust
@@ -109,7 +110,6 @@ Note that in a highly dimensional space up to all points may belong to both hull
 
 * `Tukey Vector` Proportions of points in each hemisphere from gm. This is a useful 'signature' of a data cloud. For a new point (that typically needs to be classified) we can then quickly determine whether it lies in a well populated direction. This could also be done by projecting all the existing points on its unit radius vector but that would be much slower, as there are many points. Also, in keeping with the stability properties of medians, we are only using counts of points in the hemispheres, not their distances.
 
-
 ## Implementation
 
 The main constituent parts of Rstats are its traits. The selection of traits (to `use`) is primarily determined by the types of objects handled. These are mostly vectors of arbitrary length/dimensionality (`d`). The main traits are implementing methods applicable to:
@@ -118,12 +118,14 @@ The main constituent parts of Rstats are its traits. The selection of traits (to
 * `Vecg`: methods (of vector algebra) operating on two vectors, e.g. scalar product
 * `Vecu8`: some specialized methods for end-type `u8`
 * `MutVecg`: some of the above methods, mutating self
-* `VecVec`: methods operating on n vectors, 
+* `VecVec`: methods operating on n vectors,
 * `VecVecg`: methods for n vectors, plus another generic argument, e.g. vector of weights.
 
 In other words, the traits and their methods operate on arguments of their required categories. In classical statistical terminology, the main categories correspond to the number of 'random variables'.
 
-`Vec<Vec<T>>` type is used for full rectangular matrices (could also be irregular), whereas `TriangMat` struct is used specifically for symmetric and triangular matrices (to save memory).
+**`Vec<Vec<T>>`** type is used for rectangular matrices (could also have  irregular rows).
+  
+**`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices. All TriangMat(s) store only n*(n+1)/2 items instead of n*n, thus saving significant amounts of memory. Plus their transposed versions only set up a flag that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving some processing as well. All this is put to a good use in our implementation of the Householder matrix decomposition method.
 
 The vectors' end types (of the actual data) are mostly generic: usually some numeric type. End type `f64` is mostly used for the computed results.
 
