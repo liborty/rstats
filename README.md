@@ -168,7 +168,7 @@ pub type RE = RError<String>;
 holds the central tendency of `1d` data, e.g. some kind of mean or median, and its dispersion measure, e.g. standard deviation or MAD.
 
 ### `struct TriangMat` 
-holds lower/upper triangular symmetric/non-symmetric matrix in compact form that avoids zeros and duplications. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
+holds triangular matrices of all kinds, as described in Implementation section above. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
 
 * **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes a transpose). This decomposition is used by `mahalanobis`.
 * **Mahalanobis Distance**
