@@ -1,8 +1,8 @@
-use std::{iter::FromIterator};
+use std::iter::FromIterator;
 
-use crate::{sumn, RE, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg};
-use indxvec::Vecops;
-use medians::{Med, Medianf64, Median, MedError};
+use crate::{sumn, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg, RE};
+use indxvec::{Vecops};
+use medians::{MedError, Median, Medianf64};
 use rayon::prelude::*;
 
 impl<T> VecVec<T> for &[Vec<T>]
@@ -12,9 +12,8 @@ where
     Vec<T>: IntoParallelIterator,
     f64: From<T>
 {
-
     /// Selects a column by number
-    fn column(self,cnum:usize) -> Vec<f64> {
+    fn column(self, cnum: usize) -> Vec<f64> {
         self.iter().map(|row| f64::from(row[cnum])).collect()
     }
 
@@ -25,18 +24,22 @@ where
 
     /// Normalize columns, so that they become unit row vectors
     fn normalize(self) -> Vec<Vec<f64>> {
-        (0..self[0].len()).into_par_iter().map(|cnum| self.column(cnum).vunit()).collect() 
+        (0..self[0].len())
+            .into_par_iter()
+            .map(|cnum| self.column(cnum).vunit())
+            .collect()
     }
 
     /// Householder's method returning triangular matrices (U',R), where
     /// U are the reflector generators for use by house_uapply(m).
     /// R is the upper triangular decomposition factor.
-    /// Transposes self for convenience, so columns get treated as rows.
+    /// Here both U and R are returned for convenience in their transposed lower triangular forms.
+    /// Transposed input self for convenience, so that original columns get accessed easily as rows.
     fn house_ur(self) -> (TriangMat, TriangMat) {
         let n = self.len();
         let d = self[0].len();
-        let min = d.min(n);
-        let mut r = self.transpose();
+        let min = if d <= n { d } else { n }; // minimal dimension
+        let mut r = self.transpose(); // self.iter().map(|s| s.tof64()).collect::<Vec<Vec<f64>>>(); //  // 
         let mut ures = vec![0.; sumn(min)];
         let mut rres = Vec::with_capacity(sumn(min));
         for j in 0..min {
@@ -57,17 +60,9 @@ where
             }
         }
         (
-            TriangMat {
-                transposed: true,
-                symmetric: false,
-                data: ures,
-            },
-            TriangMat {
-                transposed: true,
-                symmetric: false,
-                data: rres,
-            },
-        )
+            TriangMat { kind:3, data: ures }, // transposed, non symmetric kind
+            TriangMat { kind:3, data: rres }, // transposed, non symmetric kind
+        )   
     }
 
     /// Joint probability density function of n matched slices of the same length
@@ -83,7 +78,6 @@ where
         let mut res: Vec<f64> = Vec::with_capacity(d);
         let mut tuples = self.transpose();
         let df = tuples.len() as f64; // for turning counts to probabilities
-                                      // println!("{}",df);
                                       // lexical sort to group together occurrences of identical tuples
         tuples.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
         let mut count = 1_usize; // running count
@@ -111,29 +105,36 @@ where
     /// Dependence (component wise) of a set of vectors.
     /// i.e. `dependencen` returns 0 iff they are statistically independent
     /// bigger values when they are dependentent
-    fn dependencen(self) -> Result<f64, RE> { 
-        Ok((0..self.len()).into_par_iter().map(|i| self[i].entropy()).sum::<f64>()
-        / self.jointentropyn()? - 1.0)
+    fn dependencen(self) -> Result<f64, RE> {
+        Ok((0..self.len())
+            .into_par_iter()
+            .map(|i| self[i].entropy())
+            .sum::<f64>()
+            / self.jointentropyn()?
+            - 1.0)
     }
 
-    /// Flattened lower triangular part of a symmetric matrix for column vectors in self.
+    /// Flattened lower triangular part of a symmetric matrix for vectors in self.
     /// The upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
-    /// Applies closure f which computes a scalar relationship between two vectors,
-    /// that is different features stored in columns of self.
+    /// Applies closure f to compute a scalar binary relation between all pairs of vector 
+    /// components of self.   
     /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
-    /// such as dependencies or correlations.
-    /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2, &mut noop)?)`
+    /// such as dependencies or correlations.  
+    /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorrf64(v2)?)?`
     /// computes median correlations between all column vectors (features) in pts.
-    fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<Vec<f64>, RE> {
-        let n = self.len(); // number of the vector(s)
-        let mut codp: Vec<f64> = Vec::with_capacity((n + 1) * n / 2); // results
-        for (i, v) in self.iter().enumerate() {
-            // its dependencies up to and including the diagonal
-            for vj in self.iter().take(i + 1) {
-                codp.push(f(v, vj));
-            }
-        }
-        Ok(codp)
+    fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<TriangMat, RE> {
+        Ok(TriangMat {
+            kind:2, // symmetric, non transposed
+            data: (0..self.len())
+                .into_par_iter()
+                .flat_map(|i| {
+                    (0..i + 1usize)
+                        .into_iter()
+                        .map(|j| f(&self[i], &self[j]))
+                        .collect::<Vec<f64>>()
+                })
+                .collect::<Vec<f64>>(),
+        })
     }
 
     /// Sum of nd points (or vectors)
@@ -203,7 +204,7 @@ where
     /// For measure of 'outlyingness', use nore efficient radius from gm.    
     fn distsuminset(self, indx: usize) -> f64 {
         let thisp = &self[indx];
-        self.iter()
+        self.par_iter()
             .enumerate()
             .map(|(i, thatp)| if i == indx { 0.0 } else { thisp.vdist(thatp) })
             .sum()
@@ -216,7 +217,7 @@ where
     /// In other words, they are the members nearest and furthest from the geometric median.
     /// Returns struct MinMax{min,minindex,max,maxindex}
     fn medout(self, gm: &[f64]) -> MinMax<f64> {
-        self.iter()
+        self.par_iter()
             .map(|s| s.vdist::<f64>(gm))
             .collect::<Vec<f64>>()
             .minmax()
@@ -268,29 +269,31 @@ where
     /// especially when there are many points.
     fn radii(self, gm: &[f64]) -> Vec<f64> {
         self.iter()
-            .map(|s| s.vdist::<f64>(gm))
+            .map(|s: &Vec<T>| gm.vdist(s))
             .collect::<Vec<f64>>()
     }
 
     /// Arith mean and std (in MStats struct), Median info (in Med struct), Medoid and Outlier (in MinMax struct)
     /// of scalar radii (eccentricities) of points in self.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
-    fn eccinfo(self, gm: &[f64]) -> Result<(MStats, Med, MinMax<f64>), RE>
+    fn eccinfo(self, gm: &[f64]) -> Result<(MStats, MStats, MinMax<f64>), RE>
     where
-        Vec<f64>: FromIterator<f64>,
-    {
+        Vec<f64>: FromIterator<f64> {
         let rads: Vec<f64> = self.radii(gm);
-        Ok((rads.ameanstd()?, rads.medinfo(&mut |f:&f64| *f)?, rads.minmax()))
+        Ok((
+            rads.ameanstd()?,
+            rads.medstatsf64()?,
+            rads.minmax(),
+        ))
     }
 
     /// Quasi median, recommended only for comparison purposes
     /// Here only default f64::from() is supplied for conversion T -> f64
-    fn quasimedian(self) -> Result<Vec<f64>,RE> {
-        Ok( 
-            (0..self[0].len()).into_par_iter().map(|colnum|
-            self.column(colnum).medianf64())
-            .collect::<Result<Vec<f64>,MedError<String>>>()?
-        )
+    fn quasimedian(self) -> Result<Vec<f64>, RE> {
+        Ok((0..self[0].len())
+            .into_iter()
+            .map(|colnum| self.column(colnum).medianf64())
+            .collect::<Result<Vec<f64>, MedError<String>>>()?)
     }
 
     /// Geometric median's estimated error
@@ -302,67 +305,81 @@ where
     /// Proportions of points along each +/-axis (hemisphere)
     /// Excludes points that are perpendicular to axis
     /// Uses only the selected points specified in idx (e.g. the hull).
-    /// Self should normally be zero mean/median vectors, 
+    /// Self should normally be zero mean/median vectors,
     /// e.g. `self.translate(&median)`
-    fn tukeyvec(self, idx: &[usize]) -> Result<Vec<f64>,RE> {  
+    fn tukeyvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> {
         let dims = self[0].len();
         if self.is_empty() {
             return Err(RError::NoDataError("tukeyvec given no data".to_owned()));
-        }; 
-        let mut hemis = vec![0_f64; 2*dims]; 
-        for &i in idx {  
-            for (j,&component) in self[i].iter().enumerate() {
+        };
+        let mut hemis = vec![0_f64; 2 * dims];
+        for &i in idx {
+            for (j, &component) in self[i].iter().enumerate() {
                 let cf = f64::from(component);
-                if cf > 0. { hemis[j] += 1. }
-                else if cf < 0. { hemis[dims+j] += 1. };  
-            };
+                if cf > 0. {
+                    hemis[j] += 1.
+                } else if cf < 0. {
+                    hemis[dims + j] += 1.
+                };
+            }
         }
-        hemis.iter_mut().for_each(|count| *count /= idx.len() as f64);
+        hemis
+            .iter_mut()
+            .for_each(|count| *count /= idx.len() as f64);
         Ok(hemis)
     }
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
-    fn madgm(self, gm: &[f64]) -> Result<f64,RE> {
+    fn madgm(self, gm: &[f64]) -> Result<f64, RE> {
         let diffs: Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
-        Ok(diffs.median(&mut |f:&f64| *f)?)
+        Ok(diffs.median(&mut |f: &f64| *f)?)
     }
 
     /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.    
-    /// Vector b is not in outer hull, when there is any other point behind the plane 
-    /// through 'b' and perpendicular to it (its defining plane). 
-    /// 'b' is not in the inner hull, when it lies behind the defining plane of any other point. 
+    /// Vector b is not in outer hull, when there is any other point behind the plane
+    /// through 'b' and perpendicular to it (its defining plane).
+    /// 'b' is not in the inner hull, when it lies behind the defining plane of any other point.
     /// The testing is done against the existing hull points, in decreasing (increasing)
     /// radius order. When projection of 'a' onto line from gm to 'b' exceeds |b|, then 'a' lies outside
-    /// the defining plane of 'b': `|a|cos(θ) > |b| => a*b > |b|^2` 
+    /// the defining plane of 'b': `|a|cos(θ) > |b| => a*b > |b|^2`
     /// Thus working with square magnitudes (`|b|^2`) saves taking square roots and dividing the dot product by |b|.
-    fn hulls(self) -> (Vec<usize>,Vec<usize>) {  
+    fn hulls(self) -> (Vec<usize>, Vec<usize>) {
         let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let radindex = sqradii.hashsort_indexed(&mut |x| *x); // ascending square radii 
-        let mut innerindex: Vec<usize> = Vec::new();           
-        'candidate: for &b in &radindex { // test all points in ascending order 
-            for &a in &radindex {  // check against all points 'a' up to 'b'
-                if a == b { break; } // b can only be outside of a if a's magnitude is less
-                let dotp = self[a].dotp(&self[b]); 
-                if dotp > sqradii[a] { // b is outside of a
+        let radindex = sqradii.hashsort_indexed(&mut |x| *x); // ascending square radii
+        let mut innerindex: Vec<usize> = Vec::new();
+        'candidate: for &b in &radindex {
+            // test all points in ascending order
+            for &a in &radindex {
+                // check against all points 'a' up to 'b'
+                if a == b {
+                    break;
+                } // b can only be outside of a if a's magnitude is less
+                let dotp = self[a].dotp(&self[b]);
+                if dotp > sqradii[a] {
+                    // b is outside of a
                     continue 'candidate;
                 };
-            } 
-            innerindex.push(b); // passed   
+            }
+            innerindex.push(b); // passed
         }
         // radindex.mutrevs(); // make them descending
-        let mut outerindex: Vec<usize> = Vec::new(); 
-        'outer: for &b in radindex.iter().rev() { // test all points, in descending order 
+        let mut outerindex: Vec<usize> = Vec::new();
+        'outer: for &b in radindex.iter().rev() {
+            // test all points, in descending order
             for &a in radindex.iter().rev() {
-                if a == b { break; } // a can only be outside of b for a's of greater magnitude
+                if a == b {
+                    break;
+                } // a can only be outside of b for a's of greater magnitude
                 let dotp = self[a].dotp(&self[b]);
-                if dotp > sqradii[b] { // a is outside of b
+                if dotp > sqradii[b] {
+                    // a is outside of b
                     continue 'outer;
                 };
-            } 
-            outerindex.push(b); // passed 
+            }
+            outerindex.push(b); // passed
         }
         outerindex.reverse();
-        (innerindex,outerindex)
+        (innerindex, outerindex)
     }
 
     /// Initial (first) point for geometric medians.

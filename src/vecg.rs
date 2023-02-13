@@ -183,7 +183,7 @@ impl<T> Vecg for &[T]
 
     /// Lower triangular covariance matrix for a single vector. 
     /// Where m is either mean or median vector (to be subtracted).
-    /// Covariance matrix is symmetric (positive semi definite). 
+    /// Covariance matrix is symmetric (kind:2) (positive semi definite). 
     fn covone<U>(self, m:&[U]) -> TriangMat 
         where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U> { 
         let mut cov:Vec<f64> = Vec::new(); // flat lower triangular result array
@@ -191,7 +191,7 @@ impl<T> Vecg for &[T]
         vm.iter().enumerate().for_each(|(i,&thisc)|
             // generate its products up to and including the diagonal (itself)
             vm.iter().take(i+1).for_each(|&component| cov.push(thisc*component)) );
-        TriangMat{ transposed:false,symmetric:true, data:cov }
+        TriangMat{ kind:2, data:cov }
     }
 
     /// Kronecker product of two vectors.   

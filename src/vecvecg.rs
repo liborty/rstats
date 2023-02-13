@@ -1,4 +1,4 @@
-use crate::{noop, fromop, error::RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
+use crate::{noop,fromop,error::RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::Vecops;
 use medians::Median;
 use rayon::prelude::*;
@@ -276,7 +276,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         // now compute the means and return
         let lf = self.len() as f64;
         cov.iter_mut().for_each(|c| *c /= lf); 
-        Ok(TriangMat{transposed:false,symmetric:true,data:cov})
+        Ok(TriangMat{ kind:2,data:cov }) // symmetric, non transposed
     }
  
     /// Weighted covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -306,7 +306,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         });
         // now compute the means and return
         cov.mutsmult::<f64>(1_f64/wsum); 
-        Ok(TriangMat{transposed:false,symmetric:true,data:cov})
+        Ok(TriangMat{ kind:2,data:cov }) // symmetric, non transposed
     }
 
     /// Covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -330,7 +330,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 com.push(thisproduct.median(&mut noop)?);
             }
         }
-        Ok(TriangMat{transposed:false,symmetric:true,data:com})
+        Ok(TriangMat{ kind:2,data:com }) // symmetric, non transposed
     }
 
     /// Covariance matrix for weighted f64 vectors in self. Becomes comediance when 
@@ -357,7 +357,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 com.push(thisproduct.median(&mut noop)?/wmean);
             }
         };
-        Ok(TriangMat{transposed:false,symmetric:true,data:com})
+        Ok(TriangMat{ kind:2,data:com }) // Symmetric, non transposed
     }
  
 }

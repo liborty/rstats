@@ -1,5 +1,5 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
-use medians::Median;
+use medians::{Median,Medianf64};
 use ran::{set_seeds, Rnum };
 use rstats::{st_error, noop, fromop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
 use times::benchvvf64;
@@ -29,9 +29,8 @@ fn u8() -> Result<(), RE> {
     println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2)?.gr());
     println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
     println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8
-    println!("Median v1: {}", v1.medstats(&mut |u:&u8| *u as f64)?);
-    println!("Median v2: {}", v2.medstats(&mut |u:&u8| *u as f64)?);
-    println!("v1 {}", v1.medinfo(&mut |u:&u8| *u as f64)?);
+    println!("Median v1: {}", v1.medstats(&mut fromop)?);
+    println!("Median v2: {}", v2.medstats(&mut fromop)?);
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {}points in {}d space:", n.yl(), d.yl());
@@ -41,16 +40,11 @@ fn u8() -> Result<(), RE> {
     println!("Covariances:\n{cov}");
     let com = pt.covar(&pt.gmedian(EPS))?;
     println!("Comediances:\n{com}");
-    println!("Their Distance: {}", cov.data.vdist(&com.data));
-    let trpt = pt.transpose();
+    println!("Their Distance: {}", cov.data.vdist(&com.data)); 
     println!(
-        "Column Dependencies:\n{}",
-        trpt.crossfeatures(|v1, v2| v1.dependence(v2).expect("dependence: crossfreatures u8\n"))?.gr()
-    );
-    println!(
-        "Column Correlations:\n{}",
-        trpt.crossfeatures( |v1, v2| 
-            v1.mediancorr(v2, &mut |uf| *uf ).expect("median corr: crossfeatures u8\n"))?.gr()
+        "Column Median Correlations:\n{}",
+        pt.transpose().crossfeatures( |v1, v2| 
+            v1.mediancorrf64(v2).expect("median corr: crossfeatures u8\n"))?
     );
     Ok(())
 }
@@ -66,14 +60,14 @@ fn fstats() -> Result<(), RE> {
     // println!("Linear transform:\n{}",v1.lintrans()));
     println!("Standard arithmetic error of {}: {}",5.yl(),st_error(5.,v1.ameanstd()?).gr());
     println!("Standard harmonic error of {}:\t {}",5.yl(),st_error(5.,v1.hmeanstd()?).gr());
-    println!("Standard median error of {}:\t{}",5.yl(),st_error(5.,v1.medstats(&mut noop)?).gr());
+    println!("Standard median error of {}:\t{}",5.yl(),st_error(5.,v1.medstatsf64()?).gr());
     println!("Geometric mean:\t{}", v1.gmean()?.gr());
     println!("Harmonic mean:\t{}", v1.hmean()?.gr());
     println!("Magnitude:\t{}", v1.vmag().gr());
     println!("Arithmetic {}", v1.ameanstd()?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
-    println!("Median     {}", v1.medstats(&mut noop)?);
+    println!("Median     {}", v1.medstatsf64()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
     println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
@@ -93,15 +87,10 @@ fn fstats() -> Result<(), RE> {
         "Covariances of zero median data:\n{}",
         pt.covar(&pt.gmedian(EPS))?.gr()
     );
-    println!("Comediances:\n{}", pt.comed(&pt.gmedian(EPS))?.gr());
-    let trpt = pt.transpose();
+    println!("Comediances:\n{}", pt.comed(&pt.gmedian(EPS))?.gr()); 
     println!(
-        "Column Dependencies:\n{}",
-        trpt.crossfeatures(|v1,v2| v1.dependence(v2).expect("dependence: crossfreatures f64\n" ))?.gr()
-    );
-    println!(
-        "Column Correlations:\n{}",
-        trpt.crossfeatures(|v1,v2| v1.mediancorr(v2,&mut noop).expect("median corr: crossfeatures f64\n"))?.gr()
+        "Column Median Correlations:\n{}",
+        pt.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2,&mut noop).expect("median corr: crossfeatures f64\n"))?
     );
     Ok(())
 }
@@ -122,7 +111,7 @@ fn ustats() -> Result<(), RE> {
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
-    println!("{}\n", v1.medinfo(&mut fromop)?);
+    println!("{}\n", v1.medstats(&mut fromop)?);
     Ok(())
 }
 
@@ -134,7 +123,7 @@ fn intstats() -> Result<(), RE> {
     let v1:Vec<f64> = v.iter().map(|i| *i as f64).collect(); // downcast to f64 here
     println!("Linear transform:\n{}", v1.lintrans()?.gr());
     println!("Arithmetic mean:{}", v1.amean()?.gr());
-    println!("Median:       {GR}{:>14.10}{UN}", v1.median(&mut noop)?);
+    println!("Median:       {GR}{:>14.10}{UN}", v1.medianf64()?);
     println!("Geometric mean:\t{}", v1.gmean()?.gr());
     println!("Harmonic mean:\t{}", v1.hmean()?.gr());
     // println!("Magnitude:\t{}",v1.vmag()));
@@ -143,7 +132,7 @@ fn intstats() -> Result<(), RE> {
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
-    println!("{}\n", v1.medinfo(&mut noop)?);
+    println!("{}\n", v1.medstatsf64()?);
     Ok(())
 }
 
@@ -163,7 +152,7 @@ fn genericstats() -> Result<(), RE> {
     println!("dfdt:\t\t {}", v.dfdt()?.gr());
     v.reverse();
     println!("rev dfdt:\t{}", v.dfdt()?.gr());      
-    println!("{}\n", &v.medinfo(&mut fromop)?);
+    println!("{}\n", &v.medstats(&mut fromop)?);
     Ok(())
 }
 
@@ -226,8 +215,8 @@ fn trend() -> Result<(), RE> {
 
 #[test]
 fn triangmat() -> Result<(), RE> {
-    println!("\n{}", TriangMat::unit(5, true).gr());
-    println!("{}", TriangMat::unit(7, false).gr());
+    println!("\n{}", TriangMat::unit(5).gr());
+    println!("{}", TriangMat::unit(7).gr());
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
@@ -301,9 +290,10 @@ fn vecvec() -> Result<(), RE> {
         "Correlations with outcomes:\n{}",
         transppt.correlations(&outcomes)?.gr()
     );
-    let (median, _vsum, recips) = pts.gmparts(EPS);
-    let (eccstd, eccmed, eccecc) = pts.eccinfo(&median)?;
+    let (median, _vsum, recips) = pts.gmparts(EPS);    
+    let (eccstd, eccmed, eccecc) = pts.eccinfo(&median[..])?;
     let medoid = &pts[eccecc.minindex];
+    println!("Medoid: {}",medoid.gr());
     let outlier = &pts[eccecc.maxindex];
     let hcentroid = pts.hcentroid();
     let gcentroid = pts.gcentroid();
@@ -330,7 +320,7 @@ fn vecvec() -> Result<(), RE> {
     let md = dists.minmax();
     println!("\nMedoid and Outlier Total Distances:\n{md}");
     println!("Total Distances {}", dists.ameanstd()?);
-    println!("Total distances {}", dists.medinfo(&mut noop)?);
+    println!("Total distances {}", dists.medstatsf64()?);
     println!(
         "GM's total distances:        {}",
         pts.distsum(&median)?.gr()
@@ -367,7 +357,7 @@ fn vecvec() -> Result<(), RE> {
 
     let seccs = pts.radii(&median).sorth(&mut noop,true);
     // println!("\nSorted eccs: {}\n", seccs));
-    let lqcnt = seccs.binsearch(&eccmed.lq);
+    let lqcnt = seccs.binsearch(&(eccmed.centre-eccmed.dispersion));
     println!(
         "Inner quarter of points: {} within radius: {}",
         lqcnt.start.gr(),
@@ -380,7 +370,7 @@ fn vecvec() -> Result<(), RE> {
         medcnt.gr(),
         seccs[medcnt - 1].gr()
     );
-    let uqcnt = seccs.binsearch(&eccmed.uq);
+    let uqcnt = seccs.binsearch(&(eccmed.centre+eccmed.dispersion));
     println!(
         "Inner three quarters:    {} within radius: {}",
         uqcnt.start.gr(),
@@ -407,7 +397,7 @@ fn vecvec() -> Result<(), RE> {
         "\nContributions of Data Points, Summary:\n{}\n{}\n{}",
         contribs.minmax(),
         contribs.ameanstd()?,
-        contribs.medinfo(&mut noop)?
+        contribs.medstatsf64()?
     );
     Ok(())
 }
@@ -492,9 +482,9 @@ fn householder() -> Result<(), RE> {
     ];
     let atimesunit = a.matmult(&unit_matrix(a.len()))?;
     println!("Matrix a:\n{}", atimesunit.gr());
-    let (u, r) = a.house_ur();
-    println!("house_ur U' {u}");
-    println!("house_ur R  {r}");
+    let (u, r) = a.house_ur(); 
+    println!("house_ur u' {u}");
+    println!("house_ur r'  {r}");
     let q = u.house_uapply(&unit_matrix(a.len().min(a[0].len())));
     println!(
         "Q matrix\n{}\nOthogonality of Q check (Q'*Q = I):\n{}",

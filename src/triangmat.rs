@@ -7,12 +7,16 @@ impl std::fmt::Display for TriangMat {
         let dim = Self::rowcol(self.data.len()).0;
         write!(
             f,
-            "{YL}{} triangular {} matrix {dim}x{dim}:\n{}",
-            if self.transposed { "upper transposed" } else { "lower" },
-            if self.symmetric {
-                "symmetric"
+            "{YL}{} {} matrix {dim}x{dim}:\n{}",
+            match self.kind % 3 {
+                0 => "Non symmetric",
+                1 => "Anti symmetric",
+                _ => "Symmetric", // 2
+            },
+            if self.kind > 2 {
+                "transposed upper triangular"
             } else {
-                "non-symmetric"
+                "lower triangular"
             },
             self.to_triangle().gr()
         )
@@ -36,8 +40,8 @@ impl TriangMat {
         Self::rowcol(self.len()).0
     }
 
-    /// Generates new unit TriangMat matrix of size (n+1)*n/2
-    pub fn unit(n: usize, transposed: bool) -> TriangMat {
+    /// Generates new unit (symmetric) TriangMat matrix of size (n+1)*n/2
+    pub fn unit(n: usize) -> TriangMat {
         let mut data = Vec::new();
         for i in 0..n {
             // fill with zeros before the diagonal
@@ -46,11 +50,7 @@ impl TriangMat {
             }
             data.push(1_f64);
         }
-        TriangMat {
-            transposed,
-            symmetric: true,
-            data,
-        }
+        TriangMat { kind:2, data }
     }
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
     /// full coordinates within a lower/upper triangular matrix.
@@ -70,32 +70,46 @@ impl TriangMat {
     /// Unpacks flat TriangMat Vec to triangular Vec<Vec> form
     pub fn to_triangle(&self) -> Vec<Vec<f64>> {
         let (n, _) = TriangMat::rowcol(self.data.len());
-            let mut res = Vec::with_capacity(n);
-            for r in 0..n { res.push(self.row(r)); };  
-            res
+        let mut res = Vec::with_capacity(n);
+        for r in 0..n {
+            res.push(self.row(r));
         }
+        res
+    }
 
     /// Unpacks TriangMat to full matrix
     pub fn to_full(&self) -> Vec<Vec<f64>> {
         // full matrix dimension(s)
         let (n, _) = TriangMat::rowcol(self.data.len());
         let mut res = vec![vec!(0_f64; n); n];
-        // function pointer for primitive filling actions, depending on the matrix properties
-        // properties get tested only once
-        let fill: fn(usize, usize, &mut Vec<Vec<f64>>, f64) = if self.symmetric {
-            |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
+        // function pointer for primitive filling actions, depending on the matrix kind
+        let fill: fn(usize, usize, &mut Vec<Vec<f64>>, f64) = 
+            match self.kind % 3 {
+            2 => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
                 res[row][col] = item;
-                res[col][row] = item;
+                if row != col { res[col][row] = item; };
+            },
+            1 => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
+                res[row][col] = item;
+                if row != col { res[col][row] = -item; };
+            },
+            _ => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
+                res[row][col] = item;
+                if row != col { res[col][row] = 0_f64; };
+            },
+        }; 
+        if self.kind > 2 {
+            // is transposed
+            for (i, &item) in self.data.iter().enumerate() {
+                let (row, col) = Self::rowcol(i);
+                fill(col, row, &mut res, item);
             }
-        } else if self.transposed {
-            |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| res[col][row] = item
-        } else {
-            |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| res[row][col] = item
+        } else { 
+            for (i, &item) in self.data.iter().enumerate() {
+                let (row, col) = Self::rowcol(i);
+                fill(row, col, &mut res, item);
+            }
         };
-        for (i, &item) in self.data.iter().enumerate() {
-            let (row, col) = Self::rowcol(i);
-            fill(row, col, &mut res, item);
-        }
         res
     }
 
@@ -111,7 +125,8 @@ impl TriangMat {
         // input not long enough to compute anything
         if sl < 3 {
             return Err(RError::NoDataError(format!(
-                "cholesky needs at least three TriangMat items: {self}")));
+                "cholesky needs at least three TriangMat items: {self}"
+            )));
         };
         // n is the dimension of the implied square matrix.
         // Not needed as an extra argument. We compute it
@@ -140,7 +155,8 @@ impl TriangMat {
                     // or is ill-conditioned, so we return ArithError
                     if dif <= 0_f64 {
                         return Err(RError::ArithError(format!(
-                            "cholesky needs a positive definite matrix {dif}")));
+                            "cholesky needs a positive definite matrix {dif}"
+                        )));
                     };
                     dif.sqrt()
                 }
@@ -150,11 +166,7 @@ impl TriangMat {
                 };
             }
         }
-        Ok(TriangMat {
-            transposed: false,
-            symmetric: false,
-            data: res,
-        })
+        Ok(TriangMat { kind:0, data: res  })
     }
 
     /// Mahalanobis scaled magnitude m(d) of vector d.

@@ -22,7 +22,7 @@ pub mod vecvecg;
 use crate::error::RError;
 // reexporting useful related methods
 pub use indxvec::{printing::*, MinMax, Printing};
-pub use medians::{MedError, MStats, Med, Median};
+pub use medians::{MedError, MStats, Median, Medianf64};
 
 /// Shorthand type for returned errors with message payload
 pub type RE = RError<String>;
@@ -71,10 +71,8 @@ pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
 /// Converting the other way: `s = (n+1)*n/2;`
 #[derive(Default, Clone)]
 pub struct TriangMat {
-    /// Trans, true means transposed, or upper (data is not moved)
-    pub transposed: bool,
-    /// True means the implied full matrix is symmetric
-    pub symmetric: bool,
+    /// Matrix kind encoding: 0=ordinary, 1=antisymmetric, 2=symmetric, +3=transposed
+    pub kind: usize,
     /// Packed 1d vector of triangular matrix data of size (n+1)*n/2
     pub data: Vec<f64>,
 }
@@ -365,7 +363,7 @@ pub trait VecVec<T> {
     /// Independence (component wise) of a set of vectors.
     fn dependencen(self) -> Result<f64, RE>;
     /// Flattened lower triangular relations matrix between columns of self
-    fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<Vec<f64>, RE>;
+    fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<TriangMat, RE>;
     /// Sum of nd points (or vectors)
     fn sumv(self) -> Vec<f64>;
     /// Arithmetic Centre = euclidian mean of a set of points
@@ -392,8 +390,8 @@ pub trait VecVec<T> {
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE>;
     /// Exact radii vectors to each member point by using the gm
     fn radii(self, gm: &[f64]) -> Vec<f64>;
-    /// Arith mean and std (in MStats struct), Median info (in Med struct), Medoid and Outlier (in MinMax struct)
-    fn eccinfo(self, gm: &[f64]) -> Result<(MStats, Med, MinMax<f64>), RE>
+    /// Arith mean and std (in MStats struct), Median and mad, Medoid and Outlier (in MinMax struct)
+    fn eccinfo(self, gm: &[f64]) -> Result<(MStats, MStats, MinMax<f64>), RE>
     where Vec<f64>: FromIterator<f64>;
     /// Quasi median, recommended only for comparison purposes
     fn quasimedian(self) -> Result<Vec<f64>,RE>;
