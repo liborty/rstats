@@ -178,7 +178,7 @@ Also, some methods implemented for `VecVecg` produce `TriangMat` matrices, speci
 
 ##  Quantify Functions
 
-Most methods in `medians::Median` trait and hashort methods in `indxvec` crate require explicit closure to tell them how to quantify into f64 user data of any end type T. Variety of different quantifying methods can then be dynamically employed. For example, in analysis of words (&str type), it can be the word length, or the numerical value of its first few bytes, etc. Then we can sort them or find their means/medians/dispersions under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute them on demand.
+Most methods in `medians::Median` trait and hashort methods in `indxvec` crate require explicit closure to tell them how to quantify user data of any end type T into f64. Variety of different quantifying methods can then be dynamically employed. For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, etc. Then we can sort them or find their means/medians/dispersions under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute them on demand.
 
 ### `noop`
 
@@ -197,11 +197,12 @@ When T is a primitive type, such as i64, u64, usize, that can only be converted 
 
 ### `fromop`
 
-When T is a type convertible by an existing `From` implementation and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in one of these: 
+When T is a type convertible by an existing `From` implementation and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in one of these:
 
 ```rust
 &mut fromop
-&mut |f:&T| f64::from(*f)
+&mut |&f| f.into()
+&mut |f:&T| f.into()
 ```
 
 This also works for 'smaller' primitive types.
@@ -281,6 +282,8 @@ This general data domain is denoted here as (nd). It is in nd where the main ori
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.27** - Multithreaded `madgm` and `hulls`. Added trivial transpose of TriangMat(s). Pruned some unnecessary methods from trait `VecVecg`.
 
 * **Version 1.2.26** - More multithreading. Changed `struct TriangMat` to also allow compact representation of antisymmetric matrices (for future use). Updated dependence to the latest `medians 2.1.0`.
 

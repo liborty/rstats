@@ -307,57 +307,5 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         // now compute the means and return
         cov.mutsmult::<f64>(1_f64/wsum); 
         Ok(TriangMat{ kind:2,data:cov }) // symmetric, non transposed
-    }
-
-    /// Covariance matrix for f64 vectors in self. Becomes comediance when 
-    /// argument m is the geometric median instead of the centroid.
-    /// Since the matrix is symmetric, the missing upper triangular part can be trivially
-    /// regenerated for all j>i by: c(j,i) = c(i,j).
-    /// The indexing is always in this order: (row,column) (left to right, top to bottom).
-    /// The items are flattened into a single vector in this order.
-    /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
-    /// Similar to `covar` above but instead of averaging the covariances over n points, 
-    /// their medians are returned.
-    fn comed(self, m:&[U]) -> Result<TriangMat,RE> { // m should be the median here 
-        let d = self[0].len(); // dimension of the vector(s)
-        if d != m.len() { 
-            return Err(RError::DataError("comed self and m dimensions mismatch".to_owned())); }; 
-        let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2); // result vec flat lower triangular array 
-        let zs:Vec<Vec<f64>> = self.iter().map(|s| s.vsub(m)).collect(); // zero median vectors
-        for i in 0..d { // cross multiplaying the components
-            for j in 0..i+1 { // in this order so as to save memory
-                let thisproduct:Vec<f64> = zs.iter().map(|v| v[i]*v[j]).collect(); 
-                com.push(thisproduct.median(&mut noop)?);
-            }
-        }
-        Ok(TriangMat{ kind:2,data:com }) // symmetric, non transposed
-    }
-
-    /// Covariance matrix for weighted f64 vectors in self. Becomes comediance when 
-    /// argument m is the geometric median instead of the centroid.
-    /// Since the matrix is symmetric, the missing upper triangular part can be trivially
-    /// regenerated for all j>i by: c(j,i) = c(i,j).
-    /// The indexing is always in this order: (row,column) (left to right, top to bottom).
-    /// The items are flattened into a single vector in this order.
-    /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
-    /// Similar to `wcovar` above but instead of averaging the covariances over n points, 
-    /// their median is returned.
-    fn wcomed(self, ws:&[U], m:&[f64]) -> Result<TriangMat,RE> { // m should be the median here 
-        let d = self[0].len(); // dimension of the vector(s)
-        if d != m.len() { 
-            return Err(RError::DataError("wcomed self and m dimensions mismatch".to_owned())); }; 
-        if self.len() != ws.len() { 
-            return Err(RError::DataError("wcomed self and ws lengths mismatch".to_owned())); }; 
-        let zs:Vec<Vec<f64>> = self.iter().map(|s| s.vsub(m)).collect(); // zero median vectors
-        let mut com:Vec<f64> = Vec::with_capacity((d+1)*d/2); // result vec flat lower triangular array 
-        let wmean = ws.iter().map(|&w| f64::from(w)).sum::<f64>()/(self.len() as f64); 
-        for i in 0..d { // cross multiplaying the components
-            for j in 0..i+1 { // in this order so as to save memory
-                let thisproduct:Vec<f64> = zs.iter().zip(ws).map(|(v,&w)| f64::from(w)*v[i]*v[j]).collect();  
-                com.push(thisproduct.median(&mut noop)?/wmean);
-            }
-        };
-        Ok(TriangMat{ kind:2,data:com }) // Symmetric, non transposed
-    }
- 
+    } 
 }

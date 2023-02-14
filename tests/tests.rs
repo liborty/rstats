@@ -29,7 +29,7 @@ fn u8() -> Result<(), RE> {
     println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2)?.gr());
     println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
     println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8
-    println!("Median v1: {}", v1.medstats(&mut fromop)?);
+    println!("Median v1: {}", v1.medstats(&mut |&x| x.into())?);
     println!("Median v2: {}", v2.medstats(&mut fromop)?);
     let d = 5_usize;
     let n = 7_usize;
@@ -39,7 +39,6 @@ fn u8() -> Result<(), RE> {
     let cov = pt.covar(&pt.acentroid())?;
     println!("Covariances:\n{cov}");
     let com = pt.covar(&pt.gmedian(EPS))?;
-    println!("Comediances:\n{com}");
     println!("Their Distance: {}", cov.data.vdist(&com.data)); 
     println!(
         "Column Median Correlations:\n{}",
@@ -86,8 +85,7 @@ fn fstats() -> Result<(), RE> {
     println!(
         "Covariances of zero median data:\n{}",
         pt.covar(&pt.gmedian(EPS))?.gr()
-    );
-    println!("Comediances:\n{}", pt.comed(&pt.gmedian(EPS))?.gr()); 
+    ); 
     println!(
         "Column Median Correlations:\n{}",
         pt.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2,&mut noop).expect("median corr: crossfeatures f64\n"))?
@@ -111,7 +109,6 @@ fn ustats() -> Result<(), RE> {
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
-    println!("{}\n", v1.medstats(&mut fromop)?);
     Ok(())
 }
 
@@ -131,8 +128,7 @@ fn intstats() -> Result<(), RE> {
     println!("Median     {}", v1.medstats(&mut noop)?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
-    println!("Autocorrelation:{}", v1.autocorr()?.gr());
-    println!("{}\n", v1.medstatsf64()?);
+    println!("Autocorrelation:{}", v1.autocorr()?.gr()); 
     Ok(())
 }
 
@@ -141,18 +137,17 @@ fn intstats() -> Result<(), RE> {
 fn genericstats() -> Result<(), RE> {
     let mut v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
-    println!("Arithmetic\t{}", v.ameanstd()?.gr());
-    println!("Median\t\t{GR}{:>14.10}{UN}", v.medstats(&mut fromop)?);
-    println!("Geometric\t{}", v.gmeanstd()?.gr());
-    println!("Harmonic\t{}", v.hmeanstd()?.gr());
-    println!("Weighted Arit.\t{}", v.awmeanstd()?.gr());
-    println!("Weighted Geom.\t{}", v.gwmeanstd()?.gr());
-    println!("Weighted Harm.\t{}", v.hwmeanstd()?.gr());
-    println!("Autocorrelation:{}", v.autocorr()?.gr());
+    println!("Arithmetic\t{}", v.ameanstd()?);
+    println!("Median\t\t{}", v.medstats(&mut fromop)?);
+    println!("Geometric\t{}", v.gmeanstd()?);
+    println!("Harmonic\t{}", v.hmeanstd()?);
+    println!("Weighted Arit.\t{}", v.awmeanstd()?);
+    println!("Weighted Geom.\t{}", v.gwmeanstd()?);
+    println!("Weighted Harm.\t{}", v.hwmeanstd()?);
+    println!("Autocorrelation: {}", v.autocorr()?.gr());
     println!("dfdt:\t\t {}", v.dfdt()?.gr());
     v.reverse();
-    println!("rev dfdt:\t{}", v.dfdt()?.gr());      
-    println!("{}\n", &v.medstats(&mut fromop)?);
+    println!("rev dfdt:\t{}", v.dfdt()?.gr());
     Ok(())
 }
 

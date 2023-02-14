@@ -1,8 +1,8 @@
 use std::iter::FromIterator;
 
 use crate::{sumn, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg, RE};
-use indxvec::{Vecops};
-use medians::{MedError, Median, Medianf64};
+use indxvec::{Vecops,Mutops};
+use medians::{MedError,Medianf64};
 use rayon::prelude::*;
 
 impl<T> VecVec<T> for &[Vec<T>]
@@ -273,8 +273,8 @@ where
             .collect::<Vec<f64>>()
     }
 
-    /// Arith mean and std (in MStats struct), Median info (in Med struct), Medoid and Outlier (in MinMax struct)
-    /// of scalar radii (eccentricities) of points in self.
+    /// Arith mean and std (in MStats struct), Median and MAD (in another MStats struct), Medoid and Outlier (in MinMax struct)
+    /// of scalar radii of points in self.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
     fn eccinfo(self, gm: &[f64]) -> Result<(MStats, MStats, MinMax<f64>), RE>
     where
@@ -288,7 +288,6 @@ where
     }
 
     /// Quasi median, recommended only for comparison purposes
-    /// Here only default f64::from() is supplied for conversion T -> f64
     fn quasimedian(self) -> Result<Vec<f64>, RE> {
         Ok((0..self[0].len())
             .into_iter()
@@ -331,8 +330,8 @@ where
 
     /// MADGM median of absolute deviations from gm: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64, RE> {
-        let diffs: Vec<f64> = self.iter().map(|v| v.vdist::<f64>(gm)).collect();
-        Ok(diffs.median(&mut |f: &f64| *f)?)
+        let diffs: Vec<f64> = self.par_iter().map(|v| v.vdist::<f64>(gm)).collect();
+        Ok(diffs.medianf64()?)
     }
 
     /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.    
@@ -344,40 +343,36 @@ where
     /// the defining plane of 'b': `|a|cos(θ) > |b| => a*b > |b|^2`
     /// Thus working with square magnitudes (`|b|^2`) saves taking square roots and dividing the dot product by |b|.
     fn hulls(self) -> (Vec<usize>, Vec<usize>) {
-        let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let radindex = sqradii.hashsort_indexed(&mut |x| *x); // ascending square radii
-        let mut innerindex: Vec<usize> = Vec::new();
-        'candidate: for &b in &radindex {
+        let sqradii = self.par_iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
+        let mut radindex = sqradii.hashsort_indexed(&mut |x| *x); // ascending square radii
+        let innerindex = 
+        radindex.par_iter().filter_map(|&b| {
             // test all points in ascending order
+            let mut res = None;
             for &a in &radindex {
                 // check against all points 'a' up to 'b'
-                if a == b {
-                    break;
-                } // b can only be outside of a if a's magnitude is less
+                if a == b { res = Some(b); break; }; // good b
+                // b can only be outside of a if a's magnitude is less
                 let dotp = self[a].dotp(&self[b]);
-                if dotp > sqradii[a] {
-                    // b is outside of a
-                    continue 'candidate;
-                };
-            }
-            innerindex.push(b); // passed
-        }
-        // radindex.mutrevs(); // make them descending
-        let mut outerindex: Vec<usize> = Vec::new();
-        'outer: for &b in radindex.iter().rev() {
+                // b is outside of a
+                if dotp > sqradii[a] { break; };   
+            };
+            res
+        }).collect::<Vec<usize>>(); 
+        radindex.mutrevs(); // make the order of points descending 
+        let mut outerindex =
+        radindex.par_iter().filter_map(|&b| {
             // test all points, in descending order
-            for &a in radindex.iter().rev() {
-                if a == b {
-                    break;
-                } // a can only be outside of b for a's of greater magnitude
+            let mut res = None;
+            for &a in &radindex {
+                if a == b { res = Some(b); break; }; // good b 
+                // a can only be outside of b for a's of greater magnitude
                 let dotp = self[a].dotp(&self[b]);
-                if dotp > sqradii[b] {
-                    // a is outside of b
-                    continue 'outer;
-                };
-            }
-            outerindex.push(b); // passed
-        }
+                if dotp > sqradii[b] { break; };
+                // a is outside of b 
+            };
+            res
+        }).collect::<Vec<usize>>();  
         outerindex.reverse();
         (innerindex, outerindex)
     }

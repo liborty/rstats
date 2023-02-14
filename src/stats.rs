@@ -1,4 +1,4 @@
-use crate::{error::RError,RE,sumn,Vecg,MutVecg,MStats,Stats};
+use crate::{fromop,error::RError,RE,sumn,Vecg,MutVecg,MStats,Stats};
 use indxvec::Vecops;
 use medians::Median;
 
@@ -9,7 +9,7 @@ impl<T> Stats for &[T]
     fn vmag(self) -> f64 {
         match self.len() {
             0 => 0_f64,
-            1 => f64::from(self[0]),
+            1 => self[0].into(),
             _ =>  self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>().sqrt()
         }
     }
@@ -27,7 +27,7 @@ impl<T> Stats for &[T]
     fn vreciprocal(self) -> Result<Vec<f64>,RE> {
         if self.is_empty() { return  Err(RError::NoDataError("empty self vec".to_owned()))  };
         for &component in self {
-           let c = f64::from(component); 
+           let c:f64 = component.into(); 
            if !c.is_normal() { return Err(RError::ArithError("no reciprocal with zero component".to_owned())); }; 
         }     
         Ok( self.iter().map(|&x| 1.0/(f64::from(x))).collect() )     
@@ -86,7 +86,7 @@ impl<T> Stats for &[T]
         let mean = self
             .iter()
             .map(|&x| {
-                let fx = f64::from(x);
+                let fx:f64 = x.into();
                 sx2 += fx * fx;
                 fx
             })
@@ -138,7 +138,7 @@ impl<T> Stats for &[T]
         let centre = self
             .iter()
             .map(|&x| {
-                let fx = f64::from(x);
+                let fx:f64 = x.into();
                 w += 1_f64;
                 let wx = w * fx;
                 sx2 += wx * fx;            
@@ -160,7 +160,7 @@ impl<T> Stats for &[T]
         if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); };    
         let mut sum = 0_f64;
         for &x in self {
-            let fx = f64::from(x);
+            let fx:f64 = x.into();
             if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero".to_owned())); };      
             sum += 1.0 / fx
         }
@@ -184,7 +184,7 @@ impl<T> Stats for &[T]
         let mut sx2 = 0_f64;        
         let mut sx = 0_f64;
         for &x in self { 
-            let fx = f64::from(x);
+            let fx:f64 = x.into();
             if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero".to_owned())); };   
             let rx = 1_f64/fx;  // work with reciprocals
             sx2 += rx*rx;
@@ -211,7 +211,7 @@ impl<T> Stats for &[T]
         let mut sum = 0_f64;
         let mut w = 0_f64;
         for &x in self {
-            let fx = f64::from(x);
+            let fx:f64 = x.into();
             if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero".to_owned())); };
             w += 1_f64;
             sum += w / fx;
@@ -238,7 +238,7 @@ impl<T> Stats for &[T]
         let mut w = 0_f64;        
         for &x in self {
                 w += 1_f64;
-                let fx = f64::from(x);
+                let fx:f64 = x.into();
                 if !fx.is_normal() { return Err(RError::ArithError("attempt to divide by zero".to_owned())); };
                 sx += w/fx;  // work with reciprocals
                 sx2 += w/(fx*fx);
@@ -266,7 +266,7 @@ impl<T> Stats for &[T]
         if n == 0 { return Err(RError::NoDataError("empty self vec".to_owned())); }; 
         let mut sum = 0_f64;
         for &x in self {
-            let fx = f64::from(x);
+            let fx:f64 = x.into();
             if !fx.is_normal() { return Err(RError::ArithError("gmean attempt to take ln of zero".to_owned())); };        
             sum += fx.ln()
         }
@@ -290,7 +290,7 @@ impl<T> Stats for &[T]
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
-            let fx = f64::from(x);
+            let fx:f64 = x.into();
             if !fx.is_normal() { return Err(RError::ArithError("gmeanstd attempt to take ln of zero".to_owned())); };
             let lx = fx.ln();
             sum += lx;
@@ -322,7 +322,7 @@ impl<T> Stats for &[T]
         let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
         for &x in self {
-            let fx = f64::from(x);
+            let fx:f64 = x.into();
             if !fx.is_normal() { return Err(RError::ArithError("gwmean attempt to take ln of zero".to_owned())); }; 
             w += 1_f64;
             sum += w * fx.ln();
@@ -347,7 +347,7 @@ impl<T> Stats for &[T]
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for &x in self {
-            let fx = f64::from(x);
+            let fx:f64 = x.into();
             if !fx.is_normal() { return Err(RError::ArithError("gwmeanstd attempt to take ln of zero".to_owned())); }; 
             let lnx = fx.ln();
             w += 1_f64;
@@ -396,9 +396,9 @@ impl<T> Stats for &[T]
         let (mut sx, mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64, 0_f64);
         let n = self.len();
         if n < 2 { return Err(RError::NoDataError("autocorr needs a Vec of at least two items".to_owned())); }; 
-        let mut x = f64::from(self[0]);    
+        let mut x:f64 = self[0].into();    
         self.iter().skip(1).for_each(|&si| {
-            let y = f64::from(si);
+            let y:f64 = si.into();
             sx += x;
             sy += y;
             sxy += x * y;
@@ -430,11 +430,11 @@ impl<T> Stats for &[T]
         let mut weight = 0_f64; 
         let mut sumwx = 0_f64;  
         for &x in self.iter() {
-            let fx = f64::from(x);
+            let fx:f64 = x.into();
             weight += 1_f64; 
             sumwx += weight*fx; 
         } 
-        Ok(sumwx/(sumn(len) as f64) - self.median(&mut|x|f64::from(*x))?)
+        Ok(sumwx/(sumn(len) as f64) - self.median(&mut fromop)?)
     }
  
     /// Householder reflector
