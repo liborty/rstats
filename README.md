@@ -9,7 +9,7 @@ Insert `Rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 Use in your source files any of the following structs, as and when needed:
 
 ```rust  
-use Rstats::{RE,TriangMat,Mstats,MinMax,Med};
+use Rstats::{RE,TriangMat,Mstats,MinMax};
 ```
 
 and any of the following traits:
@@ -165,20 +165,22 @@ pub type RE = RError<String>;
 ## Structs
 
 ### `struct MStats` 
-holds the central tendency of `1d` data, e.g. some kind of mean or median, and its dispersion measure, e.g. standard deviation or MAD.
+holds the central tendency of `1d` data, e.g. some kind of mean or median, and its spread measure, e.g. standard deviation or MAD.
 
 ### `struct TriangMat` 
 holds triangular matrices of all kinds, as described in Implementation section above. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
 
-* **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes a transpose). This decomposition is used by `mahalanobis`.
+* **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes transpose). This decomposition is used by `mahalanobis`.
 * **Mahalanobis Distance**
 * **Householder UR** (M = QR) matrix decomposition
 
-Also, some methods implemented for `VecVecg` produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar`,`wcovar`,`comed` and `wcomed`. Their results are positive definite. Whenever this condition is satisfied, then the most efficient Cholesky-Banachiewics decomposition is applicable.
+Also, some methods implemented for `VecVecg` produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar` and `wcovar`. Their results are positive definite. Whenever this condition is satisfied, then the most efficient Cholesky-Banachiewics decomposition is applicable.
 
-##  Quantify Functions
+## Quantify Functions
 
-Most methods in `medians::Median` trait and hashort methods in `indxvec` crate require explicit closure to tell them how to quantify user data of any end type T into f64. Variety of different quantifying methods can then be dynamically employed. For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, etc. Then we can sort them or find their means/medians/dispersions under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute them on demand.
+Most methods in `medians::Median` trait and hashort methods in `indxvec` crate require explicit closure to tell them how to quantify user data of any end type T into f64. Variety of different quantifying methods can then be dynamically employed.
+
+For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, etc. Then we can sort them or find their means/medians/dispersions under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute them on demand.
 
 ### `noop`
 
@@ -211,8 +213,8 @@ All other cases were previously only possible with manual implementation written
 
 ## Auxiliary Functions
 
-* `sumn`: sum of the sequence `1..n = n*(n+1)/2`. It is also the size of a lower/upper triangular matrix.
-* `st_error`: standard error of a value, on the basis of any central tendency and dispersion measures.
+* `sumn`: the sum of the sequence `1..n = n*(n+1)/2`. It is also the size of a lower/upper triangular matrix.
+* `st_error`: standard error of a value v: (v-centre)/spread.
 * `unit_matrix`: - generates full unit matrix.
 
 ## Trait Stats
@@ -233,8 +235,7 @@ Included in this trait are:
 * linear transformation to [0,1],
 * other measures and vector algebra operators
 
-Note that fast implementation of 1d medians is, as of version 1.1.0, performed by crate `medians`.  
-
+Note that fast implementation of 1d medians is, as of version 1.1.0, performed by a separate crate `medians`.
 
 ## Trait Vecg
 
@@ -316,23 +317,3 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 1.2.12** - Updated dependency `indxvec v1.3.4'.
 
 * **Version 1.2.11** - Added `convex_hull` to trait VecVec. Added more error checking: VecVecg trait is now fully checked, be prepared to append `?` after most method calls.
-
-* **Version 1.2.10** - Minor: corrected some examples, removed all unnecessary `.as_slice()` conversions.
-
-* **Version 1.2.9** - More RError forwarding. Removed all deliberate panics.
-
-* **Version 1.2.8** - Fixed a silly bug in `symmatrix` and made it return Result.
-
-* **Version 1.2.7** - Added efficient `mahalanobis` distance and its test.
-
-* **Version 1.2.6** - Added test `matrices` specifically for matrix operations. Added type alias `Rstats::RE` to shorten method headings returning `RErrors` that carry `&str` payloads (see subsection Errors above). 
-
-* **Version 1.2.5** - Added some more matrix algebra. Added generic payload `T` to RError: `RError<T>` to allow it to carry more information. 
-
-* **Version 1.2.4** - Added Cholesky–Banachiewicz algorithm `cholesky` to trait `Statsg` for efficient matrix decomposition.
-
-* **Version 1.2.3** - Fixed `hwmeanstd`. Some more tidying up using RError. `Autocorr` and `lintrans` now also check their data and return `Result`. 
-
-* **Version 1.2.2** - Introduced custom error RError, potentially returned by some methods of trait `Statsg`. Removed the dependency on crate `anyhow`.
-
-* **Version 1.2.1** - Code pruning - removed `wsortedcos` of questionable utility from trait `VecVecg`.
