@@ -76,7 +76,7 @@ For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rs
 
 ## Terminology
 
-#### Including some new definitions for sets of nd points, i.e. n points in d dimensional space
+### Including some new definitions for sets of nd points, i.e. n points in d dimensional space
 
 * `Median correlation` between
  two samples. We define it analogously to Pearson, as cosine of an angle between two 'normalised' vectors. Pearson 'normalises' by subtracting the mean from all components, we subtract the median.
