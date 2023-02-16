@@ -494,8 +494,11 @@ fn householder() -> Result<(), RE> {
 
 #[test]
 fn timing_gm() {
-    const NAMES: [&str; 4] = ["gmedian", "pmedian", "quasimedian", "acentroid"];
-    const CLOSURESU8: [fn(&[Vec<f64>]); 4] = [
+    const NAMES: [&str; 5] = ["par_gmedian", "gmedian", "pmedian", "quasimedian", "acentroid"];
+    const CLOSURESU8: [fn(&[Vec<f64>]); 5] = [
+        |v: &[_]| {
+            v.par_gmedian(EPS);
+        },
         |v: &[_]| {
             v.gmedian(EPS);
         },

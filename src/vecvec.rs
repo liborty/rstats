@@ -1,8 +1,8 @@
 use std::iter::FromIterator;
 
 use crate::{sumn, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg, RE};
-use indxvec::{Vecops,Mutops};
-use medians::{MedError,Medianf64};
+use indxvec::{Mutops, Vecops};
+use medians::{MedError, Medianf64};
 use rayon::prelude::*;
 
 impl<T> VecVec<T> for &[Vec<T>]
@@ -10,7 +10,7 @@ where
     T: Copy + PartialOrd + std::fmt::Display + Sync,
     Vec<Vec<T>>: IntoParallelIterator,
     Vec<T>: IntoParallelIterator,
-    f64: From<T>
+    f64: From<T>,
 {
     /// Selects a column by number
     fn column(self, cnum: usize) -> Vec<f64> {
@@ -39,7 +39,7 @@ where
         let n = self.len();
         let d = self[0].len();
         let min = if d <= n { d } else { n }; // minimal dimension
-        let mut r = self.transpose(); // self.iter().map(|s| s.tof64()).collect::<Vec<Vec<f64>>>(); //  // 
+        let mut r = self.transpose(); // self.iter().map(|s| s.tof64()).collect::<Vec<Vec<f64>>>(); //  //
         let mut ures = vec![0.; sumn(min)];
         let mut rres = Vec::with_capacity(sumn(min));
         for j in 0..min {
@@ -60,9 +60,15 @@ where
             }
         }
         (
-            TriangMat { kind:3, data: ures }, // transposed, non symmetric kind
-            TriangMat { kind:3, data: rres }, // transposed, non symmetric kind
-        )   
+            TriangMat {
+                kind: 3,
+                data: ures,
+            }, // transposed, non symmetric kind
+            TriangMat {
+                kind: 3,
+                data: rres,
+            }, // transposed, non symmetric kind
+        )
     }
 
     /// Joint probability density function of n matched slices of the same length
@@ -116,7 +122,7 @@ where
 
     /// Flattened lower triangular part of a symmetric matrix for vectors in self.
     /// The upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
-    /// Applies closure f to compute a scalar binary relation between all pairs of vector 
+    /// Applies closure f to compute a scalar binary relation between all pairs of vector
     /// components of self.   
     /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
     /// such as dependencies or correlations.  
@@ -124,7 +130,7 @@ where
     /// computes median correlations between all column vectors (features) in pts.
     fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<TriangMat, RE> {
         Ok(TriangMat {
-            kind:2, // symmetric, non transposed
+            kind: 2, // symmetric, non transposed
             data: (0..self.len())
                 .into_par_iter()
                 .flat_map(|i| {
@@ -278,13 +284,10 @@ where
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
     fn eccinfo(self, gm: &[f64]) -> Result<(MStats, MStats, MinMax<f64>), RE>
     where
-        Vec<f64>: FromIterator<f64> {
+        Vec<f64>: FromIterator<f64>,
+    {
         let rads: Vec<f64> = self.radii(gm);
-        Ok((
-            rads.ameanstd()?,
-            rads.medstatsf64()?,
-            rads.minmax(),
-        ))
+        Ok((rads.ameanstd()?, rads.medstatsf64()?, rads.minmax()))
     }
 
     /// Quasi median, recommended only for comparison purposes
@@ -334,45 +337,56 @@ where
         Ok(diffs.medianf64()?)
     }
 
-    /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.    
-    /// Vector b is not in outer hull, when there is any other point behind the plane
-    /// through 'b' and perpendicular to it (its defining plane).
-    /// 'b' is not in the inner hull, when it lies behind the defining plane of any other point.
-    /// The testing is done against the existing hull points, in decreasing (increasing)
-    /// radius order. When projection of 'a' onto line from gm to 'b' exceeds |b|, then 'a' lies outside
-    /// the defining plane of 'b': `|a|cos(θ) > |b| => a*b > |b|^2`
-    /// Thus working with square magnitudes (`|b|^2`) saves taking square roots and dividing the dot product by |b|.
+    /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.
+    /// Defining plane of a point A goes through A and is normal to the zero median vector **a**.      
+    /// B is an inner hull point, when it lies inside all other points' defining planes.  
+    /// B is an outer hull point, when there is no other point beyond its own defining plane.
+    /// B can belong to both hulls, as when all the points lie on a hyper-sphere around gm.   
+    /// The testing is done in increasing (decreasing) radius order.  
+    /// B lies outside the defining plane of **a**, when its projection onto unit **a** exceeds `|a|`  
+    /// `|b|cos(θ) > |a| => a*b > |a|^2`,  
+    /// such B immediately fails as a candidate for the inner hull.
+    /// Working with square magnitudes `|a|^2` saves taking square roots and dividing the dot product by |a|.  
+    /// Similarly for the outer hull, where A and B simply swap roles.
     fn hulls(self) -> (Vec<usize>, Vec<usize>) {
         let sqradii = self.par_iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
         let mut radindex = sqradii.hashsort_indexed(&mut |x| *x); // ascending square radii
-        let innerindex = 
-        radindex.par_iter().filter_map(|&b| {
-            // test all points in ascending order
-            let mut res = None;
-            for &a in &radindex {
-                // check against all points 'a' up to 'b'
-                if a == b { res = Some(b); break; }; // good b
-                // b can only be outside of a if a's magnitude is less
-                let dotp = self[a].dotp(&self[b]);
-                // b is outside of a
-                if dotp > sqradii[a] { break; };   
-            };
-            res
-        }).collect::<Vec<usize>>(); 
-        radindex.mutrevs(); // make the order of points descending 
-        let mut outerindex =
-        radindex.par_iter().filter_map(|&b| {
-            // test all points, in descending order
-            let mut res = None;
-            for &a in &radindex {
-                if a == b { res = Some(b); break; }; // good b 
-                // a can only be outside of b for a's of greater magnitude
-                let dotp = self[a].dotp(&self[b]);
-                if dotp > sqradii[b] { break; };
-                // a is outside of b 
-            };
-            res
-        }).collect::<Vec<usize>>();  
+        let innerindex = radindex
+            .par_iter()
+            .filter_map(|&b| {
+                // test all points in ascending order
+                for &a in &radindex {
+                    // check against all points 'a' up to 'b'
+                    if a == b {
+                        return Some(b);
+                    }; // b passed
+                       // b lies outside of a => immediately reject b
+                    if self[a].dotp(&self[b]) > sqradii[a] {
+                        break;
+                    };
+                }
+                None
+            })
+            .collect::<Vec<usize>>();
+        radindex.mutrevs(); // make the order of points descending
+        let mut outerindex = radindex
+            .par_iter()
+            .filter_map(|&b| {
+                // test all points, in descending order
+                for &a in &radindex {
+                    // a can only be outside of b for a's of greater magnitude
+                    if a == b {
+                        return Some(b);
+                    }; // b passed
+                    let dotp = self[a].dotp(&self[b]);
+                    // a lies outside of b => immediately reject b
+                    if dotp > sqradii[b] {
+                        break;
+                    };
+                }
+                None
+            })
+            .collect::<Vec<usize>>();
         outerindex.reverse();
         (innerindex, outerindex)
     }
@@ -458,8 +472,7 @@ where
     /// Search methods are slow and difficult in highly dimensional space.
     /// Weiszfeld's fixed point iteration formula has known problems with sometimes failing to converge.
     /// Especially, when the points are dense in the close proximity of the gm, or gm coincides with one of them.  
-    /// However, these problems are fixed in my new algorithm here.      
-    /// There will eventually be a multithreaded version.
+    /// However, these problems are fixed in my new algorithm here.
     /// The sum of reciprocals is strictly increasing and so is used here as
     /// easy to evaluate termination condition.
     fn gmedian(self, eps: f64) -> Vec<f64> {
@@ -495,14 +508,67 @@ where
         }
     }
 
+    /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.  
+    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.  
+    /// It has (provably) only vector iterative solutions.    
+    /// Search methods are slow and difficult in hyper space.    
+    /// Weiszfeld's fixed point iteration formula has known problems and sometimes fails to converge.  
+    /// Specifically, when the points are dense in the close proximity of the gm, or gm coincides with one of them.    
+    /// However, these problems are solved in my new algorithm here.     
+    /// The sum of reciprocals is strictly increasing and so is used to easily evaluate the termination condition.  
+    fn par_gmedian(self, eps: f64) -> Vec<f64> {
+        let mut g = self.acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
+        let mut recsum = 0_f64;
+        loop {
+            // vector iteration till accuracy eps is exceeded
+            let (mut nextg, nextrecsum) = self
+                .par_iter()
+                .fold(
+                    || (vec![0_f64; self[0].len()], 0_f64),
+                    |mut pair: (Vec<f64>, f64), v: &Vec<T>| {
+                        // |v-g| done in-place for speed. Could have simply called x.vdist(g)
+                        let mag: f64 = v
+                            .iter()
+                            .zip(&g)
+                            .map(|(&vi, gi)| (f64::from(vi) - gi).powi(2))
+                            .sum();
+                        // let (mut vecsum, mut recsum) = pair;
+                        if mag > eps {
+                            let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
+                                                              // vsum increment by components
+                            for (vi, gi) in v.iter().zip(&mut pair.0) {
+                                *gi += f64::from(*vi) * rec
+                            }
+                            pair.1 += rec; // add separately the reciprocals for the final scaling
+                        } // else simply ignore this point should its distance from g be zero
+                        pair
+                    },
+                )
+                // must run reduce on the partial sums produced by fold
+                .reduce( 
+                    || (vec![0_f64; self[0].len()], 0_f64),
+                    |mut pairsum: (Vec<f64>, f64), pairin: (Vec<f64>, f64)| {
+                        pairsum.0.mutvadd::<f64>(&pairin.0);
+                        pairsum.1 += pairin.1;
+                        pairsum
+                    },
+                );
+            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
+            if nextrecsum - recsum < eps {
+                return nextg;
+            }; // termination test
+            g = nextg;
+            recsum = nextrecsum;
+        }
+    }
+
     /// Point by point Geometric Median (gm).
     /// Gm is the point that minimises the sum of distances to a given set of points.
     /// It has (provably) only vector iterative solutions.
     /// Search methods are slow and difficult in highly dimensional space.
     /// Weiszfeld's fixed point iteration formula has known problems with sometimes failing to converge.
     /// Especially, when the points are dense in the close proximity of the gm, or gm coincides with one of them.  
-    /// However, these problems are fixed in my new algorithm here.      
-    /// There will eventually be a multithreaded version.
+    /// However, these problems are fixed in my new algorithm here.
     /// The sum of reciprocals is strictly increasing and so is used here as
     /// easy to evaluate termination condition.
     fn pmedian(self, eps: f64) -> Vec<f64> {

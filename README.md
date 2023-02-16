@@ -284,7 +284,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.27** - Multithreaded `madgm` and `hulls`. Added trivial transpose of TriangMat(s). Pruned some unnecessary methods from trait `VecVecg`.
+* **Version 1.2.28** - The long promised multithreaded geometric median is finally unleashed! Nearly halved the execution time on a 32 cores processor. On machines with fewer cores, the gain may be less.
+
+* **Version 1.2.27** - Multithreaded `madgm` and `hulls`. Added trivial transpose of `TriangMat`(s). Pruned some unnecessary methods from trait `VecVecg`.
 
 * **Version 1.2.26** - More multithreading. Changed `struct TriangMat` to also allow compact representation of antisymmetric matrices (for future use). Updated dependence to the latest `medians 2.1.0`.
 
