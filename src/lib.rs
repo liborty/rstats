@@ -143,7 +143,7 @@ pub trait Stats {
 /// Also included are scalar operations on the `self` vector.
 pub trait Vecg {
     /// Standard error of self against geometric median and mad dispersion
-    fn st_error(self, gm:&[f64], mad:f64) -> Result<f64,RE>;
+    fn st_error(self, gm:&[f64], madgm:f64) -> Result<f64,RE>;
     /// Dot product of vector self with column c of matrix v 
     fn columnp<U>(self,c: usize,v: &[Vec<U>]) -> f64 
     where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;

@@ -8,8 +8,8 @@ impl<T> Vecg for &[T]
         T: Copy+PartialOrd+Into<T>+std::fmt::Display, f64:From<T> {
 
     /// Standard error of self against geometric median and mad dispersion
-    fn st_error(self, gm:&[f64], mad:f64) -> Result<f64,RE> {
-        Ok(self.vdist::<f64>(gm)/mad)
+    fn st_error(self, gm:&[f64], madgm:f64) -> Result<f64,RE> {
+        Ok(self.vdist::<f64>(gm)/madgm)
     }
 
     /// Dot product of vector self with column c of matrix v 

@@ -26,41 +26,47 @@ use Rstats::{noop,fromop,sumn,st_error,unit_matrix};
 
 The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be only in some details a little ahead of the crates.io release versions.
 
-It is highly recommended to read and run [tests.rs](https://github.com/liborty/Rstats/blob/master/tests/tests.rs) for examples of usage. To run all the tests, use a single thread in order to print the results in the right order:
+It is highly recommended to read and run [tests.rs](https://github.com/liborty/Rstats/blob/master/tests/tests.rs) for examples of usage. To run all the tests, use a single thread in order not to print the results in confusing mixed-up order:
 
 ```bash  
 cargo test --release -- --test-threads=1 --nocapture --color always
 ```
 
+However, `timing_gm`, which compares multithreading performance, should be run separately as follows:
+
+```bash
+cargo test -r timing_gm -- --nocapture
+```
+
 Alternatively, just to get a quick idea of the methods provided and their usage, read the output produced by an [automated test run](https://github.com/liborty/rstats/actions). There are test logs generated for each new push to the github repository. Click the latest (top) one, then `Rstats` and then `Run cargo test` ... The badge at the top of this document lights up green when all the tests have passed and clicking it gets you to these logs as well.
 
-Any compilation errors arising out of `rstats` crate indicate most likely that some of the dependencies have become out of date. Issuing `cargo update` command will usually fix this.
+Any compilation errors arising out of `rstats` crate indicate most likely that some of the dependencies are out of date. Issuing `cargo update` command will usually fix this.
 
 ## Introduction
 
-`Rstats` has a small footprint. Only the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional `nd` analysis, i.e. characterising sets of n points in space of d dimensions.
+`Rstats` has a small footprint. Only the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional ('nd' or 'hyperspace') analysis, i.e. characterising clouds of n points in space of d dimensions.
 
-Several branches of mathematics: statistics, information theory, set theory and linear algebra are combined in this one consistent crate, based on the abstraction that they all operate on the same data objects (here Rust Vecs). The only difference being that an ordering of their components is sometimes assumed (in linear algebra, set theory) and sometimes it is not (in statistics, information theory, set theory).
+Several branches of mathematics: statistics, information theory, set theory and linear algebra are combined in this one consistent crate, based on the abstraction that they all operate on the same data objects (here Rust `Vec`s). The only difference being that an ordering of their components is sometimes assumed (in linear algebra, set theory) and sometimes it is not (in statistics, information theory, set theory).
 
 `Rstats` begins with basic statistical measures, information measures, vector algebra and linear algebra. These provide self-contained tools for the multidimensional algorithms but are also useful in their own right.
 
-`Non analytical (non parametric) statistics` is preferred, whereby the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are always obtained from the real data, not from some assumed distributions.
+`Non analytical (non parametric) statistics` is preferred, whereby the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are in preference obtained from the real data, not from some assumed distributions.
 
-`Linear algebra` uses by default `Vec<Vec<T>>`, generic data structure capable of representing irregular matrices. Also, `struct TriangMat` is defined and used for symmetric and triangular matrices (for memory efficiency reasons).
+`Linear algebra` uses by default `Vec<Vec<T>>`, generic data structure capable of representing irregular matrices. Also, `struct TriangMat` is defined and used for symmetric, anti-symmetric, transposed and triangular matrices (for efficiency reasons).
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are introduced and implemented here:
 
-* `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as the cosine of an angle between two zero median samples (instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of interpreting a data sample of length d as a single point in d dimensional space (or vector).
+* `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as the cosine of an angle between two zero median samples, interpreted as vectors.  (Instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of interpreting a data sample of length d as a single point in d dimensional space (or vector).
 
-* `gmedian and pmedian` - fast multidimensional `geometric median (gm)` algorithms.
+* `gmedian, par_gmedian and pmedian` - fast multidimensional `geometric median (gm)` algorithms.
 
-* `madgm` - our generalization to n dimensions of a robust data spread estimator known as `MAD` (median of absolute deviations from median).
+* `madgm` - our generalization of a 1d robust data spread estimator known as 'mad' (median of absolute deviations from median). 'Madgm' is applicable in a (vector) space of any number of dimensions.
 
-* `standard error` - also generalized to `nd`. Here the role of the central tendency is taken by the `geometric median` and the spread by `madgm`. Thus a single scalar standard error is obtained in any number of dimensions.
+* `standard error` - is also generalized: abs(x-median)/mad => |**x-gm**|/madgm. Here the role of the central tendency is taken by the `geometric median` `gm` and the spread by `madgm`. Thus a single scalar standard error is obtained in any number of dimensions.
 
 * `contribution` - of a point to an `nd` set. Defined as a magnitude of `gm` adjustment caused by adding the point to the set. It is related to the point's radius (distance from the `gm`) but is not the same, as it depends on the radii of all the other points as well.
 
-* `comediance` - instead of covariance (triangular matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero median vectors` are replacing `zero mean vectors` in covariance calculations. The results are similar but more stable with respect to the outliers.
+* `comediance` - instead of covariance (a triangular matrix). It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero mean vectors` are replaced by `zero median vectors` in the covariance calculations. The results are similar but more stable with respect to the outliers.
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
@@ -68,7 +74,7 @@ In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians alon
 
 *Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by their rotation.*
 
-In contrast, analyses based on the true geometric median (`gm`) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its weighted version `wgmedian`, in traits `vecvec` and `vecvecg` respectively.
+In contrast, analyses based on the true geometric median (`gm`) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its parallel version `par_gmedian` in trait `VecVec` and a weighted version `wgmedian`, in trait `VecVecg`.
 
 ## Additional Documentation
 
@@ -95,16 +101,16 @@ For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rs
 
 * `Outer Hull` is a subset containing zero median member points p, such that no other points lie outside the normal plane through p. The points that do not satisfy this condition are the `internal` points.
 
-* `Inner Hull or Core` is a subset containing zero median member points p, such that none of the points lie outside (the normal planes through) any other.
+* `Inner Hull or Core` is a subset containing zero median member points p, that do not lie outside the normal plane of any other point.
 Note that in a highly dimensional space up to all points may belong to both hulls.
 
 * `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
 
-* `MADGM` (median of distances from `gm`). This is our generalisation of `MAD` (median of absolute differences) measure from one dimension to any number of dimensions (d>1). It is a robust measure of `nd` data spread.
+* `Madgm` (median of distances from `gm`). This is our generalisation of `mad` (median of absolute differences from median) measure from one dimension to any number of dimensions (d>1). It is a robust measure of `nd` data spread.
 
 * `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it (instead of zero mean vectors).
 
-* `Mahalanobis Distance` is a weighted distace, where the weights are derived from the axis of variation of the `nd` data points cloud. Thus distances in the directions in which there are few points are penalised (increased) and vice versa. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method decomposes the covariance or comediance positive definite matrix S into a product of two triangular matrices: S = LL'. For more details see the comments in the source code.
+* `Mahalanobis Distance` is a weighted distance, where the weights are derived from the axis of variation of the `nd` data points cloud. Thus distances in the directions in which there are few points are penalised (increased) and vice versa. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method decomposes the covariance or comediance positive definite matrix S into a product of two triangular matrices: S = LL'. For more details see the comments in the source code.
 
 * `Contribution` One of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point as the magnitude of adjustment to `gm` caused by adding that point. Generally, outlying points make greater contributions to the `gm` but not as much as they would to the centroid. The contribution depends not only on the radius of the example point in question but also on the radii of all other existing example points.
 
@@ -145,9 +151,10 @@ pub enum RError<T> where T:Sized+Debug {
     OtherError(T)
 }
 ```
+
 Each of its enum variants also carries a generic payload `T`. Most commonly this will be a `String` message giving more helpful explanation, e.g.:
 
-```rust 
+```rust
 if dif <= 0_f64 {
     return Err(RError::ArithError(format!(
         "cholesky needs a positive definite matrix {}", dif )));
@@ -165,16 +172,16 @@ pub type RE = RError<String>;
 ## Structs
 
 ### `struct MStats` 
-holds the central tendency of `1d` data, e.g. some kind of mean or median, and its spread measure, e.g. standard deviation or MAD.
+holds the central tendency of `1d` data, e.g. some kind of mean or median, and its spread measure, e.g. standard deviation or 'mad'.
 
 ### `struct TriangMat` 
 holds triangular matrices of all kinds, as described in Implementation section above. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
 
-* **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes transpose). This decomposition is used by `mahalanobis`.
+* **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes the transpose). This decomposition is used by `mahalanobis`.
 * **Mahalanobis Distance**
 * **Householder UR** (M = QR) matrix decomposition
 
-Also, some methods implemented for `VecVecg` produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar` and `wcovar`. Their results are positive definite. Whenever this condition is satisfied, then the most efficient Cholesky-Banachiewics decomposition is applicable.
+Also, some methods implemented for `VecVecg` produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar` and `wcovar`. Their results are positive definite, which makes the most efficient Cholesky-Banachiewics decomposition applicable.
 
 ## Quantify Functions
 
@@ -284,7 +291,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.28** - The long promised multithreaded geometric median is finally unleashed! Nearly halved the execution time on a 32 cores processor. On machines with fewer cores, the gain may be less.
+* **Version 1.2.28** - Multithreaded geometric median, `par_gmedian`, is unleashed! Nearly halving the execution time on a 32 cores processor. On machines with fewer cores, the gain may be less.
 
 * **Version 1.2.27** - Multithreaded `madgm` and `hulls`. Added trivial transpose of `TriangMat`(s). Pruned some unnecessary methods from trait `VecVecg`.
 

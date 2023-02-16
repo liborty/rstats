@@ -83,7 +83,7 @@ fn fstats() -> Result<(), RE> {
         pt.covar(&pt.acentroid())?.gr()
     );
     println!(
-        "Covariances of zero median data:\n{}",
+        "Comediances (covariances of zero median data):\n{}",
         pt.covar(&pt.gmedian(EPS))?.gr()
     ); 
     println!(
@@ -222,11 +222,10 @@ fn triangmat() -> Result<(), RE> {
     // let transppt = pts.transpose();
     let cov = pts.covar(&pts.pmedian(EPS))?;
     println!("Comediance matrix:\n{cov}");
-    let mut chol = cov.cholesky()?;
+    let chol = cov.cholesky()?;
     println!("Cholesky L matrix:\n{chol}"); 
-    chol.transpose();   
-    println!("L matrix trivially transposed:\n{}",chol.to_full().gr());
-    // set_seeds(77777);
+    // chol.transpose();   
+    // println!("L matrix trivially transposed:\n{}",chol.to_full().gr()); 
     let pta = ru.ranv(d)?.getvf64()?;
     let ptb = ru.ranv(d)?.getvf64()?;
     let d = pta.vsub(&ptb);
@@ -534,6 +533,7 @@ fn geometric_medians() -> Result<(),RE> {
     println!("{ITERATIONS} repeats of {n} points in {d} dimensions");
     let mut sumg = 0_f64;
     let mut sump = 0_f64;
+    let mut sumr = 0_f64;
     let mut sumq = 0_f64;
     let mut summ = 0_f64;
     let mut gm: Vec<f64>;
@@ -543,6 +543,8 @@ fn geometric_medians() -> Result<(),RE> {
         sumg += pts.gmerror(&gm);
         gm = pts.pmedian(EPS);
         sump += pts.gmerror(&gm);
+        gm = pts.par_gmedian(EPS);
+        sumr += pts.gmerror(&gm);
         gm = pts.quasimedian()?;
         sumq += pts.gmerror(&gm);
         gm = pts.acentroid();
@@ -550,6 +552,7 @@ fn geometric_medians() -> Result<(),RE> {
     }
     println!("Pmedian      total error: {GR}{sump:.5e}{UN}");
     println!("Gmedian      total error: {GR}{sumg:.5e}{UN}");
+    println!("Par_gmedian  total error: {GR}{sumr:.5e}{UN}");
     println!("Acentroid    total error: {GR}{summ:.5e}{UN}");
     println!("Quasi median total error: {GR}{sumq:.5e}{UN}");
     Ok(())

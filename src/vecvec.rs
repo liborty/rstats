@@ -343,10 +343,10 @@ where
     /// B is an outer hull point, when there is no other point beyond its own defining plane.
     /// B can belong to both hulls, as when all the points lie on a hyper-sphere around gm.   
     /// The testing is done in increasing (decreasing) radius order.  
-    /// B lies outside the defining plane of **a**, when its projection onto unit **a** exceeds `|a|`  
+    /// B lies outside the defining plane of **a**, when its projection onto unit **a** exceeds `|a|`:    
     /// `|b|cos(θ) > |a| => a*b > |a|^2`,  
     /// such B immediately fails as a candidate for the inner hull.
-    /// Working with square magnitudes `|a|^2` saves taking square roots and dividing the dot product by |a|.  
+    /// Working with square magnitudes, `|a|^2` saves taking square roots and dividing the dot product by |a|.  
     /// Similarly for the outer hull, where A and B simply swap roles.
     fn hulls(self) -> (Vec<usize>, Vec<usize>) {
         let sqradii = self.par_iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
