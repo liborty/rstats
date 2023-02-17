@@ -291,6 +291,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.30** - Nightly. More multithreading within VecVecg.
+
 * **Version 1.2.29** - Added multithreaded weighted median `par_wgmedian` to `VecVecg` trait. Updated dev dependency `times` for timing tests.
 
 * **Version 1.2.28** - Multithreaded geometric median, `par_gmedian`, is unleashed! Nearly halving the execution time on a 32 cores processor. On machines with fewer cores, the gain may be less.

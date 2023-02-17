@@ -1,6 +1,6 @@
 use crate::{noop,fromop,error::RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::Vecops;
-use medians::Median;
+use medians::{Median,Medianf64};
 use rayon::prelude::*;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
@@ -15,13 +15,13 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { return Err(RError::DataError(
             "leftmultv dimensions mismatch".to_owned())); };
-        Ok(self.iter().map(|s| s.dotp(v)).collect())
+        Ok(self.par_iter().map(|s| s.dotp(v)).collect())
     }
 
     /// Rightmultiply (row) vector v by columns of matrix self
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if v.len() != self.len() { return Err(RError::DataError("rightmultv dimensions mismatch".to_owned())); }; 
-        Ok((0..self[0].len()).map(|colnum| v.columnp(colnum,self)).collect())
+        Ok((0..self[0].len()).into_par_iter().map(|colnum| v.columnp(colnum,self)).collect())
     }
 
     /// Rectangular Matrices multiplication: self * m.
@@ -30,7 +30,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Result dimensions are self.len() x m[0].len() 
     fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RE> {
         if self[0].len() != m.len() { return Err(RError::DataError("matmult dimensions mismatch".to_owned())); }; 
-        Ok(self.iter().map(|srow| 
+        Ok(self.par_iter().map(|srow| 
             (0..m[0].len()).map(|colnum| srow.columnp(colnum,m)).collect()
             ).collect::<Vec<Vec<f64>>>()) 
     }
@@ -75,7 +75,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// both of which depend on the choice of axis.
      fn translate(self, m:&[U]) -> Result<Vec<Vec<f64>>,RE> { 
         if self[0].len() != m.len() { return Err(RError::DataError("translate dimensions mismatch".to_owned())); }; 
-        Ok(self.iter().map(|s| s.vsub(m)).collect())   
+        Ok(self.par_iter().map(|s| s.vsub(m)).collect())   
     }
 
     /// Proportions of points along each +/-axis (hemisphere)
@@ -108,7 +108,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn dependencies(self, m:&[U]) -> Result<Vec<f64>,RE> {  
         if self[0].len() != m.len() { return Err(RError::DataError("dependencies dimensions mismatch".to_owned())); }
         let entropym = m.entropy();
-        return self.iter().map(|s| -> Result<f64,RE> {  
+        return self.par_iter().map(|s| -> Result<f64,RE> {  
             Ok((entropym + s.entropy())/
             s.jointentropy(m)?-1.0)}).collect() 
     }
@@ -128,7 +128,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Individual distances from any point v, typically not a member, to all the members of self.    
     fn dists(self, v:&[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { return Err(RError::DataError("dists dimensions mismatch".to_owned())); }
-        Ok(self.iter().map(|p| p.vdist(v)).collect())
+        Ok(self.par_iter().map(|p| p.vdist(v)).collect())
     }
 
     /// Sum of distances from any single point v, typically not a member, 
@@ -138,17 +138,17 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// The radius (distance) from gm is far more efficient, once gm has been found.
     fn distsum(self, v: &[U]) -> Result<f64,RE> {
         if self[0].len() != v.len() { return Err(RError::DataError("distsum dimensions mismatch".to_owned())); }
-        Ok(self.iter().map(|p| p.vdist(v)).sum::<f64>())
+        Ok(self.par_iter().map(|p| p.vdist(v)).sum::<f64>())
     }
 
-    /// Sorted weighted radii (eccentricity) magnitudes to all member points from the Geometric Median.
+    /// Sorted weighted radii to all member points from the Geometric Median.
     fn wsortedrads(self, ws: &[U], gm:&[f64]) -> Result<Vec<f64>,RE> {
         if self.len() != ws.len() { 
             return Err(RError::DataError("wsortedrads self and ws lengths mismatch".to_owned())); };
         if self[0].len() != gm.len() { 
             return Err(RError::DataError("wsortedrads self and gm dimensions mismatch".to_owned())); };
         let wnorm = ws.len() as f64 / ws.iter().map(|&w|f64::from(w)).sum::<f64>(); 
-        Ok (self.iter().zip(ws).map(|(s,&w)| wnorm*f64::from(w)*s.vdist::<f64>(gm))
+        Ok (self.par_iter().zip(ws).map(|(s,&w)| wnorm*f64::from(w)*s.vdist::<f64>(gm))
             .collect::<Vec<f64>>()
             .sorth(&mut noop,true)
         )
@@ -300,10 +300,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         if self.len() != ws.len() { 
             return Err(RError::DataError("wgmadgm and ws lengths mismatch".to_owned())); }; 
         Ok( self
-            .iter()
+            .par_iter()
             .map(|v| v.wvdist(ws,wgm))
             .collect::<Vec<f64>>()
-            .median(&mut|f:&f64|*f)?
+            .medianf64()?
         ) 
     }
 
