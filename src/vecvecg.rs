@@ -200,9 +200,65 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             }
             nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);       
             // eprintln!("recsum {}, nextrecsum {} diff {}",recsum,nextrecsum,nextrecsum-recsum);
-            if nextrecsum-recsum < eps { return Ok(nextg) };  // termination test
+            if nextrecsum-recsum < eps { return Ok(nextg); };  // termination test
             g = nextg;
             recsum = nextrecsum;            
+        }
+    }
+
+    /// Parallel (multithreaded) implementation of the weighted Geometric Median.
+    /// Possibly the fastest you will find.  
+    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.  
+    /// It has (provably) only vector iterative solutions.    
+    /// Search methods are slow and difficult in hyper space.    
+    /// Weiszfeld's fixed point iteration formula has known problems and sometimes fails to converge.  
+    /// Specifically, when the points are dense in the close proximity of the gm, or gm coincides with one of them.    
+    /// However, these problems are solved in my new algorithm here.     
+    /// The sum of reciprocals is strictly increasing and so is used to easily evaluate the termination condition.  
+    fn par_wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>,RE> { 
+        if self.len() != ws.len() { 
+            return Err(RError::DataError("wgmedian and ws lengths mismatch".to_owned())); };
+        let mut g = self.acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
+        let mut recsum = 0_f64;
+        loop {
+            // vector iteration till accuracy eps is exceeded
+            let (mut nextg, nextrecsum) = self
+                .par_iter().zip(ws)
+                .fold(
+                    || (vec![0_f64; self[0].len()], 0_f64),
+                    |mut pair: (Vec<f64>, f64), (p, &w)| {
+                        // |p-g| done in-place for speed. Could have simply called p.vdist(g)
+                        let mag: f64 = p
+                            .iter()
+                            .zip(&g)
+                            .map(|(&vi, gi)| (f64::from(vi) - gi).powi(2))
+                            .sum();
+                        // let (mut vecsum, mut recsum) = pair;
+                        if mag > eps {
+                            let rec = f64::from(w) / (mag.sqrt()); // reciprocal of distance (scalar)
+                            for (vi, gi) in p.iter().zip(&mut pair.0) {
+                                *gi += f64::from(*vi) * rec
+                            }
+                            pair.1 += rec; // add separately the reciprocals for the final scaling
+                        } // else simply ignore this point should its distance from g be zero
+                        pair
+                    },
+                )
+                // must run reduce on the partial sums produced by fold
+                .reduce(
+                    || (vec![0_f64; self[0].len()], 0_f64),
+                    |mut pairsum: (Vec<f64>, f64), pairin: (Vec<f64>, f64)| {
+                        pairsum.0.mutvadd::<f64>(&pairin.0);
+                        pairsum.1 += pairin.1;
+                        pairsum
+                    },
+                );
+            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
+            if nextrecsum - recsum < eps {
+                return Ok(nextg);
+            }; // termination test
+            g = nextg;
+            recsum = nextrecsum;
         }
     }
     

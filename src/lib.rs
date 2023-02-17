@@ -453,6 +453,8 @@ pub trait VecVecg<T, U> {
     fn wnxnonmember(self, ws: &[U], g: &[f64]) -> Result<(Vec<f64>, Vec<f64>, f64), RE>;
     /// The weighted geometric median to accuracy eps
     fn wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
+    /// Parallel (multithreaded) implementation of the weighted Geometric Median.  
+    fn par_wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
     /// Like `wgmedian` but returns also the sum of unit vecs and the sum of reciprocals.
     fn wgmparts(self, ws: &[U], eps: f64) -> Result<(Vec<f64>, Vec<f64>, f64), RE>;
     /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator

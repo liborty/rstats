@@ -482,9 +482,9 @@ where
             // vector iteration till accuracy eps is exceeded
             let mut nextg = vec![0_f64; self[0].len()];
             let mut nextrecsum = 0_f64;
-            for v in self {
-                // |v-g| done in-place for speed. Could have simply called x.vdist(g)
-                let mag: f64 = v
+            for p in self {
+                // |p-g| done in-place for speed. Could have simply called p.vdist(g)
+                let mag: f64 = p
                     .iter()
                     .zip(&g)
                     .map(|(&vi, gi)| (f64::from(vi) - gi).powi(2))
@@ -492,11 +492,11 @@ where
                 if mag > eps {
                     let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
                                                       // vsum increment by components
-                    for (vi, gi) in v.iter().zip(&mut nextg) {
+                    for (vi, gi) in p.iter().zip(&mut nextg) {
                         *gi += f64::from(*vi) * rec
                     }
                     nextrecsum += rec // add separately the reciprocals for final scaling
-                } // else simply ignore this point should its distance from g be zero
+                } // else simply ignore this point v, should its distance from g be <= eps
             }
             nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
             // eprintln!("recsum {}, nextrecsum {} diff {}",recsum,nextrecsum,nextrecsum-recsum);
@@ -525,9 +525,9 @@ where
                 .par_iter()
                 .fold(
                     || (vec![0_f64; self[0].len()], 0_f64),
-                    |mut pair: (Vec<f64>, f64), v: &Vec<T>| {
-                        // |v-g| done in-place for speed. Could have simply called x.vdist(g)
-                        let mag: f64 = v
+                    |mut pair: (Vec<f64>, f64), p: &Vec<T>| {
+                        // |p-g| done in-place for speed. Could have simply called p.vdist(g)
+                        let mag: f64 = p
                             .iter()
                             .zip(&g)
                             .map(|(&vi, gi)| (f64::from(vi) - gi).powi(2))
@@ -535,8 +535,7 @@ where
                         // let (mut vecsum, mut recsum) = pair;
                         if mag > eps {
                             let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
-                                                              // vsum increment by components
-                            for (vi, gi) in v.iter().zip(&mut pair.0) {
+                            for (vi, gi) in p.iter().zip(&mut pair.0) {
                                 *gi += f64::from(*vi) * rec
                             }
                             pair.1 += rec; // add separately the reciprocals for the final scaling
@@ -545,7 +544,7 @@ where
                     },
                 )
                 // must run reduce on the partial sums produced by fold
-                .reduce( 
+                .reduce(
                     || (vec![0_f64; self[0].len()], 0_f64),
                     |mut pairsum: (Vec<f64>, f64), pairin: (Vec<f64>, f64)| {
                         pairsum.0.mutvadd::<f64>(&pairin.0);
