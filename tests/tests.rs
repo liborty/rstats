@@ -36,9 +36,12 @@ fn u8() -> Result<(), RE> {
     println!("Testing on a random set of {}points in {}d space:", n.yl(), d.yl());
     set_seeds(77777);
     let pt = Rnum::newu8().ranvv(d, n)?.getvvu8()?;
+    println!("Acentroid:\n{}", pt.acentroid().gr());
+    println!("G-median :\n{}", pt.gmedian(EPS).gr());
     let cov = pt.covar(&pt.acentroid())?;
     println!("Covariances:\n{cov}");
     let com = pt.covar(&pt.gmedian(EPS))?;
+    println!("Comediances:\n{com}");
     println!("Their Distance: {}", cov.data.vdist(&com.data)); 
     println!(
         "Column Median Correlations:\n{}",
@@ -98,7 +101,6 @@ fn ustats() -> Result<(), RE> {
     set_seeds(1234567);
     let v1 = Rnum::newu8().ranv(20)?.getvu8()?;
     println!("\n{}", (&v1).gr());
-    // println!("Linear transform:\n{}",v1.lintrans()));
     println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
     println!("Median:          {GR}{:>14.10}{UN}", v1.median(&mut fromop)?);
     println!("Geometric mean:  {GR}{:>14.10}{UN}", v1.gmean()?);

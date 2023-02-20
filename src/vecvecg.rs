@@ -337,7 +337,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                     // its products up to and including the diagonal (itself)
                     vm.iter().take(i+1).for_each(|vmi| { 
                         cov[covsub] += thisc*vmi;
-                            covsub += 1;
+                        covsub += 1;
                         })); 
                 cov 
                 }
