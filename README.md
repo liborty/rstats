@@ -32,10 +32,10 @@ It is highly recommended to read and run [tests.rs](https://github.com/liborty/R
 cargo test --release -- --test-threads=1 --nocapture --color always
 ```
 
-However, `timing_gm`, which compares multithreading performance, should be run separately as follows:
+However, `geometric_medians`, which compares multithreading performance, should be run separately in multiple threads, as follows:
 
 ```bash
-cargo test -r timing_gm -- --nocapture
+cargo test -r geometric_medians -- --nocapture
 ```
 
 Alternatively, just to get a quick idea of the methods provided and their usage, read the output produced by an [automated test run](https://github.com/liborty/rstats/actions). There are test logs generated for each new push to the github repository. Click the latest (top) one, then `Rstats` and then `Run cargo test` ... The badge at the top of this document lights up green when all the tests have passed and clicking it gets you to these logs as well.
