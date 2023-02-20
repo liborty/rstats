@@ -55,10 +55,11 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         .fold(
             || (vec![0_f64;self[0].len()], 0_f64),
             | mut pair: (Vec<f64>, f64), (p,&w) | { 
-            let weight = f64::from(w); // saves converting twice 
-            pair.0.mutvadd(&p.smult(weight));
-            pair.1 += weight;
-            pair},
+                let weight = f64::from(w); // saves converting twice 
+                pair.0.mutvadd(&p.smult(weight));
+                pair.1 += weight;
+                pair
+            }
         )
         .reduce(
             || (vec![0_f64; self[0].len()], 0_f64),
@@ -66,7 +67,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 pairsum.0.mutvadd::<f64>(&pairin.0);
                 pairsum.1 += pairin.1;
                 pairsum
-                }
+            }
         );
         sumvec.smult(1./weightsum)
     }
@@ -317,32 +318,41 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         ) 
     }
 
-    /// Covariance matrix for f64 vectors in self. Becomes comediance when 
-    /// argument m is the geometric median instead of the centroid.
-    /// Since the matrix is symmetric, the missing upper triangular part can be trivially
-    /// regenerated for all j>i by: c(j,i) = c(i,j).
+    /// Symmetric covariance matrix. Becomes comediance when argument `mid`  
+    /// is the geometric median instead of the centroid.
     /// The indexing is always in this order: (row,column) (left to right, top to bottom).
     /// The items are flattened into a single vector in this order.
-    /// The full 2D matrix can be reconstructed by `symmatrix` in the trait `Stats`.
     fn covar(self, mid:&[U]) -> Result<TriangMat,RE> {
         let d = self[0].len(); // dimension of the vector(s)
         if d != mid.len() { 
             return Err(RError::DataError("covar self and mid dimensions mismatch".to_owned())); }; 
-        let mut cov:Vec<f64> = vec![0_f64; (d+1)*d/2]; // flat lower triangular results array  
-        for thisp in self { // adding up covars for all the points
-            let mut covsub = 0_usize; // subscript into the flattened array cov
-            let vm = thisp.vsub(mid);  // zero mean vector
-            vm.iter().enumerate().for_each(|(i,thisc)| 
-                // its products up to and including the diagonal (itself)
-                vm.iter().take(i+1).for_each(|vmi| { 
-                    cov[covsub] += thisc*vmi;
-                    covsub += 1;
-                }));
-            } 
+        let mut covsum = self
+            .par_iter()
+            .fold(
+                || vec![0_f64; (d+1)*d/2],
+                | mut cov: Vec<f64>, p | {
+                let mut covsub = 0_usize; // subscript into the flattened array cov
+                let vm = p.vsub(mid);  // zero mean vector
+                vm.iter().enumerate().for_each(|(i,thisc)| 
+                    // its products up to and including the diagonal (itself)
+                    vm.iter().take(i+1).for_each(|vmi| { 
+                        cov[covsub] += thisc*vmi;
+                            covsub += 1;
+                        })); 
+                cov 
+                }
+            )
+            .reduce(
+                || vec![0_f64; (d+1)*d/2],
+                | mut covout: Vec<f64>, covin: Vec<f64> | {
+                covout.mutvadd(&covin);
+                covout
+                }
+            ); 
         // now compute the means and return
         let lf = self.len() as f64;
-        cov.iter_mut().for_each(|c| *c /= lf); 
-        Ok(TriangMat{ kind:2,data:cov }) // symmetric, non transposed
+        covsum.iter_mut().for_each(|c| *c /= lf); 
+        Ok(TriangMat{ kind:2,data:covsum }) // symmetric, non transposed
     }
  
     /// Weighted covariance matrix for f64 vectors in self. Becomes comediance when 
@@ -358,20 +368,34 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             return Err(RError::DataError("wcovar self and m dimensions mismatch".to_owned())); }; 
         if self.len() != ws.len() { 
             return Err(RError::DataError("wcovar self and ws lengths mismatch".to_owned())); }; 
-        let mut cov:Vec<f64> = vec![0_f64; (n+1)*n/2]; // flat lower triangular results array
-        let mut wsum = 0_f64;
-        self.iter().zip(ws).for_each(|(selfh,&wsh)| { // adding up covars for all the points
-            let w = f64::from(wsh); wsum += w;
-            let mut covsub = 0_usize; // subscript into the flattened array cov 
-            let vm = selfh.vsub(m);   // subtract zero mean/median vector  
-            vm.iter().enumerate().for_each(|(i,&thisc)|            
-                vm.iter().take(i+1).for_each(|&vmi| {  // its weighted products up to and including the diagonal 
-                    cov[covsub] += w*thisc*vmi;
-                    covsub += 1;
-                }));
-        });
-        // now compute the means and return
-        cov.mutsmult::<f64>(1_f64/wsum); 
-        Ok(TriangMat{ kind:2,data:cov }) // symmetric, non transposed
-    } 
+        let (mut covsum,wsum) = self
+            .par_iter().zip(ws)
+            .fold(
+                || (vec![0_f64; (n+1)*n/2], 0_f64),
+                | mut pair: (Vec<f64>, f64), (p,&w) | {
+                let mut covsub = 0_usize; // subscript into the flattened array cov
+                let vm = p.vsub(m);  // zero mean vector
+                let wf = f64::from(w); // f64 weight for this point
+                vm.iter().enumerate().for_each(|(i,thisc)| 
+                    // its products up to and including the diagonal (itself)
+                    vm.iter().take(i+1).for_each(|vmi| { 
+                        pair.0[covsub] += wf*thisc*vmi;
+                        covsub += 1;
+                        }));
+                pair.1 += wf; 
+                pair 
+                }
+            )
+            .reduce(
+                || (vec![0_f64; (n+1)*n/2], 0_f64),
+                | mut pairout: (Vec<f64>,f64), pairin: (Vec<f64>,f64) | {
+                pairout.0.mutvadd(&pairin.0);
+                pairout.1 += pairin.1;
+                pairout 
+                }
+            ); 
+        // now compute the means and return  
+        covsum.iter_mut().for_each(|c| *c /= wsum); 
+        Ok(TriangMat{ kind:2,data:covsum }) // symmetric, non transposed
+        }
 }

@@ -294,7 +294,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.30** - More multithreading within VecVecg. Removed obsolete `pmedian`. All these changes are generally improving the speed.
+* **Version 1.2.30** - Multithreading mostly done now. Removed obsolete `pmedian`. All these changes are generally improving the speed.
 
 * **Version 1.2.29** - Added multithreaded weighted median `par_wgmedian` to `VecVecg` trait. Updated dev dependency `times` for timing tests.
 
