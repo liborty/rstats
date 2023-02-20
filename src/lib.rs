@@ -414,8 +414,6 @@ pub trait VecVec<T> {
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find. 
     fn par_gmedian(self, eps: f64) -> Vec<f64>;
-    /// Point-by-point geometric median
-    fn pmedian(self, eps: f64) -> Vec<f64>;
     /// Like `gmedian` but returns the sum of unit vecs and the sum of reciprocals of distances.
     fn gmparts(self, eps: f64) -> (Vec<f64>, Vec<f64>, f64);
 }

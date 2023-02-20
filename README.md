@@ -58,11 +58,12 @@ Our treatment of multidimensional sets of points is constructed from the first p
 
 * `median correlation`- in one dimension, our `mediancorr` method is to replace `Pearson's correlation`. We define `median correlation` as the cosine of an angle between two zero median samples, interpreted as vectors.  (Instead of Pearson's zero mean samples). This conceptual clarity is one of the benefits of interpreting a data sample of length d as a single point in d dimensional space (or vector).
 
-* `gmedian, par_gmedian and pmedian` - fast multidimensional `geometric median (gm)` algorithms.
+* `gmedian, par_gmedian, wgmedian and par_wgmedian` - fast multidimensional `geometric median (gm)` algorithms.
 
 * `madgm` - our generalization of a 1d robust data spread estimator known as 'mad' (median of absolute deviations from median). 'Madgm' is applicable in a (vector) space of any number of dimensions.
 
-* `standard error` - is also generalized: abs(x-median)/mad => |**x-gm**|/madgm. Here the role of the central tendency is taken by the `geometric median` `gm` and the spread by `madgm`. Thus a single scalar standard error is obtained in any number of dimensions.
+* `standard error` - is generalized from: `abs(x-median)/mad`,   
+to: |**x-gm**|`/madgm`. Here the role of the central tendency is taken by the `geometric median` **gm** and the spread is `madgm`. Thus a single scalar standard error is obtained in any number of dimensions.
 
 * `contribution` - of a point to an `nd` set. Defined as a magnitude of `gm` adjustment caused by adding the point to the set. It is related to the point's radius (distance from the `gm`) but is not the same, as it depends on the radii of all the other points as well.
 
@@ -74,7 +75,7 @@ In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians alon
 
 *Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by their rotation.*
 
-In contrast, analyses based on the true geometric median (`gm`) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its parallel version `par_gmedian` in trait `VecVec` and a weighted version `wgmedian`, in trait `VecVecg`.
+In contrast, analyses based on the true geometric median (`gm`) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its parallel version `par_gmedian` in trait `VecVec` and their weighted versions `wgmedian` and `par_wgmedian` in trait `VecVecg`.
 
 ## Additional Documentation
 
@@ -99,22 +100,24 @@ For more detailed comments, plus some examples, see [docs.rs](https://docs.rs/rs
 
 * `Outlier` is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm`.
 
-* `Outer Hull` is a subset containing zero median member points p, such that no other points lie outside the normal plane through p. The points that do not satisfy this condition are the `internal` points.
+* `Zero median vectors` (or points) are obtained by moving the origin of the coordinate system to `gm`. This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by placing the origin at  the arithmetic centroid.
 
-* `Inner Hull or Core` is a subset containing zero median member points p, that do not lie outside the normal plane of any other point.
-Note that in a highly dimensional space up to all points may belong to both hulls.
+* `Outer Hull` is a subset of zero median points p, such that no other points lie outside the normal plane through p. The points that do not satisfy this condition are the `internal` points.
 
-* `Zero median vectors` are obtained by subtracting the `gm` (placing the origin of the coordinate system at the `gm`). This is a proposed  alternative to the commonly used `zero mean vectors`, obtained by subtracting the centroid.
+* `Inner Hull or Core` is a subset of zero median points p, that do not lie outside the normal plane of any other point.
+Note that in a highly dimensional space up to all points may belong to both inner and outer hulls.
 
-* `Madgm` (median of distances from `gm`). This is our generalisation of `mad` (median of absolute differences from median) measure from one dimension to any number of dimensions (d>1). It is a robust measure of `nd` data spread.
+
+
+* `Madgm` (median of distances from `gm`). This is our generalisation of `mad` (median of absolute differences from median) measure from one dimension to any number of dimensions. It is a robust measure of `nd` data spread.
 
 * `Comediance` is similar to `covariance`, except that zero median vectors are used to compute it (instead of zero mean vectors).
 
-* `Mahalanobis Distance` is a weighted distance, where the weights are derived from the axis of variation of the `nd` data points cloud. Thus distances in the directions in which there are few points are penalised (increased) and vice versa. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method decomposes the covariance or comediance positive definite matrix S into a product of two triangular matrices: S = LL'. For more details see the comments in the source code.
+* `Mahalanobis Distance` is a weighted distance, where the weights are derived from the axis of variation of the `nd` data points cloud. Thus distances in the directions in which there are few points are penalised (increased) and vice versa. Efficient Cholesky singular (eigen) value decomposition is used. Cholesky method decomposes the covariance or comediance positive definite matrix S into a product of two triangular matrices: S = LL'. For more details, see the comments in the source code.
 
 * `Contribution` One of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point as the magnitude of adjustment to `gm` caused by adding that point. Generally, outlying points make greater contributions to the `gm` but not as much as they would to the centroid. The contribution depends not only on the radius of the example point in question but also on the radii of all other existing example points.
 
-* `Tukey Vector` Proportions of points in each hemisphere from gm. This is a useful 'signature' of a data cloud. For a new point (that typically needs to be classified) we can then quickly determine whether it lies in a well populated direction. This could also be done by projecting all the existing points on its unit radius vector but that would be much slower, as there are many points. Also, in keeping with the stability properties of medians, we are only using counts of points in the hemispheres, not their distances.
+* `Tukey Vector` Proportions of points in each hemisphere around `gm`. This is a useful 'signature' of a data cloud. For a new point (that typically needs to be classified) we can then quickly determine whether it lies in a well populated direction. This could also be done by projecting all the existing points on its unit radius vector but that would be much slower, as there are many points. Also, in keeping with the stability properties of medians, we are only using counts of points in the hemispheres, not their distances.
 
 ## Implementation
 
@@ -275,13 +278,13 @@ Some vector algebra as above that can be more efficient when the end type happen
 ## Trait VecVec
 
 Relationships between n vectors (in d dimensions).
-This general data domain is denoted here as (nd). It is in nd where the main original contribution of this library lies. True geometric median (gm) is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhoods of existing set points. Its variant `pmedian` iterates point-by-point, which gives even better convergence.
+This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` where the main original contribution of this library lies. True geometric median (gm) is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhoods of existing set points. Its variant, `par_gmedian`, employs multithreading for faster execution and gives otherwise exactly the same result.
 
 * centroid, medoid, outliers, gm
 * sums of distances, radius of a point (as its distance from gm)
 * characterisation of a set of multidimensional points by the mean, standard deviation, median and MAD of its points' radii. These are useful recognition measures for the set.
 * transformation to zero geometric median data,
-* multivariate trend (regression) between two sets of nd points,
+* multivariate trend (regression) between two sets of `nd` points,
 * covariance and comediance matrices.
 * inner and outer hulls
 
@@ -291,7 +294,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.30** - Nightly. More multithreading within VecVecg.
+* **Version 1.2.30** - More multithreading within VecVecg. Removed obsolete `pmedian`. All these changes are generally improving the speed.
 
 * **Version 1.2.29** - Added multithreaded weighted median `par_wgmedian` to `VecVecg` trait. Updated dev dependency `times` for timing tests.
 

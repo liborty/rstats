@@ -220,7 +220,7 @@ fn triangmat() -> Result<(), RE> {
     let pts = ru.ranvv_in(d, n, 0.0, 4.0)?.getvvf64()?;
     // println!("\nTest data:\n{}",pts.gr());
     // let transppt = pts.transpose();
-    let cov = pts.covar(&pts.pmedian(EPS))?;
+    let cov = pts.covar(&pts.par_gmedian(EPS))?;
     println!("Comediance matrix:\n{cov}");
     let chol = cov.cholesky()?;
     println!("Cholesky L matrix:\n{chol}"); 
@@ -492,17 +492,14 @@ fn householder() -> Result<(), RE> {
 }
 
 #[test]
-fn timing_gm() {
-    const NAMES: [&str; 5] = ["par_gmedian", "gmedian", "pmedian", "quasimedian", "acentroid"];
-    const CLOSURESU8: [fn(&[Vec<f64>]); 5] = [
+fn geometric_medians() -> Result<(),RE> {
+    const NAMES: [&str; 4] = ["par_gmedian", "gmedian", "quasimedian", "acentroid"];
+    const CLOSURESU8: [fn(&[Vec<f64>]); 4] = [
         |v: &[_]| {
             v.par_gmedian(EPS);
         },
         |v: &[_]| {
             v.gmedian(EPS);
-        },
-        |v: &[_]| {
-            v.pmedian(EPS);
         },
         |v: &[_]| {
             v.quasimedian().expect("quasimedian failed");
@@ -513,6 +510,7 @@ fn timing_gm() {
     ];
     set_seeds(7777777777_u64); // intialise random numbers generator
                                // Rnum specifies the type of the random numbers required
+    println!("\n{YL}Timing Comparisons{UN}");
     benchvvf64(
         Rnum::newf64(),
         100,
@@ -521,18 +519,13 @@ fn timing_gm() {
         10,
         &NAMES,
         &CLOSURESU8,
-    );
-}
-
-#[test]
-fn geometric_medians() -> Result<(),RE> {
+    ); 
     const ITERATIONS: usize = 10;
     let n = 100_usize;
     let d = 1000_usize;
-    set_seeds(7777777);
-    println!("{ITERATIONS} repeats of {n} points in {d} dimensions");
-    let mut sumg = 0_f64;
-    let mut sump = 0_f64;
+    set_seeds(7777777);  
+    println!("\n{YL}Total errors for {ITERATIONS} repeats of {n} points in {d} dimensions{UN}\n");
+    let mut sumg = 0_f64; 
     let mut sumr = 0_f64;
     let mut sumq = 0_f64;
     let mut summ = 0_f64;
@@ -540,9 +533,7 @@ fn geometric_medians() -> Result<(),RE> {
     for _i in 1..ITERATIONS {
         let pts = Rnum::newf64().ranvv(d, n)?.getvvf64()?;
         gm = pts.gmedian(EPS);
-        sumg += pts.gmerror(&gm);
-        gm = pts.pmedian(EPS);
-        sump += pts.gmerror(&gm);
+        sumg += pts.gmerror(&gm); 
         gm = pts.par_gmedian(EPS);
         sumr += pts.gmerror(&gm);
         gm = pts.quasimedian()?;
@@ -550,10 +541,9 @@ fn geometric_medians() -> Result<(),RE> {
         gm = pts.acentroid();
         summ += pts.gmerror(&gm);
     }
-    println!("Pmedian      total error: {GR}{sump:.5e}{UN}");
-    println!("Gmedian      total error: {GR}{sumg:.5e}{UN}");
-    println!("Par_gmedian  total error: {GR}{sumr:.5e}{UN}");
-    println!("Acentroid    total error: {GR}{summ:.5e}{UN}");
-    println!("Quasi median total error: {GR}{sumq:.5e}{UN}");
+    println!("{MG}par_gmedian  {GR}{sumr:.10}{UN}");
+    println!("{MG}gmedian      {GR}{sumg:.10}{UN}");
+    println!("{MG}acentroid    {GR}{summ:.10}{UN}");
+    println!("{MG}quasimedian  {GR}{sumq:.10}{UN}\n");
     Ok(())
 }
