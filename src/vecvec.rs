@@ -151,15 +151,25 @@ where
         }
         resvec
     }
+    
 
     /// acentroid = multidimensional arithmetic mean
-    fn acentroid(self) -> Vec<f64> {
-        let mut centre = vec![0_f64; self[0].len()];
-        for v in self {
-            centre.mutvadd(v)
-        }
-        centre.mutsmult::<f64>(1.0 / (self.len() as f64));
-        centre
+    fn acentroid(self) -> Vec<f64> {  
+        let sumvec = self
+        .par_iter()
+        .fold(
+            || vec![0_f64;self[0].len()],
+            | mut vecsum: Vec<f64>, p | { 
+            vecsum.mutvadd(p); 
+            vecsum }
+        )
+        .reduce(
+            || vec![0_f64; self[0].len()],
+            | mut finalsum: Vec<f64>, partsum: Vec<f64> | {
+            finalsum.mutvadd::<f64>(&partsum);
+            finalsum }
+        );
+        sumvec.smult::<f64>(1./(self.len() as f64))
     }
 
     /// gcentroid = multidimensional geometric mean

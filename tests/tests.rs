@@ -510,7 +510,7 @@ fn geometric_medians() -> Result<(),RE> {
     ];
     set_seeds(7777777777_u64); // intialise random numbers generator
                                // Rnum specifies the type of the random numbers required
-    println!("\n{YL}Timing Comparisons{UN}");
+    println!("\n{YL}Timing Comparisons (in nanoseconds){UN}");
     benchvvf64(
         Rnum::newf64(),
         100,

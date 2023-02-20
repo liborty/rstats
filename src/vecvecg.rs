@@ -35,7 +35,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             ).collect::<Vec<Vec<f64>>>()) 
     }
 
-    /// Weighted sum of nd points (or vectors). 
+    /// Weighted sum of nd points (or vectors).  
     /// Weights are associated with points, not coordinates
     fn wsumv(self,ws: &[U]) -> Vec<f64> {
         let mut resvec = vec![0_f64;self[0].len()]; 
@@ -47,16 +47,28 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         resvec
     }
 
-    /// Weighted Centre
-    fn wacentroid(self,ws: &[U]) -> Vec<f64> { 
-        let mut wsum = 0_f64;
-        let mut result = vec![0_f64;self[0].len()]; 
-        for (v,&w) in self.iter().zip(ws) { 
-            let weight = f64::from(w); // saves converting twice
-            wsum += weight;
-            result.mutvadd(&v.smult(weight)); };
-        result.mutsmult::<f64>(1.0/wsum); // divide by weighted sum to get the mean
-        result
+    /// Weighted Centre.  
+    /// Weights are associated with points
+    fn wacentroid(self,ws: &[U]) -> Vec<f64> {  
+        let (sumvec,weightsum) = self
+        .par_iter().zip(ws)
+        .fold(
+            || (vec![0_f64;self[0].len()], 0_f64),
+            | mut pair: (Vec<f64>, f64), (p,&w) | { 
+            let weight = f64::from(w); // saves converting twice 
+            pair.0.mutvadd(&p.smult(weight));
+            pair.1 += weight;
+            pair},
+        )
+        .reduce(
+            || (vec![0_f64; self[0].len()], 0_f64),
+            | mut pairsum: (Vec<f64>, f64), pairin: (Vec<f64>, f64)| {
+                pairsum.0.mutvadd::<f64>(&pairin.0);
+                pairsum.1 += pairin.1;
+                pairsum
+                }
+        );
+        sumvec.smult(1./weightsum)
     }
 
     /// Trend computes the vector connecting the geometric medians of two sets of multidimensional points.
@@ -117,13 +129,11 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Factors out the unit vector of m to save repetition of work
     fn correlations(self, m: &[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != m.len() { return Err(RError::DataError("correlations dimensions mismatch".to_owned())); } 
-        let unitzerom =  m.zeromedian( &mut fromop)?.vunit(); //|f:&U| f64::from(*f))?.vunit();
-        let mut res = Vec::new();
-        for s in self {
-            res.push(unitzerom.dotp(&s.zeromedian(&mut fromop)?.vunit())); // |f:&T|f64::from(*f))?.vunit()));
-        }
-        Ok(res) 
-    }
+        let unitzerom =  m.zeromedian( &mut fromop)?.vunit();
+        self.par_iter().map(|s| -> Result<f64,RE> {
+            Ok(unitzerom.dotp(&s.zeromedian(&mut fromop)?.vunit())) } )
+            .collect::<Result<Vec<f64>,RE>>() 
+    } 
 
     /// Individual distances from any point v, typically not a member, to all the members of self.    
     fn dists(self, v:&[U]) -> Result<Vec<f64>,RE> {
@@ -242,7 +252,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                             pair.1 += rec; // add separately the reciprocals for the final scaling
                         } // else simply ignore this point should its distance from g be zero
                         pair
-                    },
+                    }
                 )
                 // must run reduce on the partial sums produced by fold
                 .reduce(
@@ -251,7 +261,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                         pairsum.0.mutvadd::<f64>(&pairin.0);
                         pairsum.1 += pairin.1;
                         pairsum
-                    },
+                    }
                 );
             nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
             if nextrecsum - recsum < eps {
