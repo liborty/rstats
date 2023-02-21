@@ -317,8 +317,8 @@ fn vecvec() -> Result<(), RE> {
     let dists = pts.distsums();
     let md = dists.minmax();
     println!("\nMedoid and Outlier Total Distances:\n{md}");
-    println!("Total Distances {}", dists.ameanstd()?);
-    println!("Total distances {}", dists.medstatsf64()?);
+    println!("Centroid of total Distances {}", dists.ameanstd()?);
+    println!("Median of total distances   {}", dists.medstatsf64()?);
     println!(
         "GM's total distances:        {}",
         pts.distsum(&median)?.gr()
@@ -337,10 +337,9 @@ fn vecvec() -> Result<(), RE> {
     );
 
     println!(
-        "\nMedoid, outlier and radii summary:\n{eccecc}\nRadii {eccstd}\nRadii {eccmed}");
+        "\nMedoid, outlier and radii summary:\n{eccecc}\nRadii centroid {eccstd}\nRadii median   {eccmed}");
     let radsindex = pts.radii(&median).hashsort_indexed(&mut |x| *x);
-    println!(
-        "Radii ratio:\t {GR}{}{UN}",
+    println!("Radii ratio:         {GR}{}{UN}",
         pts.radius(radsindex[0], &median)? / pts.radius(radsindex[radsindex.len() - 1], &median)?
     );
     println!("Madgm:               {}", pts.madgm(&median)?.gr());
@@ -392,7 +391,7 @@ fn vecvec() -> Result<(), RE> {
         .map(|p| p.contrib_oldpt(&median, recips))
         .collect::<Vec<f64>>();
     println!(
-        "\nContributions of Data Points, Summary:\n{}\n{}\n{}",
+        "\nContributions of Data Points, Summary:\n{}\nCentroid: {}\nMedian: {}",
         contribs.minmax(),
         contribs.ameanstd()?,
         contribs.medstatsf64()?
