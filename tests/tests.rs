@@ -495,8 +495,8 @@ fn householder() -> Result<(), RE> {
 
 #[test]
 fn geometric_medians() -> Result<(),RE> {
-    const NAMES: [&str; 4] = ["par_gmedian", "gmedian", "quasimedian", "acentroid"];
-    const CLOSURESU8: [fn(&[Vec<f64>]); 4] = [
+    const NAMES: [&str; 5] = ["par_gmedian", "gmedian", "quasimedian", "acentroid", "par_acentroid"];
+    const CLOSURESU8: [fn(&[Vec<f64>]); 5] = [
         |v: &[_]| {
             v.par_gmedian(EPS);
         },
@@ -508,6 +508,9 @@ fn geometric_medians() -> Result<(),RE> {
         },
         |v: &[_]| {
             v.acentroid();
+        },
+        |v: &[_]| {
+            v.par_acentroid();
         },
     ];
     set_seeds(7777777777_u64); // intialise random numbers generator
@@ -531,6 +534,7 @@ fn geometric_medians() -> Result<(),RE> {
     let mut sumr = 0_f64;
     let mut sumq = 0_f64;
     let mut summ = 0_f64;
+    let mut sump = 0_f64;
     let mut gm: Vec<f64>;
     for _i in 1..ITERATIONS {
         let pts = Rnum::newf64().ranvv(d, n)?.getvvf64()?;
@@ -542,10 +546,13 @@ fn geometric_medians() -> Result<(),RE> {
         sumq += pts.gmerror(&gm);
         gm = pts.acentroid();
         summ += pts.gmerror(&gm);
+        gm = pts.par_acentroid();
+        sump += pts.gmerror(&gm);
     }
-    println!("{MG}par_gmedian  {GR}{sumr:.10}{UN}");
-    println!("{MG}gmedian      {GR}{sumg:.10}{UN}");
-    println!("{MG}acentroid    {GR}{summ:.10}{UN}");
-    println!("{MG}quasimedian  {GR}{sumq:.10}{UN}\n");
+    println!("{MG}par_gmedian   {GR}{sumr:.10}{UN}");
+    println!("{MG}gmedian       {GR}{sumg:.10}{UN}");
+    println!("{MG}acentroid     {GR}{summ:.10}{UN}");
+    println!("{MG}par_acentroid {GR}{sump:.10}{UN}");
+    println!("{MG}quasimedian   {GR}{sumq:.10}{UN}\n");
     Ok(())
 }

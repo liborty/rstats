@@ -17,9 +17,12 @@ where
         self.iter().map(|row| f64::from(row[cnum])).collect()
     }
 
-    /// Transpose vec of vecs matrix
+    /// Multithreaded transpose of vec of vecs matrix
     fn transpose(self) -> Vec<Vec<f64>> {
-        (0..self[0].len()).map(|cnum| self.column(cnum)).collect()
+        (0..self[0].len())
+            .into_par_iter()
+            .map(|cnum| self.column(cnum))
+            .collect()
     }
 
     /// Normalize columns, so that they become unit row vectors
@@ -151,10 +154,14 @@ where
         }
         resvec
     }
-    
 
     /// acentroid = multidimensional arithmetic mean
-    fn acentroid(self) -> Vec<f64> {  
+    fn acentroid(self) -> Vec<f64> { 
+        self.sumv().smult::<f64>(1./(self.len() as f64))
+    }   
+
+    /// multithreaded acentroid = multidimensional arithmetic mean
+    fn par_acentroid(self) -> Vec<f64> {  
         let sumvec = self
         .par_iter()
         .fold(
@@ -214,18 +221,6 @@ where
         dists
     }
 
-    /// The sum of distances from one member point, given by its `indx`,
-    /// to all the other points in self.
-    /// For all the points, use more efficient `distsums`.
-    /// For measure of 'outlyingness', use nore efficient radius from gm.    
-    fn distsuminset(self, indx: usize) -> f64 {
-        let thisp = &self[indx];
-        self.par_iter()
-            .enumerate()
-            .map(|(i, thatp)| if i == indx { 0.0 } else { thisp.vdist(thatp) })
-            .sum()
-    }
-
     /// Medoid and Outlier (Medout)
     /// Medoid is the member point (point belonging to the set of points `self`),
     /// which has the least sum of distances to all other points.
@@ -237,39 +232,6 @@ where
             .map(|s| s.vdist::<f64>(gm))
             .collect::<Vec<f64>>()
             .minmax()
-    }
-
-    /// Finds approximate vectors from each member point towards the geometric median.
-    /// Twice as fast using symmetry, as doing them individually.
-    /// For measure of 'outlyingness' use `exacteccs` below
-    fn eccentricities(self) -> Vec<Vec<f64>> {
-        let n = self.len();
-        // allocate vectors for the results
-        let mut eccs = vec![vec![0_f64; self[0].len()]; n];
-        let mut recips = vec![0_f64; n];
-        // ecentricities vectors accumulator for all points
-        // examine all unique pairings (lower triangular part of symmetric flat matrix)
-        for i in 1..n {
-            let thisp = &self[i];
-            for j in 0..i {
-                // calculate each unit vector between any pair of points just once
-                let dvmag = self[j].vdist(thisp);
-                if !dvmag.is_normal() {
-                    continue;
-                }
-                let rec = 1.0_f64 / dvmag;
-                eccs[i].mutvadd::<f64>(&self[j].smult::<f64>(rec));
-                recips[i] += rec;
-                // mind the vector's opposite orientations w.r.t. to the two points!
-                eccs[j].mutvsub::<f64>(&self[j].smult::<f64>(rec));
-                recips[j] += rec; // but scalar distances are the same
-            }
-        }
-        for i in 0..n {
-            eccs[i].mutsmult::<f64>(1.0 / recips[i]);
-            eccs[i].mutvsub(&self[i])
-        }
-        eccs
     }
 
     /// Radius of a point specified by its subscript.    
@@ -420,34 +382,6 @@ where
         vsum // good initial gm
     }
 
-    /// Next approximate gm computed from a member point  
-    /// specified by its index `indx` to self.
-    fn nxmember(self, indx: usize) -> Vec<f64> {
-        let mut vsum = vec![0_f64; self[0].len()];
-        let p = &self[indx].tof64();
-        let mut recip = 0_f64;
-        for (i, x) in self.iter().enumerate() {
-            if i != indx {
-                // not point p
-                let mag: f64 = x
-                    .iter()
-                    .zip(p)
-                    .map(|(&xi, &pi)| (f64::from(xi) - pi).powi(2))
-                    .sum::<f64>();
-                if mag.is_normal() {
-                    // ignore this point should distance be zero
-                    let rec = 1.0_f64 / (mag.sqrt());
-                    vsum.iter_mut()
-                        .zip(x)
-                        .for_each(|(vi, xi)| *vi += rec * f64::from(*xi));
-                    recip += rec // add separately the reciprocals
-                }
-            }
-        }
-        vsum.iter_mut().for_each(|vi| *vi /= recip);
-        vsum
-    }
-
     /// Like gmparts, except only does one iteration from any non-member point g
     fn nxnonmember(self, g: &[f64]) -> (Vec<f64>, Vec<f64>, f64) {
         // vsum is the sum vector of unit vectors towards the points
@@ -527,7 +461,7 @@ where
     /// However, these problems are solved in my new algorithm here.     
     /// The sum of reciprocals is strictly increasing and so is used to easily evaluate the termination condition.  
     fn par_gmedian(self, eps: f64) -> Vec<f64> {
-        let mut g = self.acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
+        let mut g = self.par_acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
         let mut recsum = 0_f64;
         loop {
             // vector iteration till accuracy eps is exceeded

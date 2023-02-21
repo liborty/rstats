@@ -374,6 +374,8 @@ pub trait VecVec<T> {
     fn sumv(self) -> Vec<f64>;
     /// Arithmetic Centre = euclidian mean of a set of points
     fn acentroid(self) -> Vec<f64>;
+    /// Multithreaded Arithmetic Centre = euclidian mean of a set of points
+    fn par_acentroid(self) -> Vec<f64>;
     /// Geometric Centroid
     fn gcentroid(self) -> Vec<f64>;
     /// Harmonic Centroid = harmonic mean of a set of points
@@ -384,14 +386,8 @@ pub trait VecVec<T> {
     fn distsums(self) -> Vec<f64>;
     /// Medoid distance, its index, outlier distance, its index
     fn medout(self, gm: &[f64]) -> MinMax<f64>;
-    /// Fast sums of distances from each point to all other points
-    fn distsuminset(self, indx: usize) -> f64;
-    /// Next approx gm computed at a member point given by its indx
-    fn nxmember(self, indx: usize) -> Vec<f64>;
     /// Like gmparts, except only does one iteration from any non-member point g
     fn nxnonmember(self, g: &[f64]) -> (Vec<f64>, Vec<f64>, f64);
-    /// Estimated eccentricity vectors from each member point
-    fn eccentricities(self) -> Vec<Vec<f64>>;
     /// Radius of a point specified by its subscript.    
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE>;
     /// Exact radii vectors to each member point by using the gm

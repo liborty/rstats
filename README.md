@@ -29,7 +29,7 @@ The latest (nightly) version is always available in the github repository [Rstat
 It is highly recommended to read and run [tests.rs](https://github.com/liborty/Rstats/blob/master/tests/tests.rs) for examples of usage. To run all the tests, use a single thread in order not to print the results in confusing mixed-up order:
 
 ```bash  
-cargo test --release -- --test-threads=1 --nocapture --color always
+cargo test --release -- --test-threads=1 --nocapture
 ```
 
 However, `geometric_medians`, which compares multithreading performance, should be run separately in multiple threads, as follows:
@@ -293,6 +293,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.31** - Multithreading done. Restored sequential `acentroid` for better timing comparisons. Its multithreaded version is now `par_acentroid`. Done some more code pruning in trait `VecVec` to reduce the footprint.
 
 * **Version 1.2.30** - Multithreading mostly done now. Removed obsolete `pmedian`. All these changes are generally improving the speed.
 
