@@ -156,147 +156,147 @@ pub trait Vecg {
     /// Dot product of vector self with column c of matrix v
     fn columnp<U>(self, c: usize, v: &[Vec<U>]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Scalar addition to vector
     fn sadd<U>(self, s: U) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Scalar multiplication of vector, creates new vec
     fn smult<U>(self, s: U) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Scalar product
     fn dotp<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Product with Tukeyvec of hemispheric counts.
     fn dottukey(self, tukey: &[f64]) -> Result<f64, RE>;
     /// Cosine of angle between two slices
     fn cosine<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Vectors' subtraction (difference)
     fn vsub<U>(self, v: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Vectors difference as unit vector (done together for efficiency)
     fn vsubunit<U>(self, v: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Vector addition
     fn vadd<U>(self, v: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Euclidian distance
     fn vdist<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Weighted arithmetic mean of `self:&[T]`, scaled by `ws:&[U]`
     fn wvmean<U>(self, ws: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Weighted distance of self:&[T],weighted by ws:&[U],to v:&[V]
     fn wvdist<U, V>(self, ws: &[U], v: &[V]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
         V: Copy,
         f64: From<V>;
     /// Euclidian distance squared
     fn vdistsq<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// cityblock distance
     fn cityblockd<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Magnitude of the cross product |a x b| = |a||b|sin(theta).
     /// Attains maximum `|a|.|b|` when the vectors are othogonal.
     fn varea<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Area proportional to the swept arc
     fn varc<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Vector similarity S in the interval [0,1]: S = (1+cos(theta))/2
     fn vsim<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Positive dotp [0,2|a||b|]
     fn pdotp<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2
     fn vdisim<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Lower triangular part of a covariance matrix for a single f64 vector.
     fn covone<U>(self, m: &[U]) -> TriangMat
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Kronecker product of two vectors
     fn kron<U>(self, m: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Outer product of two vectors
     fn outer<U>(self, m: &[U]) -> Vec<Vec<f64>>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Joint probability density function
     fn jointpdf<U>(self, v: &[U]) -> Result<Vec<f64>, RE>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Joint entropy of &[T],&[U] in nats (units of e)
     fn jointentropy<U>(self, v: &[U]) -> Result<f64, RE>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Statistical pairwise dependence of &[T] &[U] variables in the range [0,1]
     fn dependence<U>(self, v: &[U]) -> Result<f64, RE>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Statistical pairwise independence in the range [0,1] based on joint entropy
     fn independence<U>(self, v: &[U]) -> Result<f64, RE>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Pearson's correlation.  
     fn correlation<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Kendall Tau-B correlation.
     fn kendalcorr<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Spearman rho correlation.
     fn spearmancorr<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
     /// Change to gm that adding point p will cause
     fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Vec<f64>;

@@ -4,8 +4,7 @@ use medians::Median;
 
 impl<T> Stats for &[T]
 where
-    T: Copy + PartialOrd + std::fmt::Display,
-    f64: From<T>,
+    T: Copy + PartialOrd, f64: From<T>,
 {
     /// Vector magnitude
     fn vmag(self) -> f64 {

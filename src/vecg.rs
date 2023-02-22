@@ -5,8 +5,7 @@ use indxvec::{Indices, Vecops};
 
 impl<T> Vecg for &[T]
 where
-    T: Copy + PartialOrd + Into<T> + std::fmt::Display,
-    f64: From<T>,
+    T: Copy + PartialOrd + Into<T>, f64: From<T>,
 {
     /// nd t_statistic of self against geometric median and madgm spread.     
     /// Unlike in 1d, is always positive.
@@ -17,8 +16,7 @@ where
     /// Dot product of vector self with column c of matrix v
     fn columnp<U>(self, c: usize, v: &[Vec<U>]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>,
+        U: Copy + PartialOrd + Into<U>, f64: From<U>,
     {
         self.iter()
             .enumerate()
@@ -29,8 +27,7 @@ where
     /// Scalar addition to a vector, creates new vec
     fn sadd<U>(self, s: U) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>,
+        U: Copy + PartialOrd + Into<U>, f64: From<U>,
     {
         let sf = f64::from(s);
         self.iter().map(|&x| sf + (f64::from(x))).collect()
@@ -39,7 +36,7 @@ where
     /// Scalar addition to a vector, creates new vec
     fn smult<U>(self, s: U) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         let sf = f64::from(s);
@@ -50,8 +47,7 @@ where
     /// Must be of the same length - no error checking (for speed)
     fn dotp<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>,
+        U: Copy + PartialOrd + Into<U>, f64: From<U>,
     {
         self.iter()
             .zip(v)
@@ -87,8 +83,7 @@ where
     /// Done in one iteration for efficiency.
     fn cosine<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>,
+        U: Copy + PartialOrd + Into<U>, f64: From<U>,
     {
         let (mut sxy, mut sy2) = (0_f64, 0_f64);
         let sx2: f64 = self
@@ -108,8 +103,7 @@ where
     /// Vector subtraction
     fn vsub<U>(self, v: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>,
+        U: Copy + PartialOrd + Into<U>, f64: From<U>
     {
         self.iter()
             .zip(v)
@@ -120,8 +114,7 @@ where
     /// Vectors difference unitised (done together for efficiency)
     fn vsubunit<U>(self, v: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>,
+        U: Copy + PartialOrd + Into<U>, f64: From<U>
     {
         let mut sumsq = 0_f64;
         let dif = self
@@ -139,8 +132,7 @@ where
     /// Vector addition
     fn vadd<U>(self, v: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>,
+        U: Copy + PartialOrd + Into<U>, f64: From<U>
     {
         self.iter()
             .zip(v)
@@ -151,8 +143,7 @@ where
     /// Euclidian distance   
     fn vdist<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>,
+        U: Copy + PartialOrd + Into<U>, f64: From<U>,
     {
         self.iter()
             .zip(v)
@@ -164,8 +155,7 @@ where
     /// Weighted arithmetic mean of `self:&[T]`, scaled by `ws:&[U]`
     fn wvmean<U>(self, ws: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
-        f64: From<U>,
+        U: Copy + PartialOrd + Into<U>, f64: From<U>
     {
         let mut wsum: f64 = 0.;
         let mut sum: f64 = 0.;
@@ -181,7 +171,7 @@ where
     /// allows all three to be of different types
     fn wvdist<U, V>(self, ws: &[U], v: &[V]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>, 
         f64: From<U>,
         V: Copy,
         f64: From<V>,
@@ -196,7 +186,7 @@ where
     /// Euclidian distance squared  
     fn vdistsq<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         self.iter()
@@ -208,7 +198,7 @@ where
     /// cityblock distance
     fn cityblockd<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         self.iter()
@@ -221,7 +211,7 @@ where
     /// Attains maximum `|a|.|b|` when the vectors are orthogonal.
     fn varea<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         (self.vmagsq() * v.vmagsq() - self.dotp(v).powi(2)).sqrt()
@@ -231,7 +221,7 @@ where
     /// = |a||b|(1-cos(theta)) = 2|a||b|D
     fn varc<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         (v.vmagsq() * self.vmagsq()).sqrt() - self.dotp(v)
@@ -241,7 +231,7 @@ where
     /// = |a||b|(1+cos(theta)) = 2|a||b|S
     fn pdotp<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         (v.vmagsq() * self.vmagsq()).sqrt() + self.dotp(v)
@@ -251,7 +241,7 @@ where
     /// S = (1+cos(theta))/2
     fn vsim<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         (1.0 + self.cosine(v)) / 2.0
@@ -261,7 +251,7 @@ where
     /// D = 1-S = (1-cos(theta))/2
     fn vdisim<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         (1.0 - self.cosine(v)) / 2.0
@@ -272,7 +262,7 @@ where
     /// Covariance matrix is symmetric (kind:2) (positive semi definite).
     fn covone<U>(self, m: &[U]) -> TriangMat
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         let mut cov: Vec<f64> = Vec::new(); // flat lower triangular result array
@@ -287,7 +277,7 @@ where
     /// The indexing is always assumed to be in this order: row,column.
     fn kron<U>(self, m: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         let mut krn: Vec<f64> = Vec::new(); // result vector
@@ -303,7 +293,7 @@ where
     /// The indexing is always assumed to be in this order: row,column.
     fn outer<U>(self, m: &[U]) -> Vec<Vec<f64>>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         let mut out: Vec<Vec<f64>> = Vec::new(); // result vector
@@ -316,7 +306,7 @@ where
     /// Joint probability density function of two pairwise matched slices
     fn jointpdf<U>(self, v: &[U]) -> Result<Vec<f64>, RE>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         let n = self.len();
@@ -354,7 +344,7 @@ where
     /// Joint entropy of two sets of the same length
     fn jointentropy<U>(self, v: &[U]) -> Result<f64, RE>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         let jpdf = self.jointpdf(v)?;
@@ -366,7 +356,7 @@ where
     /// returns 1 when they are identical or all their values are unique
     fn dependence<U>(self, v: &[U]) -> Result<f64, RE>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         Ok((self.entropy() + v.entropy()) / self.jointentropy(v)? - 1.0)
@@ -376,7 +366,7 @@ where
     /// returns 1 iff they are statistically component wise independent
     fn independence<U>(self, v: &[U]) -> Result<f64, RE>
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         Ok(2.0 * self.jointentropy(v)? / (self.entropy() + v.entropy()) - 1.0)
@@ -392,7 +382,7 @@ where
     /// ```
     fn correlation<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
@@ -424,7 +414,7 @@ where
     /// ```
     fn kendalcorr<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         let (mut conc, mut disc, mut tiesx, mut tiesy) = (0_i64, 0_i64, 0_i64, 0_i64);
@@ -466,7 +456,7 @@ where
     /// ```
     fn spearmancorr<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
     {
         let xvec = self.rank(true);
@@ -523,7 +513,7 @@ where
     /// Householder reflect
     fn house_reflect<U>(self, x: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + std::fmt::Display,
+        U: Copy + PartialOrd,
         f64: From<U>,
     {
         x.vsub(&self.smult(x.dotp(self)))

@@ -304,6 +304,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.33** - Removed superfluous trait bound `Display` from `Vecg`.
+
 * **Version 1.2.32** - Minor release. Corrected some terminology, revised some tests and Readme manual.
 
 * **Version 1.2.31** - Multithreading done. Restored sequential `acentroid` for better timing comparisons. Its multithreaded version is now `par_acentroid`. Done some more code pruning in trait `VecVec` to reduce the footprint.
