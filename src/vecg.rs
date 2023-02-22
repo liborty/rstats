@@ -5,7 +5,8 @@ use indxvec::{Indices, Vecops};
 
 impl<T> Vecg for &[T]
 where
-    T: Copy + PartialOrd + Into<T>, f64: From<T>,
+    T: Copy + PartialOrd + Into<T>,
+    f64: From<T>,
 {
     /// nd t_statistic of self against geometric median and madgm spread.     
     /// Unlike in 1d, is always positive.
@@ -16,7 +17,8 @@ where
     /// Dot product of vector self with column c of matrix v
     fn columnp<U>(self, c: usize, v: &[Vec<U>]) -> f64
     where
-        U: Copy + PartialOrd + Into<U>, f64: From<U>,
+        U: Copy + PartialOrd + Into<U>,
+        f64: From<U>,
     {
         self.iter()
             .enumerate()
@@ -27,7 +29,8 @@ where
     /// Scalar addition to a vector, creates new vec
     fn sadd<U>(self, s: U) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U>, f64: From<U>,
+        U: Copy + PartialOrd + Into<U>,
+        f64: From<U>,
     {
         let sf = f64::from(s);
         self.iter().map(|&x| sf + (f64::from(x))).collect()
@@ -47,7 +50,8 @@ where
     /// Must be of the same length - no error checking (for speed)
     fn dotp<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U>, f64: From<U>,
+        U: Copy + PartialOrd + Into<U>,
+        f64: From<U>,
     {
         self.iter()
             .zip(v)
@@ -83,7 +87,8 @@ where
     /// Done in one iteration for efficiency.
     fn cosine<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U>, f64: From<U>,
+        U: Copy + PartialOrd + Into<U>,
+        f64: From<U>,
     {
         let (mut sxy, mut sy2) = (0_f64, 0_f64);
         let sx2: f64 = self
@@ -103,7 +108,8 @@ where
     /// Vector subtraction
     fn vsub<U>(self, v: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U>, f64: From<U>
+        U: Copy + PartialOrd + Into<U>,
+        f64: From<U>,
     {
         self.iter()
             .zip(v)
@@ -114,7 +120,8 @@ where
     /// Vectors difference unitised (done together for efficiency)
     fn vsubunit<U>(self, v: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U>, f64: From<U>
+        U: Copy + PartialOrd + Into<U>,
+        f64: From<U>,
     {
         let mut sumsq = 0_f64;
         let dif = self
@@ -132,7 +139,8 @@ where
     /// Vector addition
     fn vadd<U>(self, v: &[U]) -> Vec<f64>
     where
-        U: Copy + PartialOrd + Into<U>, f64: From<U>
+        U: Copy + PartialOrd + Into<U>,
+        f64: From<U>,
     {
         self.iter()
             .zip(v)
@@ -143,7 +151,8 @@ where
     /// Euclidian distance   
     fn vdist<U>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U>, f64: From<U>,
+        U: Copy + PartialOrd + Into<U>,
+        f64: From<U>,
     {
         self.iter()
             .zip(v)
@@ -155,7 +164,8 @@ where
     /// Weighted arithmetic mean of `self:&[T]`, scaled by `ws:&[U]`
     fn wvmean<U>(self, ws: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U>, f64: From<U>
+        U: Copy + PartialOrd + Into<U>,
+        f64: From<U>,
     {
         let mut wsum: f64 = 0.;
         let mut sum: f64 = 0.;
@@ -171,7 +181,7 @@ where
     /// allows all three to be of different types
     fn wvdist<U, V>(self, ws: &[U], v: &[V]) -> f64
     where
-        U: Copy + PartialOrd + Into<U>, 
+        U: Copy + PartialOrd + Into<U>,
         f64: From<U>,
         V: Copy,
         f64: From<V>,
