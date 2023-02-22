@@ -21,10 +21,10 @@ use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 and any of the following auxiliary functions:
 
 ```rust
-use Rstats::{noop,fromop,sumn,t_statistic,unit_matrix};
+use Rstats::{noop,fromop,sumn,t_stat,unit_matrix};
 ```
 
-The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be only in some details a little ahead of the crates.io release versions.
+The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be only in some details a little ahead of the `crates.io` release versions.
 
 It is highly recommended to read and run [tests.rs](https://github.com/liborty/Rstats/blob/master/tests/tests.rs) for examples of usage. To run all the tests, use a single thread in order not to print the results in confusing mixed-up order:
 
@@ -233,7 +233,7 @@ All other cases were previously only possible with manual implementation written
 
 * `sumn`: the sum of the sequence `1..n = n*(n+1)/2`. It is also the size of a lower/upper triangular matrix.
 
-* `t_statistic`: of a value x: (x-centre)/spread. In one dimension.
+* `t_stat`: of a value x: (x-centre)/spread. In one dimension.
 
 * `unit_matrix`: - generates full square unit matrix.
 
