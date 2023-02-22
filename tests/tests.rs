@@ -1,7 +1,7 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::{Median,Medianf64};
 use ran::{set_seeds, Rnum };
-use rstats::{t_statistic, noop, fromop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
+use rstats::{t_stat, noop, fromop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
 use times::benchvvf64;
 
 pub const EPS: f64 = 1e-3;
@@ -65,10 +65,10 @@ fn fstats() -> Result<(), RE> {
     println!("Arithmetic {}", v1.ameanstd()?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
-    println!("T-statistic of 5 against median {}",t_statistic(5.,v1.medstatsf64()?).gr());
-    println!("T-statistic of 5 against amean  {}",t_statistic(5.,v1.ameanstd()?).gr());
-    println!("T-statistic of 5 against gmean  {}",t_statistic(5.,v1.gmeanstd()?).gr());
-    println!("T-statistic of 5 against hmean   {}",t_statistic(5.,v1.hmeanstd()?).gr());
+    println!("T-statistic of 5 against median {}",t_stat(5.,v1.medstatsf64()?).gr());
+    println!("T-statistic of 5 against amean  {}",t_stat(5.,v1.ameanstd()?).gr());
+    println!("T-statistic of 5 against gmean  {}",t_stat(5.,v1.gmeanstd()?).gr());
+    println!("T-statistic of 5 against hmean   {}",t_stat(5.,v1.hmeanstd()?).gr());
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
     println!("Entropy 2:\t{}", v2.entropy().gr()); // generic

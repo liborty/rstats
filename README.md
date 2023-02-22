@@ -21,7 +21,7 @@ use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 and any of the following auxiliary functions:
 
 ```rust
-use Rstats::{noop,fromop,sumn,st_error,unit_matrix};
+use Rstats::{noop,fromop,sumn,t_statistic,unit_matrix};
 ```
 
 The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be only in some details a little ahead of the crates.io release versions.
@@ -56,7 +56,6 @@ Several branches of mathematics: statistics, information theory, set theory and 
 
 Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are defined and implemented here (see the terminology section below).
 
-
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
 In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are also slower to compute than is our `gm`.
@@ -73,7 +72,7 @@ For more detailed comments, plus some examples, see [rstats in docs.rs](https://
 
 ### New Concepts and their Definitions
 
-* `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in 1d), or to the `gm` (in nd). This is our proposed  alternative to the commonly used `zero mean points`, obtained by moving the origin to the mean (in 1d) or to the arithmetic centroid (in nd).
+* `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in 1d), or to the `gm` (in `nd`). This is our proposed  alternative to the commonly used `zero mean points`, obtained by moving the origin to the mean (in 1d) or to the arithmetic centroid (in `nd`).
 
 * `median correlation` between two 1d sets of the same length.  
 We define correlation similarly to Pearson, as cosine of an angle between two normalised sets, interpreted as vectors. Pearson normalises the vectors by subtracting their means from all components, we subtract their medians. Cf. zero median points in 1d, above. This clarity is one of the benefits of interpreting a data sample of length d as a single point (or vector) in d dimensional space.
@@ -84,8 +83,11 @@ our fast multidimensional `geometric median (gm)` algorithms.
 * `madgm` (median of distances from `gm`)  
 is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. 1d median is replaced in nd by gm (geometric median). Where mad is a robust measure of 1d data spread, `madgm` is a robust measure of `nd` data spread.
 
-* `t-statistic`  
-we generalize `t-statistic` from: `(x-mean)/std`, to `(x-median)/mad` (in 1d), to: |**p-gm**|/madgm (in nd), where x is an observed value in 1d and **p** is an observed value  in nd space. The role of the central tendency is taken up by the `geometric median` **gm** and the spread by `madgm`. Thus a single scalar t-statistic is obtained in any number of dimensions.
+* `t_stat`  
+we improve 1d 't statistic' from: `(x-mean)/std`, to `(x-median)/mad`, where x is a single observed value. `(x-mean)/std`  is similar to 'z-score', except the measures of central tendency and spread are obtained from the sample (so called pivotal quantity), rather than from the (assumed) distribution.
+
+* `t_statistic`  
+we then generalize `t_stat` to nd `t_statistic`: |**p-gm**|/madgm, where **p** is now an observed value in nd space. The role of the central tendency is taken up by the `geometric median` **gm** and the spread by `madgm`. Thus a single scalar t-statistic can be obtained in any number of dimensions.
 
 * `contribution`  
 one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of adjustment to `gm` caused by adding **p**. Generally, outlying points make greater contributions to the `gm` but not as much as they would to the centroid. The contribution depends not only on the radius of the example point in question but also on the radii of all other existing example points.
@@ -318,7 +320,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 1.2.25** - added dependency on `rayon` crate which has somewhat increased the footprint but there will be significant speed ups due to parallel execution. Some have been introduced already.
 
-* **Version 1.2.24** - added `st_error` method to trait Vecg. It is a generalization of standard error to 'nd'. The central tendency is (usually) the geometric median and the spread is (usually) MADGM. Also tidied up `hulls`.
+* **Version 1.2.24** - added `st_error` method to trait Vecg. It is a generalization of standard error to 'nd'. The central tendency is (usually) the geometric median and the spread is (usually) MADGM. Also tidied up `hulls`. (Renamed in version 1.2.32 to more accurate t_statistic).
 
 * **Version 1.2.23** - `convex_hull => hulls`. Now computes both inner and outer hulls. See above for definitions. Also, added `st_error` to auxiliary functions.
 
