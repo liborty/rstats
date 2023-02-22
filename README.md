@@ -60,11 +60,13 @@ Our treatment of multidimensional sets of points is constructed from the first p
 
 *Zero median vectors are generally preferable to the commonly used zero mean vectors.*
 
-In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are also slower to compute than is our `gm`.
+In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are also slower to compute than is our `gm` (`true geometric median`).
 
 *Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by their rotation.*
 
-In contrast, our methods based on the true geometric median (`gm`) are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible). They are computed here by methods `gmedian` and its parallel version `par_gmedian` in trait `VecVec` and their weighted versions `wgmedian` and `par_wgmedian` in trait `VecVecg`.
+In contrast, our methods based on `gm` are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible).
+
+We compute geometric medians by methods `gmedian` and its parallel version `par_gmedian` in trait `VecVec` and their weighted versions `wgmedian` and `par_wgmedian` in trait `VecVecg`. It is these efficient algorithms that make most of our new concepts described below practical.
 
 ### Additional Documentation
 
@@ -97,12 +99,16 @@ one of the key questions of Machine Learning (ML) is how to quantify the contrib
 * `comediance`  
 another new concept. It is similar to `covariance`. It is a triangular symmetric matrix, obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero mean vectors` are replaced by `zero median vectors` as the data for the covariance calculations. The results are similar but more stable with respect to the outliers.
 
+* `outer hull` is a subset of all zero median points **p**, such that no other points lie outside the normal plane through **p**. The points that do not satisfy this condition are called the `internal` points.
+
+* `inner hull` is a subset of all zero median points **p**, that do not lie outside the normal plane of any other point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, when they lie on a hypersphere).
+
 * `tukey vector`  
 proportions of points in each hemisphere around `gm`. We propose this as a 'signature' of a data cloud. For a new point **p** that needs to be classified, we can quickly determine whether it lies in a well populated direction from gm. This could be done properly by projecting all the existing points onto unit **p** but that would be too slow, as there are typically many such points to project. However, `tukey_vector` needs to be precomputed only once and is then the only vector projected onto unit **p**. This gives an approximately similar result. Also, in keeping with the stability properties of medians, we are only using counts of points in the hemispheres, not their distances.
 
 ### Existing Concepts
 
-* `centroid/centre/mean` of an 'nd' set.  
+* `centroid/centre/mean` of an `nd` set.  
 Is the point, generally non member, that minimises its sum of *squares* of distances to all member points. The squaring makes it susceptible to outliers. Specifically, it is the d-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
 
 * `quasi/marginal median`  
@@ -111,7 +117,7 @@ is the point minimising sums of distances separately in each dimension (its coor
 * `tukey median`  
 is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but its advantages over the geometric median are not clear.
 
-* `median or the true geometric median (gm)`  
+* `true geometric median (gm)`  
 is the point (generally non member), which minimises the sum of distances to all member points. This is the one we want. It is much less susceptible to outliers than the centroid. In addition, unlike quasi median, `gm` is rotation independent.
 
 * `medoid`  
@@ -120,14 +126,10 @@ is the member of the set with the least sum of distances to all other members. E
 * `outlier`  
 is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm` (has the maximum radius).
 
-* `outer hull` is a subset of zero median points **p**, such that no other points lie outside the normal plane through **p**. The points that do not satisfy this condition are called the `internal` points.
-
-* `inner hull or core` is a subset of zero median points **p**, that do not lie outside the normal plane of any other point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, for a hypersphere).
-
 * `mahalanobis distance` is a scaled distance, where the scaling is derived from the axis of covariance of the `nd` data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances are decreased. Efficient Cholesky-Banachiewicz singular (eigen) value decomposition is used. Our `cholesky` method decomposes the covariance or comediance positive definite triangular matrix S into a product of two triangular matrices: S = LL'. For more details, see the comments in the source code.
 
 * `householder's decomposition`  
-in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition does not hold, this is the next best (QR) decomposition method. Implemented here with our memory efficient `TriangMat` struct.
+in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition is not satisfied, Householder's (UR) decomposition is the next best method. Implemented here with our memory efficient `TriangMat` struct.
 
 ## Implementation
 
@@ -194,9 +196,9 @@ holds triangular matrices of all kinds, as described in Implementation section a
 * **Mahalanobis Distance**
 * **Householder UR** (M = QR) matrix decomposition
 
-Some methods implemented for `VecVecg` also produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar` and `wcovar`. Their results are positive definite, which makes the most efficient Cholesky-Banachiewics decomposition applicable.
+Some methods implemented for `VecVecg` also produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar` and `wcovar`. Their results are positive definite, which makes the most efficient Cholesky-Banachiewicz decomposition applicable.
 
-## Quantify Functions (dependency injection)
+## Quantify Functions (Dependency Injection)
 
 Most methods in `medians::Median` trait and `hashort` methods in `indxvec` crate require explicit closure to tell them how to quantify input data of any user end type T into f64. Variety of different quantifying methods can then be dynamically employed.
 
@@ -259,9 +261,13 @@ Note that fast implementation of 1d medians is, as of version 1.1.0, provided by
 
 ## Trait Vecg
 
-Generic vector algebra operations between two slices `&[T]`, `&[U]` of any (common) length  (dimensions). Note that it may be necessary to invoke some using the 'turbofish' `::<type>` syntax to indicate the type U of the supplied argument, e.g.:  
-`datavec.methodname::<f64>(arg)`.  
-This is because Rust is currently incapable of inferring its type ('the inference bug'?).
+Generic vector algebra operations between two slices `&[T]`, `&[U]` of any (common) length  (dimensions). Note that it may be necessary to invoke some using the 'turbofish' `::<type>` syntax to indicate the type U of the supplied argument, e.g.:
+
+```rust 
+`datavec.methodname::<f64>(arg)`
+```
+
+This is because Rust is currently for some reason incapable of inferring its type ('the inference bug'?).
 
 Methods implemented by this trait:
 
@@ -277,6 +283,8 @@ The simpler methods of this trait are sometimes unchecked (for speed), so some c
 ## Trait MutVecg
 
 A select few of the `Stats` and `Vecg` methods (e.g. mutable vector addition, subtraction and multiplication) are reimplemented under this trait, so that they can mutate `self` in-place. This is more efficient and convenient in some circumstances, such as in vector iterative methods.
+
+However, these methods do not fit in with the functional programming style, as they do not explicitly return anything (their calls are statements with side effects, rather than expressions).
 
 ## Trait Vecu8
 
