@@ -46,11 +46,11 @@ Any compilation errors arising out of `rstats` crate indicate most likely that s
 
 `Rstats` has a small footprint. Only the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional ('nd' or 'hyperspace') analysis, i.e. characterising clouds of n points in space of d dimensions.
 
-Several branches of mathematics: statistics, information theory, set theory and linear algebra are combined in this one consistent crate, based on the abstraction that they all operate on the same data objects (here Rust `Vec`s). The only difference being that an ordering of their components is sometimes assumed (in linear algebra, set theory) and sometimes it is not (in statistics, information theory, set theory).
+Several branches of mathematics: statistics, information theory, set theory and linear algebra are combined in this one consistent crate, based on the abstraction that they all operate on the same data objects (here Rust Vecs). The only difference being that an ordering of their components is sometimes assumed (in linear algebra, set theory) and sometimes it is not (in statistics, information theory, set theory).
 
-`Rstats` begins with basic statistical measures, information measures, vector algebra and linear algebra. These provide self-contained tools for the multidimensional algorithms but are also useful in their own right.
+`Rstats` begins with basic statistical measures, information measures, vector algebra and linear algebra. These provide self-contained tools for the multidimensional algorithms but they are also useful in their own right.
 
-`Non analytical (non parametric) statistics` is preferred, whereby the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are in preference obtained from the real data, not from some assumed distributions.
+`Non analytical (non parametric) statistics` is preferred, whereby the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are in preference obtained from the real data (pivotal quantity), not from some assumed distributions.
 
 `Linear algebra` uses `Vec<Vec<T>>`, generic data structure capable of representing irregular matrices. Also, `struct TriangMat` is defined and used for symmetric, anti-symmetric, and triangular matrices, and their transposed versions (for memory efficiency reasons).
 
@@ -72,36 +72,36 @@ For more detailed comments, plus some examples, see [rstats in docs.rs](https://
 
 ### New Concepts and their Definitions
 
-* `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in 1d), or to the `gm` (in `nd`). This is our proposed  alternative to the commonly used `zero mean points`, obtained by moving the origin to the mean (in 1d) or to the arithmetic centroid (in `nd`).
+* `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in 1d), or to the `gm` (in `nd`). This is our proposed  alternative to the commonly used `zero mean points`, obtained by moving the origin to the arithmetic mean (in 1d) or to the arithmetic centroid (in `nd`).
 
 * `median correlation` between two 1d sets of the same length.  
-We define correlation similarly to Pearson, as cosine of an angle between two normalised sets, interpreted as vectors. Pearson normalises the vectors by subtracting their means from all components, we subtract their medians. Cf. zero median points in 1d, above. This clarity is one of the benefits of interpreting a data sample of length d as a single point (or vector) in d dimensional space.
+We define this correlation similarly to Pearson, as cosine of an angle between two normalised sets of numbers, interpreted as vector components. Pearson first normalises each set by subtracting its  mean from all components. Whereas we subtract the median, cf. zero median points in 1d, above. This conceptual clarity is one of the benefits of interpreting a data sample of length d as a single point (or vector) in d dimensional space.
 
 * `gmedian, par_gmedian, wgmedian and par_wgmedian`  
 our fast multidimensional `geometric median (gm)` algorithms.
 
 * `madgm` (median of distances from `gm`)  
-is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. 1d median is replaced in nd by gm (geometric median). Where mad is a robust measure of 1d data spread, `madgm` is a robust measure of `nd` data spread. It is: median(|**p**i-**gm**|,for i=1..n), where **p**1..**p**n are the n data points (d dimensional vectors).
+is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. 1d median is replaced in `nd` by `gm`. Where `mad` is a robust measure of 1d data spread, `madgm` is a robust measure of `nd` data spread. We define it as: median(|**p**i-**gm**|,for i=1..n), where **p**1..**p**n are a sample of n data points (no longer scalars but d dimensional vectors).
 
 * `t_stat`  
-we improve 1d 't statistic' from: `(x-mean)/std`, to `(x-median)/mad`, where x is a single observed value. `(x-mean)/std`  is similar to 'z-score', except the measures of central tendency and spread are obtained from the sample (so called pivotal quantity), rather than from the (assumed) distribution.
+we improve 1d 't-statistic' from: `(x-mean)/std`, to `(x-median)/mad`, where x is a single observed value. `(x-mean)/std`  is similar to `z-score`, except the measures of central tendency and spread are obtained from the sample (so called pivotal quantity), rather than from the (assumed) population distribution.
 
 * `t_statistic`  
-we then generalize `t_stat` to nd `t_statistic`: |**p-gm**|/madgm, where **p** is now an observed value in nd space. The role of the central tendency is taken up by the `geometric median` **gm** and the spread by `madgm`. Thus a single scalar t-statistic can be obtained in any number of dimensions.
+we then generalize `t_stat` to nd `t_statistic`: |**p-gm**|/madgm, where **p** is now an observed point in nd space. The role of the sample central tendency is taken up by the `geometric median` **gm** vector and the spread by the `madgm` scalar. Thus a single scalar t-statistic is obtained in any number of dimensions.
 
 * `contribution`  
-one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of adjustment to `gm` caused by adding **p**. Generally, outlying points make greater contributions to the `gm` but not as much as they would to the centroid. The contribution depends not only on the radius of the example point in question but also on the radii of all other existing example points.
+one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of displacement of `gm`, caused by adding **p** to the set. Generally, outlying points make greater contributions to the `gm` but not as much as to the `centroid`. The contribution depends not only on the radius of **p** but also on the radii of all other existing set points.
 
 * `comediance`  
-is another our new concept, similar to `covariance`. It is a triangular symmetric matrix. It is obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero mean vectors` are replaced by `zero median vectors` in the covariance calculations. The results are similar but more stable with respect to the outliers.
+another new concept. It is similar to `covariance`. It is a triangular symmetric matrix, obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero mean vectors` are replaced by `zero median vectors` as the data for the covariance calculations. The results are similar but more stable with respect to the outliers.
 
 * `tukey vector`  
-proportions of points in each hemisphere around `gm`. We propose this is as a 'signature' of a data cloud. For a new point **p**, that typically needs to be classified, we can quickly determine whether it lies in a well populated direction from gm. This could also be done by projecting all the existing points onto unit **p** but that would be much slower, as there are typically many such points to project. Whereas `tukey_vector` needs to be precomputed only once and is then the only vector projected onto unit **p**. This gives a similar result (but not exactly the same). Also, in keeping with the stability properties of medians, we are only using counts of points in the hemispheres, not their distances.
+proportions of points in each hemisphere around `gm`. We propose this as a 'signature' of a data cloud. For a new point **p** that needs to be classified, we can quickly determine whether it lies in a well populated direction from gm. This could be done properly by projecting all the existing points onto unit **p** but that would be too slow, as there are typically many such points to project. However, `tukey_vector` needs to be precomputed only once and is then the only vector projected onto unit **p**. This gives an approximately similar result. Also, in keeping with the stability properties of medians, we are only using counts of points in the hemispheres, not their distances.
 
 ### Existing Concepts
 
 * `centroid/centre/mean` of an 'nd' set.  
-Is the point, generally non member, that minimises its sum of *squares* of distances to all member points. Thus it is susceptible to outliers. Specifically, it is the d-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
+Is the point, generally non member, that minimises its sum of *squares* of distances to all member points. The squaring makes it susceptible to outliers. Specifically, it is the d-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
 
 * `quasi/marginal median`  
 is the point minimising sums of distances separately in each dimension (its coordinates are medians along each axis). It is a mistaken concept which we do not recommend using.
@@ -113,42 +113,42 @@ is the point maximising `Tukey's Depth`, which is the minimum number of (outlyin
 is the point (generally non member), which minimises the sum of distances to all member points. This is the one we want. It is much less susceptible to outliers than the centroid. In addition, unlike quasi median, `gm` is rotation independent.
 
 * `medoid`  
-is the member of the set with the least sum of distances to all other members. Equivalently, the member which is the nearest to the `gm` (with the minimum radius).
+is the member of the set with the least sum of distances to all other members. Equivalently, the member which is the nearest to the `gm` (has the minimum radius).
 
 * `outlier`  
-is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm` (with the maximum radius).
+is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm` (has the maximum radius).
 
 * `outer hull` is a subset of zero median points **p**, such that no other points lie outside the normal plane through **p**. The points that do not satisfy this condition are called the `internal` points.
 
 * `inner hull or core` is a subset of zero median points **p**, that do not lie outside the normal plane of any other point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, for a hypersphere).
 
-* `mahalanobis distance` is a weighted distance, where the weights are derived from the axis of variation of the `nd` data points cloud. Thus distances in the directions in which there are few points are penalised (increased) and vice versa. Efficient Cholesky-Banachiewicz  singular (eigen) value decomposition is used. Our `cholesky` method decomposes the covariance or comediance positive definite triangular matrix S into a product of two triangular matrices: S = LL'. For more details, see the comments in the source code.
+* `mahalanobis distance` is a scaled distance, where the scaling is derived from the axis of covariance of the `nd` data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances are decreased. Efficient Cholesky-Banachiewicz singular (eigen) value decomposition is used. Our `cholesky` method decomposes the covariance or comediance positive definite triangular matrix S into a product of two triangular matrices: S = LL'. For more details, see the comments in the source code.
 
 * `householder's decomposition`  
-in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition do not hold, this is the next best (QR) decomposition method. Implemented here with out memory efficient `TriangMat` struct.
+in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition does not hold, this is the next best (QR) decomposition method. Implemented here with our memory efficient `TriangMat` struct.
 
 ## Implementation
 
-The main constituent parts of Rstats are its traits. The selection of traits (to `use`) is primarily determined by the types of objects handled. These are mostly vectors of arbitrary length/dimensionality (`d`). The main traits are implementing methods applicable to:
+The main constituent parts of Rstats are its traits. The different traits are determined by the types of objects to be handled. The objects are mostly vectors of arbitrary length/dimensionality (`d`). The main traits are implementing methods applicable to:
 
 * `Stats`: a single vector (of numbers),
-* `Vecg`: methods (of vector algebra) operating on two vectors, e.g. scalar product
-* `Vecu8`: some specialized methods for end-type `u8`
-* `MutVecg`: some of the above methods, mutating self
-* `VecVec`: methods operating on n vectors,
-* `VecVecg`: methods for n vectors, plus another generic argument, e.g. vector of weights.
+* `Vecg`: methods operating on two vectors, e.g. scalar product,
+* `Vecu8`: some methods specialized for end-type `u8`,
+* `MutVecg`: some of the above methods, mutating self,
+* `VecVec`: methods operating on n vectors (rows of numbers),
+* `VecVecg`: methods for n vectors, plus another generic argument, e.g. a vector of weights.
 
-In other words, the traits and their methods operate on arguments of their required categories. In classical statistical terminology, the main categories correspond to the number of 'random variables'.
+The traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'.
 
-**`Vec<Vec<T>>`** type is used for rectangular matrices (could also have  irregular rows).
+**`Vec<Vec<T>>`** type is used for rectangular matrices (could also have irregular rows).
   
-**`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices. All TriangMat(s) store only n*(n+1)/2 items instead of n*n, thus saving significant amounts of memory. Plus their transposed versions only set up a flag that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving some processing as well. All this is put to a good use in our implementation of the Householder matrix decomposition method.
+**`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices. All TriangMat(s) store only n*(n+1)/2 items in a single flat vector, instead of n*n, thus saving significant amounts of memory. Plus their transposed versions only set up a flag '`kind`' that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving some processing as well. All this is put to a good use in our implementation of the matrix decomposition methods.
 
 The vectors' end types (of the actual data) are mostly generic: usually some numeric type. End type `f64` is mostly used for the computed results.
 
 ## Errors
 
-`Rstats` crate produces custom errors `RError`:
+`Rstats` crate produces custom error `RError`:
 
 ```rust
 pub enum RError<T> where T:Sized+Debug {
@@ -163,7 +163,7 @@ pub enum RError<T> where T:Sized+Debug {
 }
 ```
 
-Each of its enum variants also carries a generic payload `T`. Most commonly this will be a `String` message giving more helpful explanation, e.g.:
+Each of its enum variants also carries a generic payload `T`. Most commonly this will be a `String` message, giving more helpful explanation, e.g.:
 
 ```rust
 if dif <= 0_f64 {
@@ -172,7 +172,7 @@ if dif <= 0_f64 {
 };
 ```
 
-`format!(...)` is used to insert values of variables to the payload String, as shown. These potential errors are returned and can then be automatically converted (with `?`) to users' own errors. Some such conversions are implemented at the bottom of `errors.rs` file and used in `tests.rs`.
+`format!(...)` is used to insert values of variables to the payload String, as shown. These errors are returned and can then be automatically converted (with `?`) to users' own errors. Some such error conversions are implemented at the bottom of `errors.rs` file and used in `tests.rs`.
 
  There is a type alias shortening return declarations to, e.g.: `Result<Vec<f64>,RE>`, where
 
@@ -192,24 +192,24 @@ holds triangular matrices of all kinds, as described in Implementation section a
 * **Mahalanobis Distance**
 * **Householder UR** (M = QR) matrix decomposition
 
-Also, some methods implemented for `VecVecg` produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar` and `wcovar`. Their results are positive definite, which makes the most efficient Cholesky-Banachiewics decomposition applicable.
+Some methods implemented for `VecVecg` also produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar` and `wcovar`. Their results are positive definite, which makes the most efficient Cholesky-Banachiewics decomposition applicable.
 
-## Quantify Functions
+## Quantify Functions (dependency injection)
 
-Most methods in `medians::Median` trait and hashort methods in `indxvec` crate require explicit closure to tell them how to quantify user data of any end type T into f64. Variety of different quantifying methods can then be dynamically employed.
+Most methods in `medians::Median` trait and `hashort` methods in `indxvec` crate require explicit closure to tell them how to quantify input data of any user end type T into f64. Variety of different quantifying methods can then be dynamically employed.
 
-For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, etc. Then we can sort them or find their means/medians/dispersions under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute them on demand.
+For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, or the numerical value of its consonants, etc. Then we can sort them or find their means / medians / spreads under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute them on demand.
 
 ### `noop`
 
-is a shorthand dummy function to supply to these methods, when the data is already of f64 end type. The second line is the full equivalent version that can be used instead:
+is a shorthand dummy function to supply to these methods, when the data is already of `f64` end type. The second line is the full equivalent version that can be used instead:
 
 ```rust
 &mut noop
 &mut |f:&f64| *f
 ```
 
-When T is a primitive type, such as i64, u64, usize, that can only be converted to f64 by explicit truncation, use:
+When T is a wide primitive type, such as i64, u64, usize, that can only be converted to f64 by explicit truncation, use:
 
 ```rust
 &mut |f:&T| *f as f64
@@ -217,7 +217,7 @@ When T is a primitive type, such as i64, u64, usize, that can only be converted 
 
 ### `fromop`
 
-When T is a type convertible by an existing `From` implementation and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in one of these:
+When T is a narrow numeric type, or is convertible by another existing `From` implementation, and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in one of these:
 
 ```rust
 &mut fromop
@@ -225,9 +225,7 @@ When T is a type convertible by an existing `From` implementation and `f64:From<
 &mut |f:&T| f.into()
 ```
 
-This also works for 'smaller' primitive types.
-
-All other cases were previously only possible with manual implementation written for the (global) From trait for each type T and each different conversion method, whereby the different conversions would conflict. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of one small inconvenience: using the above closures for the simple cases.
+All other cases were previously only possible with manual implementation written for the (global) From trait for each type T and each different quantification method, whereby the different quantification would conflict. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of a small inconvenience: using the above signature closures for the simple cases.
 
 ## Auxiliary Functions
 
@@ -255,20 +253,20 @@ Included in this trait are:
 * linear transformation to [0,1],
 * other measures and vector algebra operators
 
-Note that fast implementation of 1d medians is, as of version 1.1.0, performed by a separate crate `medians`.
+Note that fast implementation of 1d medians is, as of version 1.1.0, provided by a separate crate `medians`.
 
 ## Trait Vecg
 
-Generic vector algebra operations between two slices `&[T]`, `&[U]` of any (common) length  (dimensions). Note that it may be necessary to invoke some using the 'turbofish' `::<type>` syntax to indicate the type U of the supplied argument, e.g.: 
-`datavec.methodname::<f64>(arg)`. 
-This is because Rust is currently incapable of inferring its type ('the inference bug').
+Generic vector algebra operations between two slices `&[T]`, `&[U]` of any (common) length  (dimensions). Note that it may be necessary to invoke some using the 'turbofish' `::<type>` syntax to indicate the type U of the supplied argument, e.g.:  
+`datavec.methodname::<f64>(arg)`.  
+This is because Rust is currently incapable of inferring its type ('the inference bug'?).
 
 Methods implemented by this trait:
 
 * Vector additions, subtractions and products (scalar, kronecker, outer),
 * Other relationships and measures of difference,
 * Pearson's, Spearman's and Kendall's correlations,
-* `Median correlation`, which we define analogously to Pearson's, as cosine of an angle between two zero median vectors (instead of his zero mean vectors).
+* Our `median correlation`,
 * Joint pdf, joint entropy, statistical independence (based on mutual information).
 * `Contribution` measure of a point to geometric median
 
