@@ -10,4 +10,4 @@ jobs:
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable    
     - run: cargo test --release -- --nocapture --color always --test-threads=1  
-    - run: cargo test -r timing_gm -- --nocapture
+    - run: cargo test --release geometric_medians -- --nocapture
