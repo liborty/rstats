@@ -68,7 +68,7 @@ In contrast, our methods based on the true geometric median (`gm`) are axis (rot
 
 For more detailed comments, plus some examples, see [rstats in docs.rs](https://docs.rs/rstats/latest/rstats). You may have to go directly to the modules source. These traits are implemented for existing 'out of this crate' rust `Vec` type and rust docs do not display 'implementations on foreign types' very well.
 
-## Terminology (including some original new definitions)
+## Terminology
 
 ### New Concepts and their Definitions
 
@@ -81,7 +81,7 @@ We define correlation similarly to Pearson, as cosine of an angle between two no
 our fast multidimensional `geometric median (gm)` algorithms.
 
 * `madgm` (median of distances from `gm`)  
-is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. 1d median is replaced in nd by gm (geometric median). Where mad is a robust measure of 1d data spread, `madgm` is a robust measure of `nd` data spread.
+is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. 1d median is replaced in nd by gm (geometric median). Where mad is a robust measure of 1d data spread, `madgm` is a robust measure of `nd` data spread. It is: median(|**p**i-**gm**|,for i=1..n), where **p**1..**p**n are the n data points (d dimensional vectors).
 
 * `t_stat`  
 we improve 1d 't statistic' from: `(x-mean)/std`, to `(x-median)/mad`, where x is a single observed value. `(x-mean)/std`  is similar to 'z-score', except the measures of central tendency and spread are obtained from the sample (so called pivotal quantity), rather than from the (assumed) distribution.
