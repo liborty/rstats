@@ -1,7 +1,7 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::{Median,Medianf64};
 use ran::{set_seeds, Rnum };
-use rstats::{st_error, noop, fromop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
+use rstats::{t_statistic, noop, fromop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
 use times::benchvvf64;
 
 pub const EPS: f64 = 1e-3;
@@ -60,16 +60,15 @@ fn fstats() -> Result<(), RE> {
     let v2 = v1.revs();
     println!("{}", (&v2).gr());
     // println!("Linear transform:\n{}",v1.lintrans()));
-    println!("Standard arithmetic error of {}: {}",5.yl(),st_error(5.,v1.ameanstd()?).gr());
-    println!("Standard harmonic error of {}:\t {}",5.yl(),st_error(5.,v1.hmeanstd()?).gr());
-    println!("Standard median error of {}:\t{}",5.yl(),st_error(5.,v1.medstatsf64()?).gr());
-    println!("Geometric mean:\t{}", v1.gmean()?.gr());
-    println!("Harmonic mean:\t{}", v1.hmean()?.gr());
-    println!("Magnitude:\t{}", v1.vmag().gr());
+    println!("Magnitudes:\t{} {}", v1.vmag().gr(),v2.vmag().gr());
+    println!("Median     {}", v1.medstatsf64()?);
     println!("Arithmetic {}", v1.ameanstd()?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
-    println!("Median     {}", v1.medstatsf64()?);
+    println!("T-statistic of 5 against median {}",t_statistic(5.,v1.medstatsf64()?).gr());
+    println!("T-statistic of 5 against amean  {}",t_statistic(5.,v1.ameanstd()?).gr());
+    println!("T-statistic of 5 against gmean  {}",t_statistic(5.,v1.gmeanstd()?).gr());
+    println!("T-statistic of 5 against hmean   {}",t_statistic(5.,v1.hmeanstd()?).gr());
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
     println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
@@ -422,11 +421,11 @@ fn hulls() -> Result<(), RE> {
         innerhull.yl()
     );
     println!(
-        "Inner hull min max radii: {} {}\nStandard errors:\t  {} {}",
+        "Inner hull min max radii: {} {}\nTheir t-statistics:\t  {} {}",
         zeropts[*innerhull.first().expect("Empty hullidx")].vmag().gr(), 
         zeropts[*innerhull.last().expect("Empty hullidx")].vmag().gr(),
         (pts[*innerhull.first().unwrap()].vdist(&median)/mad).gr(),
-        pts[*innerhull.last().unwrap()].st_error(&median,mad)?.gr(),
+        pts[*innerhull.last().unwrap()].t_statistic(&median,mad)?.gr(),
     );
 
     println!(
@@ -436,11 +435,11 @@ fn hulls() -> Result<(), RE> {
         outerhull.yl()
     );
     println!(
-        "Outer hull min max radii: {} {}\nStandard errors:\t  {} {}",
+        "Outer hull min max radii: {} {}\nTheir t_statistics:\t  {} {}",
         zeropts[*outerhull.first().expect("Empty hullidx")].vmag().gr(),
         zeropts[*outerhull.last().expect("Empty hullidx")].vmag().gr(),
-        pts[*outerhull.first().unwrap()].st_error(&median,mad)?.gr(),
-        pts[*outerhull.last().unwrap()].st_error(&median,mad)?.gr(),
+        pts[*outerhull.first().unwrap()].t_statistic(&median,mad)?.gr(),
+        pts[*outerhull.last().unwrap()].t_statistic(&median,mad)?.gr(),
     );
     let tukeyvec = zeropts
         .tukeyvec(&innerhull)?;

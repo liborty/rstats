@@ -7,8 +7,9 @@ impl<T> Vecg for &[T]
     where 
         T: Copy+PartialOrd+Into<T>+std::fmt::Display, f64:From<T> {
 
-    /// Standard error of self against geometric median and mad dispersion
-    fn st_error(self, gm:&[f64], madgm:f64) -> Result<f64,RE> {
+    /// nd t_statistic of self against geometric median and madgm spread.     
+    /// Unlike in 1d, is always positive.
+    fn t_statistic(self, gm:&[f64], madgm:f64) -> Result<f64,RE> {
         Ok(self.vdist::<f64>(gm)/madgm)
     }
 

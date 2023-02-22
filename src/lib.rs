@@ -31,12 +31,13 @@ pub type RE = RError<String>;
 
 /// Convenience dummy function for quantify closure
 pub fn noop(f:&f64) -> f64 { *f }
+
 /// Convenience From quantification invocation
 pub fn fromop<T>(f:&T) -> f64 where T:Clone,f64:From<T> { f64::from(f.clone()) }
 
-/// Standard error in 1d: (value-centre)/dispersion
-/// for any measure of central tendency and dispersion
-pub fn st_error(val:f64,mstats:MStats) -> f64 {
+/// t_statistic in 1d: (value-centre)/dispersion
+/// generalized to any measure of central tendency and dispersion
+pub fn t_statistic(val:f64,mstats:MStats) -> f64 {
     (val-mstats.centre)/mstats.dispersion
 }
 
@@ -142,8 +143,8 @@ pub trait Stats {
 /// Vector Algebra on two vectors (represented here as generic slices).
 /// Also included are scalar operations on the `self` vector.
 pub trait Vecg {
-    /// Standard error of self against geometric median and mad dispersion
-    fn st_error(self, gm:&[f64], madgm:f64) -> Result<f64,RE>;
+    /// nd t_statistic of self against geometric median and madgm spread
+    fn t_statistic(self, gm:&[f64], madgm:f64) -> Result<f64,RE>;
     /// Dot product of vector self with column c of matrix v 
     fn columnp<U>(self,c: usize,v: &[Vec<U>]) -> f64 
     where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
