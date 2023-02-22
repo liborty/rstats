@@ -156,27 +156,29 @@ where
     }
 
     /// acentroid = multidimensional arithmetic mean
-    fn acentroid(self) -> Vec<f64> { 
-        self.sumv().smult::<f64>(1./(self.len() as f64))
-    }   
+    fn acentroid(self) -> Vec<f64> {
+        self.sumv().smult::<f64>(1. / (self.len() as f64))
+    }
 
     /// multithreaded acentroid = multidimensional arithmetic mean
-    fn par_acentroid(self) -> Vec<f64> {  
+    fn par_acentroid(self) -> Vec<f64> {
         let sumvec = self
-        .par_iter()
-        .fold(
-            || vec![0_f64;self[0].len()],
-            | mut vecsum: Vec<f64>, p | { 
-            vecsum.mutvadd(p); 
-            vecsum }
-        )
-        .reduce(
-            || vec![0_f64; self[0].len()],
-            | mut finalsum: Vec<f64>, partsum: Vec<f64> | {
-            finalsum.mutvadd::<f64>(&partsum);
-            finalsum }
-        );
-        sumvec.smult::<f64>(1./(self.len() as f64))
+            .par_iter()
+            .fold(
+                || vec![0_f64; self[0].len()],
+                |mut vecsum: Vec<f64>, p| {
+                    vecsum.mutvadd(p);
+                    vecsum
+                },
+            )
+            .reduce(
+                || vec![0_f64; self[0].len()],
+                |mut finalsum: Vec<f64>, partsum: Vec<f64>| {
+                    finalsum.mutvadd::<f64>(&partsum);
+                    finalsum
+                },
+            );
+        sumvec.smult::<f64>(1. / (self.len() as f64))
     }
 
     /// gcentroid = multidimensional geometric mean

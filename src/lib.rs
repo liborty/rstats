@@ -22,7 +22,7 @@ pub mod vecvecg;
 use crate::error::RError;
 // reexporting useful related methods
 pub use indxvec::{printing::*, MinMax, Printing};
-pub use medians::{MedError, MStats, Median, Medianf64};
+pub use medians::{MStats, MedError, Median, Medianf64};
 
 /// Shorthand type for returned errors with message payload
 pub type RE = RError<String>;
@@ -30,15 +30,23 @@ pub type RE = RError<String>;
 // Auxiliary Functions
 
 /// Convenience dummy function for quantify closure
-pub fn noop(f:&f64) -> f64 { *f }
+pub fn noop(f: &f64) -> f64 {
+    *f
+}
 
 /// Convenience From quantification invocation
-pub fn fromop<T>(f:&T) -> f64 where T:Clone,f64:From<T> { f64::from(f.clone()) }
+pub fn fromop<T>(f: &T) -> f64
+where
+    T: Clone,
+    f64: From<T>,
+{
+    f64::from(f.clone())
+}
 
 /// t_statistic in 1d: (value-centre)/dispersion
 /// generalized to any measure of central tendency and dispersion
-pub fn t_stat(val:f64,mstats:MStats) -> f64 {
-    (val-mstats.centre)/mstats.dispersion
+pub fn t_stat(val: f64, mstats: MStats) -> f64 {
+    (val - mstats.centre) / mstats.dispersion
 }
 
 /// Sum of natural numbers 1..n.
@@ -135,19 +143,21 @@ pub trait Stats {
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Result<Vec<f64>, RE>;
     /// Linearly weighted approximate time series derivative at the last (present time) point.
-    fn dfdt(self) -> Result<f64,RE>;
+    fn dfdt(self) -> Result<f64, RE>;
     /// Householder reflection
     fn house_reflector(self) -> Vec<f64>;
 }
 
 /// Vector Algebra on two vectors (represented here as generic slices).
 /// Also included are scalar operations on the `self` vector.
-pub trait Vecg {    
+pub trait Vecg {
     /// nd t_statistic of self against geometric median and madgm spread
-    fn t_statistic(self, gm:&[f64], madgm:f64) -> Result<f64,RE>;
-    /// Dot product of vector self with column c of matrix v 
-    fn columnp<U>(self,c: usize,v: &[Vec<U>]) -> f64 
-    where U: Copy+PartialOrd+Into<U>+std::fmt::Display, f64:From<U>;
+    fn t_statistic(self, gm: &[f64], madgm: f64) -> Result<f64, RE>;
+    /// Dot product of vector self with column c of matrix v
+    fn columnp<U>(self, c: usize, v: &[Vec<U>]) -> f64
+    where
+        U: Copy + PartialOrd + Into<U> + std::fmt::Display,
+        f64: From<U>;
     /// Scalar addition to vector
     fn sadd<U>(self, s: U) -> Vec<f64>
     where
@@ -356,7 +366,7 @@ pub trait Vecu8 {
 /// Operations on a whole set of multidimensional vectors.
 pub trait VecVec<T> {
     /// Selects a column by number
-    fn column(self,cnum:usize) -> Vec<f64>;
+    fn column(self, cnum: usize) -> Vec<f64>;
     /// Transpose slice of vecs matrix
     fn transpose(self) -> Vec<Vec<f64>>;
     /// Normalize columns, so that they are all unit vectors
@@ -395,21 +405,22 @@ pub trait VecVec<T> {
     fn radii(self, gm: &[f64]) -> Vec<f64>;
     /// Arith mean and std (in MStats struct), Median and mad, Medoid and Outlier (in MinMax struct)
     fn eccinfo(self, gm: &[f64]) -> Result<(MStats, MStats, MinMax<f64>), RE>
-    where Vec<f64>: FromIterator<f64>;
+    where
+        Vec<f64>: FromIterator<f64>;
     /// Quasi median, recommended only for comparison purposes
-    fn quasimedian(self) -> Result<Vec<f64>,RE>;
+    fn quasimedian(self) -> Result<Vec<f64>, RE>;
     /// Geometric median estimate's error
     fn gmerror(self, gm: &[f64]) -> f64;
     /// Proportions of points in idx along each +/-axis (hemisphere)
-    /// Self will normally be zero median vectors 
-    fn tukeyvec(self, idx: &[usize]) -> Result<Vec<f64>,RE>; 
+    /// Self will normally be zero median vectors
+    fn tukeyvec(self, idx: &[usize]) -> Result<Vec<f64>, RE>;
     /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
-    fn madgm(self, gm: &[f64]) -> Result<f64,RE>;
+    fn madgm(self, gm: &[f64]) -> Result<f64, RE>;
     /// Collects indices of outer and inner hull points, from zero median data
-    fn hulls(self) -> (Vec<usize>,Vec<usize>); 
+    fn hulls(self) -> (Vec<usize>, Vec<usize>);
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
-    /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find. 
+    /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.
     fn par_gmedian(self, eps: f64) -> Vec<f64>;
     /// Like `gmedian` but returns the sum of unit vecs and the sum of reciprocals of distances.
     fn gmparts(self, eps: f64) -> (Vec<f64>, Vec<f64>, f64);
@@ -457,5 +468,5 @@ pub trait VecVecg<T, U> {
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med: &[U]) -> Result<TriangMat, RE>;
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
-    fn wcovar(self, ws: &[U], m: &[f64]) -> Result<TriangMat, RE>; 
+    fn wcovar(self, ws: &[U], m: &[f64]) -> Result<TriangMat, RE>;
 }

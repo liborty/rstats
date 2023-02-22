@@ -50,7 +50,7 @@ impl TriangMat {
             }
             data.push(1_f64);
         }
-        TriangMat { kind:2, data }
+        TriangMat { kind: 2, data }
     }
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
     /// full coordinates within a lower/upper triangular matrix.
@@ -60,7 +60,6 @@ impl TriangMat {
         let column = s - row * (row + 1) / 2; // subtracting the previous triangular number
         (row, column)
     }
-
 
     /// Extract one row from TriangMat
     pub fn row(&self, r: usize) -> Vec<f64> {
@@ -80,8 +79,11 @@ impl TriangMat {
 
     /// TriangMat trivial implicit transposition
     pub fn transpose(&mut self) {
-        if self.kind > 2 { self.kind -= 3; }
-        else { self.kind += 3; }
+        if self.kind > 2 {
+            self.kind -= 3;
+        } else {
+            self.kind += 3;
+        }
     }
 
     /// Unpacks TriangMat to full matrix
@@ -90,28 +92,33 @@ impl TriangMat {
         let (n, _) = TriangMat::rowcol(self.data.len());
         let mut res = vec![vec!(0_f64; n); n];
         // function pointer for primitive filling actions, depending on the matrix kind
-        let fill: fn(usize, usize, &mut Vec<Vec<f64>>, f64) = 
-            match self.kind % 3 {
+        let fill: fn(usize, usize, &mut Vec<Vec<f64>>, f64) = match self.kind % 3 {
             2 => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
                 res[row][col] = item;
-                if row != col { res[col][row] = item; };
+                if row != col {
+                    res[col][row] = item;
+                };
             },
             1 => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
                 res[row][col] = item;
-                if row != col { res[col][row] = -item; };
+                if row != col {
+                    res[col][row] = -item;
+                };
             },
             _ => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
                 res[row][col] = item;
-                if row != col { res[col][row] = 0_f64; };
+                if row != col {
+                    res[col][row] = 0_f64;
+                };
             },
-        }; 
+        };
         if self.kind > 2 {
             // is transposed
             for (i, &item) in self.data.iter().enumerate() {
                 let (row, col) = Self::rowcol(i);
                 fill(col, row, &mut res, item);
             }
-        } else { 
+        } else {
             for (i, &item) in self.data.iter().enumerate() {
                 let (row, col) = Self::rowcol(i);
                 fill(row, col, &mut res, item);
@@ -173,7 +180,7 @@ impl TriangMat {
                 };
             }
         }
-        Ok(TriangMat { kind:0, data: res  })
+        Ok(TriangMat { kind: 0, data: res })
     }
 
     /// Mahalanobis scaled magnitude m(d) of a (column) vector d.
