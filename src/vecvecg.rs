@@ -4,10 +4,10 @@ use medians::{Median,Medianf64};
 use rayon::prelude::*;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
-    where T: Sync+Copy+PartialOrd+std::fmt::Display,f64:From<T>, 
+    where T: Sync+Copy+PartialOrd,f64:From<T>, 
     Vec<Vec<T>>: IntoParallelIterator,
     Vec<T>: IntoParallelIterator,
-    U: Sync+Copy+PartialOrd+std::fmt::Display,f64:From<U>,
+    U: Sync+Copy+PartialOrd,f64:From<U>,
     Vec<Vec<U>>: IntoParallelIterator,
     Vec<U>: IntoParallelIterator {
 

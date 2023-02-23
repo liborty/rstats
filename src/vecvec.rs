@@ -7,7 +7,7 @@ use rayon::prelude::*;
 
 impl<T> VecVec<T> for &[Vec<T>]
 where
-    T: Copy + PartialOrd + std::fmt::Display + Sync,
+    T: Copy + PartialOrd + Sync,
     Vec<Vec<T>>: IntoParallelIterator,
     Vec<T>: IntoParallelIterator,
     f64: From<T>,
