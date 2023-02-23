@@ -1,5 +1,3 @@
-use std::iter::FromIterator;
-
 use crate::{sumn, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg, RE};
 use indxvec::{Mutops, Vecops};
 use medians::{MedError, Medianf64};
