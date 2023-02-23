@@ -244,7 +244,7 @@ All other cases were previously only possible with manual implementation written
 One dimensional statistical measures implemented for all numeric end types.
 
 Its methods operate on one slice of generic data and take no arguments.
-For example, `s.amean()` returns the arithmetic mean of the data in slice `s`.
+For example, `s.amean()?` returns the arithmetic mean of the data in slice `s`.
 These methods are checked and will report RError(s), such as an empty input. This means you have to apply `?` to their results to pass the errors up, or explicitly match them to take recovery actions, depending on the error variant.
 
 Included in this trait are:
