@@ -34,15 +34,18 @@ where
         if self.is_empty() {
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        for &component in self {
-            let c: f64 = component.into();
-            if !c.is_normal() {
-                return Err(RError::ArithError(
-                    "no reciprocal with zero component".to_owned(),
-                ));
-            };
-        }
-        Ok(self.iter().map(|&x| 1.0 / (f64::from(x))).collect())
+        self.iter()
+            .map(|&component| -> Result<f64, RE> {
+                let c: f64 = component.into();
+                if c.is_normal() {
+                    Ok(1.0 / c)
+                } else {
+                    Err(RError::ArithError(
+                        "no reciprocal for zero component".to_owned(),
+                    ))
+                }
+            })
+            .collect::<Result<Vec<f64>, RE>>()
     }
 
     /// Vector with inverse magnitude
@@ -52,7 +55,7 @@ where
         };
         let mag = self.vmagsq();
         if mag > 0.0 {
-            Ok(self.iter().map(|&x| f64::from(x) / mag).collect())
+            Ok(self.iter().map(|&x| f64::from(x)/mag).collect())
         } else {
             Err(RError::DataError(
                 "no inverse of zero vector magnitude".to_owned(),
@@ -61,24 +64,26 @@ where
     }
 
     // negated vector (all components swap sign)
-    fn negv(self) -> Vec<f64> {
+    fn negv(self) -> Result<Vec<f64>, RE> {
         if self.is_empty() {
-            return Vec::new();
+            return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        self.iter().map(|&x| (-f64::from(x))).collect()
+        Ok( self.iter().map(|&x| (-f64::from(x))).collect() )
     }
 
     /// Unit vector
-    fn vunit(self) -> Vec<f64> {
+    fn vunit(self) -> Result<Vec<f64>, RE> {
         if self.is_empty() {
-            return Vec::new();
+            return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        let magnitude = self
-            .iter()
-            .map(|&x| f64::from(x).powi(2))
-            .sum::<f64>()
-            .sqrt();
-        self.iter().map(|&x| (f64::from(x)) / magnitude).collect()
+        let mag = self.vmag();
+        if mag > 0.0 {
+            Ok(self.iter().map(|&x| f64::from(x)/mag).collect())
+        } else {
+            Err(RError::DataError(
+                "vector of zero magnitude cannot be made into a unit vector".to_owned(),
+            ))
+        }
     }
 
     /// Arithmetic mean

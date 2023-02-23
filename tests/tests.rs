@@ -59,7 +59,10 @@ fn fstats() -> Result<(), RE> {
     println!("\n{}", (&v1).gr());
     let v2 = v1.revs();
     println!("{}", (&v2).gr());
-    // println!("Linear transform:\n{}",v1.lintrans()));
+    println!("Reciprocals of v1:\n{}",v1.vreciprocal()?.gr());
+    println!("Unit v1:\n{}",v1.vunit()?.gr());
+    println!("Inverse magnitude v1:\n{}",v1.vinverse()?.gr());
+    println!("Linear transform of v1:\n{}\n",v1.lintrans()?.gr());  
     println!("Magnitudes:\t{} {}", v1.vmag().gr(),v2.vmag().gr());
     println!("Median     {}", v1.medstatsf64()?);
     println!("Arithmetic {}", v1.ameanstd()?);

@@ -26,10 +26,10 @@ where
     }
 
     /// Normalize columns, so that they become unit row vectors
-    fn normalize(self) -> Vec<Vec<f64>> {
+    fn normalize(self) -> Result<Vec<Vec<f64>>, RE> {
         (0..self[0].len())
             .into_par_iter()
-            .map(|cnum| self.column(cnum).vunit())
+            .map(|cnum| -> Result<Vec<f64>, RE> { self.column(cnum).vunit() })
             .collect()
     }
 

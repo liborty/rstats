@@ -71,7 +71,7 @@ where
             ));
         }
         let mut ressum = 0_f64;
-        for (i, &scomp) in self.vunit().iter().enumerate() {
+        for (i, &scomp) in self.vunit()?.iter().enumerate() {
             if scomp > 0_f64 {
                 ressum += scomp * tukey[i];
                 continue;

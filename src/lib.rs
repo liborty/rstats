@@ -107,9 +107,9 @@ pub trait Stats {
     /// vector with inverse magnitude
     fn vinverse(self) -> Result<Vec<f64>, RE>;
     /// negated vector (all components swap sign)
-    fn negv(self) -> Vec<f64>;
+    fn negv(self) -> Result<Vec<f64>, RE>;
     /// Unit vector
-    fn vunit(self) -> Vec<f64>;
+    fn vunit(self) -> Result<Vec<f64>, RE>;
     /// Arithmetic mean
     fn amean(self) -> Result<f64, RE>;
     /// Arithmetic mean and standard deviation
@@ -370,7 +370,7 @@ pub trait VecVec<T> {
     /// Transpose slice of vecs matrix
     fn transpose(self) -> Vec<Vec<f64>>;
     /// Normalize columns, so that they are all unit vectors
-    fn normalize(self) -> Vec<Vec<f64>>;
+    fn normalize(self) -> Result<Vec<Vec<f64>>,RE>;
     /// Householder's method returning matrices (U,R)
     fn house_ur(self) -> (TriangMat, TriangMat);
     /// Joint probability density function of n matched slices of the same length

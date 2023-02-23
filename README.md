@@ -312,6 +312,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.34** - Made `vreciprocal`, `vinverse` and `vunit` in trait Stats to produce RE errors, like most methods in this trait. Added some more simple tests.
+
 * **Version 1.2.33** - Removed superfluous trait bound `Display` from `Vecg`.
 
 * **Version 1.2.32** - Minor release. Corrected some terminology, revised some tests and Readme manual.
