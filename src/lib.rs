@@ -298,14 +298,14 @@ pub trait Vecg {
     where
         U: Copy + PartialOrd + Into<U>,
         f64: From<U>;
-    /// Change to gm that adding point p will cause
+    /// Change to gm that adding point self will cause
     fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Vec<f64>;
-    /// Magnitude of change to gm that adding point p will cause
-    fn contrib_newpt(self, gm: &[f64], recips: f64) -> f64;
-    /// Contribution an existing set point p has made to the gm
+    /// Normalized magnitude of change to gm that adding point self will cause
+    fn contrib_newpt(self, gm: &[f64], recips: f64, nf:f64) -> f64;
+    /// Contribution of removing point self
     fn contribvec_oldpt(self, gm: &[f64], recips: f64) -> Vec<f64>;
-    /// Contribution removing an existing p will make (as a negative number)
-    fn contrib_oldpt(self, gm: &[f64], recips: f64) -> f64;
+    /// Normalized contribution of removing point self (as negative scalar)
+    fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> f64;
     /// Householder reflect
     fn house_reflect<U>(self, x: &[U]) -> Vec<f64>
     where
@@ -372,7 +372,7 @@ pub trait VecVec<T> {
     /// Normalize columns, so that they are all unit vectors
     fn normalize(self) -> Result<Vec<Vec<f64>>,RE>;
     /// Householder's method returning matrices (U,R)
-    fn house_ur(self) -> (TriangMat, TriangMat);
+    fn house_ur(self) -> Result<(TriangMat, TriangMat),RE>; 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>, RE>;
     /// Joint entropy between a set of vectors of the same length
@@ -388,9 +388,9 @@ pub trait VecVec<T> {
     /// Multithreaded Arithmetic Centre = euclidian mean of a set of points
     fn par_acentroid(self) -> Vec<f64>;
     /// Geometric Centroid
-    fn gcentroid(self) -> Vec<f64>;
+    fn gcentroid(self) -> Result<Vec<f64>,RE>;
     /// Harmonic Centroid = harmonic mean of a set of points
-    fn hcentroid(self) -> Vec<f64>;
+    fn hcentroid(self) -> Result<Vec<f64>,RE>;
     /// Possible first iteration point for geometric medians
     fn firstpoint(self) -> Vec<f64>;
     /// Sums of distances from each point to all other points

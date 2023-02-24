@@ -475,7 +475,7 @@ where
         xvec.ucorrelation(&yvec) // using Indices trait from idxvec
     }
 
-    /// Change to gm that adding point p will cause
+    /// Delta gm that adding point self will cause
     fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Vec<f64> {
         let dv = self.vsub::<f64>(gm);
         let mag = dv.vmag();
@@ -484,20 +484,20 @@ where
         };
         let recip = 1f64 / mag; // first had to test for division by zero
                                 // adding new unit vector (to approximate zero vector)
-        dv.smult::<f64>(recip / (recips + recip)) // to unit v. and scaling by new sum of reciprocals
+        dv.smult::<f64>(recip/(recips + recip)) // to unit v. and scaling by new sum of reciprocals
     }
 
-    /// Magnitude of change to gm that adding point p will cause
-    fn contrib_newpt(self, gm: &[f64], recips: f64) -> f64 {
+    /// Normalized magnitude of change to gm that adding point self will cause
+    fn contrib_newpt(self, gm: &[f64], recips: f64, nf:f64) -> f64 {
         let mag = self.vdist::<f64>(gm);
         if !mag.is_normal() {
             return 0_f64;
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        1_f64 / (recips + recip)
+        (nf+1.0) / (recips + recip)
     }
 
-    /// Contribution an existing set point p has made to the gm
+    /// Delta gm caused by removing an existing set point self
     fn contribvec_oldpt(self, gm: &[f64], recips: f64) -> Vec<f64> {
         let dv = self.vsub::<f64>(gm);
         let mag = dv.vmag();
@@ -505,18 +505,18 @@ where
             return dv;
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        dv.smult::<f64>(recip / (recip - recips)) // scaling
+        dv.smult::<f64>(recip/(recip - recips)) // scaling
     }
 
-    /// Contribution removing an existing set point p will make
+    /// Normalized Contribution that removing an existing set point p will make
     /// Is a negative number
-    fn contrib_oldpt(self, gm: &[f64], recips: f64) -> f64 {
+    fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> f64 {
         let mag = self.vdist::<f64>(gm);
         if !mag.is_normal() {
             return 0_f64;
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        1_f64 / (recip - recips)
+        (nf-1.0) / (recip - recips)
         // self.contribvec_oldpt(gm,recips,p).vmag()
     }
 

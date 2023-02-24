@@ -312,6 +312,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.35** - Some more error processing. Improved `gcentroid` and `hcentroid`. Made scalar `contributions` normalized by number of points, so they remain of roughly the same magnitude.
+
 * **Version 1.2.34** - Made `vreciprocal`, `vinverse` and `vunit` in trait Stats to produce RE errors, like most methods in this trait. Added some more simple tests.
 
 * **Version 1.2.33** - Removed superfluous trait bound `Display` from `Vecg`.

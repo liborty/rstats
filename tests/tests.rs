@@ -271,7 +271,7 @@ fn mat() -> Result<(), RE> {
 #[test]
 fn vecvec() -> Result<(), RE> {
     let d = 10_usize;
-    let n = 90_usize;
+    let n = 120_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
     set_seeds(113);
     let ru = Rnum::newu8();
@@ -295,8 +295,8 @@ fn vecvec() -> Result<(), RE> {
     let medoid = &pts[eccecc.minindex];
     println!("Medoid: {}",medoid.gr());
     let outlier = &pts[eccecc.maxindex];
-    let hcentroid = pts.hcentroid();
-    let gcentroid = pts.gcentroid();
+    let hcentroid = pts.hcentroid()?;
+    let gcentroid = pts.gcentroid()?;
     let acentroid = pts.acentroid();
     let firstp = pts.firstpoint();
     let idx = Vec::from_iter(0..n);
@@ -314,8 +314,7 @@ fn vecvec() -> Result<(), RE> {
     println!(
         "Mag of Tukeyvec for outlier:   {}",
         pts.translate(outlier)?.tukeyvec(&idx)?.vmag().gr()
-    );
-    // let testvec = ru.ranv(d).getvu8();
+    ); 
     let dists = pts.distsums();
     let md = dists.minmax();
     println!("\nMedoid and Outlier Total Distances:\n{md}");
@@ -330,12 +329,12 @@ fn vecvec() -> Result<(), RE> {
         pts.distsum(&acentroid)?.gr()
     );
     println!(
-        "HCentroid's total distances: {}",
-        pts.distsum(&hcentroid)?.gr()
-    );
-    println!(
         "GCentroid's total distances: {}",
         pts.distsum(&gcentroid)?.gr()
+    );
+    println!(
+        "HCentroid's total distances: {}",
+        pts.distsum(&hcentroid)?.gr()
     );
 
     println!(
@@ -348,9 +347,9 @@ fn vecvec() -> Result<(), RE> {
     println!("Median's error:      {GR}{:e}{UN}", pts.gmerror(&median));
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());
     println!("Firstpoint's radius: {}", firstp.vdist(&median).gr());
-    println!("Medoid's radius:     {}", medoid.vdist(&median).gr());
-    println!("HCentroid's radius:  {}", hcentroid.vdist(&median).gr());
     println!("GCentroid's radius:  {}", gcentroid.vdist(&median).gr());
+    println!("HCentroid's radius:  {}", hcentroid.vdist(&median).gr()); 
+    println!("Medoid's radius:     {}", medoid.vdist(&median).gr());
     println!("Outlier's radius:    {}", outlier.vdist(&median).gr());
     println!("Outlier to Medoid:   {}", outlier.vdist(medoid).gr());
 
@@ -376,24 +375,30 @@ fn vecvec() -> Result<(), RE> {
         seccs[uqcnt.start - 1].gr()
     );
 
+    let nf = n as f64;
+
     println!(
         "\nContribution of adding acentroid:   {}",
-        acentroid.contrib_newpt(&median, recips).gr()
+        acentroid.contrib_newpt(&median, recips, nf).gr() 
     );
     println!(
         "Contribution of adding gcentroid:   {}",
-        gcentroid.contrib_newpt(&median, recips).gr()
+        gcentroid.contrib_newpt(&median, recips, nf).gr()
+    );
+    println!(
+        "Contribution of adding outlier:     {}",
+        outlier.contrib_newpt(&median, recips, nf).gr()
     );
     println!(
         "Contribution of removing outlier:  {}",
-        outlier.contrib_oldpt(&median, recips).gr()
+        outlier.contrib_oldpt(&median, recips+1.0/median.vdist(outlier), nf+1.0).gr() 
     );
     let contribs = pts
         .iter()
-        .map(|p| p.contrib_oldpt(&median, recips))
+        .map(|p| p.contrib_oldpt(&median, recips, nf))
         .collect::<Vec<f64>>();
     println!(
-        "\nContributions of Data Points, Summary:\n{}\nCentroid: {}\nMedian: {}",
+        "\nContributions of removing data points, summary:\n{}\nCentroid: {}\nMedian: {}",
         contribs.minmax(),
         contribs.ameanstd()?,
         contribs.medstatsf64()?
@@ -481,7 +486,7 @@ fn householder() -> Result<(), RE> {
     ];
     let atimesunit = a.matmult(&unit_matrix(a.len()))?;
     println!("Matrix a:\n{}", atimesunit.gr());
-    let (u, r) = a.house_ur(); 
+    let (u, r) = a.house_ur()?; 
     println!("house_ur u' {u}");
     println!("house_ur r'  {r}");
     let q = u.house_uapply(&unit_matrix(a.len().min(a[0].len())));

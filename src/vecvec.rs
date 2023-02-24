@@ -36,7 +36,7 @@ where
     /// R is the upper triangular decomposition factor.
     /// Here both U and R are returned for convenience in their transposed lower triangular forms.
     /// Transposed input self for convenience, so that original columns get accessed easily as rows.
-    fn house_ur(self) -> (TriangMat, TriangMat) {
+    fn house_ur(self) -> Result<(TriangMat, TriangMat),RE> {
         let n = self.len();
         let d = self[0].len();
         let min = if d <= n { d } else { n }; // minimal dimension
@@ -44,7 +44,9 @@ where
         let mut ures = vec![0.; sumn(min)];
         let mut rres = Vec::with_capacity(sumn(min));
         for j in 0..min {
-            let uvec = r[j].get(j..d).unwrap().house_reflector(); // reflector
+            let Some(slc) = r[j].get(j..d) 
+            else { return Err(RError::DataError("house_ur: failed to extract uvec slice".to_owned()));}; 
+            let uvec = slc.house_reflector();
             for rlast in r.iter_mut().take(d).skip(j) {
                 let rvec = uvec.house_reflect::<f64>(&rlast.drain(j..d).collect::<Vec<f64>>());
                 rlast.extend(rvec);
@@ -60,7 +62,7 @@ where
                 rres.push(rsave)
             }
         }
-        (
+        Ok((
             TriangMat {
                 kind: 3,
                 data: ures,
@@ -69,7 +71,7 @@ where
                 kind: 3,
                 data: rres,
             }, // transposed, non symmetric kind
-        )
+        ))
     }
 
     /// Joint probability density function of n matched slices of the same length
@@ -86,7 +88,9 @@ where
         let mut tuples = self.transpose();
         let df = tuples.len() as f64; // for turning counts to probabilities
                                       // lexical sort to group together occurrences of identical tuples
-        tuples.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
+        tuples.sort_unstable_by(|a, b| {
+            let Some(x) = a.partial_cmp(b) 
+            else { panic!("jointpdfn: comparison fail in f64 sort!"); }; x});
         let mut count = 1_usize; // running count
         let mut lastindex = 0; // initial index of the last unique tuple
         tuples.iter().enumerate().skip(1).for_each(|(i, ti)| {
@@ -180,30 +184,23 @@ where
     }
 
     /// gcentroid = multidimensional geometric mean
-    fn gcentroid(self) -> Vec<f64> {
-        let nf = self.len() as f64; // number of points
-        let dim = self[0].len(); // dimensions
-        let mut result = vec![0_f64; dim];
-        for d in 0..dim {
-            for v in self {
-                result[d] += f64::from(v[d]).ln();
-            }
-            result[d] /= nf;
-            result[d] = result[d].exp()
-        }
-        result
+    fn gcentroid(self) -> Result<Vec<f64>,RE> { 
+        let logvs = self.iter().map(|v|-> Result<Vec<f64>,RE> {
+            Ok(v.vunit()?.smult::<f64>(v.vmag().ln())) })
+            .collect::<Result<Vec<Vec<f64>>,RE>>()?;
+        let logcentroid = logvs.acentroid();
+        Ok(logcentroid.vunit()?.smult::<f64>(logcentroid.vmag().exp()))
     }
 
     /// hcentroid =  multidimensional harmonic mean
-    fn hcentroid(self) -> Vec<f64> {
+    fn hcentroid(self) -> Result<Vec<f64>,RE> {
         let mut centre = vec![0_f64; self[0].len()];
         for v in self {
-            centre.mutvadd::<f64>(&v.vinverse().unwrap())
+            centre.mutvadd::<f64>(&v.vinverse()?)
         }
         centre
             .smult::<f64>(1.0 / (self.len() as f64))
-            .vinverse()
-            .unwrap()
+            .vinverse() 
     }
 
     /// For each member point, gives its sum of distances to all other points and their MinMax

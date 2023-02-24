@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "1.2.34"
+version = "1.2.35"
 authors = ["Libor Spacek"]
 edition = "2021"
 description = "Statistics, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder Decomposition, Hulls, Information Measures, Multidimensional Data Analysis, Machine Learning, Multithreading and more"
