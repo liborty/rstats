@@ -108,7 +108,7 @@ another new concept. It is similar to `covariance`. It is a triangular symmetric
 * `tukey vector`  
 proportions of points in each hemisphere around `gm`. We propose this as a 'signature' of a data cloud. For a new point **p** that needs to be classified, we can quickly determine whether it lies in a well populated direction from gm. This could be done properly by projecting all the existing points onto unit **p** but that would be too slow, as there are typically many such points to project. However, `tukey_vector` needs to be precomputed only once and is then the only vector projected onto unit **p**. This gives an approximately similar result. Also, in keeping with the stability properties of medians, we are only using counts of points in the hemispheres, not their distances.
 
-### Existing Concepts
+## Existing Terminology
 
 * `centroid/centre/mean` of an `nd` set.  
 Is the point, generally non member, that minimises its sum of *squares* of distances to all member points. The squaring makes it susceptible to outliers. Specifically, it is the d-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
@@ -251,22 +251,22 @@ These methods are checked and will report RError(s), such as an empty input. Thi
 
 Included in this trait are:
 
-* means (arithmetic, geometric and harmonic),
-* standard deviations,
+* 1d medians (classic, geometric and harmonic) and their spreads
+* 1d means (arithmetic, geometric and harmonic) and their spreads
 * linearly weighted means (useful for time analysis),
 * probability density function (pdf)
 * autocorrelation, entropy
 * linear transformation to [0,1],
-* other measures and vector algebra operators
+* other measures and basic vector algebra operators
 
-Note that fast implementation of 1d medians is, as of version 1.1.0, provided by a separate crate `medians`.
+Note that a fast implementation of 1d 'classic' medians is, as of version 1.1.0, provided in a separate crate `medians`.
 
 ## Trait Vecg
 
 Generic vector algebra operations between two slices `&[T]`, `&[U]` of any (common) length  (dimensions). Note that it may be necessary to invoke some using the 'turbofish' `::<type>` syntax to indicate the type U of the supplied argument, e.g.:
 
-```rust 
-`datavec.methodname::<f64>(arg)`
+```rust
+datavec.somemethod::<f64>(arg)
 ```
 
 This is because Rust is currently for some reason incapable of inferring its type ('the inference bug'?).
@@ -275,10 +275,10 @@ Methods implemented by this trait:
 
 * Vector additions, subtractions and products (scalar, kronecker, outer),
 * Other relationships and measures of difference,
-* Pearson's, Spearman's and Kendall's correlations,
 * Our `median correlation`,
+* Pearson's, Spearman's and Kendall's correlations,
 * Joint pdf, joint entropy, statistical independence (based on mutual information).
-* `Contribution` measure of a point to geometric median
+* `Contribution` measure of a point's impact on the geometric median
 
 The simpler methods of this trait are sometimes unchecked (for speed), so some caution with data is advisable.
 
@@ -297,8 +297,8 @@ Some vector algebra as above that can be more efficient when the end type happen
 
 ## Trait VecVec
 
-Relationships between n vectors (in d dimensions).
-This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` where the main original contribution of this library lies. True geometric median (gm) is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhoods of existing set points. Its variant, `par_gmedian`, employs multithreading for faster execution and gives otherwise exactly the same result.
+Relationships between n vectors in d dimensions.
+This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` where the main original contribution of this library lies. True geometric median (gm) is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhoods of existing set points. Its variant, `par_gmedian`, employs multithreading for faster execution and gives otherwise  the same result.
 
 * centroid, medoid, outliers, gm
 * sums of distances, radius of a point (as its distance from gm)
