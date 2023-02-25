@@ -110,10 +110,8 @@ pub trait Stats {
     fn negv(self) -> Result<Vec<f64>, RE>;
     /// Unit vector
     fn vunit(self) -> Result<Vec<f64>, RE>;
-    /// Harmonic median 
-    fn hmedmad(self) -> Result<MStats, RE>;
-    /// Geometric median
-    fn gmedmad(self) -> Result<MStats, RE>;
+    /// Harmonic spread from median
+    fn hmad(self) -> Result<f64, RE>; 
     /// Arithmetic mean
     fn amean(self) -> Result<f64, RE>;
     /// Arithmetic mean and standard deviation

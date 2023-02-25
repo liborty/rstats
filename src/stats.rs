@@ -86,50 +86,25 @@ where
         }
     }
 
-    /// Harmonic median and spread
-    fn hmedmad(self) -> Result<MStats, RE> {
+    /// Harmonic spread from median
+    fn hmad(self) -> Result<f64, RE> {
         let n = self.len();
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        let recips = self
+        let recmedian = 1.0/self.median(&mut fromop)?;
+        let recmad = self
             .iter()
             .map(|&x| -> Result<f64, RE> {
                 let fx: f64 = x.into();
                 if !fx.is_normal() {
                     return Err(RError::ArithError("attempt to divide by zero".to_owned()));
                 };
-                Ok(1.0 / fx)
+                Ok((recmedian-1.0/fx).abs())
             })
             .collect::<Result<Vec<f64>, RE>>()?
-            .medstatsf64()?;
-        Ok(MStats {
-            centre: 1.0 / recips.centre,
-            dispersion: recips.centre / recips.dispersion
-        })
-    }
-
-    /// Geometric median and spread 
-    fn gmedmad(self) -> Result<MStats, RE> {
-        let n = self.len();
-        if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
-        };
-        let recips = self
-            .iter()
-            .map(|&x| -> Result<f64, RE> {
-                let fx: f64 = x.into();
-                if !fx.is_normal() {
-                    return Err(RError::ArithError("attempt to take ln of zero".to_owned()));
-                };
-                Ok(fx.ln())
-            })
-            .collect::<Result<Vec<f64>, RE>>()?
-            .medstatsf64()?;
-        Ok(MStats {
-            centre: recips.centre.exp(),
-            dispersion: recips.dispersion.exp()
-        })
+            .medianf64()?;
+        Ok( recmedian / recmad ) 
     }
 
     /// Arithmetic mean

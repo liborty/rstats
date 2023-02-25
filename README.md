@@ -76,8 +76,6 @@ For more detailed comments, plus some examples, see [rstats in docs.rs](https://
 
 ## New Concepts and their Definitions
 
-* `Pythagorean Medians` - we define and implement the following 1d measures of central tendency and their associated spread: arithmetic mean -> median (existing), geometric mean -> geometric median (new), harmonic mean -> harmonic median (new). For example: harmonic mean is the reciprocal of the mean reciprocal, so here we replace the mean reciprocal with the median reciprocal. Our measures of spread are in all cases based on the appropriate forms of the median of absolute differences from median (`mad`).
-
 * `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in 1d), or to the **gm** (in `nd`). This is our proposed  alternative to the commonly used `zero mean points`, obtained by moving the origin to the arithmetic mean (in 1d) or to the arithmetic centroid (in `nd`).
 
 * `median correlation` between two 1d sets of the same length.  
@@ -314,7 +312,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.36** - Introduced `hmedmad` and `gmedmad` to `Stats` and `tests.rs`.
+* **Version 1.2.37** - Introduced `harmonic mad` (`hmad`): 1d measure of spread of reciprocals from the reciprocal of the median.
 
 * **Version 1.2.35** - Some more error processing. Improved `gcentroid` and `hcentroid`. Made scalar `contributions` normalized by number of points, so they remain of roughly the same magnitude.
 
