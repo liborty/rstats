@@ -110,6 +110,10 @@ pub trait Stats {
     fn negv(self) -> Result<Vec<f64>, RE>;
     /// Unit vector
     fn vunit(self) -> Result<Vec<f64>, RE>;
+    /// Harmonic median 
+    fn hmedmad(self) -> Result<MStats, RE>;
+    /// Geometric median
+    fn gmedmad(self) -> Result<MStats, RE>;
     /// Arithmetic mean
     fn amean(self) -> Result<f64, RE>;
     /// Arithmetic mean and standard deviation
@@ -119,7 +123,7 @@ pub trait Stats {
     /// Weighted arithmetic men and standard deviation
     fn awmeanstd(self) -> Result<MStats, RE>;
     /// Harmonic mean
-    fn hmean(self) -> Result<f64, RE>;
+    fn hmean(self) -> Result<f64, RE>; 
     /// Harmonic mean and experimental standard deviation
     fn hmeanstd(self) -> Result<MStats, RE>;
     /// Weighted harmonic mean

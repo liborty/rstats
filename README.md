@@ -54,29 +54,31 @@ Several branches of mathematics: statistics, information theory, set theory and 
 
 `Non analytical (non parametric) statistics` is preferred, whereby the 'random variables' are replaced by vectors of real data. Probabilities densities and other parameters are in preference obtained from the real data (pivotal quantity), not from some assumed distributions.
 
-`Linear algebra` uses `Vec<Vec<T>>`, generic data structure capable of representing irregular matrices. Also, `struct TriangMat` is defined and used for symmetric, anti-symmetric, and triangular matrices, and their transposed versions (for memory efficiency reasons).
+`Linear algebra` uses generic data structure `Vec<Vec<T>>` capable of representing irregular matrices.
 
-Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are defined and implemented here (see the terminology section below).
+`Struct TriangMat` is defined and used for symmetric, anti-symmetric, and triangular matrices, and their transposed versions, saving memory.
 
-*Zero median vectors are generally preferable to the commonly used zero mean vectors.*
+Our treatment of multidimensional sets of points is constructed from the first principles. Some original concepts, not found elsewhere, are defined and implemented here (see the next section).
 
-In n dimensions, many authors 'cheat' by using `quasi medians` (1-d medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. In a highly dimensional space, they are also slower to compute than is our `gm` (`true geometric median`).
+*Zero median vectors are generally preferred to commonly used zero mean vectors.*
+
+In n dimensions, many authors 'cheat' by using `quasi medians` (one dimensional (`1d`) medians along each axis). Quasi medians are a poor start to stable characterisation of multidimensional data. Also, they are actually slower to compute than is our `gm` (`true geometric median`), as soon as the number of dimensions exceeds trivial numbers.
 
 *Specifically, all such 1d measures are sensitive to the choice of axis and thus are affected by their rotation.*
 
 In contrast, our methods based on `gm` are axis (rotation) independent. Also, they are more stable, as medians have a 50% breakdown point (the maximum possible).
 
-We compute geometric medians by methods `gmedian` and its parallel version `par_gmedian` in trait `VecVec` and their weighted versions `wgmedian` and `par_wgmedian` in trait `VecVecg`. It is these efficient algorithms that make most of our new concepts described below practical.
+We compute geometric medians by methods `gmedian` and its parallel version `par_gmedian` in trait `VecVec` and their weighted versions `wgmedian` and `par_wgmedian` in trait `VecVecg`. It is mostly these efficient algorithms that make our new concepts described below practical.
 
 ### Additional Documentation
 
 For more detailed comments, plus some examples, see [rstats in docs.rs](https://docs.rs/rstats/latest/rstats). You may have to go directly to the modules source. These traits are implemented for existing 'out of this crate' rust `Vec` type and rust docs do not display 'implementations on foreign types' very well.
 
-## Terminology
+## New Concepts and their Definitions
 
-### New Concepts and their Definitions
+* `Pythagorean Medians` - we define and implement the following 1d measures of central tendency and their associated spread: arithmetic mean -> median (existing), geometric mean -> geometric median (new), harmonic mean -> harmonic median (new). For example: harmonic mean is the reciprocal of the mean reciprocal, so here we replace the mean reciprocal with the median reciprocal. Our measures of spread are in all cases based on the appropriate forms of the median of absolute differences from median (`mad`).
 
-* `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in 1d), or to the `gm` (in `nd`). This is our proposed  alternative to the commonly used `zero mean points`, obtained by moving the origin to the arithmetic mean (in 1d) or to the arithmetic centroid (in `nd`).
+* `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in 1d), or to the **gm** (in `nd`). This is our proposed  alternative to the commonly used `zero mean points`, obtained by moving the origin to the arithmetic mean (in 1d) or to the arithmetic centroid (in `nd`).
 
 * `median correlation` between two 1d sets of the same length.  
 We define this correlation similarly to Pearson, as cosine of an angle between two normalised sets of numbers, interpreted as vector components. Pearson first normalises each set by subtracting its  mean from all components. Whereas we subtract the median, cf. zero median points in 1d, above. This conceptual clarity is one of the benefits of interpreting a data sample of length d as a single point (or vector) in d dimensional space.
@@ -311,6 +313,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.36** - Introduced `hmedmad` and `gmedmad` to `Stats` and `tests.rs`.
 
 * **Version 1.2.35** - Some more error processing. Improved `gcentroid` and `hcentroid`. Made scalar `contributions` normalized by number of points, so they remain of roughly the same magnitude.
 

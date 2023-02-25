@@ -1,6 +1,6 @@
 use crate::{error::RError, fromop, sumn, MStats, MutVecg, Stats, Vecg, RE};
 use indxvec::Vecops;
-use medians::Median;
+use medians::{Median, Medianf64};
 
 impl<T> Stats for &[T]
 where
@@ -55,7 +55,7 @@ where
         };
         let mag = self.vmagsq();
         if mag > 0.0 {
-            Ok(self.iter().map(|&x| f64::from(x)/mag).collect())
+            Ok(self.iter().map(|&x| f64::from(x) / mag).collect())
         } else {
             Err(RError::DataError(
                 "no inverse of zero vector magnitude".to_owned(),
@@ -68,7 +68,7 @@ where
         if self.is_empty() {
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        Ok( self.iter().map(|&x| (-f64::from(x))).collect() )
+        Ok(self.iter().map(|&x| (-f64::from(x))).collect())
     }
 
     /// Unit vector
@@ -78,12 +78,58 @@ where
         };
         let mag = self.vmag();
         if mag > 0.0 {
-            Ok(self.iter().map(|&x| f64::from(x)/mag).collect())
+            Ok(self.iter().map(|&x| f64::from(x) / mag).collect())
         } else {
             Err(RError::DataError(
                 "vector of zero magnitude cannot be made into a unit vector".to_owned(),
             ))
         }
+    }
+
+    /// Harmonic median and spread
+    fn hmedmad(self) -> Result<MStats, RE> {
+        let n = self.len();
+        if n == 0 {
+            return Err(RError::NoDataError("empty self vec".to_owned()));
+        };
+        let recips = self
+            .iter()
+            .map(|&x| -> Result<f64, RE> {
+                let fx: f64 = x.into();
+                if !fx.is_normal() {
+                    return Err(RError::ArithError("attempt to divide by zero".to_owned()));
+                };
+                Ok(1.0 / fx)
+            })
+            .collect::<Result<Vec<f64>, RE>>()?
+            .medstatsf64()?;
+        Ok(MStats {
+            centre: 1.0 / recips.centre,
+            dispersion: recips.centre / recips.dispersion
+        })
+    }
+
+    /// Geometric median and spread 
+    fn gmedmad(self) -> Result<MStats, RE> {
+        let n = self.len();
+        if n == 0 {
+            return Err(RError::NoDataError("empty self vec".to_owned()));
+        };
+        let recips = self
+            .iter()
+            .map(|&x| -> Result<f64, RE> {
+                let fx: f64 = x.into();
+                if !fx.is_normal() {
+                    return Err(RError::ArithError("attempt to take ln of zero".to_owned()));
+                };
+                Ok(fx.ln())
+            })
+            .collect::<Result<Vec<f64>, RE>>()?
+            .medstatsf64()?;
+        Ok(MStats {
+            centre: recips.centre.exp(),
+            dispersion: recips.dispersion.exp()
+        })
     }
 
     /// Arithmetic mean

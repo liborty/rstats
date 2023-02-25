@@ -54,7 +54,7 @@ fn u8() -> Result<(), RE> {
 #[test]
 fn fstats() -> Result<(), RE> {
     let v1 = vec![
-        1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
+        1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15., 50.
     ];
     println!("\n{}", (&v1).gr());
     let v2 = v1.revs();
@@ -63,11 +63,13 @@ fn fstats() -> Result<(), RE> {
     println!("Unit v1:\n{}",v1.vunit()?.gr());
     println!("Inverse magnitude v1:\n{}",v1.vinverse()?.gr());
     println!("Linear transform of v1:\n{}\n",v1.lintrans()?.gr());  
-    println!("Magnitudes:\t{} {}", v1.vmag().gr(),v2.vmag().gr());
-    println!("Median     {}", v1.medstatsf64()?);
-    println!("Arithmetic {}", v1.ameanstd()?);
-    println!("Geometric  {}", v1.gmeanstd()?);
-    println!("Harmonic   {}", v1.hmeanstd()?);
+    println!("Magnitudes: {} {}", v1.vmag().gr(),v2.vmag().gr());   
+    println!("Median           {}", v1.medstatsf64()?); 
+    println!("Harmonic  Median {}", v1.hmedmad()?); 
+    println!("Geometric Median {}", v1.gmedmad()?);       
+    println!("Arithmetic Mean  {}", v1.ameanstd()?);
+    println!("Geometric  Mean  {}", v1.gmeanstd()?);
+    println!("Harmonic   Mean  {}", v1.hmeanstd()?);
     println!("T-statistic of 5 against median {}",t_stat(5.,v1.medstatsf64()?).gr());
     println!("T-statistic of 5 against amean  {}",t_stat(5.,v1.ameanstd()?).gr());
     println!("T-statistic of 5 against gmean  {}",t_stat(5.,v1.gmeanstd()?).gr());
