@@ -198,9 +198,8 @@ where
         for v in self {
             centre.mutvadd::<f64>(&v.vinverse()?)
         }
-        centre
-            .smult::<f64>(1.0 / (self.len() as f64))
-            .vinverse() 
+        Ok(centre  
+            .vinverse()?.smult::<f64>(self.len() as f64)) 
     }
 
     /// For each member point, gives its sum of distances to all other points and their MinMax

@@ -482,8 +482,7 @@ where
         if !mag.is_normal() {
             return dv;
         };
-        let recip = 1f64 / mag; // first had to test for division by zero
-                                // adding new unit vector (to approximate zero vector)
+        let recip = 1f64 / mag; // adding new unit vector (to approximate zero vector)
         dv.smult::<f64>(recip/(recips + recip)) // to unit v. and scaling by new sum of reciprocals
     }
 
