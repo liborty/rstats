@@ -465,7 +465,7 @@ pub trait VecVecg<T, U> {
     fn par_wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
     /// Like `wgmedian` but returns also the sum of unit vecs and the sum of reciprocals.
     fn wgmparts(self, ws: &[U], eps: f64) -> Result<(Vec<f64>, Vec<f64>, f64), RE>;
-    /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator
+    /// wmadgm median of weighted absolute deviations from (weighted) gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64, RE>;
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med: &[U]) -> Result<TriangMat, RE>;

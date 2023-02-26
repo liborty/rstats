@@ -305,16 +305,16 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         }
     }
 
-    /// wmadgm median of weighted absolute deviations from weighted gm: stable nd data spread estimator.
-    /// Here the weights are associated with the dimensions, not the points!
+    /// wmadgm median of weighted absolute deviations from (weighted) gm: stable nd data spread estimator.
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
         if self.len() != ws.len() { 
-            return Err(RError::DataError("wgmadgm and ws lengths mismatch".to_owned())); }; 
+            return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
+        let fws = ws.tof64();
         Ok( self
-            .par_iter()
-            .map(|v| v.wvdist(ws,wgm))
+            .par_iter().enumerate()
+            .map(|(i,p)| fws[i]*p.vdist(wgm))
             .collect::<Vec<f64>>()
-            .medianf64()?
+            .medianf64()?/fws.medianf64()?
         ) 
     }
 
