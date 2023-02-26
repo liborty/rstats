@@ -312,6 +312,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.38** - Improved `wmadgm`, added `wstdgm` and `stdgm`.
+
 * **Version 1.2.37** - Introduced `harmonic mad` (`hmad`): 1d measure of spread of reciprocals from the reciprocal of the median.
 
 * **Version 1.2.35** - Some more error processing. Improved `gcentroid` and `hcentroid`. Made scalar `contributions` normalized by number of points, so they remain of roughly the same magnitude.

@@ -305,7 +305,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         }
     }
 
-    /// wmadgm median of weighted absolute deviations from (weighted) gm: stable nd data spread estimator.
+    /// wmadgm median of weighted deviations from (weighted) gm: stable nd data spread estimator.
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
         if self.len() != ws.len() { 
             return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
@@ -316,6 +316,18 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             .collect::<Vec<f64>>()
             .medianf64()?/fws.medianf64()?
         ) 
+    }
+
+    /// wstdgm mean of weighted deviations from (weighted) gm: data spread estimator.
+    fn wstdgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
+            if self.len() != ws.len() { 
+                return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
+            let fws = ws.tof64();       
+            Ok( self
+                .iter().enumerate()
+                .map(|(i,p)| fws[i]*p.vdist(wgm))
+                .sum::<f64>()/fws.iter().sum::<f64>()
+            ) 
     }
 
     /// Symmetric covariance matrix. Becomes comediance when argument `mid`  

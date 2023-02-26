@@ -299,11 +299,28 @@ where
         Ok(hemis)
     }
 
-    /// MADGM median of absolute deviations from gm: stable nd data spread estimator
+    /// madgm median of distances from gm: stable nd data spread measure
     fn madgm(self, gm: &[f64]) -> Result<f64, RE> {
-        let diffs: Vec<f64> = self.par_iter().map(|v| v.vdist::<f64>(gm)).collect();
-        Ok(diffs.medianf64()?)
+        if self.is_empty() { 
+            return Err(RError::NoDataError("stdgm given zero length vec!".to_owned())); };     
+        Ok( self
+            .iter()
+            .map(|p| p.vdist::<f64>(gm))
+            .collect::<Vec<f64>>()
+            .medianf64()?
+        )
     }
+
+    /// stdgm mean of distances from gm: nd data spread measure, aka nd standard deviation
+    fn stdgm(self, gm: &[f64]) -> Result<f64,RE> { 
+        if self.is_empty() { 
+            return Err(RError::NoDataError("stdgm given zero length vec!".to_owned())); };     
+        Ok( self
+            .iter()
+            .map(|p| p.vdist::<f64>(gm))
+            .sum::<f64>()/self.len() as f64
+        ) 
+}
 
     /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.
     /// Defining plane of a point A goes through A and is normal to the zero median vector **a**.      

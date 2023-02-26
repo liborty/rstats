@@ -416,8 +416,10 @@ pub trait VecVec<T> {
     /// Proportions of points in idx along each +/-axis (hemisphere)
     /// Self will normally be zero median vectors
     fn tukeyvec(self, idx: &[usize]) -> Result<Vec<f64>, RE>;
-    /// MADGM, absolute deviations from geometric median: stable nd data spread estimator
+    /// madgm, median of radii from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64, RE>;
+    /// stdgm mean of radii from gm: nd data spread estimator
+    fn stdgm(self, gm: &[f64]) -> Result<f64,RE>;
     /// Collects indices of outer and inner hull points, from zero median data
     fn hulls(self) -> (Vec<usize>, Vec<usize>);
     /// New algorithm for geometric median, to accuracy eps    
@@ -465,8 +467,10 @@ pub trait VecVecg<T, U> {
     fn par_wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
     /// Like `wgmedian` but returns also the sum of unit vecs and the sum of reciprocals.
     fn wgmparts(self, ws: &[U], eps: f64) -> Result<(Vec<f64>, Vec<f64>, f64), RE>;
-    /// wmadgm median of weighted absolute deviations from (weighted) gm: stable nd data spread estimator
+    /// wmadgm median of weighted distances from (weighted) gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64, RE>;
+    /// wstdgm mean of weighted distances from (weighted) gm: nd data spread estimator.
+    fn wstdgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE>;
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med: &[U]) -> Result<TriangMat, RE>;
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.

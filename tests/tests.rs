@@ -346,6 +346,7 @@ fn vecvec() -> Result<(), RE> {
     );
     println!("Madgm:               {}", pts.madgm(&median)?.gr());
     println!("Median's error:      {GR}{:e}{UN}", pts.gmerror(&median));
+    println!("Stdgm:               {}", pts.stdgm(&median)?.gr());
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());
     println!("Firstpoint's radius: {}", firstp.vdist(&median).gr());
     println!("GCentroid's radius:  {}", gcentroid.vdist(&median).gr());
