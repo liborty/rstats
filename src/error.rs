@@ -1,9 +1,10 @@
-use medians::MedError;
+use medians::error::MedError;
 use ran::RanError;
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Debug, Display};
 use std::thread::AccessError;
+use crate::RE;
 
 #[derive(Debug)]
 /// Custom RStats Error
@@ -56,3 +57,18 @@ impl From<AccessError> for RError<String> {
         RError::OtherError(format!("AccessError: {e}"))
     }
 }
+
+// 'From' implementation for converting ioerror to RError
+impl From<std::io::Error> for RError<String> {
+    fn from(e: std::io::Error) -> Self {
+        RError::OtherError(format!("IOError: {e}"))
+    }
+}
+
+/// Convenience function for returning RError(s) with either &str or String payloads:  
+/// `return Err(re_arith_error("Attempted division by zero"));` 
+/// `return Err(re_arith_error(format!("cholesky needs a positive definite matrix {dif}")));` 
+pub fn re_arith_error(message: impl Into<String>) -> RE
+{
+    RError::ArithError(message.into()) 
+} 

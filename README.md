@@ -312,6 +312,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.39** - Upped various dependencies. Improved automatic external error conversions, such as from crate Medians, v. 2.2.0.
+
 * **Version 1.2.38** - Improved `wmadgm`, added `wstdgm` and `stdgm`.
 
 * **Version 1.2.37** - Introduced `harmonic mad` (`hmad`): 1d measure of spread of reciprocals from the reciprocal of the median.

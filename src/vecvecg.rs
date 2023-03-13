@@ -132,7 +132,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         if self[0].len() != m.len() { return Err(RError::DataError("correlations dimensions mismatch".to_owned())); } 
         let unitzerom =  m.zeromedian( &mut fromop)?.vunit()?;
         self.par_iter().map(|s| -> Result<f64,RE> {
-            Ok(unitzerom.dotp(&s.zeromedian(&mut fromop)?.vunit()?)) } )
+            Ok(unitzerom.dotp(&s.as_slice().zeromedian(&mut fromop)?.vunit()?)) } )
             .collect::<Result<Vec<f64>,RE>>() 
     } 
 
@@ -314,7 +314,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             .par_iter().enumerate()
             .map(|(i,p)| fws[i]*p.vdist(wgm))
             .collect::<Vec<f64>>()
-            .medianf64()?/fws.medianf64()?
+            .median()?/fws.median()?
         ) 
     }
 

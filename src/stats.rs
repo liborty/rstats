@@ -103,7 +103,7 @@ where
                 Ok((recmedian-1.0/fx).abs())
             })
             .collect::<Result<Vec<f64>, RE>>()?
-            .medianf64()?;
+            .median()?;
         Ok( recmedian / recmad ) 
     }
 

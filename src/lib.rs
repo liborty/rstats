@@ -19,12 +19,12 @@ pub mod vecvec;
 /// Multidimensional operations on sets of vectors, with additional inputs
 pub mod vecvecg;
 
-use crate::error::RError;
+pub use crate::error::RError;
 // reexporting useful related methods
 pub use indxvec::{printing::*, MinMax, Printing};
-pub use medians::{MStats, MedError, Median, Medianf64};
+pub use medians::{MStats, Median, Medianf64, error::MedError};
 
-/// Shorthand type for returned errors with message payload
+/// Shorthand type for returned errors with String (message) payload
 pub type RE = RError<String>;
 
 // Auxiliary Functions

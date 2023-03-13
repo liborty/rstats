@@ -1,6 +1,6 @@
 use crate::{sumn, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg, RE};
 use indxvec::{Mutops, Vecops};
-use medians::{MedError, Medianf64};
+use medians::{error::MedError, Medianf64};
 use rayon::prelude::*;
 
 impl<T> VecVec<T> for &[Vec<T>]
@@ -255,14 +255,14 @@ where
         Vec<f64>: FromIterator<f64>,
     {
         let rads: Vec<f64> = self.radii(gm);
-        Ok((rads.ameanstd()?, rads.medstatsf64()?, rads.minmax()))
+        Ok((rads.ameanstd()?, rads.medstats()?, rads.minmax()))
     }
 
     /// Quasi median, recommended only for comparison purposes
     fn quasimedian(self) -> Result<Vec<f64>, RE> {
         Ok((0..self[0].len())
             .into_iter()
-            .map(|colnum| self.column(colnum).medianf64())
+            .map(|colnum| self.column(colnum).median())
             .collect::<Result<Vec<f64>, MedError<String>>>()?)
     }
 
@@ -307,7 +307,7 @@ where
             .iter()
             .map(|p| p.vdist::<f64>(gm))
             .collect::<Vec<f64>>()
-            .medianf64()?
+            .median()?
         )
     }
 

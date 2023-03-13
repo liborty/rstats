@@ -1,6 +1,6 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::{Median,Medianf64};
-use ran::{set_seeds, Rnum };
+use ran::{set_seeds, Rnum};
 use rstats::{t_stat, noop, fromop, unit_matrix, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8, RE};
 use times::benchvvf64;
 
@@ -29,8 +29,8 @@ fn u8() -> Result<(), RE> {
     println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2)?.gr());
     println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
     println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8
-    println!("Median v1: {}", v1.medstats(&mut |&x| x.into())?);
-    println!("Median v2: {}", v2.medstats(&mut fromop)?);
+    println!("Median v1: {}", v1.as_slice().medstats(&mut |&x| x.into())?);
+    println!("Median v2: {}", v2.as_slice().medstats(&mut fromop)?);
     let d = 5_usize;
     let n = 7_usize;
     println!("Testing on a random set of {}points in {}d space:", n.yl(), d.yl());
@@ -46,7 +46,7 @@ fn u8() -> Result<(), RE> {
     println!(
         "Column Median Correlations:\n{}",
         pt.transpose().crossfeatures( |v1, v2| 
-            v1.mediancorrf64(v2).expect("median corr: crossfeatures u8\n"))?
+            v1.mediancorr(v2).expect("median corr: crossfeatures u8\n"))?
     );
     Ok(())
 }
@@ -64,12 +64,12 @@ fn fstats() -> Result<(), RE> {
     println!("Inverse magnitude v1:\n{}",v1.vinverse()?.gr());
     println!("Linear transform of v1:\n{}\n",v1.lintrans()?.gr());  
     println!("Magnitudes: {} {}", v1.vmag().gr(),v2.vmag().gr());   
-    println!("Median           {}", v1.medstatsf64()?); 
+    println!("Median           {}", v1.medstats()?); 
     println!("Harmonic spread  {}", v1.hmad()?.gr());    
     println!("Arithmetic Mean  {}", v1.ameanstd()?);
     println!("Geometric  Mean  {}", v1.gmeanstd()?);
     println!("Harmonic   Mean  {}", v1.hmeanstd()?);
-    println!("T-statistic of 5 against median {}",t_stat(5.,v1.medstatsf64()?).gr());
+    println!("T-statistic of 5 against median {}",t_stat(5.,v1.medstats()?).gr());
     println!("T-statistic of 5 against amean  {}",t_stat(5.,v1.ameanstd()?).gr());
     println!("T-statistic of 5 against gmean  {}",t_stat(5.,v1.gmeanstd()?).gr());
     println!("T-statistic of 5 against hmean   {}",t_stat(5.,v1.hmeanstd()?).gr());
@@ -94,7 +94,7 @@ fn fstats() -> Result<(), RE> {
     ); 
     println!(
         "Column Median Correlations:\n{}",
-        pt.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2,&mut noop).expect("median corr: crossfeatures f64\n"))?
+        pt.transpose().crossfeatures(|v1,v2| v1.mediancorr(v2).expect("median corr: crossfeatures f64\n"))?
     );
     Ok(())
 }
@@ -105,12 +105,12 @@ fn ustats() -> Result<(), RE> {
     let v1 = Rnum::newu8().ranv(20)?.getvu8()?;
     println!("\n{}", (&v1).gr());
     println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
-    println!("Median:          {GR}{:>14.10}{UN}", v1.median(&mut fromop)?);
+    println!("Median:          {GR}{:>14.10}{UN}", v1.as_slice().median(&mut fromop)?);
     println!("Geometric mean:  {GR}{:>14.10}{UN}", v1.gmean()?);
     println!("Harmonic mean:   {GR}{:>14.10}{UN}", v1.hmean()?);
     println!("Magnitude:       {GR}{:>14.10}{UN}", v1.vmag());
     println!("Arithmetic {}", v1.ameanstd()?);
-    println!("Median     {}", v1.medstats(&mut fromop)?);
+    println!("Median     {}", v1.as_slice().medstats(&mut fromop)?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
@@ -125,12 +125,12 @@ fn intstats() -> Result<(), RE> {
     let v1:Vec<f64> = v.iter().map(|i| *i as f64).collect(); // downcast to f64 here
     println!("Linear transform:\n{}", v1.lintrans()?.gr());
     println!("Arithmetic mean:{}", v1.amean()?.gr());
-    println!("Median:       {GR}{:>14.10}{UN}", v1.medianf64()?);
+    println!("Median:       {GR}{:>14.10}{UN}", v1.median()?);
     println!("Geometric mean:\t{}", v1.gmean()?.gr());
     println!("Harmonic mean:\t{}", v1.hmean()?.gr());
     // println!("Magnitude:\t{}",v1.vmag()));
     println!("Arithmetic {}", v1.ameanstd()?);
-    println!("Median     {}", v1.medstats(&mut noop)?);
+    println!("Median     {}", v1.medstats()?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr()); 
@@ -143,7 +143,7 @@ fn genericstats() -> Result<(), RE> {
     let mut v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?);
-    println!("Median\t\t{}", v.medstats(&mut fromop)?);
+    println!("Median\t\t{}", v.as_slice().medstats(&mut fromop)?);
     println!("Geometric\t{}", v.gmeanstd()?);
     println!("Harmonic\t{}", v.hmeanstd()?);
     println!("Weighted Arit.\t{}", v.awmeanstd()?);
@@ -167,7 +167,7 @@ fn vecg() -> Result<(), RE> {
     ];
     println!("v2: {}", (&v2).gr());
     println!("Lexical order v1<v2:\t{}", (v1 < v2).gr());
-    println!("Median Correlation:\t{}", v1.mediancorr(&v2,&mut noop)?.gr());
+    println!("Median Correlation:\t{}", v1.mediancorr(&v2)?.gr());
     println!("Pearson's Correlation:\t{}", v1.correlation(&v2).gr());
     println!("Kendall's Correlation:\t{}", v1.kendalcorr(&v2).gr());
     println!("Spearman's Correlation:\t{}", v1.spearmancorr(&v2).gr());
@@ -320,7 +320,7 @@ fn vecvec() -> Result<(), RE> {
     let md = dists.minmax();
     println!("\nMedoid and Outlier Total Distances:\n{md}");
     println!("Centroid of total Distances {}", dists.ameanstd()?);
-    println!("Median of total distances   {}", dists.medstatsf64()?);
+    println!("Median of total distances   {}", dists.medstats()?);
     println!(
         "GM's total distances:        {}",
         pts.distsum(&median)?.gr()
@@ -403,7 +403,7 @@ fn vecvec() -> Result<(), RE> {
         "\nContributions of removing data points, summary:\n{}\nCentroid: {}\nMedian: {}",
         contribs.minmax(),
         contribs.ameanstd()?,
-        contribs.medstatsf64()?
+        contribs.medstats()?
     );
     Ok(())
 }
