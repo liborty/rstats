@@ -312,6 +312,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.40** - Fixed dependencies in `times 1.0.10` as well.
+
 * **Version 1.2.39** - Upped various dependencies. Improved automatic external error conversions, such as from crate Medians, v. 2.2.0.
 
 * **Version 1.2.38** - Improved `wmadgm`, added `wstdgm` and `stdgm`.
