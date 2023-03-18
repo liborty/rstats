@@ -126,7 +126,7 @@ is the member of the set with the least sum of distances to all other members. E
 * `outlier`  
 is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm` (has the maximum radius).
 
-* `mahalanobis distance` is a scaled distance, where the scaling is derived from the axis of covariance of the `nd` data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances are decreased. Efficient Cholesky-Banachiewicz singular (eigen) value decomposition is used. Our `cholesky` method decomposes the covariance or comediance positive definite triangular matrix S into a product of two triangular matrices: S = LL'. For more details, see the comments in the source code.
+* `mahalanobis distance` is a scaled distance, where the scaling is derived from the axis of covariance of the `nd` data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances are decreased. Efficient Cholesky-Banachiewicz matrix decomposition is used. Our `cholesky` method decomposes the covariance or comediance positive definite triangular matrix S into a product of two triangular matrices: S = LL'. For more details, see the comments in the source code.
 
 * `householder's decomposition`  
 in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition is not satisfied, Householder's (UR) decomposition is the next best method. Implemented here with our memory efficient `TriangMat` struct.
