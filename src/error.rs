@@ -4,7 +4,9 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::{Debug, Display};
 use std::thread::AccessError;
-use crate::RE;
+
+/// Shorthand type for returned errors with String (message) payload
+pub type RE = RError<String>;
 
 #[derive(Debug)]
 /// Custom RStats Error
@@ -65,10 +67,14 @@ impl From<std::io::Error> for RError<String> {
     }
 }
 
-/// Convenience function for returning RError(s) with either &str or String payloads:  
-/// `return Err(re_arith_error("Attempted division by zero"));` 
-/// `return Err(re_arith_error(format!("cholesky needs a positive definite matrix {dif}")));` 
-pub fn re_arith_error(message: impl Into<String>) -> RE
-{
-    RError::ArithError(message.into()) 
-} 
+/// Convenience function for building RError<String>  
+/// from short name and payload message, which can be either &str or String
+pub fn re_error(kind: &str, msg: impl Into<String>) -> RE {
+    match kind {
+        "empty" => RError::NoDataError(msg.into()), 
+        "size"  => RError::DataError(msg.into()), 
+        "arith" => RError::ArithError(msg.into()),
+        "other" => RError::OtherError(msg.into()),
+        _ => RError::OtherError("Wrong error kind given to re_error".into())
+    }
+}

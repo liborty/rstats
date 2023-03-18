@@ -11,7 +11,7 @@ Insert `Rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 Use in your source files any of the following structs, as and when needed:
 
 ```rust  
-use Rstats::{RE,TriangMat,Mstats,MinMax};
+use Rstats::{RE,RError,TriangMat,Mstats,MinMax};
 ```
 
 and any of the following traits:
@@ -23,7 +23,7 @@ use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 and any of the following auxiliary functions:
 
 ```rust
-use Rstats::{noop,fromop,sumn,t_stat,unit_matrix};
+use Rstats::{noop,fromop,sumn,t_stat,unit_matrix,re_error};
 ```
 
 The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be only in some details a little ahead of the `crates.io` release versions.
@@ -79,7 +79,7 @@ For more detailed comments, plus some examples, see [rstats in docs.rs](https://
 * `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in 1d), or to the **gm** (in `nd`). This is our proposed  alternative to the commonly used `zero mean points`, obtained by moving the origin to the arithmetic mean (in 1d) or to the arithmetic centroid (in `nd`).
 
 * `median correlation` between two 1d sets of the same length.  
-We define this correlation similarly to Pearson, as cosine of an angle between two normalised sets of numbers, interpreted as vector components. Pearson first normalises each set by subtracting its  mean from all components. Whereas we subtract the median, cf. zero median points in 1d, above. This conceptual clarity is one of the benefits of interpreting a data sample of length d as a single point (or vector) in d dimensional space.
+We define this correlation similarly to Pearson, as cosine of an angle between two normalised samples of numbers, interpreted as coordinate vectors. Pearson first normalises each set by subtracting its  mean from all components. Whereas we subtract the median, cf. zero median points in 1d, above. This conceptual clarity is one of the benefits of interpreting a data sample of length d as a single point (or vector) in d dimensional space.
 
 * `gmedian, par_gmedian, wgmedian and par_wgmedian`  
 our fast multidimensional `geometric median (gm)` algorithms.
@@ -91,7 +91,7 @@ is our generalisation of `mad` (median of absolute deviations from median), to n
 we improve 1d 't-statistic' from: `(x-mean)/std`, to `(x-median)/mad`, where x is a single observed value. `(x-mean)/std`  is similar to `z-score`, except the measures of central tendency and spread are obtained from the sample (so called pivotal quantity), rather than from the (assumed) population distribution.
 
 * `t_statistic`  
-we then generalize `t_stat` to nd `t_statistic`: |**p-gm**|/madgm, where **p** is now an observed point in nd space. The role of the sample central tendency is taken up by the `geometric median` **gm** vector and the spread by the `madgm` scalar. Thus a single scalar t-statistic is obtained in any number of dimensions.
+we then generalize `t_stat` to nd `t_statistic`: |**p-gm**|/madgm, where **p** is now an observed point in nd space. The role of the sample central tendency is taken up by the `geometric median` **gm** vector and the spread by the `madgm` scalar. Thus a single scalar t-statistic is obtained for point **p** in space of any number of dimensions.
 
 * `contribution`  
 one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of displacement of `gm`, caused by adding **p** to the set. Generally, outlying points make greater contributions to the `gm` but not as much as to the `centroid`. The contribution depends not only on the radius of **p** but also on the radii of all other existing set points.
@@ -103,8 +103,8 @@ another new concept. It is similar to `covariance`. It is a triangular symmetric
 
 * `inner hull` is a subset of all zero median points **p**, that do not lie outside the normal plane of any other point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, when they lie on a hypersphere).
 
-* `tukey vector`  
-proportions of points in each hemisphere around `gm`. We propose this as a 'signature' of a data cloud. For a new point **p** that needs to be classified, we can quickly determine whether it lies in a well populated direction from gm. This could be done properly by projecting all the existing points onto unit **p** but that would be too slow, as there are typically many such points to project. However, `tukey_vector` needs to be precomputed only once and is then the only vector projected onto unit **p**. This gives an approximately similar result. Also, in keeping with the stability properties of medians, we are only using counts of points in the hemispheres, not their distances.
+* `signature vector`  
+Frequencies of points in all hemispheres. The origin will most often be the **gm**. For a new point **p** that needs to be classified, we can quickly estimate whether it lies in a well populated direction from **gm**. This could be done properly by projecting all the existing points onto unit **p** but that would be too slow, as there are typically too many such points. However, `signature_vector` needs to be precomputed only once and is then the only vector to be projected onto unit **p**. In keeping with the stability properties of medians, `signature vector` is only using counts of points, not their distances from **gm**.
 
 ## Existing Terminology
 
@@ -184,6 +184,13 @@ if dif <= 0_f64 {
 pub type RE = RError<String>;
 ```
 
+Convenience function `re_error` can be used to construct these errors with either String or &str payload messages, as follows:
+```rust
+if denom == 0. {
+    return Err(re_error("arith","Attempted division by zero!"));
+};
+```
+
 ## Structs
 
 ### `struct MStats` 
@@ -221,12 +228,11 @@ When T is a wide primitive type, such as i64, u64, usize, that can only be conve
 
 ### `fromop`
 
-When T is a narrow numeric type, or is convertible by another existing `From` implementation, and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in one of these:
+When T is a narrow numeric type, or is convertible by another existing `From` implementation, and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in either one of these:
 
 ```rust
 &mut fromop
-&mut |&f| f.into()
-&mut |f:&T| f.into()
+&mut |f:&T| (*f).clone().into()
 ```
 
 All other cases were previously only possible with manual implementation written for the (global) From trait for each type T and each different quantification method, whereby the different quantification would conflict. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of a small inconvenience: using the above signature closures for the simple cases.
@@ -238,6 +244,8 @@ All other cases were previously only possible with manual implementation written
 * `t_stat`: of a value x: (x-centre)/spread. In one dimension.
 
 * `unit_matrix`: - generates full square unit matrix.
+
+* `re_error` - helps to construct custom RE errors (see Errors above).
 
 ## Trait Stats
 
@@ -267,18 +275,17 @@ Generic vector algebra operations between two slices `&[T]`, `&[U]` of any (comm
 datavec.somemethod::<f64>(arg)
 ```
 
-This is because Rust is currently for some reason incapable of inferring its type ('the inference bug'?).
-
 Methods implemented by this trait:
 
 * Vector additions, subtractions and products (scalar, kronecker, outer),
 * Other relationships and measures of difference,
-* Our `median correlation`,
 * Pearson's, Spearman's and Kendall's correlations,
 * Joint pdf, joint entropy, statistical independence (based on mutual information).
 * `Contribution` measure of a point's impact on the geometric median
 
-The simpler methods of this trait are sometimes unchecked (for speed), so some caution with data is advisable.
+Note that our `median correlation` is implemented in a separate crate `medians`.
+
+Some simpler methods of this trait may be unchecked (for speed), so some caution with data is advisable.
 
 ## Trait MutVecg
 
@@ -311,6 +318,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.41** - Added `anglestat` to `VecVecg` trait. Added convenience function `re_error`. Relaxed trait bounds in `Vecg` trait: `U:Copy -> U:Clone`. Renamed `tukeydot`,`tukeyvec`,`wtukeyvec` to more descriptive `sigdot`,`sigvec`,`wsigvec` and made them include orthogonal points.
 
 * **Version 1.2.40** - Fixed dependencies in `times 1.0.10` as well.
 

@@ -4,19 +4,14 @@ use medians::{Median, Medianf64};
 
 impl<T> Stats for &[T]
 where
-    T: Copy + PartialOrd,
-    f64: From<T>,
+   T: Clone + PartialOrd + Into<f64>,
 {
     /// Vector magnitude
     fn vmag(self) -> f64 {
         match self.len() {
             0 => 0_f64,
-            1 => self[0].into(),
-            _ => self
-                .iter()
-                .map(|&x| f64::from(x).powi(2))
-                .sum::<f64>()
-                .sqrt(),
+            1 => self[0].clone().into(),
+            _ => self.iter().map(|x| x.clone().into().powi(2)).sum::<f64>().sqrt(),
         }
     }
 
@@ -24,8 +19,8 @@ where
     fn vmagsq(self) -> f64 {
         match self.len() {
             0 => 0_f64,
-            1 => f64::from(self[0]).powi(2),
-            _ => self.iter().map(|&x| f64::from(x).powi(2)).sum::<f64>(),
+            1 => self[0].clone().into().powi(2),
+            _ => self.iter().map(|x| x.clone().into().powi(2)).sum::<f64>(),
         }
     }
 
@@ -35,8 +30,8 @@ where
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
         self.iter()
-            .map(|&component| -> Result<f64, RE> {
-                let c: f64 = component.into();
+            .map(|component| -> Result<f64, RE> {
+                let c: f64 = component.clone().into();
                 if c.is_normal() {
                     Ok(1.0 / c)
                 } else {
@@ -55,7 +50,7 @@ where
         };
         let mag = self.vmagsq();
         if mag > 0.0 {
-            Ok(self.iter().map(|&x| f64::from(x) / mag).collect())
+            Ok(self.iter().map(|x| x.clone().into() / mag).collect())
         } else {
             Err(RError::DataError(
                 "no inverse of zero vector magnitude".to_owned(),
@@ -63,12 +58,12 @@ where
         }
     }
 
-    // negated vector (all components swap sign)
+    // Negated vector (all components swap sign)
     fn negv(self) -> Result<Vec<f64>, RE> {
         if self.is_empty() {
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        Ok(self.iter().map(|&x| (-f64::from(x))).collect())
+        Ok(self.iter().map(|x| (-x.clone().into())).collect())
     }
 
     /// Unit vector
@@ -78,7 +73,7 @@ where
         };
         let mag = self.vmag();
         if mag > 0.0 {
-            Ok(self.iter().map(|&x| f64::from(x) / mag).collect())
+            Ok(self.iter().map(|x| x.clone().into() / mag).collect())
         } else {
             Err(RError::DataError(
                 "vector of zero magnitude cannot be made into a unit vector".to_owned(),
@@ -92,19 +87,19 @@ where
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        let recmedian = 1.0/self.median(&mut fromop)?;
+        let recmedian = 1.0 / self.median(&mut fromop)?;
         let recmad = self
             .iter()
-            .map(|&x| -> Result<f64, RE> {
-                let fx: f64 = x.into();
+            .map(|x| -> Result<f64, RE> {
+                let fx: f64 = x.clone().into();
                 if !fx.is_normal() {
                     return Err(RError::ArithError("attempt to divide by zero".to_owned()));
                 };
-                Ok((recmedian-1.0/fx).abs())
+                Ok((recmedian - 1.0 / fx).abs())
             })
             .collect::<Result<Vec<f64>, RE>>()?
             .median()?;
-        Ok( recmedian / recmad ) 
+        Ok(recmedian / recmad)
     }
 
     /// Arithmetic mean
@@ -117,7 +112,7 @@ where
     fn amean(self) -> Result<f64, RE> {
         let n = self.len();
         if n > 0 {
-            Ok(self.iter().map(|&x| f64::from(x)).sum::<f64>() / (n as f64))
+            Ok(self.iter().map(|x| x.clone().into()).sum::<f64>() / (n as f64))
         } else {
             Err(RError::NoDataError("empty self vec".to_owned()))
         }
@@ -141,8 +136,8 @@ where
         let mut sx2 = 0_f64;
         let mean = self
             .iter()
-            .map(|&x| {
-                let fx: f64 = x.into();
+            .map(|x| {
+                let fx: f64 = x.clone().into();
                 sx2 += fx * fx;
                 fx
             })
@@ -172,9 +167,9 @@ where
         let mut iw = 0_f64; // descending linear weights
         Ok(self
             .iter()
-            .map(|&x| {
+            .map(|x| {
                 iw += 1_f64;
-                iw * f64::from(x)
+                iw * x.clone().into()
             })
             .sum::<f64>()
             / (sumn(n) as f64))
@@ -201,8 +196,8 @@ where
         let nf = sumn(n) as f64;
         let centre = self
             .iter()
-            .map(|&x| {
-                let fx: f64 = x.into();
+            .map(|x| {
+                let fx: f64 = x.clone().into();
                 w += 1_f64;
                 let wx = w * fx;
                 sx2 += wx * fx;
@@ -229,8 +224,8 @@ where
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
         let mut sum = 0_f64;
-        for &x in self {
-            let fx: f64 = x.into();
+        for x in self {
+            let fx: f64 = x.clone().into();
             if !fx.is_normal() {
                 return Err(RError::ArithError("attempt to divide by zero".to_owned()));
             };
@@ -257,8 +252,8 @@ where
         let nf = n as f64;
         let mut sx2 = 0_f64;
         let mut sx = 0_f64;
-        for &x in self {
-            let fx: f64 = x.into();
+        for x in self {
+            let fx: f64 = x.clone().into();
             if !fx.is_normal() {
                 return Err(RError::ArithError("attempt to divide by zero".to_owned()));
             };
@@ -288,8 +283,8 @@ where
         };
         let mut sum = 0_f64;
         let mut w = 0_f64;
-        for &x in self {
-            let fx: f64 = x.into();
+        for x in self {
+            let fx: f64 = x.clone().into();
             if !fx.is_normal() {
                 return Err(RError::ArithError("attempt to divide by zero".to_owned()));
             };
@@ -318,9 +313,9 @@ where
         let mut sx2 = 0_f64;
         let mut sx = 0_f64;
         let mut w = 0_f64;
-        for &x in self {
+        for x in self {
             w += 1_f64;
-            let fx: f64 = x.into();
+            let fx: f64 = x.clone().into();
             if !fx.is_normal() {
                 return Err(RError::ArithError("attempt to divide by zero".to_owned()));
             };
@@ -351,8 +346,8 @@ where
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
         let mut sum = 0_f64;
-        for &x in self {
-            let fx: f64 = x.into();
+        for x in self {
+            let fx: f64 = x.clone().into();
             if !fx.is_normal() {
                 return Err(RError::ArithError(
                     "gmean attempt to take ln of zero".to_owned(),
@@ -381,8 +376,8 @@ where
         };
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
-        for &x in self {
-            let fx: f64 = x.into();
+        for x in self {
+            let fx: f64 = x.clone().into();
             if !fx.is_normal() {
                 return Err(RError::ArithError(
                     "gmeanstd attempt to take ln of zero".to_owned(),
@@ -419,8 +414,8 @@ where
         };
         let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
-        for &x in self {
-            let fx: f64 = x.into();
+        for x in self {
+            let fx: f64 = x.clone().into();
             if !fx.is_normal() {
                 return Err(RError::ArithError(
                     "gwmean attempt to take ln of zero".to_owned(),
@@ -449,8 +444,8 @@ where
         let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
-        for &x in self {
-            let fx: f64 = x.into();
+        for x in self {
+            let fx: f64 = x.clone().into();
             if !fx.is_normal() {
                 return Err(RError::ArithError(
                     "gwmeanstd attempt to take ln of zero".to_owned(),
@@ -475,9 +470,9 @@ where
         let nf = self.len() as f64;
         let mut res: Vec<f64> = Vec::new();
         let mut count = 1_usize; // running count
-        let mut lastval = self[0];
-        self.iter().skip(1).for_each(|&s| {
-            if s > lastval {
+        let mut lastval = &self[0];
+        self.iter().skip(1).for_each(|s| {
+            if *s > *lastval {
                 // new value encountered
                 res.push((count as f64) / nf); // save previous probability
                 lastval = s; // new value
@@ -511,9 +506,9 @@ where
                 "autocorr needs a Vec of at least two items".to_owned(),
             ));
         };
-        let mut x: f64 = self[0].into();
-        self.iter().skip(1).for_each(|&si| {
-            let y: f64 = si.into();
+        let mut x: f64 = self[0].clone().into();
+        self.iter().skip(1).for_each(|si| {
+            let y: f64 = si.clone().into();
             sx += x;
             sy += y;
             sxy += x * y;
@@ -528,7 +523,8 @@ where
     /// Linear transform to interval [0,1]
     fn lintrans(self) -> Result<Vec<f64>, RE> {
         let mm = self.minmax();
-        let range = f64::from(mm.max) - f64::from(mm.min);
+        let min = mm.min.into();
+        let range = mm.max.into() - min; 
         if range == 0_f64 {
             return Err(RError::ArithError(
                 "lintrans self has zero range".to_owned(),
@@ -536,7 +532,7 @@ where
         };
         Ok(self
             .iter()
-            .map(|&x| (f64::from(x) - f64::from(mm.min)) / range)
+            .map(|x| (x.clone().into() - min) / range)
             .collect())
     }
 
@@ -552,8 +548,8 @@ where
         };
         let mut weight = 0_f64;
         let mut sumwx = 0_f64;
-        for &x in self.iter() {
-            let fx: f64 = x.into();
+        for x in self.iter() {
+            let fx: f64 = x.clone().into();
             weight += 1_f64;
             sumwx += weight * fx;
         }

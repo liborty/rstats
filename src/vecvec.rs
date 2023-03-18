@@ -1,4 +1,4 @@
-use crate::{sumn, MStats, MinMax, MutVecg, RError, Stats, TriangMat, VecVec, Vecg, RE};
+use crate::{sumn, re_error, RError, RE, MStats, MinMax, MutVecg, Stats, TriangMat, VecVec, Vecg};
 use indxvec::{Mutops, Vecops};
 use medians::{error::MedError, Medianf64};
 use rayon::prelude::*;
@@ -12,7 +12,7 @@ where
 {
     /// Selects a column by number
     fn column(self, cnum: usize) -> Vec<f64> {
-        self.iter().map(|row| f64::from(row[cnum])).collect()
+        self.iter().map(|row| row[cnum].into()).collect()
     }
 
     /// Multithreaded transpose of vec of vecs matrix
@@ -140,7 +140,6 @@ where
                 .into_par_iter()
                 .flat_map(|i| {
                     (0..i + 1usize)
-                        .into_iter()
                         .map(|j| f(&self[i], &self[j]))
                         .collect::<Vec<f64>>()
                 })
@@ -260,8 +259,7 @@ where
 
     /// Quasi median, recommended only for comparison purposes
     fn quasimedian(self) -> Result<Vec<f64>, RE> {
-        Ok((0..self[0].len())
-            .into_iter()
+        Ok((0..self[0].len()) 
             .map(|colnum| self.column(colnum).median())
             .collect::<Result<Vec<f64>, MedError<String>>>()?)
     }
@@ -273,29 +271,35 @@ where
     }
 
     /// Proportions of points along each +/-axis (hemisphere)
-    /// Excludes points that are perpendicular to axis
+    /// Points that are perpendicular to axis get included in both +/-ve hemispheres.
     /// Uses only the selected points specified in idx (e.g. the hull).
-    /// Self should normally be zero mean/median vectors,
+    /// Self should normally be zero median vectors,
     /// e.g. `self.translate(&median)`
-    fn tukeyvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> {
+    fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> {
+        let mut totpoints = idx.len();
         let dims = self[0].len();
         if self.is_empty() {
-            return Err(RError::NoDataError("tukeyvec given no data".to_owned()));
+            return Err(re_error("empty","sigvec given no data"));
         };
         let mut hemis = vec![0_f64; 2 * dims];
         for &i in idx {
             for (j, &component) in self[i].iter().enumerate() {
                 let cf = f64::from(component);
-                if cf > 0. {
+                if cf == 0. {
+                    totpoints += 1;
+                    hemis[j] += 1.;
+                    hemis[dims + j] += 1.
+                } else if cf > 0. {
                     hemis[j] += 1.
-                } else if cf < 0. {
+                } else  {
                     hemis[dims + j] += 1.
                 };
             }
         }
+        let totf:f64 = totpoints as f64;
         hemis
             .iter_mut()
-            .for_each(|count| *count /= idx.len() as f64);
+            .for_each(|count| *count /= totf);
         Ok(hemis)
     }
 

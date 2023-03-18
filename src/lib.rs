@@ -19,13 +19,10 @@ pub mod vecvec;
 /// Multidimensional operations on sets of vectors, with additional inputs
 pub mod vecvecg;
 
-pub use crate::error::RError;
+pub use crate::error::{RError,RE,re_error};
 // reexporting useful related methods
 pub use indxvec::{printing::*, MinMax, Printing};
 pub use medians::{MStats, Median, Medianf64, error::MedError};
-
-/// Shorthand type for returned errors with String (message) payload
-pub type RE = RError<String>;
 
 // Auxiliary Functions
 
@@ -35,12 +32,9 @@ pub fn noop(f: &f64) -> f64 {
 }
 
 /// Convenience From quantification invocation
-pub fn fromop<T>(f: &T) -> f64
-where
-    T: Clone,
-    f64: From<T>,
+pub fn fromop<T:Clone+Into<f64>>(f: &T) -> f64
 {
-    f64::from(f.clone())
+   (*f).clone().into()
 }
 
 /// t_statistic in 1d: (value-centre)/dispersion
@@ -156,150 +150,64 @@ pub trait Vecg {
     /// nd t_statistic of self against geometric median and madgm spread
     fn t_statistic(self, gm: &[f64], madgm: f64) -> Result<f64, RE>;
     /// Dot product of vector self with column c of matrix v
-    fn columnp<U>(self, c: usize, v: &[Vec<U>]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn columnp<U:Clone+Into<f64>>(self, c: usize, v: &[Vec<U>]) -> f64; 
     /// Scalar addition to vector
-    fn sadd<U>(self, s: U) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn sadd<U:Into<f64>>(self, s: U) -> Vec<f64>;
     /// Scalar multiplication of vector, creates new vec
-    fn smult<U>(self, s: U) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn smult<U:Into<f64>>(self, s: U) -> Vec<f64>;
     /// Scalar product
-    fn dotp<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
-    /// Product with Tukeyvec of hemispheric counts.
-    fn dottukey(self, tukey: &[f64]) -> Result<f64, RE>;
+    fn dotp<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
+    /// Product with signature vec of hemispheric frequencies 
+    fn dotsig(self, sig: &[f64]) -> Result<f64, RE>;
     /// Cosine of angle between two slices
-    fn cosine<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn cosine<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Vectors' subtraction (difference)
-    fn vsub<U>(self, v: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn vsub<U:Clone+Into<f64>>(self, v: &[U]) -> Vec<f64>;
     /// Vectors difference as unit vector (done together for efficiency)
-    fn vsubunit<U>(self, v: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn vsubunit<U:Clone+Into<f64>>(self, v: &[U]) -> Vec<f64>;
     /// Vector addition
-    fn vadd<U>(self, v: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn vadd<U:Clone+Into<f64>>(self, v: &[U]) -> Vec<f64>;
     /// Euclidian distance
-    fn vdist<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn vdist<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Weighted arithmetic mean of `self:&[T]`, scaled by `ws:&[U]`
-    fn wvmean<U>(self, ws: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn wvmean<U:Clone+Into<f64>>(self, ws: &[U]) -> f64;
     /// Weighted distance of self:&[T],weighted by ws:&[U],to v:&[V]
-    fn wvdist<U, V>(self, ws: &[U], v: &[V]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-        V: Copy,
-        f64: From<V>;
+    fn wvdist<U:Clone+Into<f64>, V:Clone+Into<f64>>(self, ws: &[U], v: &[V]) -> f64;
     /// Euclidian distance squared
-    fn vdistsq<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn vdistsq<U:Clone+Into<f64>>(self, v: &[U]) -> f64; 
     /// cityblock distance
-    fn cityblockd<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn cityblockd<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Magnitude of the cross product |a x b| = |a||b|sin(theta).
     /// Attains maximum `|a|.|b|` when the vectors are othogonal.
-    fn varea<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn varea<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64;
     /// Area proportional to the swept arc
-    fn varc<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn varc<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64;
     /// Vector similarity S in the interval [0,1]: S = (1+cos(theta))/2
-    fn vsim<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn vsim<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Positive dotp [0,2|a||b|]
-    fn pdotp<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn pdotp<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64; 
     /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2
-    fn vdisim<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn vdisim<U:Clone+Into<f64>>(self, v: &[U]) -> f64; 
     /// Lower triangular part of a covariance matrix for a single f64 vector.
-    fn covone<U>(self, m: &[U]) -> TriangMat
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn covone<U:Clone+Into<f64>>(self, m: &[U]) -> TriangMat;
     /// Kronecker product of two vectors
-    fn kron<U>(self, m: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn kron<U:Clone+Into<f64>>(self, m: &[U]) -> Vec<f64>;
     /// Outer product of two vectors
-    fn outer<U>(self, m: &[U]) -> Vec<Vec<f64>>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn outer<U:Clone+Into<f64>>(self, mv: &[U]) -> Vec<Vec<f64>>;
     /// Joint probability density function
-    fn jointpdf<U>(self, v: &[U]) -> Result<Vec<f64>, RE>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn jointpdf<U:Clone+Into<f64>>(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// Joint entropy of &[T],&[U] in nats (units of e)
-    fn jointentropy<U>(self, v: &[U]) -> Result<f64, RE>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn jointentropy<U:Clone+Into<f64>>(self, v: &[U]) -> Result<f64, RE>;
     /// Statistical pairwise dependence of &[T] &[U] variables in the range [0,1]
-    fn dependence<U>(self, v: &[U]) -> Result<f64, RE>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn dependence<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> Result<f64, RE>;
     /// Statistical pairwise independence in the range [0,1] based on joint entropy
-    fn independence<U>(self, v: &[U]) -> Result<f64, RE>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn independence<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> Result<f64, RE>;
     /// Pearson's correlation.  
-    fn correlation<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn correlation<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Kendall Tau-B correlation.
-    fn kendalcorr<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn kendalcorr<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Spearman rho correlation.
-    fn spearmancorr<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>;
+    fn spearmancorr<U:PartialOrd+Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Change to gm that adding point self will cause
     fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Vec<f64>;
     /// Normalized magnitude of change to gm that adding point self will cause
@@ -309,10 +217,7 @@ pub trait Vecg {
     /// Normalized contribution of removing point self (as negative scalar)
     fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> f64;
     /// Householder reflect
-    fn house_reflect<U>(self, x: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + std::fmt::Display,
-        f64: From<U>;
+    fn house_reflect<U:Clone+PartialOrd+Into<f64>>(self, x: &[U]) -> Vec<f64>; 
 }
 
 /// Mutable operations on one generic slice.
@@ -414,8 +319,7 @@ pub trait VecVec<T> {
     /// Geometric median estimate's error
     fn gmerror(self, gm: &[f64]) -> f64;
     /// Proportions of points in idx along each +/-axis (hemisphere)
-    /// Self will normally be zero median vectors
-    fn tukeyvec(self, idx: &[usize]) -> Result<Vec<f64>, RE>;
+    fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE>;
     /// madgm, median of radii from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64, RE>;
     /// stdgm mean of radii from gm: nd data spread estimator
@@ -447,8 +351,10 @@ pub trait VecVecg<T, U> {
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Result<Vec<f64>, RE>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[U]) -> Result<Vec<Vec<f64>>, RE>;
+    /// Statistic (median,madgm) of angles against reference vector v 
+    fn anglestat(self, uv: &[U]) -> Result<MStats,RE>;
     /// Proportions of points along each +/-axis (hemisphere)
-    fn wtukeyvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
+    fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
     /// Dependencies of vector m on each vector in self
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>, RE>;
     /// (Median) correlations of m with each vector in self

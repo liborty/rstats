@@ -1,12 +1,14 @@
 // use core::slice::SlicePattern;
 
-use crate::{error::RError, Stats, TriangMat, Vecg, RE};
+use crate::{
+    error::{re_error, RError, RE},
+    Stats, TriangMat, Vecg,
+};
 use indxvec::{Indices, Vecops};
 
 impl<T> Vecg for &[T]
 where
-    T: Copy + PartialOrd + Into<T>,
-    f64: From<T>,
+    T: Clone + PartialOrd + Into<f64>,
 {
     /// nd t_statistic of self against geometric median and madgm spread.     
     /// Unlike in 1d, is always positive.
@@ -15,69 +17,53 @@ where
     }
 
     /// Dot product of vector self with column c of matrix v
-    fn columnp<U>(self, c: usize, v: &[Vec<U>]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn columnp<U: Clone + Into<f64>>(self, c: usize, v: &[Vec<U>]) -> f64 {
         self.iter()
             .enumerate()
-            .map(|(i, &x)| (f64::from(x) * f64::from(v[i][c])))
-            .sum()
+            .map(|(i, x)| x.clone().into() * v[i][c].clone().into())
+            .sum::<f64>()
     }
 
     /// Scalar addition to a vector, creates new vec
-    fn sadd<U>(self, s: U) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
-        let sf = f64::from(s);
-        self.iter().map(|&x| sf + (f64::from(x))).collect()
+    fn sadd<U: Into<f64>>(self, s: U) -> Vec<f64> {
+        let sf: f64 = s.into();
+        self.iter().map(|x| sf + x.clone().into()).collect()
     }
 
-    /// Scalar addition to a vector, creates new vec
-    fn smult<U>(self, s: U) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
-        let sf = f64::from(s);
-        self.iter().map(|&x| sf * (f64::from(x))).collect()
+    /// Scalar multiplication with a vector, creates new vec
+    fn smult<U: Into<f64>>(self, s: U) -> Vec<f64> {
+        let sf: f64 = s.into();
+        self.iter().map(|x| sf * x.clone().into()).collect()
     }
 
     /// Scalar product.   
     /// Must be of the same length - no error checking (for speed)
-    fn dotp<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn dotp<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         self.iter()
             .zip(v)
-            .map(|(&xi, &vi)| f64::from(xi) * f64::from(vi))
+            .map(|(xi, vi)| -> f64 { xi.clone().into() * vi.clone().into() })
             .sum::<f64>()
     }
 
-    /// Product with Tukeyvec of hemispheric counts. Self is unitised, only using its direction.
-    /// It should have had subtracted the same reference point as was used in the construction of tukeyvec,
-    /// typically the geometric median.
-    /// Similar result could be obtained by projecting onto it all points but that is much slower.
-    fn dottukey(self, tukey: &[f64]) -> Result<f64, RE> {
+    /// Product with signature vec of hemispheric frequencies.  
+    /// Self should be a unit vector. Similar result could be obtained
+    /// by projecting onto self all points but that is usually too slow.
+    fn dotsig(self, sig: &[f64]) -> Result<f64, RE> {
         let dims = self.len();
-        if 2 * dims != tukey.len() {
-            return Err(RError::DataError(
-                "{dottukey: tukey vec must have double the dimensions!".to_owned(),
+        if 2 * dims != sig.len() {
+            return Err(re_error(
+                "size",
+                "dotsig: sig vec must have double the dimensions"
             ));
         }
         let mut ressum = 0_f64;
         for (i, &scomp) in self.vunit()?.iter().enumerate() {
             if scomp > 0_f64 {
-                ressum += scomp * tukey[i];
+                ressum += scomp * sig[i];
                 continue;
             };
             if scomp < 0_f64 {
-                ressum -= scomp * tukey[dims + i];
+                ressum -= scomp * sig[dims + i];
             };
         }
         Ok(ressum)
@@ -85,18 +71,14 @@ where
 
     /// Cosine of angle between the two slices.
     /// Done in one iteration for efficiency.
-    fn cosine<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn cosine<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         let (mut sxy, mut sy2) = (0_f64, 0_f64);
         let sx2: f64 = self
             .iter()
             .zip(v)
-            .map(|(&tx, &uy)| {
-                let x = f64::from(tx);
-                let y = f64::from(uy);
+            .map(|(tx, uy)| {
+                let x = tx.clone().into();
+                let y = uy.clone().into();
                 sxy += x * y;
                 sy2 += y * y;
                 x * x
@@ -106,72 +88,52 @@ where
     }
 
     /// Vector subtraction
-    fn vsub<U>(self, v: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn vsub<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<f64> {
         self.iter()
             .zip(v)
-            .map(|(&xi, &vi)| f64::from(xi) - f64::from(vi))
+            .map(|(xi, vi)| xi.clone().into() - vi.clone().into())
             .collect()
     }
 
     /// Vectors difference unitised (done together for efficiency)
-    fn vsubunit<U>(self, v: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn vsubunit<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<f64> {
         let mut sumsq = 0_f64;
         let dif = self
             .iter()
             .zip(v)
-            .map(|(&xi, &vi)| {
-                let d = f64::from(xi) - f64::from(vi);
+            .map(|(xi, vi)| {
+                let d = xi.clone().into() - vi.clone().into();
                 sumsq += d * d;
                 d
             })
             .collect::<Vec<f64>>();
-        dif.smult(1_f64 / sumsq.sqrt())
+        dif.smult::<f64>(1_f64 / sumsq.sqrt())
     }
 
     /// Vector addition
-    fn vadd<U>(self, v: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn vadd<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<f64> {
         self.iter()
             .zip(v)
-            .map(|(&xi, &vi)| f64::from(xi) + f64::from(vi))
+            .map(|(xi, vi)| xi.clone().into() + vi.clone().into())
             .collect()
     }
 
     /// Euclidian distance   
-    fn vdist<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn vdist<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         self.iter()
             .zip(v)
-            .map(|(&xi, &vi)| (f64::from(xi) - f64::from(vi)).powi(2))
+            .map(|(xi, vi)| (xi.clone().into() - vi.clone().into()).powi(2))
             .sum::<f64>()
             .sqrt()
     }
 
     /// Weighted arithmetic mean of `self:&[T]`, scaled by `ws:&[U]`
-    fn wvmean<U>(self, ws: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn wvmean<U: Clone + Into<f64>>(self, ws: &[U]) -> f64 {
         let mut wsum: f64 = 0.;
         let mut sum: f64 = 0.;
-        for (&s, &w) in self.iter().zip(ws) {
-            let fw = f64::from(w);
-            sum += fw * (f64::from(s));
+        for (s, w) in self.iter().zip(ws) {
+            let fw = w.clone().into();
+            sum += fw * s.clone().into();
             wsum += fw;
         }
         sum / wsum
@@ -181,100 +143,69 @@ where
     /// allows all three to be of different types
     fn wvdist<U, V>(self, ws: &[U], v: &[V]) -> f64
     where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-        V: Copy,
-        f64: From<V>,
+        U: Clone + Into<f64>,
+        V: Clone + Into<f64>,
     {
         self.iter()
             .enumerate()
-            .map(|(i, &xi)| (f64::from(ws[i]) * (f64::from(xi) - f64::from(v[i])).powi(2)))
+            .map(|(i, xi)| (ws[i].clone().into() * xi.clone().into() - v[i].clone().into()).powi(2))
             .sum::<f64>()
             .sqrt()
     }
 
     /// Euclidian distance squared  
-    fn vdistsq<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn vdistsq<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         self.iter()
             .zip(v)
-            .map(|(&xi, &vi)| (f64::from(xi) - f64::from(vi)).powi(2))
+            .map(|(xi, vi)| (xi.clone().into() - vi.clone().into()).powi(2))
             .sum::<f64>()
     }
 
     /// cityblock distance
-    fn cityblockd<U>(self, v: &[U]) -> f64
+    fn cityblockd<U: Clone + Into<f64>>(self, v: &[U]) -> f64
     where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
+        U: Into<f64>,
     {
         self.iter()
             .zip(v)
-            .map(|(&xi, &vi)| (f64::from(xi) - f64::from(vi)).abs())
+            .map(|(xi, vi)| (xi.clone().into() - vi.clone().into()).abs())
             .sum::<f64>()
     }
 
     /// Magnitude of the cross product |a x b| = |a||b|sin(theta).
     /// Attains maximum `|a|.|b|` when the vectors are orthogonal.
-    fn varea<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn varea<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> f64 {
         (self.vmagsq() * v.vmagsq() - self.dotp(v).powi(2)).sqrt()
     }
 
     /// Area of swept arc
     /// = |a||b|(1-cos(theta)) = 2|a||b|D
-    fn varc<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn varc<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> f64 {
         (v.vmagsq() * self.vmagsq()).sqrt() - self.dotp(v)
     }
 
     /// Positive dotp [0,2|a||b|]
     /// = |a||b|(1+cos(theta)) = 2|a||b|S
-    fn pdotp<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn pdotp<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> f64 {
         (v.vmagsq() * self.vmagsq()).sqrt() + self.dotp(v)
     }
 
     /// We define vector similarity S in the interval [0,1] as
     /// S = (1+cos(theta))/2
-    fn vsim<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn vsim<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         (1.0 + self.cosine(v)) / 2.0
     }
 
     /// We define vector dissimilarity D in the interval [0,1] as
     /// D = 1-S = (1-cos(theta))/2
-    fn vdisim<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn vdisim<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         (1.0 - self.cosine(v)) / 2.0
     }
 
     /// Lower triangular covariance matrix for a single vector.
     /// Where m is either mean or median vector (to be subtracted).
     /// Covariance matrix is symmetric (kind:2) (positive semi definite).
-    fn covone<U>(self, m: &[U]) -> TriangMat
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn covone<U: Clone + Into<f64>>(self, m: &[U]) -> TriangMat {
         let mut cov: Vec<f64> = Vec::new(); // flat lower triangular result array
         let vm = self.vsub(m); // zero mean/median vector
         vm.iter().enumerate().for_each(|(i,&thisc)|
@@ -285,40 +216,27 @@ where
 
     /// Kronecker product of two vectors.   
     /// The indexing is always assumed to be in this order: row,column.
-    fn kron<U>(self, m: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn kron<U: Clone + Into<f64>>(self, m: &[U]) -> Vec<f64> {
         let mut krn: Vec<f64> = Vec::new(); // result vector
-        for &a in self {
-            for &b in m {
-                krn.push(f64::from(a) * f64::from(b))
+        for a in self {
+            for b in m {
+                krn.push(a.clone().into() * b.clone().into())
             }
         }
         krn
     }
 
-    /// Outer product of two vectors.   
-    /// The indexing is always assumed to be in this order: row,column.
-    fn outer<U>(self, m: &[U]) -> Vec<Vec<f64>>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    /// Outer product of two vectors.
+    fn outer<U: Clone + Into<f64>>(self, mv: &[U]) -> Vec<Vec<f64>> {
         let mut out: Vec<Vec<f64>> = Vec::new(); // result vector
-        for &s in self {
-            out.push(m.smult(s))
+        for m in mv {
+            out.push(self.smult(m.clone().into()))
         }
         out
     }
 
     /// Joint probability density function of two pairwise matched slices
-    fn jointpdf<U>(self, v: &[U]) -> Result<Vec<f64>, RE>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn jointpdf<U: Clone + Into<f64>>(self, v: &[U]) -> Result<Vec<f64>, RE> {
         let n = self.len();
         if v.len() != n {
             return Err(RError::DataError(
@@ -328,10 +246,10 @@ where
         let nf = n as f64;
         let mut res: Vec<f64> = Vec::new();
         // collect successive pairs, upgrading all end types to common f64
-        let mut spairs: Vec<Vec<f64>> = self
+        let mut spairs: Vec<(f64, f64)> = self
             .iter()
             .zip(v)
-            .map(|(&si, &vi)| vec![f64::from(si), f64::from(vi)])
+            .map(|(si, vi)| (si.clone().into(), vi.clone().into()))
             .collect();
         // sort them to group all same pairs together for counting
         spairs.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
@@ -352,11 +270,7 @@ where
     }
 
     /// Joint entropy of two sets of the same length
-    fn jointentropy<U>(self, v: &[U]) -> Result<f64, RE>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn jointentropy<U: Clone + Into<f64>>(self, v: &[U]) -> Result<f64, RE> {
         let jpdf = self.jointpdf(v)?;
         Ok(jpdf.iter().map(|&x| -x * (x.ln())).sum())
     }
@@ -364,21 +278,13 @@ where
     /// Dependence of &[T] &[U] variables in the range [0,1]
     /// returns 0 iff they are statistically component wise independent
     /// returns 1 when they are identical or all their values are unique
-    fn dependence<U>(self, v: &[U]) -> Result<f64, RE>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn dependence<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> Result<f64, RE> {
         Ok((self.entropy() + v.entropy()) / self.jointentropy(v)? - 1.0)
     }
 
     /// Independence of &[T] &[U] variables in the range [0,1]
     /// returns 1 iff they are statistically component wise independent
-    fn independence<U>(self, v: &[U]) -> Result<f64, RE>
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn independence<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> Result<f64, RE> {
         Ok(2.0 * self.jointentropy(v)? / (self.entropy() + v.entropy()) - 1.0)
     }
 
@@ -390,18 +296,14 @@ where
     /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
     /// assert_eq!(v1.correlation(&v2),-0.1076923076923077);
     /// ```
-    fn correlation<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn correlation<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         let (mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64);
         let sx: f64 = self
             .iter()
             .zip(v)
-            .map(|(&xt, &yu)| {
-                let x = f64::from(xt);
-                let y = f64::from(yu);
+            .map(|(xt, yu)| {
+                let x = xt.clone().into();
+                let y = yu.clone().into();
                 sy += y;
                 sxy += x * y;
                 sx2 += x * x;
@@ -422,18 +324,14 @@ where
     /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
     /// assert_eq!(v1.kendalcorr(&v2),-0.07692307692307693);
     /// ```
-    fn kendalcorr<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn kendalcorr<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         let (mut conc, mut disc, mut tiesx, mut tiesy) = (0_i64, 0_i64, 0_i64, 0_i64);
         for i in 1..self.len() {
-            let x = f64::from(self[i]);
-            let y = f64::from(v[i]);
+            let x = self[i].clone().into();
+            let y = v[i].clone().into();
             for j in 0..i {
-                let xd = x - f64::from(self[j]);
-                let yd = y - f64::from(v[j]);
+                let xd = x - self[j].clone().into();
+                let yd = y - v[j].clone().into();
                 if !xd.is_normal() {
                     if !yd.is_normal() {
                         continue;
@@ -464,11 +362,7 @@ where
     /// let v2 = vec![14_f64,1.,13.,2.,12.,3.,11.,4.,10.,5.,9.,6.,8.,7.];
     /// assert_eq!(v1.spearmancorr(&v2),-0.1076923076923077);
     /// ```
-    fn spearmancorr<U>(self, v: &[U]) -> f64
-    where
-        U: Copy + PartialOrd + Into<U>,
-        f64: From<U>,
-    {
+    fn spearmancorr<U: PartialOrd + Clone + Into<f64>>(self, v: &[U]) -> f64 {
         let xvec = self.rank(true);
         let yvec = v.rank(true); // rank from crate idxvec::merge
                                  // It is just Pearson's correlation of usize ranks
@@ -483,17 +377,17 @@ where
             return dv;
         };
         let recip = 1f64 / mag; // adding new unit vector (to approximate zero vector)
-        dv.smult::<f64>(recip/(recips + recip)) // to unit v. and scaling by new sum of reciprocals
+        dv.smult::<f64>(recip / (recips + recip)) // to unit v. and scaling by new sum of reciprocals
     }
 
     /// Normalized magnitude of change to gm that adding point self will cause
-    fn contrib_newpt(self, gm: &[f64], recips: f64, nf:f64) -> f64 {
+    fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> f64 {
         let mag = self.vdist::<f64>(gm);
         if !mag.is_normal() {
             return 0_f64;
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        (nf+1.0) / (recips + recip)
+        (nf + 1.0) / (recips + recip)
     }
 
     /// Delta gm caused by removing an existing set point self
@@ -504,7 +398,7 @@ where
             return dv;
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        dv.smult::<f64>(recip/(recip - recips)) // scaling
+        dv.smult::<f64>(recip / (recip - recips)) // scaling
     }
 
     /// Normalized Contribution that removing an existing set point p will make
@@ -515,16 +409,12 @@ where
             return 0_f64;
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        (nf-1.0) / (recip - recips)
+        (nf - 1.0) / (recip - recips)
         // self.contribvec_oldpt(gm,recips,p).vmag()
     }
 
     /// Householder reflect
-    fn house_reflect<U>(self, x: &[U]) -> Vec<f64>
-    where
-        U: Copy + PartialOrd,
-        f64: From<U>,
-    {
+    fn house_reflect<U: Clone + PartialOrd + Into<f64>>(self, x: &[U]) -> Vec<f64> {
         x.vsub(&self.smult(x.dotp(self)))
     }
 }

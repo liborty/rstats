@@ -1,6 +1,6 @@
-use crate::{noop,fromop,error::RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
+use crate::{noop,fromop,re_error,RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::Vecops;
-use medians::{Median,Medianf64};
+use medians::{MStats,Median,Medianf64};
 use rayon::prelude::*;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
@@ -91,26 +91,46 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         Ok(self.par_iter().map(|s| s.vsub(m)).collect())   
     }
 
-    /// Proportions of points along each +/-axis (hemisphere)
-    /// Excludes points that are perpendicular to it
+    /// Statistic (median,madgm) of angles that points in self form 
+    /// with some reference vector v.
+    fn anglestat(self,v: &[U]) -> Result<MStats,RE> { 
+        if self.is_empty() { 
+            return Err(re_error("empty","anglestat given no points")); }; 
+        if self[0].len() != v.len() { 
+            return Err(re_error("size","anglestat dimensions mismatch")); }; 
+        let uv = v.vunit()?;
+        let angles = self.iter()
+            .map(|p| -> Result<f64,RE> { Ok(p
+                .vunit()?  
+                .dotp(&uv))} )
+            .collect::<Result<Vec<f64>,RE>>()?;
+        Ok(angles.medstats()?)
+    }
+
+    /// Proportions of points along each +/-axis (hemisphere).
+    /// Includes (counts) orthogonal points.
     /// Uses only the points specified in idx (e.g. the convex hull).
-    /// Self should normally be zero mean/median vectors, 
-    /// e.g. `self.translate(&median)`
-    fn wtukeyvec(self, idx: &[usize], ws:&[U]) -> Result<Vec<f64>,RE> { 
+    /// Self should normally be zero median vectors, i.e. `self.translate(&median)`
+    fn wsigvec(self, idx: &[usize], ws:&[U]) -> Result<Vec<f64>,RE> { 
         let mut wsum = 0_f64; 
         let dims = self[0].len();
         if self.len() != ws.len() { return Err(RError::DataError("wtukeyvec weights number mismatch".to_owned())); }; 
         let mut hemis = vec![0_f64; 2*dims]; 
         for &i in idx { 
-            let wf = f64::from(ws[i]);
+            let wf:f64 = ws[i].into();
             wsum += wf;
             // let zerogm = self[i].vsub::<f64>(gm);
             for (j,&component) in self[i].iter().enumerate() {
-                let cf = f64::from(component);
-                if cf > 0. { hemis[j] += wf }
-                else if cf < 0. { hemis[dims+j] += wf };  
-            }
-        }
+                let cf:f64 = component.into();
+                if cf == 0. { 
+                    wsum += wf;
+                    hemis[j] += wf;
+                    hemis[dims+j] += wf;
+                }
+                else if cf > 0. { hemis[j] += wf; }
+                else { hemis[dims+j] += wf; };  
+            };
+        };
         hemis.iter_mut().for_each(|hem| *hem /= wsum );
         Ok(hemis)
     } 
