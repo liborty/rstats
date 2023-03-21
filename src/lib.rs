@@ -161,6 +161,8 @@ pub trait Vecg {
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE>;
     /// Cosine of angle between two slices
     fn cosine<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
+    /// Sine of an angle with correct sign in any number of dimensions
+    fn sine<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Vectors' subtraction (difference)
     fn vsub<U:Clone+Into<f64>>(self, v: &[U]) -> Vec<f64>;
     /// Vectors difference as unit vector (done together for efficiency)
@@ -177,8 +179,7 @@ pub trait Vecg {
     fn vdistsq<U:Clone+Into<f64>>(self, v: &[U]) -> f64; 
     /// cityblock distance
     fn cityblockd<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
-    /// Magnitude of the cross product |a x b| = |a||b|sin(theta).
-    /// Attains maximum `|a|.|b|` when the vectors are othogonal.
+    /// Area spanned by two vectors always over their concave angle
     fn varea<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64;
     /// Area proportional to the swept arc
     fn varc<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64;
@@ -191,9 +192,13 @@ pub trait Vecg {
     /// Lower triangular part of a covariance matrix for a single f64 vector.
     fn covone<U:Clone+Into<f64>>(self, m: &[U]) -> TriangMat;
     /// Kronecker product of two vectors
-    fn kron<U:Clone+Into<f64>>(self, m: &[U]) -> Vec<f64>;
-    /// Outer product of two vectors
-    fn outer<U:Clone+Into<f64>>(self, mv: &[U]) -> Vec<Vec<f64>>;
+    fn kron<U:Clone+Into<f64>>(self, v: &[U]) -> Vec<f64>;
+    /// Outer product: matrix multiplication of column self with row v.
+    fn outer<U:Clone+Into<f64>>(self, v: &[U]) -> Vec<Vec<f64>>;
+    /// Exterior (Grassman) algebra product: produces bivector components
+    fn wedge<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<f64>;
+    /// Pseudoscalar: an oriented magnitude of the bivector == |a||b|sin(theta)
+    fn pseudoscalar<U: Clone + Into<f64>>(self, v: &[U]) -> f64; 
     /// Joint probability density function
     fn jointpdf<U:Clone+Into<f64>>(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// Joint entropy of &[T],&[U] in nats (units of e)

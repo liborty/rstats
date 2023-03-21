@@ -46,20 +46,22 @@ where
     }
 
     /// Product with signature vec of hemispheric frequencies.  
-    /// Self should be a unit vector. Similar result could be obtained
+    /// Similar result can be obtained
     /// by projecting onto self all points but that is usually too slow.
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE> {
         let dims = self.len();
         if 2 * dims != sig.len() {
             return Err(re_error(
                 "size",
-                "dotsig: sig vec must have double the dimensions"
+                "dotsig: sig vec must have double the dimensions",
             ));
         }
+        let sigunit = sig.vunit()?;
+        let sunit = self.vunit()?;
         let mut ressum = 0_f64;
-        for (i, &scomp) in self.vunit()?.iter().enumerate() {
+        for (i, &scomp) in sunit.iter().enumerate() {
             if scomp > 0_f64 {
-                ressum += scomp * sig[i];
+                ressum += scomp * sigunit[i];
                 continue;
             };
             if scomp < 0_f64 {
@@ -87,6 +89,13 @@ where
         sxy / (sx2 * sy2).sqrt()
     }
 
+    /// Sine of an angle with correct sign in any number of dimensions,
+    /// using wedge product
+    fn sine<U: Clone + Into<f64>>(self, v: &[U]) -> f64 { 
+        self.pseudoscalar(v)/
+        (self.vmagsq()*v.iter().map(|x| x.clone().into().powi(2)).sum::<f64>()).sqrt() 
+    }
+ 
     /// Vector subtraction
     fn vsub<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<f64> {
         self.iter()
@@ -172,7 +181,8 @@ where
             .sum::<f64>()
     }
 
-    /// Magnitude of the cross product |a x b| = |a||b|sin(theta).
+    /// Area spanned by two vectors over their concave angle:
+    /// |a||b||sin(theta)| == (1-cos2(theta)).sqrt()
     /// Attains maximum `|a|.|b|` when the vectors are orthogonal.
     fn varea<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> f64 {
         (self.vmagsq() * v.vmagsq() - self.dotp(v).powi(2)).sqrt()
@@ -216,24 +226,46 @@ where
 
     /// Kronecker product of two vectors.   
     /// The indexing is always assumed to be in this order: row,column.
-    fn kron<U: Clone + Into<f64>>(self, m: &[U]) -> Vec<f64> {
-        let mut krn: Vec<f64> = Vec::new(); // result vector
-        for a in self {
-            for b in m {
-                krn.push(a.clone().into() * b.clone().into())
-            }
-        }
-        krn
+    /// Flat version of outer(wedge) product
+    fn kron<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<f64> {
+        let vf = v.iter().map(|vi| vi.clone().into()).collect::<Vec<f64>>();
+        self.iter().flat_map(|s| {
+            let sf:f64 = s.clone().into();
+            vf.iter().map(move |&vfi| sf*vfi)
+        }).collect::<Vec<f64>>()
     }
 
-    /// Outer product of two vectors.
-    fn outer<U: Clone + Into<f64>>(self, mv: &[U]) -> Vec<Vec<f64>> {
-        let mut out: Vec<Vec<f64>> = Vec::new(); // result vector
-        for m in mv {
-            out.push(self.smult(m.clone().into()))
-        }
-        out
+    /// Outer product: matrix multiplication of column self with row v.
+    fn outer<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<Vec<f64>> { 
+        let vf = v.iter().map(|vi| vi.clone().into()).collect::<Vec<f64>>();
+        self.iter().map(|s| {
+            let sf:f64 = s.clone().into();
+            vf.iter().map(|&vfi| sf*vfi).collect::<Vec<f64>>()
+        }).collect::<Vec<Vec<f64>>>()
     }
+
+    /// Exterior (Grassman) algebra product: produces a bivector
+    fn wedge<U: Clone + Into<f64>>(self, b: &[U]) -> Vec<f64> {
+        let n = self.len();
+        assert_eq!(n, b.len());    
+        let mut result:Vec<f64> = Vec::new();
+        for i in 0..n {
+            let ai:f64 = self[i].clone().into();
+            let bi:f64 = b[i].clone().into();
+            for j in i..n {
+                result.push(ai * b[j].clone().into() - bi * self[j].clone().into());
+            }
+        }
+        result
+    }    
+ 
+    /// Pseudoscalar: an oriented magnitude of the bivector == |a||b|sin(theta)
+    fn pseudoscalar<U: Clone + Into<f64>>(self, v: &[U]) -> f64 { 
+        let n = self.len();
+        assert_eq!(n, v.len());
+        let bivector = self.wedge(v);
+        bivector[bivector.len()-2].signum()*(bivector.vmag())
+    }    
 
     /// Joint probability density function of two pairwise matched slices
     fn jointpdf<U: Clone + Into<f64>>(self, v: &[U]) -> Result<Vec<f64>, RE> {

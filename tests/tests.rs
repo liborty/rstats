@@ -181,11 +181,10 @@ fn genericstats() -> Result<(), RE> {
 #[test]
 fn vecg() -> Result<(), RE> {
     let v1 = vec![
-        1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 10., 10., 13., 14., 15.,
+        1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
     ];
     println!("v1: {}", (&v1).gr());
-    let v2 = vec![
-        1_f64, 14., 2., 13., 3., 12., 4., 11., 5., 10., 6., 6., 7., 1., 15.,
+    let v2 = vec![ 1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., -15.,
     ];
     println!("v2: {}", (&v2).gr());
     println!("Lexical order v1<v2:\t{}", (v1 < v2).gr());
@@ -205,7 +204,11 @@ fn vecg() -> Result<(), RE> {
     println!("Joint Entropy:\t\t{}", v1.jointentropy(&v2)?.gr());
     println!("Dependence:\t\t{}", v1.dependence(&v2)?.gr());
     println!("Independence:\t\t{}", v1.independence(&v2)?.gr());
+    println!("Wedge: {}",v1.wedge(&v2).gr());
+    println!("Pseudoscalar: {}", v1.pseudoscalar(&v2).gr());
+    println!("Sine: {} {} {YL}{}{UN}",v1.sine(&v2).gr(),v2.sine(&v1).gr(),v1.varea(&v2)/v1.vmag()/v2.vmag());
     println!("Cosine:\t\t\t{}", v1.cosine(&v2).gr());
+    println!("Cos2+sin2:\t\t\t{}", (v1.cosine(&v2).powi(2)+v1.sine(&v2).powi(2)).gr());
     println!(
         "Cosine of ranks:\t{}",
         v1.rank(true)
@@ -320,10 +323,16 @@ fn vecvec() -> Result<(), RE> {
     let hcentroid = pts.hcentroid()?;
     let gcentroid = pts.gcentroid()?;
     let acentroid = pts.acentroid();
+    let quasimed = pts.quasimedian()?;
     let firstp = pts.firstpoint();
     let idx = Vec::from_iter(0..n);
 
     println!("\nMean reciprocal of radius: {}", (recips / d as f64).gr());
+
+    println!(
+        "Magnitude of sigvec for quasi median: {}",
+        pts.translate(&quasimed)?.sigvec(&idx)?.vmag().gr()
+    );
 
     println!(
         "Magnitude of sigvec for gm: {}",
@@ -370,6 +379,7 @@ fn vecvec() -> Result<(), RE> {
     println!("Median's error:      {GR}{:e}{UN}", pts.gmerror(&median));
     println!("Stdgm:               {}", pts.stdgm(&median)?.gr());
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());
+    println!("Quasimed's radius:   {}", quasimed.vdist(&median).gr());
     println!("Firstpoint's radius: {}", firstp.vdist(&median).gr());
     println!("GCentroid's radius:  {}", gcentroid.vdist(&median).gr());
     println!("HCentroid's radius:  {}", hcentroid.vdist(&median).gr());
