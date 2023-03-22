@@ -184,7 +184,7 @@ fn vecg() -> Result<(), RE> {
         1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
     ];
     println!("v1: {}", (&v1).gr());
-    let v2 = vec![ 1_f64, 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., -15.,
+    let v2 = vec![ 1_f64, -2., 3., - 4., 5., -6., 7., -8., 9., -10., 11., -12., 13., -14., 15.,
     ];
     println!("v2: {}", (&v2).gr());
     println!("Lexical order v1<v2:\t{}", (v1 < v2).gr());
@@ -204,11 +204,11 @@ fn vecg() -> Result<(), RE> {
     println!("Joint Entropy:\t\t{}", v1.jointentropy(&v2)?.gr());
     println!("Dependence:\t\t{}", v1.dependence(&v2)?.gr());
     println!("Independence:\t\t{}", v1.independence(&v2)?.gr());
-    println!("Wedge: {}",v1.wedge(&v2).gr());
-    println!("Pseudoscalar: {}", v1.pseudoscalar(&v2).gr());
+    println!("Wedge product:\n{}",v1.wedge(&v2).gr());
+    println!("Geometric product:\n{}",v1.geometric(&v2).gr());
     println!("Sine: {} {} {YL}{}{UN}",v1.sine(&v2).gr(),v2.sine(&v1).gr(),v1.varea(&v2)/v1.vmag()/v2.vmag());
     println!("Cosine:\t\t\t{}", v1.cosine(&v2).gr());
-    println!("Cos2+sin2:\t\t\t{}", (v1.cosine(&v2).powi(2)+v1.sine(&v2).powi(2)).gr());
+    println!("cos^2+sin^2 check:\t{}", (v1.cosine(&v2).powi(2)+v1.sine(&v2).powi(2)).gr());
     println!(
         "Cosine of ranks:\t{}",
         v1.rank(true)
@@ -240,8 +240,8 @@ fn trend() -> Result<(), RE> {
 
 #[test]
 fn triangmat() -> Result<(), RE> {
-    println!("\n{}", TriangMat::unit(5).gr());
-    println!("{}", TriangMat::unit(7).gr());
+    println!("\n{}", TriangMat::unit(7).gr());
+    println!("Diagonal: {}",TriangMat::unit(7).diagonal().gr());
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
@@ -254,8 +254,8 @@ fn triangmat() -> Result<(), RE> {
     println!("Comediance matrix:\n{cov}");
     let chol = cov.cholesky()?;
     println!("Cholesky L matrix:\n{chol}");
-    // chol.transpose();
-    // println!("L matrix trivially transposed:\n{}",chol.to_full().gr());
+    println!("Eigenvalues of the comediance matrix:\n{}",chol.eigenvalues().gr());
+    println!("Determinant of the comediance matrix:\n{}",chol.determinant().gr());
     let pta = ru.ranv(d)?.getvf64()?;
     let ptb = ru.ranv(d)?.getvf64()?;
     let d = pta.vsub(&ptb);

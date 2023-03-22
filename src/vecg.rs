@@ -91,11 +91,14 @@ where
 
     /// Sine of an angle with correct sign in any number of dimensions,
     /// using wedge product
-    fn sine<U: Clone + Into<f64>>(self, v: &[U]) -> f64 { 
-        self.pseudoscalar(v)/
-        (self.vmagsq()*v.iter().map(|x| x.clone().into().powi(2)).sum::<f64>()).sqrt() 
+    fn sine<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
+        let bivector = self.wedge(v);
+        bivector.sum().signum()
+            * (bivector.magsq()
+                / (self.vmagsq() * v.iter().map(|x| x.clone().into().powi(2)).sum::<f64>()))
+            .sqrt()
     }
- 
+
     /// Vector subtraction
     fn vsub<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<f64> {
         self.iter()
@@ -229,43 +232,63 @@ where
     /// Flat version of outer(wedge) product
     fn kron<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<f64> {
         let vf = v.iter().map(|vi| vi.clone().into()).collect::<Vec<f64>>();
-        self.iter().flat_map(|s| {
-            let sf:f64 = s.clone().into();
-            vf.iter().map(move |&vfi| sf*vfi)
-        }).collect::<Vec<f64>>()
+        self.iter()
+            .flat_map(|s| {
+                let sf: f64 = s.clone().into();
+                vf.iter().map(move |&vfi| sf * vfi)
+            })
+            .collect::<Vec<f64>>()
     }
 
     /// Outer product: matrix multiplication of column self with row v.
-    fn outer<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<Vec<f64>> { 
+    fn outer<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<Vec<f64>> {
         let vf = v.iter().map(|vi| vi.clone().into()).collect::<Vec<f64>>();
-        self.iter().map(|s| {
-            let sf:f64 = s.clone().into();
-            vf.iter().map(|&vfi| sf*vfi).collect::<Vec<f64>>()
-        }).collect::<Vec<Vec<f64>>>()
+        self.iter()
+            .map(|s| {
+                let sf: f64 = s.clone().into();
+                vf.iter().map(|&vfi| sf * vfi).collect::<Vec<f64>>()
+            })
+            .collect::<Vec<Vec<f64>>>()
     }
 
-    /// Exterior (Grassman) algebra product: produces a bivector
-    fn wedge<U: Clone + Into<f64>>(self, b: &[U]) -> Vec<f64> {
+    /// Exterior (Grassman) algebra product: produces a bivector **a∧b**
+    fn wedge<U: Clone + Into<f64>>(self, b: &[U]) -> TriangMat {
         let n = self.len();
-        assert_eq!(n, b.len());    
-        let mut result:Vec<f64> = Vec::new();
+        assert_eq!(n, b.len());
+        let mut result: Vec<f64> = Vec::new();
         for i in 0..n {
-            let ai:f64 = self[i].clone().into();
-            let bi:f64 = b[i].clone().into();
-            for j in i..n {
-                result.push(ai * b[j].clone().into() - bi * self[j].clone().into());
+            let ai: f64 = self[i].clone().into();
+            let bi: f64 = b[i].clone().into();
+            for j in 0..i + 1 {
+                result.push(bi * self[j].clone().into() - ai * b[j].clone().into());
             }
         }
-        result
-    }    
- 
-    /// Pseudoscalar: an oriented magnitude of the bivector == |a||b|sin(theta)
-    fn pseudoscalar<U: Clone + Into<f64>>(self, v: &[U]) -> f64 { 
+        TriangMat {
+            kind: 1,
+            data: result,
+        }
+    }
+
+    /// Geometric (Clifford) algebra product: produces a*b + **a∧b**
+    /// here the elements of the dot product a*b are placed in their
+    /// natural positions on the diagonal and can be easily added
+    fn geometric<U: Clone + Into<f64>>(self, b: &[U]) -> TriangMat {
         let n = self.len();
-        assert_eq!(n, v.len());
-        let bivector = self.wedge(v);
-        bivector[bivector.len()-2].signum()*(bivector.vmag())
-    }    
+            assert_eq!(n, b.len());
+            let mut result: Vec<f64> = Vec::new();
+            for i in 0..n {
+                let ai: f64 = self[i].clone().into();
+                let bi: f64 = b[i].clone().into();
+                for j in 0..i {
+                    result.push(bi * self[j].clone().into() - ai * b[j].clone().into());
+                }
+                result.push(ai*bi); // the diagonal dot product element
+            }
+            TriangMat {
+                kind: 1,
+                data: result,
+            }
+        }
 
     /// Joint probability density function of two pairwise matched slices
     fn jointpdf<U: Clone + Into<f64>>(self, v: &[U]) -> Result<Vec<f64>, RE> {

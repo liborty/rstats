@@ -39,7 +39,27 @@ impl TriangMat {
     pub fn rows(&self) -> usize {
         Self::rowcol(self.len()).0
     }
-
+    /// Squared euclidian vector magnitude (norm) of the data vector
+    pub fn magsq(&self) -> f64 {
+        self.data.vmagsq()
+    }
+    /// Sum of the elements:  
+    /// when applied to the wedge product **a∧b**, returns det(**a,b**)
+    pub fn sum(&self) -> f64 {
+        self.data.iter().sum()
+    }
+    /// Diagonal elements
+    pub fn diagonal(&self) -> Vec<f64> {
+        let mut next = 0_usize;
+        let mut skip = 1;
+        self.data.iter().enumerate().filter_map(|(i,&x)| 
+            if i == next { 
+                skip += 1; 
+                next = i + skip; 
+                Some(x) 
+            } else { None }
+        ).collect::<Vec<f64>>()
+    }
     /// Generates new unit (symmetric) TriangMat matrix of size (n+1)*n/2
     pub fn unit(n: usize) -> Self {
         let mut data = Vec::new();
@@ -52,6 +72,15 @@ impl TriangMat {
         }
         TriangMat { kind: 2, data }
     }
+    /// Eigenvalues obtained from Cholesky L matrix
+    pub fn eigenvalues(&self) -> Vec<f64> {
+        self.diagonal().iter().map(|&x| x*x ).collect::<Vec<f64>>()
+    }
+    /// Determinant obtained from Cholesky L matrix
+    pub fn determinant(&self) -> f64 {
+        self.diagonal().iter().map(|&x| x*x ).product()
+    }
+
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
     /// full coordinates within a lower/upper triangular matrix.
     /// Enables memory efficient representation of triangular matrices as a flat vector.

@@ -136,7 +136,7 @@ pub trait Stats {
     fn entropy(self) -> f64;
     /// (Auto)correlation coefficient of pairs of successive values of (time series) variable.
     fn autocorr(self) -> Result<f64, RE>;
-    /// Linear transform to interval [0,1]
+    /// Linear transform to interval `[0,1]`
     fn lintrans(self) -> Result<Vec<f64>, RE>;
     /// Linearly weighted approximate time series derivative at the last (present time) point.
     fn dfdt(self) -> Result<f64, RE>;
@@ -173,7 +173,7 @@ pub trait Vecg {
     fn vdist<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Weighted arithmetic mean of `self:&[T]`, scaled by `ws:&[U]`
     fn wvmean<U:Clone+Into<f64>>(self, ws: &[U]) -> f64;
-    /// Weighted distance of self:&[T],weighted by ws:&[U],to v:&[V]
+    /// Weighted distance of `self:&[T]` to `v:&[V]`, weighted by `ws:&[U]`
     fn wvdist<U:Clone+Into<f64>, V:Clone+Into<f64>>(self, ws: &[U], v: &[V]) -> f64;
     /// Euclidian distance squared
     fn vdistsq<U:Clone+Into<f64>>(self, v: &[U]) -> f64; 
@@ -183,11 +183,11 @@ pub trait Vecg {
     fn varea<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64;
     /// Area proportional to the swept arc
     fn varc<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64;
-    /// Vector similarity S in the interval [0,1]: S = (1+cos(theta))/2
+    /// Vector similarity S in the interval `[0,1]: S = (1+cos(theta))/2`
     fn vsim<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
     /// Positive dotp [0,2|a||b|]
     fn pdotp<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64; 
-    /// We define vector dissimilarity D in the interval [0,1]: D = 1-S = (1-cos(theta))/2
+    /// We define vector dissimilarity D in the interval `[0,1]: D = 1-S = (1-cos(theta))/2`
     fn vdisim<U:Clone+Into<f64>>(self, v: &[U]) -> f64; 
     /// Lower triangular part of a covariance matrix for a single f64 vector.
     fn covone<U:Clone+Into<f64>>(self, m: &[U]) -> TriangMat;
@@ -196,16 +196,16 @@ pub trait Vecg {
     /// Outer product: matrix multiplication of column self with row v.
     fn outer<U:Clone+Into<f64>>(self, v: &[U]) -> Vec<Vec<f64>>;
     /// Exterior (Grassman) algebra product: produces bivector components
-    fn wedge<U: Clone + Into<f64>>(self, v: &[U]) -> Vec<f64>;
-    /// Pseudoscalar: an oriented magnitude of the bivector == |a||b|sin(theta)
-    fn pseudoscalar<U: Clone + Into<f64>>(self, v: &[U]) -> f64; 
+    fn wedge<U: Clone + Into<f64>>(self, v: &[U]) -> TriangMat;
+    /// Geometric (Clifford) algebra product: produces a*b + **a∧b** 
+    fn geometric<U: Clone + Into<f64>>(self, b: &[U]) -> TriangMat;
     /// Joint probability density function
     fn jointpdf<U:Clone+Into<f64>>(self, v: &[U]) -> Result<Vec<f64>, RE>;
-    /// Joint entropy of &[T],&[U] in nats (units of e)
+    /// Joint entropy of `&[T],&[U]` in nats (units of e)
     fn jointentropy<U:Clone+Into<f64>>(self, v: &[U]) -> Result<f64, RE>;
-    /// Statistical pairwise dependence of &[T] &[U] variables in the range [0,1]
+    /// Statistical pairwise dependence of `&[T] &[U]` variables in the range `[0,1]`
     fn dependence<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> Result<f64, RE>;
-    /// Statistical pairwise independence in the range [0,1] based on joint entropy
+    /// Statistical pairwise independence in the range `[0,1]` based on joint entropy
     fn independence<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> Result<f64, RE>;
     /// Pearson's correlation.  
     fn correlation<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
@@ -252,7 +252,7 @@ pub trait MutVecg {
     fn mneg(self);
     /// Make into a unit vector
     fn munit(self);
-    /// Linearly transform to interval [0,1]
+    /// Linearly transform to interval `[0,1]`
     fn mlintrans(self);
 }
 
@@ -268,9 +268,9 @@ pub trait Vecu8 {
     fn jointpdfu8(self, v: &[u8]) -> Result<Vec<Vec<u32>>, RE>;
     /// Joint entropy of &[u8],&[u8] (in nats)
     fn jointentropyu8(self, v: &[u8]) -> Result<f64, RE>;
-    /// Statistical pairwise dependence of two &[u8] variables in the range [0,1]
+    /// Statistical pairwise dependence of two `&[u8]` variables in the range `[0,1]`
     fn dependenceu8(self, v: &[u8]) -> Result<f64, RE>;
-    /// Independence in the range [1,2] of two &[u8] variables
+    /// Independence in the range `[1,2]` of two `&[u8]` variables
     fn independenceu8(self, v: &[u8]) -> Result<f64, RE>;
 }
 
