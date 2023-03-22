@@ -319,6 +319,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.44** - Swapped the sign of `wedge` so it agrees with convention.
+
 * **Version 1.2.43** - Removed `pseudoscalar` method. The `sine` method now computes the correct oriented magnitude of the bivector directly from the wedge product. Added geometric product `geometric`. Added some methods to struct `TriangMat` for completeness. In particular, `eigenvalues` and `determinant`, which are both easily obtained after successful Cholesky decomposition.
 
 * **Version 1.2.42** - Added `wedge` (product of Exterior Algebra), `pseudoscalar` and `sine` to trait Vecg. The sine method now always returns the correct antireflexive sign, in any number of dimensions. The sign flips when the order of the vector operands is exchanged. The `pseudoscalar` method is vector cross product generalised to n dimensions.

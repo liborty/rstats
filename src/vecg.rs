@@ -260,7 +260,7 @@ where
             let ai: f64 = self[i].clone().into();
             let bi: f64 = b[i].clone().into();
             for j in 0..i + 1 {
-                result.push(bi * self[j].clone().into() - ai * b[j].clone().into());
+                result.push(ai * b[j].clone().into() - bi * self[j].clone().into());
             }
         }
         TriangMat {
@@ -280,7 +280,7 @@ where
                 let ai: f64 = self[i].clone().into();
                 let bi: f64 = b[i].clone().into();
                 for j in 0..i {
-                    result.push(bi * self[j].clone().into() - ai * b[j].clone().into());
+                    result.push(ai * b[j].clone().into() - bi * self[j].clone().into());
                 }
                 result.push(ai*bi); // the diagonal dot product element
             }
