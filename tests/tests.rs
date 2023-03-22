@@ -204,7 +204,7 @@ fn vecg() -> Result<(), RE> {
     println!("Joint Entropy:\t\t{}", v1.jointentropy(&v2)?.gr());
     println!("Dependence:\t\t{}", v1.dependence(&v2)?.gr());
     println!("Independence:\t\t{}", v1.independence(&v2)?.gr());
-    println!("Wedge product:\n{}",v1. (&v2).gr());
+    println!("Wedge product:\n{}",v1.wedge(&v2).gr());
     println!("Geometric product:\n{}",v1.geometric(&v2).gr());
     println!("Sine: {} {} {YL}{}{UN}",v1.sine(&v2).gr(),v2.sine(&v1).gr(),v1.varea(&v2)/v1.vmag()/v2.vmag());
     println!("Cosine:\t\t\t{}", v1.cosine(&v2).gr());
