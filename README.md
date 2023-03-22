@@ -2,7 +2,7 @@
 
 Author: Libor Spacek
 
-Statistics, Information Measures, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder QR Decomposition, Exterior Algebra, Multidimensional Data Analysis, Geometric Median, Hulls, Machine Learning, Multithreading ...
+Statistics, Information Measures, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder QR Decomposition, Clifford Algebra, Multidimensional Data Analysis, Geometric Median, Hulls, Machine Learning, Multithreading ...
 
 ## Usage
 
