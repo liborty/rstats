@@ -106,7 +106,7 @@ another new concept. It is similar to `covariance`. It is a triangular symmetric
 * `signature vector`  
 Frequencies of points in all hemispheres. The origin will most often be the **gm**. For a new point **p** that needs to be classified, we can quickly estimate whether it lies in a well populated direction from **gm**. This could be done properly by projecting all the existing points onto unit **p** but that would be too slow, as there are typically too many such points. However, `signature_vector` needs to be precomputed only once and is then the only vector to be projected onto unit **p**. In keeping with the stability properties of medians, `signature vector` is only using counts of points, not their distances from **gm**.
 
-## Existing Terminology
+## Previously Known Concepts and Terminology
 
 * `centroid/centre/mean` of an `nd` set.  
 Is the point, generally non member, that minimises its sum of *squares* of distances to all member points. The squaring makes it susceptible to outliers. Specifically, it is the d-dimensional arithmetic mean. It is sometimes called 'the centre of mass'. Centroid can also sometimes mean the member of the set which is the nearest to the Centre. Here we follow the common usage: Centroid = Centre = Arithmetic Mean.
@@ -126,10 +126,17 @@ is the member of the set with the least sum of distances to all other members. E
 * `outlier`  
 is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm` (has the maximum radius).
 
-* `mahalanobis distance` is a scaled distance, where the scaling is derived from the axis of covariance of the `nd` data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances are decreased. Efficient Cholesky-Banachiewicz matrix decomposition is used. Our `cholesky` method decomposes the covariance or comediance positive definite triangular matrix S into a product of two triangular matrices: S = LL'. For more details, see the comments in the source code.
+* `mahalanobis distance`  
+is a scaled distance, whereby the scaling is derived from the axis of covariance / comediance of the data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances / comediances are decreased.
+
+* `Cholesky-Banachiewicz matrix decomposition`  
+decomposes any positive definite matrix S (often covariance or comediance) into a product of two triangular matrices: S = LL'. The eigenvalues and the determinant are easily obtained from the diagonal. We implemented it on `TriangMat` for maximum efficiency. Is used by `mahalanobis distance`.
 
 * `householder's decomposition`  
-in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition is not satisfied, Householder's (UR) decomposition is the next best method. Implemented here with our memory efficient `TriangMat` struct.
+in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition is not satisfied, Householder's (UR) decomposition is often the next best method. Implemented here with our memory efficient `TriangMat` struct.
+
+* `wedge product, geometric product`  
+products of the Grassman and Clifford algebras. Wedge product is used here to generalize the cross product of two vectors into any number of dimensions.
 
 ## Implementation
 
@@ -321,9 +328,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 1.2.44** - Swapped the sign of `wedge` so it agrees with convention.
 
-* **Version 1.2.43** - Removed `pseudoscalar` method. The `sine` method now computes the correct oriented magnitude of the bivector directly from the wedge product. Added geometric product `geometric`. Added some methods to struct `TriangMat` for completeness. In particular, `eigenvalues` and `determinant`, which are both easily obtained after successful Cholesky decomposition.
+* **Version 1.2.43** - Removed `pseudoscalar` method. The `sine` method now computes the correct oriented magnitude of the 2-blade directly from the wedge product. Added geometric product `geometric`. Added some methods to struct `TriangMat` for completeness. In particular, `eigenvalues` and `determinant`, which are both easily obtained after successful Cholesky decomposition.
 
-* **Version 1.2.42** - Added `wedge` (product of Exterior Algebra), `pseudoscalar` and `sine` to trait Vecg. The sine method now always returns the correct antireflexive sign, in any number of dimensions. The sign flips when the order of the vector operands is exchanged. The `pseudoscalar` method is vector cross product generalised to n dimensions.
+* **Version 1.2.42** - Added `wedge` (product of Exterior Algebra), `pseudoscalar` and `sine` to trait Vecg. The sine method now always returns the correct antireflexive sign, in any number of dimensions. The sign flips when the order of the vector operands is exchanged.
 
 * **Version 1.2.41** - Added `anglestat` to `VecVecg` trait. Added convenience function `re_error`. Relaxed trait bounds in `Vecg` trait: `U:Copy -> U:Clone`. Renamed `tukeydot`,`tukeyvec`,`wtukeyvec` to more descriptive `sigdot`,`sigvec`,`wsigvec` and made them include orthogonal points.
 

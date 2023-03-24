@@ -195,9 +195,9 @@ pub trait Vecg {
     fn kron<U:Clone+Into<f64>>(self, v: &[U]) -> Vec<f64>;
     /// Outer product: matrix multiplication of column self with row v.
     fn outer<U:Clone+Into<f64>>(self, v: &[U]) -> Vec<Vec<f64>>;
-    /// Exterior (Grassman) algebra product: produces bivector components
+    /// Exterior (Grassman) algebra product: produces 2-blade components
     fn wedge<U: Clone + Into<f64>>(self, v: &[U]) -> TriangMat;
-    /// Geometric (Clifford) algebra product: produces a*b + **a∧b** 
+    /// Geometric (Clifford) algebra product in matrix form: **a*b** + **a∧b** 
     fn geometric<U: Clone + Into<f64>>(self, b: &[U]) -> TriangMat;
     /// Joint probability density function
     fn jointpdf<U:Clone+Into<f64>>(self, v: &[U]) -> Result<Vec<f64>, RE>;

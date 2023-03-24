@@ -89,12 +89,12 @@ where
         sxy / (sx2 * sy2).sqrt()
     }
 
-    /// Sine of an angle with correct sign in any number of dimensions,
-    /// using wedge product
+    /// Generalized cross product:  
+    /// Sine of an angle between **self** and **v** with correct sign in any number of dimensions
     fn sine<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
-        let bivector = self.wedge(v);
-        bivector.sum().signum()
-            * (bivector.magsq()
+        let blade = self.wedge(v);
+        blade.sum().signum()
+            * (blade.magsq()
                 / (self.vmagsq() * v.iter().map(|x| x.clone().into().powi(2)).sum::<f64>()))
             .sqrt()
     }
@@ -251,7 +251,7 @@ where
             .collect::<Vec<Vec<f64>>>()
     }
 
-    /// Exterior (Grassman) algebra product: produces a bivector **a∧b**
+    /// Exterior (Grassman) algebra product: produces components of 2-blade **a∧b**
     fn wedge<U: Clone + Into<f64>>(self, b: &[U]) -> TriangMat {
         let n = self.len();
         assert_eq!(n, b.len());
@@ -269,9 +269,9 @@ where
         }
     }
 
-    /// Geometric (Clifford) algebra product: produces a*b + **a∧b**
+    /// Geometric (Clifford) algebra product: **a*b** + **a∧b** in matrix form
     /// here the elements of the dot product a*b are placed in their
-    /// natural positions on the diagonal and can be easily added
+    /// natural positions on the diagonal (can be easily added)
     fn geometric<U: Clone + Into<f64>>(self, b: &[U]) -> TriangMat {
         let n = self.len();
             assert_eq!(n, b.len());
