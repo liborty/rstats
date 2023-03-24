@@ -114,7 +114,7 @@ Is the point, generally non member, that minimises its sum of *squares* of dista
 * `quasi/marginal median`  
 is the point minimising sums of distances separately in each dimension (its coordinates are medians along each axis). It is a mistaken concept which we do not recommend using.
 
-* `tukey median`  
+* `Tukey median`  
 is the point maximising `Tukey's Depth`, which is the minimum number of (outlying) points found in a hemisphere in any direction. Potentially useful concept but its advantages over the geometric median are not clear.
 
 * `true geometric median (gm)`  
@@ -126,13 +126,13 @@ is the member of the set with the least sum of distances to all other members. E
 * `outlier`  
 is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the `gm` (has the maximum radius).
 
-* `mahalanobis distance`  
+* `Mahalanobis distance`  
 is a scaled distance, whereby the scaling is derived from the axis of covariance / comediance of the data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances / comediances are decreased.
 
 * `Cholesky-Banachiewicz matrix decomposition`  
 decomposes any positive definite matrix S (often covariance or comediance) into a product of two triangular matrices: S = LL'. The eigenvalues and the determinant are easily obtained from the diagonal. We implemented it on `TriangMat` for maximum efficiency. Is used by `mahalanobis distance`.
 
-* `householder's decomposition`  
+* `Householder's decomposition`  
 in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition is not satisfied, Householder's (UR) decomposition is often the next best method. Implemented here with our memory efficient `TriangMat` struct.
 
 * `wedge product, geometric product`  
