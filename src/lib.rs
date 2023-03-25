@@ -74,10 +74,10 @@ pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
 /// `.kind == 5` is unnecessary, as transposed symmetric matrix is unchanged.  
 /// Simply adding (or subtracting) 3 to .kind implicitly transposes the matrix.
 /// `.kind > 2 are all transposed, individual variants are determined by kind % 3.
-/// The size of the implied full square matrix, nxn, is not explicitly stored.
-/// It is obtained by solving the quadratic equation:
-/// `((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize;`
-/// where `s = triangmat.len()` = `n*(n+1)/2`
+/// The full size of the implied square matrix, nxn, is not explicitly stored.
+/// It is obtained by solving the quadratic equation: `n^2+n-2s=0` =>
+/// `n=((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize;`
+/// where s = `triangmat.len()` = `n*(n+1)/2`
 #[derive(Default, Clone)]
 pub struct TriangMat {
     /// Matrix kind encoding: 0=plain, 1=antisymmetric, 2=symmetric, +3=transposed
@@ -185,6 +185,8 @@ pub trait Vecg {
     fn varc<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64;
     /// Vector similarity S in the interval `[0,1]: S = (1+cos(theta))/2`
     fn vsim<U:Clone+Into<f64>>(self, v: &[U]) -> f64;
+    /// Median correlation similarity in the interval [0,1]
+    fn vcorrsim(self, v: Self) -> f64;
     /// Positive dotp [0,2|a||b|]
     fn pdotp<U:Clone+PartialOrd+Into<f64>>(self, v: &[U]) -> f64; 
     /// We define vector dissimilarity D in the interval `[0,1]: D = 1-S = (1-cos(theta))/2`
@@ -231,21 +233,11 @@ pub trait Vecg {
 /// For example, in vector iterative methods.
 pub trait MutVecg {
     /// mutable multiplication by a scalar
-    fn mutsmult<U>(self, _s: U)
-    where
-        U: Copy + PartialOrd,
-        f64: From<U>;
+    fn mutsmult<U:PartialOrd+Into<f64>>(self, _s: U);
     /// mutable vector subtraction
-    fn mutvsub<U>(self, _v: &[U])
-    where
-        U: Copy + PartialOrd,
-        f64: From<U>;
+    fn mutvsub<U:Clone+PartialOrd+Into<f64>>(self, _v: &[U]); 
     /// mutable vector addition
-    fn mutvadd<U>(self, _v: &[U])
-    where
-        U: Copy + PartialOrd,
-        f64: From<U>;
-
+    fn mutvadd<U:Clone+PartialOrd+Into<f64>>(self, _v: &[U]); 
     /// Invert the magnitude
     fn minvert(self);
     /// Negate the vector (all components swap sign)
@@ -291,7 +283,7 @@ pub trait VecVec<T> {
     fn jointentropyn(self) -> Result<f64, RE>;
     /// Independence (component wise) of a set of vectors.
     fn dependencen(self) -> Result<f64, RE>;
-    /// Flattened lower triangular relations matrix between columns of self
+    /// Binary relations between columns of self
     fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<TriangMat, RE>;
     /// Sum of nd points (or vectors)
     fn sumv(self) -> Vec<f64>;
@@ -356,8 +348,10 @@ pub trait VecVecg<T, U> {
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Result<Vec<f64>, RE>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[U]) -> Result<Vec<Vec<f64>>, RE>;
-    /// Statistic (median,madgm) of angles against reference vector v 
+    /// Statistic (median,madgm) of angles against some reference vector v 
     fn anglestat(self, uv: &[U]) -> Result<MStats,RE>;
+    /// Statistic (median,madgm) of median correlations against some reference vector v 
+    fn corrstat(self, v: &[U]) -> Result<MStats,RE>;
     /// Proportions of points along each +/-axis (hemisphere)
     fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
     /// Dependencies of vector m on each vector in self

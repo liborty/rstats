@@ -1,13 +1,13 @@
 use crate::{noop,fromop,re_error,RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
-use indxvec::Vecops;
+use indxvec::Mutops;
 use medians::{MStats,Median,Medianf64};
 use rayon::prelude::*;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
-    where T: Sync+Copy+PartialOrd,f64:From<T>, 
+    where T: Sync+Clone+PartialOrd+Into<f64>, 
     Vec<Vec<T>>: IntoParallelIterator,
     Vec<T>: IntoParallelIterator,
-    U: Sync+Copy+PartialOrd,f64:From<U>,
+    U: Sync+Clone+PartialOrd+Into<f64>,
     Vec<Vec<U>>: IntoParallelIterator,
     Vec<U>: IntoParallelIterator {
 
@@ -39,10 +39,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Weights are associated with points, not coordinates
     fn wsumv(self,ws: &[U]) -> Vec<f64> {
         let mut resvec = vec![0_f64;self[0].len()]; 
-        for (v,&w) in self.iter().zip(ws) { 
-            let weight = f64::from(w);
+        for (v,w) in self.iter().zip(ws) { 
+            let weight:f64 = w.clone().into();
             for (res,component) in resvec.iter_mut().zip(v) {
-                *res += weight*f64::from(*component) }
+                *res += weight*(component.clone().into()) }
         };
         resvec
     }
@@ -54,8 +54,8 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         .par_iter().zip(ws)
         .fold(
             || (vec![0_f64;self[0].len()], 0_f64),
-            | mut pair: (Vec<f64>, f64), (p,&w) | { 
-                let weight = f64::from(w); // saves converting twice 
+            | mut pair: (Vec<f64>, f64), (p,w) | { 
+                let weight:f64 = w.clone().into(); // saves converting twice 
                 pair.0.mutvadd(&p.smult(weight));
                 pair.1 += weight;
                 pair
@@ -107,6 +107,22 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         Ok(angles.medstats()?)
     }
 
+    /// Statistic (median,madgm) of median correlations in [0,1] with some reference vector v 
+    fn corrstat(self,v:&[U]) -> Result<MStats,RE> { 
+        if self.is_empty() { 
+            return Err(re_error("empty","corrstat given no points")); }; 
+        if self[0].len() != v.len() { 
+            return Err(re_error("size","corrstat dimensions mismatch")); }; 
+        let zmvunit = v.zeromedian(&mut fromop)?.vunit()?; 
+        let corrs = self.iter()
+            .map(|p| -> Result<f64,RE> { Ok((p.as_slice()
+                .zeromedian(&mut fromop)?  
+                .vunit()?
+                .dotp(&zmvunit)+1.)/2.)} )
+            .collect::<Result<Vec<f64>,RE>>()?;
+        Ok(corrs.medstats()?)
+    }    
+
     /// Proportions of points along each +/-axis (hemisphere).
     /// Includes (counts) orthogonal points.
     /// Uses only the points specified in idx (e.g. the convex hull).
@@ -117,11 +133,11 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         if self.len() != ws.len() { return Err(RError::DataError("wtukeyvec weights number mismatch".to_owned())); }; 
         let mut hemis = vec![0_f64; 2*dims]; 
         for &i in idx { 
-            let wf:f64 = ws[i].into();
+            let wf:f64 = ws[i].clone().into();
             wsum += wf;
             // let zerogm = self[i].vsub::<f64>(gm);
-            for (j,&component) in self[i].iter().enumerate() {
-                let cf:f64 = component.into();
+            for (j,component) in self[i].iter().enumerate() {
+                let cf:f64 = component.clone().into();
                 if cf == 0. { 
                     wsum += wf;
                     hemis[j] += wf;
@@ -178,11 +194,12 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             return Err(RError::DataError("wsortedrads self and ws lengths mismatch".to_owned())); };
         if self[0].len() != gm.len() { 
             return Err(RError::DataError("wsortedrads self and gm dimensions mismatch".to_owned())); };
-        let wnorm = ws.len() as f64 / ws.iter().map(|&w|f64::from(w)).sum::<f64>(); 
-        Ok (self.par_iter().zip(ws).map(|(s,&w)| wnorm*f64::from(w)*s.vdist::<f64>(gm))
-            .collect::<Vec<f64>>()
-            .sorth(&mut noop,true)
-        )
+        let wf = ws.iter().map(|x| x.clone().into()).collect::<Vec<f64>>();
+        let wnorm = 1.0 / wf.iter().sum::<f64>(); 
+        let mut res = self.iter().map(|s| wnorm*s.vdist::<f64>(gm))
+            .collect::<Vec<f64>>();
+        res.muthashsort(&mut noop);
+        Ok(res)
     } 
 
     /// Like wgmparts, except only does one iteration from any non-member point g
@@ -194,13 +211,13 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         // vsum is the sum vector of unit vectors towards the points
         let mut vsum = vec![0_f64; self[0].len()];
         let mut recip = 0_f64;
-        for (x,&w) in self.iter().zip(ws) { 
+        for (x,w) in self.iter().zip(ws) { 
             // |x-p| done in-place for speed. Could have simply called x.vdist(p)
-            let mag:f64 = x.iter().zip(g).map(|(&xi,&gi)|(f64::from(xi)-gi).powi(2)).sum::<f64>(); 
+            let mag:f64 = x.iter().zip(g).map(|(xi,&gi)|(xi.clone().into()-gi).powi(2)).sum::<f64>(); 
             if mag.is_normal() { // ignore this point should distance be zero
-                let rec = f64::from(w)/(mag.sqrt()); // reciprocal of distance (scalar)
+                let rec = w.clone().into()/(mag.sqrt()); // reciprocal of distance (scalar)
                 // vsum increments by components
-                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += f64::from(*xi)*rec); 
+                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += xi.clone().into()*rec); 
                  recip += rec // add separately the reciprocals for final scaling   
             }
         }
@@ -218,14 +235,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         loop { // vector iteration till accuracy eps is exceeded  
             let mut nextg = vec![0_f64; self[0].len()];   
             let mut nextrecsum = 0_f64;
-            for (x,&w) in self.iter().zip(ws) {   
+            for (x,w) in self.iter().zip(ws) {   
                 // |x-g| done in-place for speed. Could have simply called x.vdist(g)
                 //let mag:f64 = g.vdist::<f64>(&x); 
-                let mag = g.iter().zip(x).map(|(&gi,&xi)|(f64::from(xi)-gi).powi(2)).sum::<f64>(); 
+                let mag = g.iter().zip(x).map(|(&gi,xi)|(xi.clone().into()-gi).powi(2)).sum::<f64>(); 
                 if mag.is_normal() { 
-                    let rec = f64::from(w)/(mag.sqrt()); // reciprocal of distance (scalar)
+                    let rec = w.clone().into()/(mag.sqrt()); // reciprocal of distance (scalar)
                     // vsum increments by components
-                    nextg.iter_mut().zip(x).for_each(|(vi,&xi)| *vi += f64::from(xi)*rec); 
+                    nextg.iter_mut().zip(x).for_each(|(vi,xi)| *vi += xi.clone().into()*rec); 
                     nextrecsum += rec // add separately the reciprocals for final scaling   
                 } // else simply ignore this point should its distance from g be zero
             }
@@ -257,18 +274,18 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 .par_iter().zip(ws)
                 .fold(
                     || (vec![0_f64; self[0].len()], 0_f64),
-                    |mut pair: (Vec<f64>, f64), (p, &w)| {
+                    |mut pair: (Vec<f64>, f64), (p, w)| {
                         // |p-g| done in-place for speed. Could have simply called p.vdist(g)
                         let mag: f64 = p
                             .iter()
                             .zip(&g)
-                            .map(|(&vi, gi)| (f64::from(vi) - gi).powi(2))
+                            .map(|(vi, gi)| (vi.clone().into() - gi).powi(2))
                             .sum();
                         // let (mut vecsum, mut recsum) = pair;
                         if mag > eps {
-                            let rec = f64::from(w) / (mag.sqrt()); // reciprocal of distance (scalar)
+                            let rec = w.clone().into() / (mag.sqrt()); // reciprocal of distance (scalar)
                             for (vi, gi) in p.iter().zip(&mut pair.0) {
-                                *gi += f64::from(*vi) * rec
+                                *gi += vi.clone().into() * rec
                             }
                             pair.1 += rec; // add separately the reciprocals for the final scaling
                         } // else simply ignore this point should its distance from g be zero
@@ -302,14 +319,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         loop { // vector iteration till accuracy eps is exceeded  
             let mut nextg = vec![0_f64; self[0].len()];   
             let mut nextrecsum = 0f64;
-            for (x,&w) in self.iter().zip(ws) { // for all points
+            for (x,w) in self.iter().zip(ws) { // for all points
                 // |x-g| done in-place for speed. Could have simply called x.vdist(g)
                 //let mag:f64 = g.vdist::<f64>(&x); 
-                let mag = g.iter().zip(x).map(|(&gi,&xi)|(f64::from(xi)-gi).powi(2)).sum::<f64>(); 
+                let mag = g.iter().zip(x).map(|(&gi,xi)|(xi.clone().into()-gi).powi(2)).sum::<f64>(); 
                 if mag.is_normal() { 
-                    let rec = f64::from(w)/(mag.sqrt()); // reciprocal of distance (scalar)
+                    let rec = w.clone().into()/(mag.sqrt()); // reciprocal of distance (scalar)
                     // vsum increments by components
-                    nextg.iter_mut().zip(x).for_each(|(vi,&xi)| *vi += f64::from(xi)*rec); 
+                    nextg.iter_mut().zip(x).for_each(|(vi,xi)| *vi += xi.clone().into()*rec); 
                     nextrecsum += rec // add separately the reciprocals for final scaling   
                 } // else simply ignore this point should its distance from g be zero
             }
@@ -329,7 +346,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
         if self.len() != ws.len() { 
             return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
-        let fws = ws.tof64();
+        let fws = ws.iter().map(|x| x.clone().into()).collect::<Vec<f64>>();
         Ok( self
             .par_iter().enumerate()
             .map(|(i,p)| fws[i]*p.vdist(wgm))
@@ -342,7 +359,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn wstdgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
             if self.len() != ws.len() { 
                 return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
-            let fws = ws.tof64();       
+            let fws = ws.iter().map(|x| x.clone().into()).collect::<Vec<f64>>();       
             Ok( self
                 .iter().enumerate()
                 .map(|(i,p)| fws[i]*p.vdist(wgm))
@@ -404,10 +421,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             .par_iter().zip(ws)
             .fold(
                 || (vec![0_f64; (n+1)*n/2], 0_f64),
-                | mut pair: (Vec<f64>, f64), (p,&w) | {
+                | mut pair: (Vec<f64>, f64), (p,w) | {
                 let mut covsub = 0_usize; // subscript into the flattened array cov
                 let vm = p.vsub(m);  // zero mean vector
-                let wf = f64::from(w); // f64 weight for this point
+                let wf = w.clone().into(); // f64 weight for this point
                 vm.iter().enumerate().for_each(|(i,thisc)| 
                     // its products up to and including the diagonal (itself)
                     vm.iter().take(i+1).for_each(|vmi| { 

@@ -2,13 +2,14 @@
 
 use crate::{
     error::{re_error, RError, RE},
-    Stats, TriangMat, Vecg,
+    fromop, Stats, TriangMat, Vecg,
 };
 use indxvec::{Indices, Vecops};
+use medians::Median;
 
 impl<T> Vecg for &[T]
 where
-    T: Clone + PartialOrd + Into<f64>,
+    T: Clone + PartialOrd + Into<f64>
 {
     /// nd t_statistic of self against geometric median and madgm spread.     
     /// Unlike in 1d, is always positive.
@@ -184,7 +185,7 @@ where
             .sum::<f64>()
     }
 
-    /// Area spanned by two vectors over their concave angle:
+    /// Area spanned by two vectors over their concave angle (always >= 0)
     /// |a||b||sin(theta)| == (1-cos2(theta)).sqrt()
     /// Attains maximum `|a|.|b|` when the vectors are orthogonal.
     fn varea<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> f64 {
@@ -197,7 +198,7 @@ where
         (v.vmagsq() * self.vmagsq()).sqrt() - self.dotp(v)
     }
 
-    /// Positive dotp [0,2|a||b|]
+    /// Positive dotp in the interval: `[0,2|a||b|]`
     /// = |a||b|(1+cos(theta)) = 2|a||b|S
     fn pdotp<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> f64 {
         (v.vmagsq() * self.vmagsq()).sqrt() + self.dotp(v)
@@ -213,6 +214,11 @@ where
     /// D = 1-S = (1-cos(theta))/2
     fn vdisim<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         (1.0 - self.cosine(v)) / 2.0
+    }
+
+    /// We define vector median correlation similarity in the interval [0,1] as
+    fn vcorrsim(self, v:Self) -> f64 {
+        (1.0 + self.mediancorr(v, &mut fromop).expect("vcorrsim: mediancorr failed")) / 2.0
     }
 
     /// Lower triangular covariance matrix for a single vector.
@@ -274,21 +280,21 @@ where
     /// natural positions on the diagonal (can be easily added)
     fn geometric<U: Clone + Into<f64>>(self, b: &[U]) -> TriangMat {
         let n = self.len();
-            assert_eq!(n, b.len());
-            let mut result: Vec<f64> = Vec::new();
-            for i in 0..n {
-                let ai: f64 = self[i].clone().into();
-                let bi: f64 = b[i].clone().into();
-                for j in 0..i {
-                    result.push(ai * b[j].clone().into() - bi * self[j].clone().into());
-                }
-                result.push(ai*bi); // the diagonal dot product element
+        assert_eq!(n, b.len());
+        let mut result: Vec<f64> = Vec::new();
+        for i in 0..n {
+            let ai: f64 = self[i].clone().into();
+            let bi: f64 = b[i].clone().into();
+            for j in 0..i {
+                result.push(ai * b[j].clone().into() - bi * self[j].clone().into());
             }
-            TriangMat {
-                kind: 1,
-                data: result,
-            }
+            result.push(ai * bi); // the diagonal dot product element
         }
+        TriangMat {
+            kind: 1,
+            data: result,
+        }
+    }
 
     /// Joint probability density function of two pairwise matched slices
     fn jointpdf<U: Clone + Into<f64>>(self, v: &[U]) -> Result<Vec<f64>, RE> {

@@ -4,35 +4,26 @@ use indxvec::Vecops;
 /// Mutable vector operations on `&mut [f64]`, where the operand endtype is generic
 impl MutVecg for &mut [f64] {
     /// Scalar multiplication of a vector, mutates self
-    fn mutsmult<U>(self, s: U)
-    where
-        U: Copy + PartialOrd,
-        f64: From<U>,
+    fn mutsmult<U:PartialOrd+Into<f64>>(self, s: U)
     {
-        let sf = f64::from(s);
+        let sf = s.into();
         self.iter_mut().for_each(|x| *x *= sf);
     }
 
     /// Vector subtraction, mutates self
-    fn mutvsub<U>(self, v: &[U])
-    where
-        U: Copy + PartialOrd,
-        f64: From<U>,
+    fn mutvsub<U:Clone+PartialOrd+Into<f64>>(self, v: &[U])
     {
         self.iter_mut()
             .zip(v)
-            .for_each(|(x, &vi)| *x -= f64::from(vi))
+            .for_each(|(x, vi)| *x -= vi.clone().into())
     }
 
     /// Vector addition, mutates self
-    fn mutvadd<U>(self, v: &[U])
-    where
-        U: Copy + PartialOrd,
-        f64: From<U>,
+    fn mutvadd<U:Clone+PartialOrd+Into<f64>>(self, v: &[U])
     {
         self.iter_mut()
             .zip(v)
-            .for_each(|(x, &vi)| *x += f64::from(vi))
+            .for_each(|(x, vi)| *x += vi.clone().into())
     }
 
     /// Vector with inverse magnitude

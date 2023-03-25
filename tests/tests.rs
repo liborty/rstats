@@ -91,7 +91,8 @@ fn fstats() -> Result<(), RE> {
         "T-statistic of 5 against hmean   {}",
         t_stat(5., v1.hmeanstd()?).gr()
     );
-    println!("Autocorrelation:{}", v1.autocorr()?.gr());
+    println!("Autocorr1:\t{}", v1.autocorr()?.gr());
+    println!("Autocorr2:\t{}", v2.autocorr()?.gr());
     println!("Entropy 1:\t{}", v1.entropy().gr());
     println!("Entropy 2:\t{}", v2.entropy().gr()); // generic
     println!("Joint Entropy:  {}", v1.jointentropy(&v2)?.gr());
@@ -195,7 +196,7 @@ fn vecg() -> Result<(), RE> {
     println!("Euclidian distance:\t{}", v1.vdist(&v2).gr());
     println!("Cityblock distance:\t{}", v1.cityblockd(&v2).gr());
     println!("Vector difference: {}", v1.vsub(&v2).gr());
-    println!("Vector sum: {}", v1.vadd(&v2).gr());
+    println!("Vector sum:        {}", v1.vadd(&v2).gr());
     println!("Scalar product:\t\t{}", v1.dotp(&v2).gr());
     println!("Parallelogram area:\t{}", v1.varea(&v2).gr());
     println!("Arc area:\t\t{}", v1.varc(&v2).gr());
@@ -217,6 +218,7 @@ fn vecg() -> Result<(), RE> {
             .gr()
     );
     println!("Cos Similarity [0,1]:\t{}", v1.vsim(&v2).gr());
+    println!("Cor Similarity [0,1]:\t{}", v1.vcorrsim(&v2).gr());
     println!("Cos Dissimilarity:\t{}", v1.vdisim(&v2).gr());
     println!("[1,2,3].kron(&[4,5]):\t{}", [1, 2, 3].kron(&[4, 5]).gr());
     let outerp = [1, 2, 3].outer(&[4, 5]);
@@ -439,10 +441,12 @@ fn vecvec() -> Result<(), RE> {
         contribs.ameanstd()?,
         contribs.medstats()?
     );
-    println!("\nAngles against gm:  {}",pts.anglestat(&median)?.gr()); 
-    println!("Zeromedians angles: {}\n",
+    println!("\nVecs angles against gm: {}",pts.anglestat(&median)?.gr()); 
+    println!("Zeromedian vecs angles against gm: {}\n",
         pts.translate(&median)?.anglestat(&median)?.gr()); 
 
+    println!("Vecs correlations in [0,1] with gm: {}",pts.corrstat(&median)?.gr()); 
+ 
     Ok(())
 }
 

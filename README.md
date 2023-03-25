@@ -26,7 +26,7 @@ and any of the following auxiliary functions:
 use Rstats::{noop,fromop,sumn,t_stat,unit_matrix,re_error};
 ```
 
-The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be only in some details a little ahead of the `crates.io` release versions.
+The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be (only in some details) a little ahead of the `crates.io` release versions.
 
 It is highly recommended to read and run [tests.rs](https://github.com/liborty/Rstats/blob/master/tests/tests.rs) for examples of usage. To run all the tests, use a single thread in order not to print the results in confusing mixed-up order:
 
@@ -138,7 +138,7 @@ in cases where the precondition (positive definite matrix) for the Cholesky-Bana
 * `wedge product, geometric product`  
 products of the Grassman and Clifford algebras. Wedge product is used here to generalize the cross product of two vectors into any number of dimensions.
 
-## Implementation
+## Implementation Notes
 
 The main constituent parts of Rstats are its traits. The different traits are determined by the types of objects to be handled. The objects are mostly vectors of arbitrary length/dimensionality (`d`). The main traits are implementing methods applicable to:
 
@@ -153,9 +153,11 @@ The traits and their methods operate on arguments of their required categories. 
 
 **`Vec<Vec<T>>`** type is used for rectangular matrices (could also have irregular rows).
   
-**`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices. All TriangMat(s) store only n*(n+1)/2 items in a single flat vector, instead of n*n, thus saving significant amounts of memory. Plus their transposed versions only set up a flag '`kind`' that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving some processing as well. All this is put to a good use in our implementation of the matrix decomposition methods.
+**`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices and wedge and geometric products. All instances of `TriangMat` store only `n*(n+1)/2` items in a single flat vector, instead of `n*n`, thus almost halving the memory requirements. Their transposed versions only set up a flag '`kind >=3`' that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving some processing as well. All this is put to a good use in our implementation of the matrix decomposition methods.
 
-The vectors' end types (of the actual data) are mostly generic: usually some numeric type. End type `f64` is mostly used for the computed results.
+The vectors' end types (of the actual data) are mostly generic: usually some numeric type. `Copy` trait bounds on these generic input types have been relaxed to `Clone`, to allow you to clone your own complex data end types in any way you choose. There is no difference to the users for ordinary simple types. 
+
+The computed results end types are mostly `f64`. 
 
 ## Errors
 
@@ -325,6 +327,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.45** - Added `vcorrsim` which computes similarity of two vectors in [0,1], based on their median correlation. Added `corrstat`: statistics of `vcorrsim` applied to a set of vectors, all compared against some common reference vector. Completed trait bounds relaxation and simplification. Some minor documentation improvements.
 
 * **Version 1.2.44** - Swapped the sign of `wedge` so it agrees with convention.
 

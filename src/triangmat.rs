@@ -35,7 +35,7 @@ impl TriangMat {
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
-    /// Square dimension (rows)
+    /// Square matrix dimension (rows)
     pub fn rows(&self) -> usize {
         Self::rowcol(self.len()).0
     }
@@ -72,21 +72,21 @@ impl TriangMat {
         }
         TriangMat { kind: 2, data }
     }
-    /// Eigenvalues obtained from Cholesky L matrix
+    /// Eigenvalues (obtainable only from Cholesky L matrix)
     pub fn eigenvalues(&self) -> Vec<f64> {
         self.diagonal().iter().map(|&x| x*x ).collect::<Vec<f64>>()
     }
-    /// Determinant obtained from Cholesky L matrix
+    /// Determinant (obtainable only from Cholesky L matrix)
     pub fn determinant(&self) -> f64 {
         self.diagonal().iter().map(|&x| x*x ).product()
     }
 
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
-    /// full coordinates within a lower/upper triangular matrix.
-    /// Enables memory efficient representation of triangular matrices as a flat vector.
+    /// (row,column) coordinates within a lower/upper triangular matrix.
+    /// Enables memory efficient representation of triangular matrices as one flat vector.
     pub fn rowcol(s: usize) -> (usize, usize) {
         let row = ((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize; // cast truncates, like .floor()
-        let column = s - row * (row + 1) / 2; // subtracting the previous triangular number
+        let column = s - row * (row + 1) / 2; // subtracting the preceding triangular number
         (row, column)
     }
 
@@ -115,7 +115,7 @@ impl TriangMat {
         }
     }
 
-    /// Unpacks TriangMat to full matrix
+    /// Unpacks TriangMat to ordinary full matrix
     pub fn to_full(&self) -> Vec<Vec<f64>> {
         // full matrix dimension(s)
         let (n, _) = TriangMat::rowcol(self.data.len());

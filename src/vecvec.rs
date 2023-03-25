@@ -5,14 +5,13 @@ use rayon::prelude::*;
 
 impl<T> VecVec<T> for &[Vec<T>]
 where
-    T: Copy + PartialOrd + Sync,
+    T: Clone + PartialOrd + Sync + Into<f64>,
     Vec<Vec<T>>: IntoParallelIterator,
-    Vec<T>: IntoParallelIterator,
-    f64: From<T>,
+    Vec<T>: IntoParallelIterator
 {
     /// Selects a column by number
     fn column(self, cnum: usize) -> Vec<f64> {
-        self.iter().map(|row| row[cnum].into()).collect()
+        self.iter().map(|row| row[cnum].clone().into()).collect()
     }
 
     /// Multithreaded transpose of vec of vecs matrix
@@ -283,8 +282,8 @@ where
         };
         let mut hemis = vec![0_f64; 2 * dims];
         for &i in idx {
-            for (j, &component) in self[i].iter().enumerate() {
-                let cf = f64::from(component);
+            for (j, component) in self[i].iter().enumerate() {
+                let cf = component.clone().into();
                 if cf == 0. {
                     totpoints += 1;
                     hemis[j] += 1.;
@@ -385,7 +384,7 @@ where
         let mut rsum = 0_f64;
         let mut vsum = vec![0_f64; self[0].len()];
         for p in self {
-            let mag = p.iter().map(|&pi| f64::from(pi).powi(2)).sum::<f64>(); // vmag();
+            let mag = p.iter().map(|pi| pi.clone().into().powi(2)).sum::<f64>(); // vmag();
             if mag.is_normal() {
                 // skip if p is at the origin
                 let rec = 1.0_f64 / (mag.sqrt());
@@ -409,7 +408,7 @@ where
             let mag: f64 = x
                 .iter()
                 .zip(g)
-                .map(|(&xi, &gi)| (f64::from(xi) - gi).powi(2))
+                .map(|(xi, &gi)| (xi.clone().into() - gi).powi(2))
                 .sum::<f64>();
             if mag.is_normal() {
                 // ignore this point should distance be zero
@@ -417,7 +416,7 @@ where
                                                   // vsum increments by components
                 vsum.iter_mut()
                     .zip(x)
-                    .for_each(|(vi, xi)| *vi += f64::from(*xi) * rec);
+                    .for_each(|(vi, xi)| *vi += xi.clone().into() * rec);
                 recip += rec // add separately the reciprocals for final scaling
             }
         }
@@ -448,13 +447,13 @@ where
                 let mag: f64 = p
                     .iter()
                     .zip(&g)
-                    .map(|(&vi, gi)| (f64::from(vi) - gi).powi(2))
+                    .map(|(vi, gi)| (vi.clone().into() - gi).powi(2))
                     .sum();
                 if mag > eps {
                     let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
                                                       // vsum increment by components
                     for (vi, gi) in p.iter().zip(&mut nextg) {
-                        *gi += f64::from(*vi) * rec
+                        *gi += vi.clone().into() * rec
                     }
                     nextrecsum += rec // add separately the reciprocals for final scaling
                 } // else simply ignore this point v, should its distance from g be <= eps
@@ -491,13 +490,13 @@ where
                         let mag: f64 = p
                             .iter()
                             .zip(&g)
-                            .map(|(&vi, gi)| (f64::from(vi) - gi).powi(2))
+                            .map(|(vi, gi)| (vi.clone().into() - gi).powi(2))
                             .sum();
                         // let (mut vecsum, mut recsum) = pair;
                         if mag > eps {
                             let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
                             for (vi, gi) in p.iter().zip(&mut pair.0) {
-                                *gi += f64::from(*vi) * rec
+                                *gi += vi.clone().into() * rec
                             }
                             pair.1 += rec; // add separately the reciprocals for the final scaling
                         } // else simply ignore this point should its distance from g be zero
@@ -537,7 +536,7 @@ where
                 let mag = g
                     .iter()
                     .zip(x)
-                    .map(|(&gi, &xi)| (f64::from(xi) - gi).powi(2))
+                    .map(|(&gi, xi)| (xi.clone().into() - gi).powi(2))
                     .sum::<f64>();
                 if mag.is_normal() {
                     let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
@@ -545,7 +544,7 @@ where
                     nextg
                         .iter_mut()
                         .zip(x)
-                        .for_each(|(vi, &xi)| *vi += f64::from(xi) * rec);
+                        .for_each(|(vi, xi)| *vi += xi.clone().into() * rec);
                     nextrecsum += rec // add separately the reciprocals for final scaling
                 } // else simply ignore this point should its distance from g be zero
             }
