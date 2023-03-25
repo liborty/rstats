@@ -153,7 +153,7 @@ The traits and their methods operate on arguments of their required categories. 
 
 **`Vec<Vec<T>>`** type is used for rectangular matrices (could also have irregular rows).
   
-**`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices and wedge and geometric products. All instances of `TriangMat` store only `n*(n+1)/2` items in a single flat vector, instead of `n*n`, thus almost halving the memory requirements. Their transposed versions only set up a flag '`kind >=3`' that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving some processing as well. All this is put to a good use in our implementation of the matrix decomposition methods.
+**`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices and wedge and geometric products. All instances of `TriangMat` store only `n*(n+1)/2` items in a single flat vector, instead of `n*n`, thus almost halving the memory requirements. Their transposed versions only set up a flag `kind >=3` that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving some processing as well. All this is put to a good use in our implementation of the matrix decomposition methods.
 
 The vectors' end types (of the actual data) are mostly generic: usually some numeric type. `Copy` trait bounds on these generic input types have been relaxed to `Clone`, to allow you to clone your own complex data end types in any way you choose. There is no difference to the users for ordinary simple types. 
 
