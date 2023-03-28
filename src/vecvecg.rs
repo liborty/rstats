@@ -1,6 +1,6 @@
 use crate::{noop,fromop,re_error,RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::Mutops;
-use medians::{MStats,Median,Medianf64};
+use medians::{Median,Medianf64};
 use rayon::prelude::*;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
@@ -91,36 +91,42 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         Ok(self.par_iter().map(|s| s.vsub(m)).collect())   
     }
 
-    /// Statistic (median,madgm) of angles that points in self form 
-    /// with some reference vector v.
-    fn anglestat(self,v: &[U]) -> Result<MStats,RE> { 
+    /// Mad of 1.0-dotproducts with **v**, in range [0,2] 
+    fn anglemad(self,v: &[U]) -> Result<f64,RE> { 
         if self.is_empty() { 
             return Err(re_error("empty","anglestat given no points")); }; 
         if self[0].len() != v.len() { 
             return Err(re_error("size","anglestat dimensions mismatch")); }; 
         let uv = v.vunit()?;
         let angles = self.iter()
-            .map(|p| -> Result<f64,RE> { Ok(p
+            .map(|p| -> Result<f64,RE> { Ok(1.0-p
                 .vunit()?  
                 .dotp(&uv))} )
             .collect::<Result<Vec<f64>,RE>>()?;
-        Ok(angles.medstats()?)
+        Ok(angles.mad(0.)?)
     }
 
-    /// Statistic (median,madgm) of median correlations in [0,1] with some reference vector v 
-    fn corrstat(self,v:&[U]) -> Result<MStats,RE> { 
+    /// (Median) uncorrelations in [0,2] of each vector in self against some reference vector v.  
+    /// Precomputes the zeromedian unit vector of v to save repetition
+    fn uncorrelations(self, v: &[U]) -> Result<Vec<f64>,RE> {
         if self.is_empty() { 
-            return Err(re_error("empty","corrstat given no points")); }; 
+            return Err(re_error("empty","uncorrelations given no data")); }; 
         if self[0].len() != v.len() { 
-            return Err(re_error("size","corrstat dimensions mismatch")); }; 
-        let zmvunit = v.zeromedian(&mut fromop)?.vunit()?; 
-        let corrs = self.iter()
-            .map(|p| -> Result<f64,RE> { Ok((p.as_slice()
-                .zeromedian(&mut fromop)?  
+            return Err(RError::DataError("uncorrelations dimensions mismatch".to_owned())); } 
+        let uzv =  v.zeromedian(&mut fromop)?.vunit()?;
+        self.par_iter().map(|s:&Vec<T>| -> Result<f64,RE> {
+            Ok(1.0-s.as_slice()
+                .zeromedian(&mut fromop)?
                 .vunit()?
-                .dotp(&zmvunit)+1.)/2.)} )
-            .collect::<Result<Vec<f64>,RE>>()?;
-        Ok(corrs.medstats()?)
+                .dotp(&uzv))})
+            .collect::<Result<Vec<f64>,RE>>() 
+    }
+
+    /// mad of median uncorrelations in [0,2] with some reference vector v
+    /// i.e. coincidence with v returns 0 and as self vectors diverge, so does their uncorrelation,
+    /// up to the maximum value of 2 for -v. 
+    fn uncorrmad(self,v:&[U]) -> Result<f64,RE> { 
+        Ok(self.uncorrelations(v)?.mad(0.)?)
     }    
 
     /// Proportions of points along each +/-axis (hemisphere).
@@ -161,16 +167,6 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             Ok((entropym + s.entropy())/
             s.jointentropy(m)?-1.0)}).collect() 
     }
-
-    /// (Median) correlations of m with each vector in self
-    /// Factors out the unit vector of m to save repetition of work
-    fn correlations(self, m: &[U]) -> Result<Vec<f64>,RE> {
-        if self[0].len() != m.len() { return Err(RError::DataError("correlations dimensions mismatch".to_owned())); } 
-        let unitzerom =  m.zeromedian( &mut fromop)?.vunit()?;
-        self.par_iter().map(|s| -> Result<f64,RE> {
-            Ok(unitzerom.dotp(&s.as_slice().zeromedian(&mut fromop)?.vunit()?)) } )
-            .collect::<Result<Vec<f64>,RE>>() 
-    } 
 
     /// Individual distances from any point v, typically not a member, to all the members of self.    
     fn dists(self, v:&[U]) -> Result<Vec<f64>,RE> {

@@ -129,7 +129,7 @@ where
     /// Applies closure f to compute a scalar binary relation between all pairs of vector
     /// components of self.   
     /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
-    /// such as dependencies or correlations.  
+    /// such as dependencies or anglestions.  
     /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorrf64(v2)?)?`
     /// computes median correlations between all column vectors (features) in pts.
     fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<TriangMat, RE> {

@@ -306,16 +306,16 @@ fn vecvec() -> Result<(), RE> {
     // println!("\nTest data:\n{}",pts.gr());
     println!("Set joint entropy: {}", pts.jointentropyn()?.gr());
     println!("Set dependence:    {}", pts.dependencen()?.gr());
-    // println!("\nTest outcomes:\n{}",pts.gr());
     let outcomes = ru.ranv(n)?.getvu8()?;
+    println!("\nTest outcomes:\n{}",outcomes.gr());
     let transppt = pts.transpose();
     println!(
-        "\nDependencies of outcomes:\n{}",
+        "\nDependencies of columns with test outcomes:\n{}",
         transppt.dependencies(&outcomes)?.gr()
     );
     println!(
-        "Correlations with outcomes:\n{}",
-        transppt.correlations(&outcomes)?.gr()
+        "Uncorrelations with outcomes:\n{}",
+        transppt.uncorrelations(&outcomes)?.gr()
     );
     let (median, _vsum, recips) = pts.gmparts(EPS);
     let (eccstd, eccmed, eccecc) = pts.eccinfo(&median[..])?;
@@ -441,12 +441,12 @@ fn vecvec() -> Result<(), RE> {
         contribs.ameanstd()?,
         contribs.medstats()?
     );
-    println!("\nVecs angles against gm: {}",pts.anglestat(&median)?.gr()); 
-    println!("Zeromedian vecs angles against gm: {}\n",
-        pts.translate(&median)?.anglestat(&median)?.gr()); 
-
-    println!("Vecs correlations in [0,1] with gm: {}",pts.corrstat(&median)?.gr()); 
- 
+    println!("\nMad of cosines with gm: {}",pts.anglemad(&median)?.gr()); 
+    println!("Mad of zeromedian points cosines with gm: {}\n",
+        pts.translate(&median)?.anglemad(&median)?.gr());
+    println!("Mad of uncorrelations with gm: {}",pts.uncorrmad(&median)?.gr()); 
+    println!("Mad of zeromedian points uncorrelations with gm: {}\n",
+        pts.translate(&median)?.uncorrmad(&median)?.gr()); 
     Ok(())
 }
 

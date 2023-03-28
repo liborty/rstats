@@ -328,7 +328,10 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.45** - Added `vcorrsim` which computes similarity of two vectors in [0,1], based on their median correlation. Added `corrstat`: statistics of `vcorrsim` applied to a set of vectors, all compared against some common reference vector. Completed trait bounds relaxation and simplification. Some minor documentation improvements.
+* **Version 1.2.46** - Simplified and replaced `agnlestat` -> `anglemad`, `vcorrsim` -> `uncorrmad`,
+ `correlations` -> `uncorrelations`.
+
+* **Version 1.2.45** - Completed trait bounds relaxation and simplification. Some minor documentation improvements.
 
 * **Version 1.2.44** - Swapped the sign of `wedge` so it agrees with convention.
 

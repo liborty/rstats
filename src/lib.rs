@@ -281,7 +281,7 @@ pub trait VecVec<T> {
     fn jointpdfn(self) -> Result<Vec<f64>, RE>;
     /// Joint entropy between a set of vectors of the same length
     fn jointentropyn(self) -> Result<f64, RE>;
-    /// Independence (component wise) of a set of vectors.
+    /// Dependence (component wise) of a set of vectors.
     fn dependencen(self) -> Result<f64, RE>;
     /// Binary relations between columns of self
     fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<TriangMat, RE>;
@@ -348,16 +348,16 @@ pub trait VecVecg<T, U> {
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Result<Vec<f64>, RE>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[U]) -> Result<Vec<Vec<f64>>, RE>;
-    /// Statistic (median,madgm) of angles against some reference vector v 
-    fn anglestat(self, uv: &[U]) -> Result<MStats,RE>;
-    /// Statistic (median,madgm) of median correlations against some reference vector v 
-    fn corrstat(self, v: &[U]) -> Result<MStats,RE>;
+    /// Mad of 1.0-dotproducts with **v**, in range [0,2] 
+    fn anglemad(self,v: &[U]) -> Result<f64,RE>; 
+    /// (Median) uncorrelations in [0,2] with some reference vector v 
+    fn uncorrelations(self, m: &[U]) -> Result<Vec<f64>, RE>;
+    /// mad of median uncorrelations in [0,2] with some reference vector v
+    fn uncorrmad(self,v:&[U]) -> Result<f64,RE>;  
     /// Proportions of points along each +/-axis (hemisphere)
     fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
     /// Dependencies of vector m on each vector in self
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>, RE>;
-    /// (Median) correlations of m with each vector in self
-    fn correlations(self, m: &[U]) -> Result<Vec<f64>, RE>;
     /// Sum of distances from arbitrary point (v) to all the points in self      
     fn distsum(self, v: &[U]) -> Result<f64, RE>;
     /// Individual distances from any point v (typically not in self) to all the points in self.    
