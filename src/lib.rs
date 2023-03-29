@@ -269,6 +269,10 @@ pub trait Vecu8 {
 /// Methods applicable to a slice of vectors of generic end type.
 /// Operations on a whole set of multidimensional vectors.
 pub trait VecVec<T> {
+    /// Maps a scalar valued closure onto all vectors in self
+    fn scalar_fn(self,f: &mut impl Fn(&[T]) -> Result<f64,RE>) -> Result<Vec<f64>,RE>;
+    /// Maps vector valued closure onto all vectors in self and collects
+    fn vector_fn(self,f: &mut impl Fn(&[T]) -> Result<Vec<f64>,RE>) -> Result<Vec<Vec<f64>>,RE>;
     /// Selects a column by number
     fn column(self, cnum: usize) -> Vec<f64>;
     /// Transpose slice of vecs matrix
@@ -300,13 +304,13 @@ pub trait VecVec<T> {
     /// Sums of distances from each point to all other points
     fn distsums(self) -> Vec<f64>;
     /// Medoid distance, its index, outlier distance, its index
-    fn medout(self, gm: &[f64]) -> MinMax<f64>;
+    fn medout(self, gm: &[f64]) -> Result<MinMax<f64>,RE>;
     /// Like gmparts, except only does one iteration from any non-member point g
     fn nxnonmember(self, g: &[f64]) -> (Vec<f64>, Vec<f64>, f64);
     /// Radius of a point specified by its subscript.    
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE>;
     /// Exact radii vectors to each member point by using the gm
-    fn radii(self, gm: &[f64]) -> Vec<f64>;
+    fn radii(self, gm: &[f64]) -> Result<Vec<f64>,RE>;
     /// Arith mean and std (in MStats struct), Median and mad, Medoid and Outlier (in MinMax struct)
     fn eccinfo(self, gm: &[f64]) -> Result<(MStats, MStats, MinMax<f64>), RE>
     where
@@ -348,12 +352,8 @@ pub trait VecVecg<T, U> {
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Result<Vec<f64>, RE>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[U]) -> Result<Vec<Vec<f64>>, RE>;
-    /// Mad of 1.0-dotproducts with **v**, in range [0,2] 
-    fn anglemad(self,v: &[U]) -> Result<f64,RE>; 
-    /// (Median) uncorrelations in [0,2] with some reference vector v 
-    fn uncorrelations(self, m: &[U]) -> Result<Vec<f64>, RE>;
-    /// mad of median uncorrelations in [0,2] with some reference vector v
-    fn uncorrmad(self,v:&[U]) -> Result<f64,RE>;  
+    /// 1.0-dotproducts with **v**, in range [0,2] 
+    fn divs(self,v: &[U]) -> Result<Vec<f64>,RE>; 
     /// Proportions of points along each +/-axis (hemisphere)
     fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
     /// Dependencies of vector m on each vector in self

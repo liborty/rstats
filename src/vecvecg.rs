@@ -1,6 +1,6 @@
-use crate::{noop,fromop,re_error,RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
+use crate::{noop,re_error,RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::Mutops;
-use medians::{Median,Medianf64};
+use medians::{Medianf64};
 use rayon::prelude::*;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
@@ -87,47 +87,20 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// unlike the often used mean (`acentroid` here), or the quasi median,
     /// both of which depend on the choice of axis.
      fn translate(self, m:&[U]) -> Result<Vec<Vec<f64>>,RE> { 
-        if self[0].len() != m.len() { return Err(RError::DataError("translate dimensions mismatch".to_owned())); }; 
-        Ok(self.par_iter().map(|s| s.vsub(m)).collect())   
+        if self[0].len() != m.len() { 
+            return Err(re_error("DataError","translate dimensions mismatch")); }; 
+        self.vector_fn(&mut |s| Ok(s.vsub(m)))   
     }
 
     /// Mad of 1.0-dotproducts with **v**, in range [0,2] 
-    fn anglemad(self,v: &[U]) -> Result<f64,RE> { 
+    fn divs(self,v: &[U]) -> Result<Vec<f64>,RE> { 
         if self.is_empty() { 
             return Err(re_error("empty","anglestat given no points")); }; 
         if self[0].len() != v.len() { 
             return Err(re_error("size","anglestat dimensions mismatch")); }; 
         let uv = v.vunit()?;
-        let angles = self.iter()
-            .map(|p| -> Result<f64,RE> { Ok(1.0-p
-                .vunit()?  
-                .dotp(&uv))} )
-            .collect::<Result<Vec<f64>,RE>>()?;
-        Ok(angles.mad(0.)?)
+        self.scalar_fn(&mut |p| Ok(1.0-p.vunit()?.dotp(&uv)))
     }
-
-    /// (Median) uncorrelations in [0,2] of each vector in self against some reference vector v.  
-    /// Precomputes the zeromedian unit vector of v to save repetition
-    fn uncorrelations(self, v: &[U]) -> Result<Vec<f64>,RE> {
-        if self.is_empty() { 
-            return Err(re_error("empty","uncorrelations given no data")); }; 
-        if self[0].len() != v.len() { 
-            return Err(RError::DataError("uncorrelations dimensions mismatch".to_owned())); } 
-        let uzv =  v.zeromedian(&mut fromop)?.vunit()?;
-        self.par_iter().map(|s:&Vec<T>| -> Result<f64,RE> {
-            Ok(1.0-s.as_slice()
-                .zeromedian(&mut fromop)?
-                .vunit()?
-                .dotp(&uzv))})
-            .collect::<Result<Vec<f64>,RE>>() 
-    }
-
-    /// mad of median uncorrelations in [0,2] with some reference vector v
-    /// i.e. coincidence with v returns 0 and as self vectors diverge, so does their uncorrelation,
-    /// up to the maximum value of 2 for -v. 
-    fn uncorrmad(self,v:&[U]) -> Result<f64,RE> { 
-        Ok(self.uncorrelations(v)?.mad(0.)?)
-    }    
 
     /// Proportions of points along each +/-axis (hemisphere).
     /// Includes (counts) orthogonal points.
@@ -342,25 +315,33 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
         if self.len() != ws.len() { 
             return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
-        let fws = ws.iter().map(|x| x.clone().into()).collect::<Vec<f64>>();
-        Ok( self
-            .par_iter().enumerate()
+        let mut wsum = 0_f64;
+        let fws = ws.iter().map(|x|{
+            let fx = x.clone().into();
+            wsum += fx;
+            fx }).collect::<Vec<f64>>();
+        Ok( (self.len() as f64) * self
+            .iter().enumerate()
             .map(|(i,p)| fws[i]*p.vdist(wgm))
             .collect::<Vec<f64>>()
-            .median()?/fws.median()?
+            .median()?/wsum //fws.median()?
         ) 
     }
 
     /// wstdgm mean of weighted deviations from (weighted) gm: data spread estimator.
     fn wstdgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
-            if self.len() != ws.len() { 
-                return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
-            let fws = ws.iter().map(|x| x.clone().into()).collect::<Vec<f64>>();       
-            Ok( self
-                .iter().enumerate()
-                .map(|(i,p)| fws[i]*p.vdist(wgm))
-                .sum::<f64>()/fws.iter().sum::<f64>()
-            ) 
+        if self.len() != ws.len() { 
+            return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
+        let mut wsum = 0_f64;
+        let fws = ws.iter().map(|x|{
+            let fx = x.clone().into();
+            wsum += fx;
+            fx }).collect::<Vec<f64>>(); 
+        Ok( self
+            .iter().enumerate()
+            .map(|(i,p)| fws[i]*p.vdist(wgm))
+            .sum::<f64>()/wsum
+        ) 
     }
 
     /// Symmetric covariance matrix. Becomes comediance when argument `mid`  

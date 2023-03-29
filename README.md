@@ -328,8 +328,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.46** - Simplified and replaced `agnlestat` -> `anglemad`, `vcorrsim` -> `uncorrmad`,
- `correlations` -> `uncorrelations`.
+* **Version 1.2.47** - Added `scalar_fn` and `vector_fn` to trait `VecVec`. These apply arbitrary scalar valued or vector valued closures to all vectors in self. This increased generality allows some code rationalization.
 
 * **Version 1.2.45** - Completed trait bounds relaxation and simplification. Some minor documentation improvements.
 
@@ -337,7 +336,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 1.2.43** - Removed `pseudoscalar` method. The `sine` method now computes the correct oriented magnitude of the 2-blade directly from the wedge product. Added geometric product `geometric`. Added some methods to struct `TriangMat` for completeness. In particular, `eigenvalues` and `determinant`, which are both easily obtained after successful Cholesky decomposition.
 
-* **Version 1.2.42** - Added `wedge` (product of Exterior Algebra), `pseudoscalar` and `sine` to trait Vecg. The sine method now always returns the correct antireflexive sign, in any number of dimensions. The sign flips when the order of the vector operands is exchanged.
+* **Version 1.2.42** - Added `wedge` (product of Exterior Algebra), `pseudoscalar` and `sine` to trait Vecg. The sine method now always returns the correct anti reflexive sign, in any number of dimensions. The sign flips when the order of the vector operands is exchanged.
 
 * **Version 1.2.41** - Added `anglestat` to `VecVecg` trait. Added convenience function `re_error`. Relaxed trait bounds in `Vecg` trait: `U:Copy -> U:Clone`. Renamed `tukeydot`,`tukeyvec`,`wtukeyvec` to more descriptive `sigdot`,`sigvec`,`wsigvec` and made them include orthogonal points.
 

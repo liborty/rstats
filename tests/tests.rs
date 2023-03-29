@@ -314,9 +314,8 @@ fn vecvec() -> Result<(), RE> {
         transppt.dependencies(&outcomes)?.gr()
     );
     println!(
-        "Uncorrelations with outcomes:\n{}",
-        transppt.uncorrelations(&outcomes)?.gr()
-    );
+        "Correlations with outcomes:\n{}",
+        transppt.scalar_fn(&mut |column| Ok(column.correlation(&outcomes)))?.gr());
     let (median, _vsum, recips) = pts.gmparts(EPS);
     let (eccstd, eccmed, eccecc) = pts.eccinfo(&median[..])?;
     let medoid = &pts[eccecc.minindex];
@@ -372,7 +371,7 @@ fn vecvec() -> Result<(), RE> {
 
     println!(
         "\nMedoid, outlier and radii summary:\n{eccecc}\nRadii centroid {eccstd}\nRadii median   {eccmed}");
-    let radsindex = pts.radii(&median).hashsort_indexed(&mut |x| *x);
+    let radsindex = pts.radii(&median)?.hashsort_indexed(&mut |x| *x);
     println!(
         "Radii ratio:         {GR}{}{UN}",
         pts.radius(radsindex[0], &median)? / pts.radius(radsindex[radsindex.len() - 1], &median)?
@@ -389,7 +388,7 @@ fn vecvec() -> Result<(), RE> {
     println!("Outlier's radius:    {}", outlier.vdist(&median).gr());
     println!("Outlier to Medoid:   {}", outlier.vdist(medoid).gr());
 
-    let seccs = pts.radii(&median).sorth(&mut noop, true);
+    let seccs = pts.radii(&median)?.sorth(&mut noop, true);
     // println!("\nSorted eccs: {}\n", seccs));
     let lqcnt = seccs.binsearch(&(eccmed.centre - eccmed.dispersion));
     println!(
@@ -441,12 +440,8 @@ fn vecvec() -> Result<(), RE> {
         contribs.ameanstd()?,
         contribs.medstats()?
     );
-    println!("\nMad of cosines with gm: {}",pts.anglemad(&median)?.gr()); 
-    println!("Mad of zeromedian points cosines with gm: {}\n",
-        pts.translate(&median)?.anglemad(&median)?.gr());
-    println!("Mad of uncorrelations with gm: {}",pts.uncorrmad(&median)?.gr()); 
-    println!("Mad of zeromedian points uncorrelations with gm: {}\n",
-        pts.translate(&median)?.uncorrmad(&median)?.gr()); 
+    println!("\nMean div with gm: {}",pts.divs(&median)?.ameanstd()?); 
+    println!("Median div with gm: {}",pts.divs(&median)?.medstats()?); 
     Ok(())
 }
 

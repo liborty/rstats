@@ -9,6 +9,18 @@ where
     Vec<Vec<T>>: IntoParallelIterator,
     Vec<T>: IntoParallelIterator
 {
+    /// Maps scalar valued closure onto all vectors in self and collects
+    fn scalar_fn(self,f: &mut impl Fn(&[T]) -> Result<f64,RE>) -> Result<Vec<f64>,RE> {
+        self.iter().map(|s|-> Result<f64,RE> {
+            f(s) }).collect::<Result<Vec<f64>,RE>>()
+    }
+
+    /// Maps vector valued closure onto all vectors in self and collects
+    fn vector_fn(self,f: &mut impl Fn(&[T]) -> Result<Vec<f64>,RE>) -> Result<Vec<Vec<f64>>,RE> {
+        self.iter().map(|s|-> Result<Vec<f64>,RE> {
+            f(s) }).collect::<Result<Vec<Vec<f64>>,RE>>()
+    }    
+
     /// Selects a column by number
     fn column(self, cnum: usize) -> Vec<f64> {
         self.iter().map(|row| row[cnum].clone().into()).collect()
@@ -129,7 +141,7 @@ where
     /// Applies closure f to compute a scalar binary relation between all pairs of vector
     /// components of self.   
     /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
-    /// such as dependencies or anglestions.  
+    /// such as dependencies.  
     /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorrf64(v2)?)?`
     /// computes median correlations between all column vectors (features) in pts.
     fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<TriangMat, RE> {
@@ -138,7 +150,7 @@ where
             data: (0..self.len())
                 .into_par_iter()
                 .flat_map(|i| {
-                    (0..i + 1usize)
+                    (0..i+1)
                         .map(|j| f(&self[i], &self[j]))
                         .collect::<Vec<f64>>()
                 })
@@ -215,23 +227,16 @@ where
         dists
     }
 
-    /// Medoid and Outlier (Medout)
-    /// Medoid is the member point (point belonging to the set of points `self`),
-    /// which has the least sum of distances to all other points.
-    /// Outlier is the point with the greatest sum of distances.
-    /// In other words, they are the members nearest and furthest from the geometric median.
+    /// Points nearest and furthest from the geometric median.
     /// Returns struct MinMax{min,minindex,max,maxindex}
-    fn medout(self, gm: &[f64]) -> MinMax<f64> {
-        self.par_iter()
-            .map(|s| s.vdist::<f64>(gm))
-            .collect::<Vec<f64>>()
-            .minmax()
+    fn medout(self, gm: &[f64]) -> Result<MinMax<f64>,RE> {
+        Ok(self.scalar_fn(&mut |s| Ok(gm.vdist(s)))?.minmax())
     }
 
     /// Radius of a point specified by its subscript.    
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE> {
         if i > self.len() {
-            return Err(RError::DataError("radius: invalid subscript".to_owned()));
+            return Err(re_error("DataError","radius: invalid subscript"));
         }
         Ok(self[i].vdist::<f64>(gm))
     }
@@ -239,10 +244,8 @@ where
     /// Exact radii (eccentricity) magnitudes for all member points from the Geometric Median.
     /// More accurate and usually faster as well than the approximate `eccentricities` above,
     /// especially when there are many points.
-    fn radii(self, gm: &[f64]) -> Vec<f64> {
-        self.iter()
-            .map(|s: &Vec<T>| gm.vdist(s))
-            .collect::<Vec<f64>>()
+    fn radii(self, gm: &[f64]) -> Result<Vec<f64>, RE> {
+        self.scalar_fn(&mut |s| Ok(gm.vdist(s)))  
     }
 
     /// Arith mean and std (in MStats struct), Median and MAD (in another MStats struct), Medoid and Outlier (in MinMax struct)
@@ -252,7 +255,7 @@ where
     where
         Vec<f64>: FromIterator<f64>,
     {
-        let rads: Vec<f64> = self.radii(gm);
+        let rads: Vec<f64> = self.radii(gm)?;
         Ok((rads.ameanstd()?, rads.medstats()?, rads.minmax()))
     }
 
@@ -305,25 +308,17 @@ where
     /// madgm median of distances from gm: stable nd data spread measure
     fn madgm(self, gm: &[f64]) -> Result<f64, RE> {
         if self.is_empty() { 
-            return Err(RError::NoDataError("stdgm given zero length vec!".to_owned())); };     
-        Ok( self
-            .iter()
-            .map(|p| p.vdist::<f64>(gm))
-            .collect::<Vec<f64>>()
-            .median()?
-        )
-    }
+            return Err(re_error("NoDataError","madgm given zero length vec!")); };     
+        Ok(self.radii(gm)?.median()?)
+     }
 
     /// stdgm mean of distances from gm: nd data spread measure, aka nd standard deviation
     fn stdgm(self, gm: &[f64]) -> Result<f64,RE> { 
         if self.is_empty() { 
-            return Err(RError::NoDataError("stdgm given zero length vec!".to_owned())); };     
-        Ok( self
-            .iter()
-            .map(|p| p.vdist::<f64>(gm))
-            .sum::<f64>()/self.len() as f64
-        ) 
-}
+            return Err(re_error("NoDataError","stdgm given zero length vec!")); };     
+        Ok( self.iter()
+            .map(|s| s.vdist(gm)).sum::<f64>()/self.len() as f64 ) 
+    }
 
     /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.
     /// Defining plane of a point A goes through A and is normal to the zero median vector **a**.      
