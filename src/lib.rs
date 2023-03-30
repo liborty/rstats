@@ -338,6 +338,12 @@ pub trait VecVec<T> {
 /// Methods applicable to slice of vectors of generic end type, plus one other argument
 /// of a similar kind
 pub trait VecVecg<T, U> {
+    /// Scalar valued closure for all vectors in self, multiplied by their weights
+    fn scalar_wfn(self,ws: &[U],f: &mut impl Fn(&[T]) -> Result<f64,RE>)
+        -> Result<(Vec<f64>,f64),RE>;
+    /// Vector valued closure for all vectors in self, multiplied by their weights
+    fn vector_wfn(self,v: &[U],f: &mut impl Fn(&[T]) -> Result<Vec<f64>,RE>)
+        -> Result<(Vec<Vec<f64>>,f64),RE>;
     /// Leftmultiply (column) vector v by (rows of) matrix self
     fn leftmultv(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// Rightmultiply (row) vector v by (columns of) matrix self
@@ -354,6 +360,8 @@ pub trait VecVecg<T, U> {
     fn translate(self, m: &[U]) -> Result<Vec<Vec<f64>>, RE>;
     /// 1.0-dotproducts with **v**, in range [0,2] 
     fn divs(self,v: &[U]) -> Result<Vec<f64>,RE>; 
+    /// median of weighted 1.0-dotproduct of **v**, with all in self
+    fn wdivsmed(self, ws:&[U], v: &[U]) -> Result<f64,RE>; 
     /// Proportions of points along each +/-axis (hemisphere)
     fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
     /// Dependencies of vector m on each vector in self

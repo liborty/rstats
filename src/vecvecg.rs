@@ -11,17 +11,41 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     Vec<Vec<U>>: IntoParallelIterator,
     Vec<U>: IntoParallelIterator {
 
-    /// Leftmultiply (column) vector v by (rows of) matrix self
-    fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
-        if self[0].len() != v.len() { return Err(RError::DataError(
-            "leftmultv dimensions mismatch".to_owned())); };
-        Ok(self.par_iter().map(|s| s.dotp(v)).collect())
+    /// Scalar valued closure for all vectors in self, multiplied by their weights
+    /// Returns also the sum of weights
+    fn scalar_wfn(self,ws: &[U],f: &mut impl Fn(&[T]) -> Result<f64,RE>)
+        -> Result<(Vec<f64>,f64),RE> {
+        let mut wsum = 0_f64;
+        let resvec = self.iter().zip(ws).map(|(s,w)|-> Result<f64,RE> {
+            let wf = w.clone().into();
+            wsum += wf;
+            Ok(wf*f(s)?) }).collect::<Result<Vec<f64>,RE>>()?;
+        Ok((resvec,wsum))
     }
 
-    /// Rightmultiply (row) vector v by columns of matrix self
+    /// Vector valued closure for all vectors in self, multiplied by their weights
+    fn vector_wfn(self,v: &[U],f: &mut impl Fn(&[T]) -> Result<Vec<f64>,RE>)
+        -> Result<(Vec<Vec<f64>>,f64),RE> {
+        let mut wsum = 0_f64;
+        let resvecvec = self.iter().zip(v).map(|(s,w)|-> Result<Vec<f64>,RE> {
+            let wf = w.clone().into();
+            wsum += wf;            
+            Ok(f(s)?.smult(wf))}).collect::<Result<Vec<Vec<f64>>,RE>>()?;
+        Ok((resvecvec,wsum))
+    }    
+
+    /// Rows of matrix self multiplying (column) vector v
+    fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
+        if self[0].len() != v.len() { 
+            return Err(re_error("DataError","leftmultv dimensions mismatch")); };
+        Ok(self.iter().map(|s| s.dotp(v)).collect())
+    }
+
+    /// Row vector v multipying columns of matrix self
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
-        if v.len() != self.len() { return Err(RError::DataError("rightmultv dimensions mismatch".to_owned())); }; 
-        Ok((0..self[0].len()).into_par_iter().map(|colnum| v.columnp(colnum,self)).collect())
+        if v.len() != self.len() { 
+            return Err(re_error("DataError","rightmultv dimensions mismatch")); }; 
+        Ok((0..self[0].len()).map(|colnum| v.columnp(colnum,self)).collect())
     }
 
     /// Rectangular Matrices multiplication: self * m.
@@ -29,14 +53,15 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// and columns of m: `m.len()` do not match.
     /// Result dimensions are self.len() x m[0].len() 
     fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RE> {
-        if self[0].len() != m.len() { return Err(RError::DataError("matmult dimensions mismatch".to_owned())); }; 
+        if self[0].len() != m.len() { 
+            return Err(re_error("DataError","matmult dimensions mismatch")); }; 
         Ok(self.par_iter().map(|srow| 
             (0..m[0].len()).map(|colnum| srow.columnp(colnum,m)).collect()
             ).collect::<Vec<Vec<f64>>>()) 
     }
 
-    /// Weighted sum of nd points (or vectors).  
-    /// Weights are associated with points, not coordinates
+    /// Weighted sum.  
+    /// Weights are associated with vectors of self, not with coordinates
     fn wsumv(self,ws: &[U]) -> Vec<f64> {
         let mut resvec = vec![0_f64;self[0].len()]; 
         for (v,w) in self.iter().zip(ws) { 
@@ -92,14 +117,25 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         self.vector_fn(&mut |s| Ok(s.vsub(m)))   
     }
 
-    /// Mad of 1.0-dotproducts with **v**, in range [0,2] 
-    fn divs(self,v: &[U]) -> Result<Vec<f64>,RE> { 
+    /// 1.0-dotproduct with **v**, in range [0,2] 
+    fn divs(self, v: &[U]) -> Result<Vec<f64>,RE> { 
         if self.is_empty() { 
-            return Err(re_error("empty","anglestat given no points")); }; 
+            return Err(re_error("empty","divs given no points")); }; 
         if self[0].len() != v.len() { 
-            return Err(re_error("size","anglestat dimensions mismatch")); }; 
+            return Err(re_error("size","divs dimensions mismatch")); }; 
         let uv = v.vunit()?;
         self.scalar_fn(&mut |p| Ok(1.0-p.vunit()?.dotp(&uv)))
+    }
+
+    /// median of weighted 1.0-dotproducts of **v**, with all in self
+    fn wdivsmed(self, ws:&[U], v: &[U]) -> Result<f64,RE> { 
+        if self.is_empty() { 
+            return Err(re_error("empty","wdivsmed given no points")); }; 
+        if self[0].len() != v.len() { 
+            return Err(re_error("size","wdivsmed dimensions mismatch")); }; 
+        let uv = v.vunit()?;
+        let (vals,wsum) = self.scalar_wfn(ws, &mut |p| Ok(1.0-p.vunit()?.dotp(&uv)))?;
+        Ok((self.len() as f64)*vals.median()?/wsum)
     }
 
     /// Proportions of points along each +/-axis (hemisphere).
@@ -143,8 +179,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// Individual distances from any point v, typically not a member, to all the members of self.    
     fn dists(self, v:&[U]) -> Result<Vec<f64>,RE> {
-        if self[0].len() != v.len() { return Err(RError::DataError("dists dimensions mismatch".to_owned())); }
-        Ok(self.par_iter().map(|p| p.vdist(v)).collect())
+        if self[0].len() != v.len() { 
+            return Err(re_error("DataError","dists dimensions mismatch")); }
+        self.scalar_fn(&mut |p| Ok(p.vdist(v)))
     }
 
     /// Sum of distances from any single point v, typically not a member, 
@@ -153,8 +190,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// This is relatively expensive measure to compute.
     /// The radius (distance) from gm is far more efficient, once gm has been found.
     fn distsum(self, v: &[U]) -> Result<f64,RE> {
-        if self[0].len() != v.len() { return Err(RError::DataError("distsum dimensions mismatch".to_owned())); }
-        Ok(self.par_iter().map(|p| p.vdist(v)).sum::<f64>())
+        if self[0].len() != v.len() { 
+            return Err(re_error("DataError","distsum dimensions mismatch")); }
+        Ok(self.iter().map(|p| p.vdist(v)).sum::<f64>())
     }
 
     /// Sorted weighted radii to all member points from the Geometric Median.
@@ -321,6 +359,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             wsum += fx;
             fx }).collect::<Vec<f64>>();
         Ok( (self.len() as f64) * self
+     //       .scalar_fn()
             .iter().enumerate()
             .map(|(i,p)| fws[i]*p.vdist(wgm))
             .collect::<Vec<f64>>()

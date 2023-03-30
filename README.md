@@ -328,7 +328,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.47** - Added `scalar_fn` and `vector_fn` to trait `VecVec`. These apply arbitrary scalar valued or vector valued closures to all vectors in self. This increased generality allows some code rationalization.
+* **Version 1.2.48** - Added also weighted `scalar_wfn` and `vector_wfn` to trait `VecVecg`. Also `wdivsmed`.
+
+* **Version 1.2.47** - Added `scalar_fn` and `vector_fn` to trait `VecVec`. These apply arbitrary scalar valued or vector valued closures to all vectors in self. This generality allows some code rationalization.
 
 * **Version 1.2.45** - Completed trait bounds relaxation and simplification. Some minor documentation improvements.
 
