@@ -361,7 +361,7 @@ pub trait VecVecg<T, U> {
     /// 1.0-dotproducts with **v**, in range [0,2] 
     fn divs(self,v: &[U]) -> Result<Vec<f64>,RE>; 
     /// median of weighted 1.0-dotproduct of **v**, with all in self
-    fn wdivsmed(self, ws:&[U], v: &[U]) -> Result<f64,RE>; 
+    fn wdivsmed(self, ws:&[U], v: &[f64]) -> Result<f64,RE>; 
     /// Proportions of points along each +/-axis (hemisphere)
     fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
     /// Dependencies of vector m on each vector in self

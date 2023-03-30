@@ -128,7 +128,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     }
 
     /// median of weighted 1.0-dotproducts of **v**, with all in self
-    fn wdivsmed(self, ws:&[U], v: &[U]) -> Result<f64,RE> { 
+    fn wdivsmed(self, ws:&[U], v: &[f64]) -> Result<f64,RE> { 
         if self.is_empty() { 
             return Err(re_error("empty","wdivsmed given no points")); }; 
         if self[0].len() != v.len() { 
