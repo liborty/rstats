@@ -32,7 +32,56 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             wsum += wf;            
             Ok(f(s)?.smult(wf))}).collect::<Result<Vec<Vec<f64>>,RE>>()?;
         Ok((resvecvec,wsum))
-    }    
+    } 
+
+    /// 1.0-dotproduct with **v**, in range [0,2] 
+    fn divs(self, v: &[U]) -> Result<Vec<f64>,RE> { 
+        if self.is_empty() { 
+            return Err(re_error("empty","divs given no points")); }; 
+        if self[0].len() != v.len() { 
+            return Err(re_error("size","divs dimensions mismatch")); }; 
+        let uv = v.vunit()?;
+        self.scalar_fn(&mut |p| Ok(1.0-p.vunit()?.dotp(&uv)))
+    }
+
+    /// median of weighted 1.0-dotproducts of **v**, with all in self
+    fn wdivs(self, ws:&[U], v: &[f64]) -> Result<(Vec<f64>,f64),RE> { 
+        if self.is_empty() { 
+            return Err(re_error("empty","wdivs given no points")); }; 
+        if self[0].len() != v.len() { 
+            return Err(re_error("size","wdivs dimensions mismatch")); }; 
+        let uv = v.vunit()?;
+        self.scalar_wfn(ws, &mut |p| Ok(1.0-p.vunit()?.dotp(&uv)))
+    }
+
+    /// median of weighted cos deviations from **v**
+    fn wdivsmed(self, ws: &[U], v: &[f64]) -> Result<f64,RE> { 
+        if self.is_empty() { 
+            return Err(re_error("empty","wmeddivs given no points")); }; 
+        if self[0].len() != v.len() { 
+            return Err(re_error("size","wmeddivs dimensions mismatch")); }; 
+        let (values,wsum) = self.wdivs(ws,v)?;
+        Ok((self.len() as f64) * values.median()?/wsum)
+    }
+ 
+    /// weighted radii to all points in self
+    fn wradii(self, ws:&[U], gm: &[f64]) -> Result<(Vec<f64>,f64),RE> {
+        if self.is_empty() { 
+            return Err(re_error("empty","wradii given no points")); }; 
+        if self[0].len() != gm.len() { 
+            return Err(re_error("size","wradii dimensions mismatch")); }; 
+        self.scalar_wfn(ws, &mut |p| Ok(p.vdist(gm)))
+    }
+
+    /// wmadgm median of weighted deviations from (weighted) gm: stable nd data spread estimator.
+    fn wmadgm(self, ws: &[U], gm: &[f64]) -> Result<f64,RE> { 
+        if self.is_empty() { 
+            return Err(re_error("empty","wmadgm given no points")); }; 
+        if self[0].len() != gm.len() { 
+            return Err(re_error("size","wmadgm dimensions mismatch")); }; 
+        let (values,wsum) = self.scalar_wfn(ws, &mut |p| Ok(p.vdist(gm)))?;
+        Ok((self.len() as f64) * values.median()?/wsum)
+    }
 
     /// Rows of matrix self multiplying (column) vector v
     fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
@@ -115,27 +164,6 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         if self[0].len() != m.len() { 
             return Err(re_error("DataError","translate dimensions mismatch")); }; 
         self.vector_fn(&mut |s| Ok(s.vsub(m)))   
-    }
-
-    /// 1.0-dotproduct with **v**, in range [0,2] 
-    fn divs(self, v: &[U]) -> Result<Vec<f64>,RE> { 
-        if self.is_empty() { 
-            return Err(re_error("empty","divs given no points")); }; 
-        if self[0].len() != v.len() { 
-            return Err(re_error("size","divs dimensions mismatch")); }; 
-        let uv = v.vunit()?;
-        self.scalar_fn(&mut |p| Ok(1.0-p.vunit()?.dotp(&uv)))
-    }
-
-    /// median of weighted 1.0-dotproducts of **v**, with all in self
-    fn wdivsmed(self, ws:&[U], v: &[f64]) -> Result<f64,RE> { 
-        if self.is_empty() { 
-            return Err(re_error("empty","wdivsmed given no points")); }; 
-        if self[0].len() != v.len() { 
-            return Err(re_error("size","wdivsmed dimensions mismatch")); }; 
-        let uv = v.vunit()?;
-        let (vals,wsum) = self.scalar_wfn(ws, &mut |p| Ok(1.0-p.vunit()?.dotp(&uv)))?;
-        Ok((self.len() as f64)*vals.median()?/wsum)
     }
 
     /// Proportions of points along each +/-axis (hemisphere).
@@ -347,40 +375,6 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             g = nextg;
             recsum = nextrecsum;            
         }
-    }
-
-    /// wmadgm median of weighted deviations from (weighted) gm: stable nd data spread estimator.
-    fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
-        if self.len() != ws.len() { 
-            return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
-        let mut wsum = 0_f64;
-        let fws = ws.iter().map(|x|{
-            let fx = x.clone().into();
-            wsum += fx;
-            fx }).collect::<Vec<f64>>();
-        Ok( (self.len() as f64) * self
-     //       .scalar_fn()
-            .iter().enumerate()
-            .map(|(i,p)| fws[i]*p.vdist(wgm))
-            .collect::<Vec<f64>>()
-            .median()?/wsum //fws.median()?
-        ) 
-    }
-
-    /// wstdgm mean of weighted deviations from (weighted) gm: data spread estimator.
-    fn wstdgm(self, ws: &[U], wgm: &[f64]) -> Result<f64,RE> { 
-        if self.len() != ws.len() { 
-            return Err(RError::DataError("ws length does not match the data!".to_owned())); }; 
-        let mut wsum = 0_f64;
-        let fws = ws.iter().map(|x|{
-            let fx = x.clone().into();
-            wsum += fx;
-            fx }).collect::<Vec<f64>>(); 
-        Ok( self
-            .iter().enumerate()
-            .map(|(i,p)| fws[i]*p.vdist(wgm))
-            .sum::<f64>()/wsum
-        ) 
     }
 
     /// Symmetric covariance matrix. Becomes comediance when argument `mid`  

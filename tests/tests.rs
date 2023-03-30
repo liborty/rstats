@@ -440,8 +440,10 @@ fn vecvec() -> Result<(), RE> {
         contribs.ameanstd()?,
         contribs.medstats()?
     );
-    println!("\nMean div with gm: {}",pts.divs(&median)?.ameanstd()?); 
-    println!("Median div with gm: {}",pts.divs(&median)?.medstats()?); 
+    println!("\nWeighted madgm: {}",pts.wmadgm(&outcomes,&median)?.gr());
+    println!("Weighted divs median: {}",pts.wdivsmed(&outcomes,&median)?.gr()); 
+    let (divs,wsum) = pts.wdivs(&outcomes,&median)?;
+    println!("Weighted divs mean:   {}",(divs.iter().sum::<f64>()/wsum).gr());    
     Ok(())
 }
 

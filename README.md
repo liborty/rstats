@@ -328,6 +328,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.49** - Added `wradii`. Some more code rationalizations.
+
 * **Version 1.2.48** - Added also weighted `scalar_wfn` and `vector_wfn` to trait `VecVecg`. Also `wdivsmed`.
 
 * **Version 1.2.47** - Added `scalar_fn` and `vector_fn` to trait `VecVec`. These apply arbitrary scalar valued or vector valued closures to all vectors in self. This generality allows some code rationalization.
@@ -371,13 +373,3 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 1.2.26** - More multithreading. Changed `struct TriangMat` to also allow compact representation of antisymmetric matrices (for future use). Updated dependence to the latest `medians 2.1.0`.
 
 * **Version 1.2.25** - added dependency on `rayon` crate which has somewhat increased the footprint but there will be significant speed ups due to parallel execution. Some have been introduced already.
-
-* **Version 1.2.24** - added `st_error` method to trait Vecg. It is a generalization of standard error to 'nd'. The central tendency is (usually) the geometric median and the spread is (usually) MADGM. Also tidied up `hulls`. (Renamed in version 1.2.32 to more accurate t_statistic).
-
-* **Version 1.2.23** - `convex_hull => hulls`. Now computes both inner and outer hulls. See above for definitions. Also, added `st_error` to auxiliary functions.
-
-* **Version 1.2.22** - Improved Display of TriangMat - it now prints just the actual triangular form. Other minor cosmetic improvements.
-
-* **Version 1.2.21** - Updated dependency `medians` to v 2.0.2 and made the necessary compatibility changes (see Quantify Functions above). Moved all remaining methods to do with 1d medians from here to crate `medians`. Removed auxiliary function i64tof64, as it was a trivial mapping of `as f64`. Made `dfdt` smoothed and median based.
-
-* **Version 1.2.20** - Added `dfdt` to `Stats` trait (approximate weighted time series derivative at the last point). Added automatic conversions (with `?`) of any potential errors returned from crates `ran`, `medians` and `times`. Now demonstrated in `tests.rs`.

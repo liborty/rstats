@@ -19,7 +19,14 @@ where
     fn vector_fn(self,f: &mut impl Fn(&[T]) -> Result<Vec<f64>,RE>) -> Result<Vec<Vec<f64>>,RE> {
         self.iter().map(|s|-> Result<Vec<f64>,RE> {
             f(s) }).collect::<Result<Vec<Vec<f64>>,RE>>()
-    }    
+    } 
+
+    /// Exact radii magnitudes to all member points from the Geometric Median.
+    /// More accurate and usually faster as well than the approximate `eccentricities` above,
+    /// especially when there are many points.
+    fn radii(self, gm: &[f64]) -> Result<Vec<f64>, RE> {
+        self.scalar_fn(&mut |s| Ok(gm.vdist(s)))  
+    }   
 
     /// Selects a column by number
     fn column(self, cnum: usize) -> Vec<f64> {
@@ -239,13 +246,6 @@ where
             return Err(re_error("DataError","radius: invalid subscript"));
         }
         Ok(self[i].vdist::<f64>(gm))
-    }
-
-    /// Exact radii (eccentricity) magnitudes for all member points from the Geometric Median.
-    /// More accurate and usually faster as well than the approximate `eccentricities` above,
-    /// especially when there are many points.
-    fn radii(self, gm: &[f64]) -> Result<Vec<f64>, RE> {
-        self.scalar_fn(&mut |s| Ok(gm.vdist(s)))  
     }
 
     /// Arith mean and std (in MStats struct), Median and MAD (in another MStats struct), Medoid and Outlier (in MinMax struct)
