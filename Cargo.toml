@@ -21,7 +21,7 @@ maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
 rayon = "1.7"
-indxvec = "1.5"
+indxvec = "1.7"
 medians = "2.2"   
 ran = "1.1" # {path = "../random"}
 [dev-dependencies]
