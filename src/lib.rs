@@ -215,13 +215,13 @@ pub trait Vecg {
     /// Spearman rho correlation.
     fn spearmancorr<U: PartialOrd + Clone + Into<f64>>(self, v: &[U]) -> f64;
     /// Change to gm that adding point self will cause
-    fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Vec<f64>;
+    fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>,RE>;
     /// Normalized magnitude of change to gm that adding point self will cause
-    fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> f64;
+    fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64,RE>;
     /// Contribution of removing point self
-    fn contribvec_oldpt(self, gm: &[f64], recips: f64) -> Vec<f64>;
+    fn contribvec_oldpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>,RE>;
     /// Normalized contribution of removing point self (as negative scalar)
-    fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> f64;
+    fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64,RE>;
     /// Householder reflect
     fn house_reflect<U: Clone + PartialOrd + Into<f64>>(self, x: &[U]) -> Vec<f64>;
 }
@@ -269,9 +269,9 @@ pub trait Vecu8 {
 /// Operations on a whole set of multidimensional vectors.
 pub trait VecVec<T> {
     /// Maps a scalar valued closure onto all vectors in self
-    fn scalar_fn(self, f: &mut impl Fn(&[T]) -> Result<f64, RE>) -> Result<Vec<f64>, RE>;
+    fn scalar_fn(self, f: impl Fn(&[T]) -> Result<f64, RE>) -> Result<Vec<f64>, RE>;
     /// Maps vector valued closure onto all vectors in self and collects
-    fn vector_fn(self, f: &mut impl Fn(&[T]) -> Result<Vec<f64>, RE>) -> Result<Vec<Vec<f64>>, RE>;
+    fn vector_fn(self, f: impl Fn(&[T]) -> Result<Vec<f64>, RE>) -> Result<Vec<Vec<f64>>, RE>;
     /// Exact radii magnitudes to all member points from the Geometric Median.
     fn radii(self, gm: &[f64]) -> Result<Vec<f64>, RE>;
     /// Selects a column by number
@@ -341,13 +341,13 @@ pub trait VecVecg<T, U> {
     fn scalar_wfn(
         self,
         ws: &[U],
-        f: &mut impl Fn(&[T]) -> Result<f64, RE>,
+        f: impl Fn(&[T]) -> Result<f64, RE>,
     ) -> Result<(Vec<f64>, f64), RE>;
     /// Vector valued closure for all vectors in self, multiplied by their weights
     fn vector_wfn(
         self,
         v: &[U],
-        f: &mut impl Fn(&[T]) -> Result<Vec<f64>, RE>,
+        f: impl Fn(&[T]) -> Result<Vec<f64>, RE>,
     ) -> Result<(Vec<Vec<f64>>, f64), RE>;
     /// 1.0-dotproducts with **v**, in range [0,2]
     fn divs(self, v: &[U]) -> Result<Vec<f64>, RE>;

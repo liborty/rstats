@@ -31,8 +31,8 @@ fn u8() -> Result<(), RE> {
     println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2)?.gr());
     println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
     println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8
-    println!("Median v1: {}", v1.as_slice().medstats(&mut |&x| x.into())?);
-    println!("Median v2: {}", v2.as_slice().medstats(&mut fromop)?);
+    println!("Median v1: {}", v1.as_slice().medstats(|&x| x.into())?);
+    println!("Median v2: {}", v2.as_slice().medstats(fromop)?);
     let d = 5_usize;
     let n = 7_usize;
     println!(
@@ -127,13 +127,13 @@ fn ustats() -> Result<(), RE> {
     println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
     println!(
         "Median:          {GR}{:>14.10}{UN}",
-        v1.as_slice().median(&mut fromop)?
+        v1.as_slice().median(fromop)?
     );
     println!("Geometric mean:  {GR}{:>14.10}{UN}", v1.gmean()?);
     println!("Harmonic mean:   {GR}{:>14.10}{UN}", v1.hmean()?);
     println!("Magnitude:       {GR}{:>14.10}{UN}", v1.vmag());
     println!("Arithmetic {}", v1.ameanstd()?);
-    println!("Median     {}", v1.as_slice().medstats(&mut fromop)?);
+    println!("Median     {}", v1.as_slice().medstats(fromop)?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
@@ -166,7 +166,7 @@ fn genericstats() -> Result<(), RE> {
     let mut v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?);
-    println!("Median\t\t{}", v.as_slice().medstats(&mut fromop)?);
+    println!("Median\t\t{}", v.as_slice().medstats(fromop)?);
     println!("Geometric\t{}", v.gmeanstd()?);
     println!("Harmonic\t{}", v.hmeanstd()?);
     println!("Weighted Arit.\t{}", v.awmeanstd()?);
@@ -315,7 +315,7 @@ fn vecvec() -> Result<(), RE> {
     );
     println!(
         "Correlations with outcomes:\n{}",
-        transppt.scalar_fn(&mut |column| Ok(column.correlation(&outcomes)))?.gr());
+        transppt.scalar_fn(|column| Ok(column.correlation(&outcomes)))?.gr());
     let (median, _vsum, recips) = pts.gmparts(EPS);
     let (eccstd, eccmed, eccecc) = pts.eccinfo(&median[..])?;
     let medoid = &pts[eccecc.minindex];
@@ -371,7 +371,7 @@ fn vecvec() -> Result<(), RE> {
 
     println!(
         "\nMedoid, outlier and radii summary:\n{eccecc}\nRadii centroid {eccstd}\nRadii median   {eccmed}");
-    let radsindex = pts.radii(&median)?.hashsort_indexed(&mut |x| *x);
+    let radsindex = pts.radii(&median)?.hashsort_indexed(|x| *x);
     println!(
         "Radii ratio:         {GR}{}{UN}",
         pts.radius(radsindex[0], &median)? / pts.radius(radsindex[radsindex.len() - 1], &median)?
@@ -388,7 +388,7 @@ fn vecvec() -> Result<(), RE> {
     println!("Outlier's radius:    {}", outlier.vdist(&median).gr());
     println!("Outlier to Medoid:   {}", outlier.vdist(medoid).gr());
 
-    let seccs = pts.radii(&median)?.sorth(&mut noop, true);
+    let seccs = pts.radii(&median)?.sorth(noop, true);
     // println!("\nSorted eccs: {}\n", seccs));
     let lqcnt = seccs.binsearch(&(eccmed.centre - eccmed.dispersion));
     println!(
@@ -413,27 +413,23 @@ fn vecvec() -> Result<(), RE> {
     let nf = n as f64;
 
     println!(
-        "\nContribution of adding acentroid:   {}",
-        acentroid.contrib_newpt(&median, recips, nf).gr()
+        "\nContribution of adding acentroid:    {}",
+        acentroid.contrib_newpt(&median, recips, nf)?.gr()
     );
     println!(
-        "Contribution of adding gcentroid:   {}",
-        gcentroid.contrib_newpt(&median, recips, nf).gr()
+        "Contribution of adding gcentroid:    {}",
+        gcentroid.contrib_newpt(&median, recips, nf)?.gr()
     );
     println!(
-        "Contribution of adding outlier:     {}",
-        outlier.contrib_newpt(&median, recips, nf).gr()
-    );
-    println!(
-        "Contribution of removing outlier:  {}",
-        outlier
-            .contrib_oldpt(&median, recips + 1.0 / median.vdist(outlier), nf + 1.0)
+        "Contribution of removing gcentroid: {}",
+        gcentroid
+            .contrib_oldpt(&median, recips + 1.0 / median.vdist(&gcentroid), nf)? 
             .gr()
     );
     let contribs = pts
         .iter()
-        .map(|p| p.contrib_oldpt(&median, recips, nf))
-        .collect::<Vec<f64>>();
+        .map(|p|-> Result<f64,RE> { p.contrib_oldpt(&median, recips, nf)})
+        .collect::<Result<Vec<f64>,RE>>()?;
     println!(
         "\nContributions of removing data points, summary:\n{}\nCentroid: {}\nMedian: {}",
         contribs.minmax(),

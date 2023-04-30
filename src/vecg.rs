@@ -2,7 +2,7 @@
 
 use crate::{
     error::{re_error, RError, RE},
-    fromop, Stats, TriangMat, Vecg,
+    fromop, Stats, TriangMat, Vecg
 };
 use indxvec::{Indices, Vecops};
 use medians::Median;
@@ -218,7 +218,7 @@ where
 
     /// We define vector median correlation similarity in the interval [0,1] as
     fn vcorrsim(self, v:Self) -> f64 {
-        (1.0 + self.mediancorr(v, &mut fromop).expect("vcorrsim: mediancorr failed")) / 2.0
+        (1.0 + self.mediancorr(v, fromop).expect("vcorrsim: mediancorr failed")) / 2.0
     }
 
     /// Lower triangular covariance matrix for a single vector.
@@ -431,46 +431,47 @@ where
     }
 
     /// Delta gm that adding point self will cause
-    fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Vec<f64> {
+    fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>,RE> {
         let dv = self.vsub::<f64>(gm);
         let mag = dv.vmag();
         if !mag.is_normal() {
-            return dv;
+            return Err(re_error("arith","point being added is coincident with gm"));
         };
-        let recip = 1f64 / mag; // adding new unit vector (to approximate zero vector)
-        dv.smult::<f64>(recip / (recips + recip)) // to unit v. and scaling by new sum of reciprocals
+        // adding new unit vector (to approximate zero vector) and rescaling
+        let recip = 1f64 / mag; 
+        Ok(dv.vunit()?.smult::<f64>(recip / (recips + recip))) 
     }
 
     /// Normalized magnitude of change to gm that adding point self will cause
-    fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> f64 {
+    fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64,RE> {
         let mag = self.vdist::<f64>(gm);
         if !mag.is_normal() {
-            return 0_f64;
+            return Err(re_error("arith","point being added is coincident with gm"));
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        (nf + 1.0) / (recips + recip)
+        Ok((nf + 1.0) / (recips + recip))
     }
 
     /// Delta gm caused by removing an existing set point self
-    fn contribvec_oldpt(self, gm: &[f64], recips: f64) -> Vec<f64> {
+    fn contribvec_oldpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>,RE> {
         let dv = self.vsub::<f64>(gm);
         let mag = dv.vmag();
         if !mag.is_normal() {
-            return dv;
+            return Err(re_error("arith","point being removed is coincident with gm")); 
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        dv.smult::<f64>(recip / (recip - recips)) // scaling
+        Ok(dv.vunit()?.smult::<f64>(recip / (recip - recips))) // scaling
     }
 
     /// Normalized Contribution that removing an existing set point p will make
     /// Is a negative number
-    fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> f64 {
+    fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64,RE> {
         let mag = self.vdist::<f64>(gm);
         if !mag.is_normal() {
-            return 0_f64;
+            return Err(re_error("arith","point being removed is coincident with gm")); 
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        (nf - 1.0) / (recip - recips)
+        Ok((nf - 1.0) / (recip - recips))
         // self.contribvec_oldpt(gm,recips,p).vmag()
     }
 

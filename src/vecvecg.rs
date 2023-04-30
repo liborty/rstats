@@ -13,7 +13,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// Scalar valued closure for all vectors in self, multiplied by their weights
     /// Returns also the sum of weights
-    fn scalar_wfn(self,ws: &[U],f: &mut impl Fn(&[T]) -> Result<f64,RE>)
+    fn scalar_wfn(self,ws: &[U],f: impl Fn(&[T]) -> Result<f64,RE>)
         -> Result<(Vec<f64>,f64),RE> {
         let mut wsum = 0_f64;
         let resvec = self.iter().zip(ws).map(|(s,w)|-> Result<f64,RE> {
@@ -24,7 +24,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     }
 
     /// Vector valued closure for all vectors in self, multiplied by their weights
-    fn vector_wfn(self,v: &[U],f: &mut impl Fn(&[T]) -> Result<Vec<f64>,RE>)
+    fn vector_wfn(self,v: &[U],f: impl Fn(&[T]) -> Result<Vec<f64>,RE>)
         -> Result<(Vec<Vec<f64>>,f64),RE> {
         let mut wsum = 0_f64;
         let resvecvec = self.iter().zip(v).map(|(s,w)|-> Result<Vec<f64>,RE> {
@@ -41,7 +41,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         if self[0].len() != v.len() { 
             return Err(re_error("size","divs dimensions mismatch")); }; 
         let uv = v.vunit()?;
-        self.scalar_fn(&mut |p| Ok(1.0-p.vunit()?.dotp(&uv)))
+        self.scalar_fn(|p| Ok(1.0-p.vunit()?.dotp(&uv)))
     }
 
     /// median of weighted 1.0-dotproducts of **v**, with all in self
@@ -51,7 +51,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         if self[0].len() != v.len() { 
             return Err(re_error("size","wdivs dimensions mismatch")); }; 
         let uv = v.vunit()?;
-        self.scalar_wfn(ws, &mut |p| Ok(1.0-p.vunit()?.dotp(&uv)))
+        self.scalar_wfn(ws,|p| Ok(1.0-p.vunit()?.dotp(&uv)))
     }
 
     /// median of weighted cos deviations from **v**
@@ -70,7 +70,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             return Err(re_error("empty","wradii given no points")); }; 
         if self[0].len() != gm.len() { 
             return Err(re_error("size","wradii dimensions mismatch")); }; 
-        self.scalar_wfn(ws, &mut |p| Ok(p.vdist(gm)))
+        self.scalar_wfn(ws, |p| Ok(p.vdist(gm)))
     }
 
     /// wmadgm median of weighted deviations from (weighted) gm: stable nd data spread estimator.
@@ -79,7 +79,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             return Err(re_error("empty","wmadgm given no points")); }; 
         if self[0].len() != gm.len() { 
             return Err(re_error("size","wmadgm dimensions mismatch")); }; 
-        let (values,wsum) = self.scalar_wfn(ws, &mut |p| Ok(p.vdist(gm)))?;
+        let (values,wsum) = self.scalar_wfn(ws,|p| Ok(p.vdist(gm)))?;
         Ok((self.len() as f64) * values.median()?/wsum)
     }
 
@@ -163,7 +163,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
      fn translate(self, m:&[U]) -> Result<Vec<Vec<f64>>,RE> { 
         if self[0].len() != m.len() { 
             return Err(re_error("DataError","translate dimensions mismatch")); }; 
-        self.vector_fn(&mut |s| Ok(s.vsub(m)))   
+        self.vector_fn(|s| Ok(s.vsub(m)))   
     }
 
     /// Proportions of points along each +/-axis (hemisphere).
@@ -209,7 +209,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn dists(self, v:&[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { 
             return Err(re_error("DataError","dists dimensions mismatch")); }
-        self.scalar_fn(&mut |p| Ok(p.vdist(v)))
+        self.scalar_fn(|p| Ok(p.vdist(v)))
     }
 
     /// Sum of distances from any single point v, typically not a member, 
@@ -233,7 +233,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         let wnorm = 1.0 / wf.iter().sum::<f64>(); 
         let mut res = self.iter().map(|s| wnorm*s.vdist::<f64>(gm))
             .collect::<Vec<f64>>();
-        res.muthashsort(&mut noop);
+        res.muthashsort(noop);
         Ok(res)
     } 
 

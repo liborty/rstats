@@ -87,7 +87,7 @@ where
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        let recmedian = 1.0 / self.median(&mut fromop)?;
+        let recmedian = 1.0 / self.median(fromop)?;
         let recmad = self
             .iter()
             .map(|x| -> Result<f64, RE> {
@@ -553,7 +553,7 @@ where
             weight += 1_f64;
             sumwx += weight * fx;
         }
-        Ok(sumwx / (sumn(len) as f64) - self.median(&mut fromop)?)
+        Ok(sumwx / (sumn(len) as f64) - self.median(fromop)?)
     }
 
     /// Householder reflector

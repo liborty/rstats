@@ -10,13 +10,13 @@ where
     Vec<T>: IntoParallelIterator
 {
     /// Maps scalar valued closure onto all vectors in self and collects
-    fn scalar_fn(self,f: &mut impl Fn(&[T]) -> Result<f64,RE>) -> Result<Vec<f64>,RE> {
+    fn scalar_fn(self,f: impl Fn(&[T]) -> Result<f64,RE>) -> Result<Vec<f64>,RE> {
         self.iter().map(|s|-> Result<f64,RE> {
             f(s) }).collect::<Result<Vec<f64>,RE>>()
     }
 
     /// Maps vector valued closure onto all vectors in self and collects
-    fn vector_fn(self,f: &mut impl Fn(&[T]) -> Result<Vec<f64>,RE>) -> Result<Vec<Vec<f64>>,RE> {
+    fn vector_fn(self,f: impl Fn(&[T]) -> Result<Vec<f64>,RE>) -> Result<Vec<Vec<f64>>,RE> {
         self.iter().map(|s|-> Result<Vec<f64>,RE> {
             f(s) }).collect::<Result<Vec<Vec<f64>>,RE>>()
     } 
@@ -25,7 +25,7 @@ where
     /// More accurate and usually faster as well than the approximate `eccentricities` above,
     /// especially when there are many points.
     fn radii(self, gm: &[f64]) -> Result<Vec<f64>, RE> {
-        self.scalar_fn(&mut |s| Ok(gm.vdist(s)))  
+        self.scalar_fn(|s| Ok(gm.vdist(s)))  
     }   
 
     /// Selects a column by number
@@ -237,7 +237,7 @@ where
     /// Points nearest and furthest from the geometric median.
     /// Returns struct MinMax{min,minindex,max,maxindex}
     fn medout(self, gm: &[f64]) -> Result<MinMax<f64>,RE> {
-        Ok(self.scalar_fn(&mut |s| Ok(gm.vdist(s)))?.minmax())
+        Ok(self.scalar_fn(|s| Ok(gm.vdist(s)))?.minmax())
     }
 
     /// Radius of a point specified by its subscript.    
@@ -333,7 +333,7 @@ where
     /// Similarly for the outer hull, where A and B simply swap roles.
     fn hulls(self) -> (Vec<usize>, Vec<usize>) {
         let sqradii = self.par_iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let mut radindex = sqradii.hashsort_indexed(&mut |x| *x); // ascending square radii
+        let mut radindex = sqradii.hashsort_indexed(|x| *x); // ascending square radii
         let innerindex = radindex
             .par_iter()
             .filter_map(|&b| {

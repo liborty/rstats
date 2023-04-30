@@ -216,35 +216,36 @@ Some methods implemented for `VecVecg` also produce `TriangMat` matrices, specif
 
 ## Quantify Functions (Dependency Injection)
 
-Most methods in `medians::Median` trait and `hashort` methods in `indxvec` crate require explicit closure to tell them how to quantify input data of any user end type T into f64. Variety of different quantifying methods can then be dynamically employed.
+Most methods in `medians::Median` trait and some methods in `indxvec` crate, e.g. `hashort`, `find_any` and `find_all`, require explicit closure passed to them, usually to tell them how to quantify input data of any  type T, into f64. Variety of different quantifying methods can then be dynamically employed.
 
-For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, or the numerical value of its consonants, etc. Then we can sort them or find their means / medians / spreads under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute them on demand.
+For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, or the numerical value of its consonants, etc. Then we can sort them or find their means / medians / spreads under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute any of them on demand.
 
 ### `noop`
 
 is a shorthand dummy function to supply to these methods, when the data is already of `f64` end type. The second line is the full equivalent version that can be used instead:
 
 ```rust
-&mut noop
-&mut |f:&f64| *f
+noop
+|f:&f64| *f
 ```
+### `asop`
 
-When T is a wide primitive type, such as i64, u64, usize, that can only be converted to f64 by explicit truncation, use:
+When T is a wide primitive type, such as i64, u64, usize, that can only be converted to f64 by explicit truncation, we can use:
 
 ```rust
-&mut |f:&T| *f as f64
+|f:&T| *f as f64
 ```
 
 ### `fromop`
 
-When T is a narrow numeric type, or is convertible by another existing `From` implementation, and `f64:From<T>` has been duly added everywhere as a trait bound, then you can pass in either one of these:
+When T is a narrow numeric type, or is convertible by an existing `From` implementation, and `f64:From<T>` has been duly added everywhere as a trait bound, then we can pass in one of these:
 
 ```rust
-&mut fromop
-&mut |f:&T| (*f).clone().into()
+fromop
+|f:&T| (*f).clone().into()
 ```
 
-All other cases were previously only possible with manual implementation written for the (global) From trait for each type T and each different quantification method, whereby the different quantification would conflict. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of a small inconvenience: using the above signature closures for the simple cases.
+All other cases were previously only possible with manual implementation written for the (global) `From` trait for each type and each different quantification method, whereby the different quantification would conflict with each other. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of a small inconvenience: using the above signature closures in simple cases.
 
 ## Auxiliary Functions
 
@@ -327,6 +328,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.50** - Upped dependency on `indxvec` to version 1.8. Added error checking to 'contribution' methods in trait Vecg.
 
 * **Version 1.2.49** - Added `wradii`. Some more code rationalizations.
 
