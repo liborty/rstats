@@ -2,8 +2,6 @@
 
 Author: Libor Spacek
 
-Statistics, Information Measures, Linear Algebra, Cholesky Matrix Decomposition, Mahalanobis Distance, Householder QR Decomposition, Clifford Algebra, Multidimensional Data Analysis, Geometric Median, Hulls, Machine Learning, Multithreading ...
-
 ## Usage
 
 Insert `Rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
