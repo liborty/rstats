@@ -1,6 +1,8 @@
 # Rstats [<img alt="crates.io" src="https://img.shields.io/crates/v/Rstats?logo=rust">](https://crates.io/crates/rstats) [<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/liborty/Rstats/HEAD?logo=github">](https://github.com/liborty/Rstats) [![Actions Status](https://github.com/liborty/rstats/actions/workflows/tests.yml/badge.svg)](https://github.com/liborty/rstats/actions)
 
-Author: Libor Spacek
+## Author: Libor Spacek
+
+This crate is written in 100% safe Rust.
 
 ## Usage
 
@@ -326,6 +328,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.2.51** - Upped dependency on `medians` to version 2.3. 
 
 * **Version 1.2.50** - Upped dependency on `indxvec` to version 1.8. Added error checking to 'contribution' methods in trait Vecg.
 
