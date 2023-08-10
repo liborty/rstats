@@ -329,7 +329,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.51** - Upped dependency on `medians` to version 2.3. 
+* **Version 1.2.52** - Added explicit `inner_hull` and `outer_hull`.
+
+* **Version 1.2.51** - Upped dependency on `medians` to version 2.3.
 
 * **Version 1.2.50** - Upped dependency on `indxvec` to version 1.8. Added error checking to 'contribution' methods in trait Vecg.
 

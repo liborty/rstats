@@ -445,8 +445,8 @@ fn vecvec() -> Result<(), RE> {
 
 #[test]
 fn hulls() -> Result<(), RE> {
-    let d = 5_usize;
-    let n = 100_usize;
+    let d = 3_usize;
+    let n = 700_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
     // set_seeds(113);
     let rf = Rnum::newf64();
@@ -490,16 +490,16 @@ fn hulls() -> Result<(), RE> {
     );
     println!(
         "Outer hull min max radii: {} {}\nTheir t_statistics:\t  {} {}",
-        zeropts[*outerhull.first().expect("Empty hullidx")]
-            .vmag()
-            .gr(),
         zeropts[*outerhull.last().expect("Empty hullidx")]
             .vmag()
             .gr(),
-        pts[*outerhull.first().unwrap()]
-            .t_statistic(&median, mad)?
+        zeropts[*outerhull.first().expect("Empty hullidx")]
+            .vmag()
             .gr(),
         pts[*outerhull.last().unwrap()]
+            .t_statistic(&median, mad)?
+            .gr(),
+        pts[*outerhull.first().unwrap()]
             .t_statistic(&median, mad)?
             .gr(),
     );

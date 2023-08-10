@@ -301,7 +301,7 @@ where
         let totf:f64 = totpoints as f64;
         hemis
             .iter_mut()
-            .for_each(|count| *count /= totf);
+            .for_each(|x:&mut f64| *x /= totf);
         Ok(hemis)
     }
 
@@ -320,6 +320,49 @@ where
             .map(|s| s.vdist(gm)).sum::<f64>()/self.len() as f64 ) 
     }
 
+    /// Inner hull points from their square radii and 
+    /// their ascending index `radindex`. Returns subset of `radindex`.  
+    fn inner_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize> {
+        radindex
+            .par_iter()
+            .filter_map(|&b| {
+                // test all points in ascending order
+                for &a in radindex {
+                    // check against all points 'a' up to 'b'
+                    if a == b {
+                        return Some(b);
+                    }; // b passed
+                    // b lies inside of a => immediately reject b  
+                    if self[a].dotp(&self[b]) > sqrads[a] {
+                        break;
+                    };
+                }
+                None
+            })
+            .collect::<Vec<usize>>()
+    }
+
+    /// Outer hull points from their square radii and
+    /// their descending index `radindex`. Returns subset of `radindex`.  
+    fn outer_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize> {
+        radindex
+            .par_iter()
+            .filter_map(|&b| {
+                // test all points, in descending order
+                for &a in radindex {
+                    if a == b {
+                        return Some(b);
+                    }; // b passed
+                    // a lies outside of b => immediately reject b
+                    if self[a].dotp(&self[b]) > sqrads[b] {
+                        break;
+                    };
+                }
+                None
+            })
+            .collect::<Vec<usize>>() 
+    }
+ 
     /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.
     /// Defining plane of a point A goes through A and is normal to the zero median vector **a**.      
     /// B is an inner hull point, when it lies inside all other points' defining planes.  
@@ -334,43 +377,9 @@ where
     fn hulls(self) -> (Vec<usize>, Vec<usize>) {
         let sqradii = self.par_iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
         let mut radindex = sqradii.hashsort_indexed(|x| *x); // ascending square radii
-        let innerindex = radindex
-            .par_iter()
-            .filter_map(|&b| {
-                // test all points in ascending order
-                for &a in &radindex {
-                    // check against all points 'a' up to 'b'
-                    if a == b {
-                        return Some(b);
-                    }; // b passed
-                       // b lies outside of a => immediately reject b
-                    if self[a].dotp(&self[b]) > sqradii[a] {
-                        break;
-                    };
-                }
-                None
-            })
-            .collect::<Vec<usize>>();
+        let innerindex = self.inner_hull(&sqradii,&radindex);
         radindex.mutrevs(); // make the order of points descending
-        let mut outerindex = radindex
-            .par_iter()
-            .filter_map(|&b| {
-                // test all points, in descending order
-                for &a in &radindex {
-                    // a can only be outside of b for a's of greater magnitude
-                    if a == b {
-                        return Some(b);
-                    }; // b passed
-                    let dotp = self[a].dotp(&self[b]);
-                    // a lies outside of b => immediately reject b
-                    if dotp > sqradii[b] {
-                        break;
-                    };
-                }
-                None
-            })
-            .collect::<Vec<usize>>();
-        outerindex.reverse();
+        let outerindex = self.outer_hull(&sqradii,&radindex); 
         (innerindex, outerindex)
     }
 

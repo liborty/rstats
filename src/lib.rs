@@ -324,6 +324,10 @@ pub trait VecVec<T> {
     fn madgm(self, gm: &[f64]) -> Result<f64, RE>;
     /// stdgm mean of radii from gm: nd data spread estimator
     fn stdgm(self, gm: &[f64]) -> Result<f64, RE>;
+    /// Inner hull points from their square radii and their ascending index `radindex`  
+    fn inner_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize>;    
+    /// Outer hull points from their square radii `self` and their decending index `radindex`
+    fn outer_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize>;
     /// Collects indices of outer and inner hull points, from zero median data
     fn hulls(self) -> (Vec<usize>, Vec<usize>);
     /// New algorithm for geometric median, to accuracy eps    

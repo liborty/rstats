@@ -1,5 +1,3 @@
-// use core::slice::SlicePattern;
-
 use crate::{
     error::{re_error, RError, RE},
     fromop, Stats, TriangMat, Vecg
@@ -479,4 +477,5 @@ where
     fn house_reflect<U: Clone + PartialOrd + Into<f64>>(self, x: &[U]) -> Vec<f64> {
         x.vsub(&self.smult(x.dotp(self)))
     }
+
 }
