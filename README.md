@@ -85,13 +85,13 @@ We define this correlation similarly to Pearson, as cosine of an angle between t
 our fast multidimensional `geometric median (gm)` algorithms.
 
 * `madgm` (median of distances from `gm`)  
-is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. 1d median is replaced in `nd` by `gm`. Where `mad` is a robust measure of 1d data spread, `madgm` is a robust measure of `nd` data spread. We define it as: median(|**p**i-**gm**|,for i=1..n), where **p**1..**p**n are a sample of n data points (no longer scalars but d dimensional vectors).
+is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. `1d` median is replaced in `nd` by `gm`. Where `mad` was a robust measure of 1d data spread, `madgm` becomes a robust measure of `nd` data spread. We define it as: `median(|`**p**i-**gm**`|,for i=1..n)`, where **p**1..**p**n are a sample of n data points, which are no longer scalars but d dimensional vectors.
 
-* `t_stat`  
-we improve 1d 't-statistic' from: `(x-mean)/std`, to `(x-median)/mad`, where x is a single observed value. `(x-mean)/std`  is similar to `z-score`, except the measures of central tendency and spread are obtained from the sample (so called pivotal quantity), rather than from the (assumed) population distribution.
+* `tm_stat`  
+`t-stat(istic)`, defined as `(x-mean)/std`, is similar to  `standard(z)-score`, except that the scalar measures of central tendency and spread are obtained from the sample (pivotal quantity), rather than from the assumed population distribution. We define improved `tm-stat` of single scalar observation x as: `(x-median)/mad`, by replacing mean by median and std by mad.
 
-* `t_statistic`  
-we then generalize `t_stat` to nd `t_statistic`: |**p-gm**|/madgm, where **p** is now an observed point in nd space. The role of the sample central tendency is taken up by the `geometric median` **gm** vector and the spread by the `madgm` scalar. Thus a single scalar t-statistic is obtained for point **p** in space of any number of dimensions.
+* `tm_statistic`  
+we then generalize `tm_stat` from scalar domain to n dimensional vector domain, as `tm_statistic` |**p-gm**|`/madgm`, where **p** is now an observation point in `nd` space. The sample central tendency is now the `geometric median` **gm** (vector) and the spread is the `madgm` scalar. Thus a single scalar t-statistic is obtained for any point **p** in space of any number of dimensions.
 
 * `contribution`  
 one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of displacement of `gm`, caused by adding **p** to the set. Generally, outlying points make greater contributions to the `gm` but not as much as to the `centroid`. The contribution depends not only on the radius of **p** but also on the radii of all other existing set points.
@@ -102,6 +102,8 @@ another new concept. It is similar to `covariance`. It is a triangular symmetric
 * `outer hull` is a subset of all zero median points **p**, such that no other points lie outside the normal plane through **p**. The points that do not satisfy this condition are called the `internal` points.
 
 * `inner hull` is a subset of all zero median points **p**, that do not lie outside the normal plane of any other point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, when they lie on a hypersphere).
+
+* `insideness` is a measure of likelihood of zero median point **p** belonging to a data cloud s. More specifically, it is the proportion of points belonging to s falling outside the normal through **p**. For example, all outer hull points have by definition `insideness = 0`. This is not nearly as fast as is simple distance of **p** from **gm** but it is more sophisticated, taking into account the local shape of s near **p**. Mahalanobis distance has a similar goal but is less specific. When s contains only precomputed outer hull points, the computation will be somewhat faster.
 
 * `signature vector`  
 Frequencies of points in all hemispheres. The origin will most often be the **gm**. For a new point **p** that needs to be classified, we can quickly estimate whether it lies in a well populated direction from **gm**. This could be done properly by projecting all the existing points onto unit **p** but that would be too slow, as there are typically too many such points. However, `signature_vector` needs to be precomputed only once and is then the only vector to be projected onto unit **p**. In keeping with the stability properties of medians, `signature vector` is only using counts of points, not their distances from **gm**.
@@ -329,6 +331,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.2.53** - Added `insideness`.
+
 * **Version 1.2.52** - Added explicit `inner_hull` and `outer_hull`.
 
 * **Version 1.2.51** - Upped dependency on `medians` to version 2.3.
@@ -352,31 +356,3 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 1.2.41** - Added `anglestat` to `VecVecg` trait. Added convenience function `re_error`. Relaxed trait bounds in `Vecg` trait: `U:Copy -> U:Clone`. Renamed `tukeydot`,`tukeyvec`,`wtukeyvec` to more descriptive `sigdot`,`sigvec`,`wsigvec` and made them include orthogonal points.
 
 * **Version 1.2.40** - Fixed dependencies in `times 1.0.10` as well.
-
-* **Version 1.2.39** - Upped various dependencies. Improved automatic external error conversions, such as from crate Medians, v. 2.2.0.
-
-* **Version 1.2.38** - Improved `wmadgm`, added `wstdgm` and `stdgm`.
-
-* **Version 1.2.37** - Introduced `harmonic mad` (`hmad`): 1d measure of spread of reciprocals from the reciprocal of the median.
-
-* **Version 1.2.35** - Some more error processing. Improved `gcentroid` and `hcentroid`. Made scalar `contributions` normalized by number of points, so they remain of roughly the same magnitude.
-
-* **Version 1.2.34** - Made `vreciprocal`, `vinverse` and `vunit` in trait Stats to produce RE errors, like most methods in this trait. Added some more simple tests.
-
-* **Version 1.2.33** - Removed superfluous trait bound `Display` from `Vecg`.
-
-* **Version 1.2.32** - Minor release. Corrected some terminology, revised some tests and Readme manual.
-
-* **Version 1.2.31** - Multithreading done. Restored sequential `acentroid` for better timing comparisons. Its multithreaded version is now `par_acentroid`. Done some more code pruning in trait `VecVec` to reduce the footprint.
-
-* **Version 1.2.30** - Multithreading mostly done now. Removed obsolete `pmedian`. All these changes are generally improving the speed.
-
-* **Version 1.2.29** - Added multithreaded weighted median `par_wgmedian` to `VecVecg` trait. Updated dev dependency `times` for timing tests.
-
-* **Version 1.2.28** - Multithreaded geometric median, `par_gmedian`, is unleashed! Nearly halving the execution time on a 32 cores processor. On machines with fewer cores, the gain may be less.
-
-* **Version 1.2.27** - Multithreaded `madgm` and `hulls`. Added trivial transpose of `TriangMat`(s). Pruned some unnecessary methods from trait `VecVecg`.
-
-* **Version 1.2.26** - More multithreading. Changed `struct TriangMat` to also allow compact representation of antisymmetric matrices (for future use). Updated dependence to the latest `medians 2.1.0`.
-
-* **Version 1.2.25** - added dependency on `rayon` crate which has somewhat increased the footprint but there will be significant speed ups due to parallel execution. Some have been introduced already.

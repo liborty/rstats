@@ -362,6 +362,22 @@ where
             })
             .collect::<Vec<usize>>() 
     }
+
+    /// Measure of likelihood of zero median point **p** belonging to a zero median data cloud `self`.
+    /// This is not nearly as fast as is simple distance of **p** from **gm** but it is more sophisticated,
+    /// taking into account the local shape of s near **p**. 
+    /// Returns the number of points belonging to s falling outside the normal through **p**.
+    /// All outer hull points have by definition `insideness = 0`.
+    /// Mahalanobis distance has the same goal but is less specific. 
+    /// When self contains only precomputed outer hull points, the computation will be faster.
+    fn insideness(self, p: &[f64]) -> usize {
+        let sqrad = p.vmagsq();
+        let mut count = 0_usize;
+        for a in self {
+            if a.dotp(p) > sqrad { count += 1; };
+        };
+        count
+    }
  
     /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.
     /// Defining plane of a point A goes through A and is normal to the zero median vector **a**.      

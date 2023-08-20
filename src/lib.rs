@@ -328,7 +328,9 @@ pub trait VecVec<T> {
     fn inner_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize>;    
     /// Outer hull points from their square radii `self` and their decending index `radindex`
     fn outer_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize>;
-    /// Collects indices of outer and inner hull points, from zero median data
+    /// Measure of likelihood of zero median point **p** belonging to a zero median data cloud `self`.
+    fn insideness(self, p: &[f64]) -> usize;
+    /// Collects indices of outer and inner hull points, from zero median data    
     fn hulls(self) -> (Vec<usize>, Vec<usize>);
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;

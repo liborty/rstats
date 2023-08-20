@@ -503,6 +503,12 @@ fn hulls() -> Result<(), RE> {
             .t_statistic(&median, mad)?
             .gr(),
     );
+
+    let innerhpts = innerhull.unindex(&zeropts,true);
+    let outerhpts = outerhull.unindex(&zeropts,true);
+    let insidecounts:Vec<usize> = innerhpts.iter().map(|p| outerhpts.insideness(p)).collect();
+    println!("Insideness of innerhull points: {}",insidecounts.gr());
+    
     let sigvec = zeropts.sigvec(&innerhull)?;
     println!(
         "\nInner hull sigvec: {} mag:{}",

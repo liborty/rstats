@@ -1,6 +1,6 @@
 use crate::{noop,re_error,RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::Mutops;
-use medians::{Medianf64};
+use medians::Medianf64;
 use rayon::prelude::*;
 
 impl<T,U> VecVecg<T,U> for &[Vec<T>] 
