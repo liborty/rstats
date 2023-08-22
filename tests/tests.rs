@@ -2,7 +2,7 @@ use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::{Median, Medianf64};
 use ran::{set_seeds, Rnum};
 use rstats::{
-    fromop, noop, t_stat, unit_matrix, re_error, RE, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
+    fromop, noop, tm_stat, unit_matrix, re_error, RE, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
 };
 use times::benchvvf64;
 
@@ -77,19 +77,19 @@ fn fstats() -> Result<(), RE> {
     println!("Harmonic   Mean  {}", v1.hmeanstd()?);
     println!(
         "T-statistic of 5 against median {}",
-        t_stat(5., v1.medstats()?).gr()
+        tm_stat(5., v1.medstats()?).gr()
     );
     println!(
         "T-statistic of 5 against amean  {}",
-        t_stat(5., v1.ameanstd()?).gr()
+        tm_stat(5., v1.ameanstd()?).gr()
     );
     println!(
         "T-statistic of 5 against gmean  {}",
-        t_stat(5., v1.gmeanstd()?).gr()
+        tm_stat(5., v1.gmeanstd()?).gr()
     );
     println!(
         "T-statistic of 5 against hmean   {}",
-        t_stat(5., v1.hmeanstd()?).gr()
+        tm_stat(5., v1.hmeanstd()?).gr()
     );
     println!("Autocorr1:\t{}", v1.autocorr()?.gr());
     println!("Autocorr2:\t{}", v2.autocorr()?.gr());
@@ -326,30 +326,11 @@ fn vecvec() -> Result<(), RE> {
     let acentroid = pts.acentroid();
     let quasimed = pts.quasimedian()?;
     let firstp = pts.firstpoint();
-    let idx = Vec::from_iter(0..n);
 
-    println!("\nMean reciprocal of radius: {}", (recips / d as f64).gr());
-
-    println!(
-        "Magnitude of sigvec for quasi median: {}",
-        pts.translate(&quasimed)?.sigvec(&idx)?.vmag().gr()
-    );
-
-    println!(
-        "Magnitude of sigvec for gm: {}",
-        pts.translate(&median)?.sigvec(&idx)?.vmag().gr()
-    );
-    println!(
-        "Mag of sigvec for acentroid: {}",
-        pts.translate(&acentroid)?.sigvec(&idx)?.vmag().gr()
-    );
-    println!(
-        "Mag of sigvec for outlier:   {}",
-        pts.translate(outlier)?.sigvec(&idx)?.vmag().gr()
-    );
+    println!("Mean reciprocal of radius: {}", (recips / d as f64).gr());
     let dists = pts.distsums();
     let md = dists.minmax();
-    println!("\nMedoid and Outlier Total Distances:\n{md}");
+    println!("Medoid and Outlier Total Distances:\n{md}");
     println!("Centroid of total Distances {}", dists.ameanstd()?);
     println!("Median of total distances   {}", dists.medstats()?);
     println!(
@@ -446,7 +427,7 @@ fn vecvec() -> Result<(), RE> {
 #[test]
 fn hulls() -> Result<(), RE> {
     let d = 3_usize;
-    let n = 700_usize;
+    let n = 777_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
     // set_seeds(113);
     let rf = Rnum::newf64();
@@ -455,31 +436,48 @@ fn hulls() -> Result<(), RE> {
     let median = pts.gmedian(EPS);
     let zeropts = pts.translate(&median)?;
     let (innerhull, outerhull) = zeropts.hulls();
+    let innerpts = innerhull.unindex(&zeropts,true);
+    let outerpts = outerhull.unindex(&zeropts,false);
     if innerhull.is_empty() || outerhull.is_empty() {
         return Err(re_error("arith","no hull points found")) };
     let mad = pts.madgm(&median)?;
-    println!("\nMadgm: {}", mad.gr());
-
+    println!("Madgm: {}", mad.gr());
     println!(
         "\nInner hull has {}/{} points:\n{}",
         innerhull.len().gr(),
         pts.len().gr(),
         innerhull.yl()
+    ); 
+    println!(
+        "Inner hull min max radii: {} {}\nTheir tm_statistics:\t  {} {}",
+        innerpts.first().expect("Empty hullidx")
+            .vmag()
+            .gr(),
+        innerpts.last().expect("Empty hullidx")
+            .vmag()
+            .gr(),
+        innerpts.first().unwrap()
+            .tm_statistic(&median, mad)?
+            .gr(),
+        innerpts.last().unwrap()
+            .tm_statistic(&median, mad)?
+            .gr()
+    );
+    let insidecounts:Vec<usize> = innerpts.iter().map(|p| zeropts.insideness(p)).collect();
+    println!("Insideness of innerhull points: {}",insidecounts.gr());
+
+    let sigvec = zeropts.sigvec(&innerhull)?;
+    println!(
+        "Inner hull sigvec: {}",
+        sigvec.gr()
     );
     println!(
-        "Inner hull min max radii: {} {}\nTheir t-statistics:\t  {} {}",
-        zeropts[*innerhull.first().expect("Empty hullidx")]
-            .vmag()
-            .gr(),
-        zeropts[*innerhull.last().expect("Empty hullidx")]
-            .vmag()
-            .gr(),
-        pts[*innerhull.first().unwrap()]
-            .t_statistic(&median, mad)?
-            .gr(),
-        pts[*innerhull.last().unwrap()]
-            .t_statistic(&median, mad)?
-            .gr(),
+        "Dotsigs: {}",
+        innerhull
+            .iter()
+            .map(|&hi| zeropts[hi].dotsig(&sigvec))
+            .collect::<Result<Vec<f64>, RE>>()?
+            .gr()
     );
 
     println!(
@@ -489,59 +487,38 @@ fn hulls() -> Result<(), RE> {
         outerhull.yl()
     );
     println!(
-        "Outer hull min max radii: {} {}\nTheir t_statistics:\t  {} {}",
-        zeropts[*outerhull.last().expect("Empty hullidx")]
+        "Outer hull min max radii: {} {}\nTheir tm_statistics:\t  {} {}",
+        outerpts.first().expect("Empty hullidx")
             .vmag()
             .gr(),
-        zeropts[*outerhull.first().expect("Empty hullidx")]
+        outerpts.last().expect("Empty hullidx")
             .vmag()
             .gr(),
-        pts[*outerhull.last().unwrap()]
-            .t_statistic(&median, mad)?
+        outerpts.first().unwrap()
+            .tm_statistic(&median, mad)?
             .gr(),
-        pts[*outerhull.first().unwrap()]
-            .t_statistic(&median, mad)?
-            .gr(),
-    );
-
-    let innerhpts = innerhull.unindex(&zeropts,true);
-    let outerhpts = outerhull.unindex(&zeropts,true);
-    let insidecounts:Vec<usize> = innerhpts.iter().map(|p| outerhpts.insideness(p)).collect();
-    println!("Insideness of innerhull points: {}",insidecounts.gr());
-    
-    let sigvec = zeropts.sigvec(&innerhull)?;
-    println!(
-        "\nInner hull sigvec: {} mag:{}",
-        sigvec.gr(),
-        sigvec.vmag().yl()
-    );
-    println!(
-        "Dotsig mapped: {}",
-        innerhull
-            .iter()
-            .map(|&hi| pts[hi].vsub(&median).dotsig(&sigvec))
-            .collect::<Result<Vec<f64>, RE>>()?
+        outerpts.last().unwrap()
+            .tm_statistic(&median, mad)?
             .gr()
     );
+
     let sigvec = zeropts.sigvec(&outerhull)?;
     println!(
-        "\nOuter hull sigvec: {} mag:{}",
-        sigvec.gr(),
-        sigvec.vmag().yl()
+        "Outer hull sigvec: {}",
+        sigvec.gr()
     );
     println!(
-        "Dotsig mapped: {}",
+        "Dotsigs: {}",
         outerhull
             .iter()
-            .map(|&hi| pts[hi].vsub(&median).dotsig(&sigvec))
+            .map(|&hi| zeropts[hi].dotsig(&sigvec))
             .collect::<Result<Vec<f64>, RE>>()?
             .gr()
     );
     let allptsig = zeropts.sigvec(&Vec::from_iter(0..zeropts.len()))?;
     println!(
-        "\nAll points sigvec: {} mag:{}",
-        allptsig.gr(),
-        allptsig.vmag().yl()
+        "\nAll points sigvec: {}",
+        allptsig.gr() 
     );
     Ok(())
 }

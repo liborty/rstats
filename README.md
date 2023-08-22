@@ -88,10 +88,10 @@ our fast multidimensional `geometric median (gm)` algorithms.
 is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. `1d` median is replaced in `nd` by `gm`. Where `mad` was a robust measure of 1d data spread, `madgm` becomes a robust measure of `nd` data spread. We define it as: `median(|`**p**i-**gm**`|,for i=1..n)`, where **p**1..**p**n are a sample of n data points, which are no longer scalars but d dimensional vectors.
 
 * `tm_stat`  
-`t-stat(istic)`, defined as `(x-mean)/std`, is similar to  `standard(z)-score`, except that the scalar measures of central tendency and spread are obtained from the sample (pivotal quantity), rather than from the assumed population distribution. We define improved `tm-stat` of single scalar observation x as: `(x-median)/mad`, by replacing mean by median and std by mad.
+`t-stat`, defined as `(x-mean)/std`, where std is standard deviation, is similar to familiar `standard(z)-score`, except that its scalar measures of central tendency and spread are obtained from the sample (pivotal quantity), rather than from the assumed population distribution. Here, we define improved `tm_stat` of single scalar observation x as: `(x-median)/mad`, replacing mean by median and std by mad.
 
 * `tm_statistic`  
-we then generalize `tm_stat` from scalar domain to n dimensional vector domain, as `tm_statistic` |**p-gm**|`/madgm`, where **p** is now an observation point in `nd` space. The sample central tendency is now the `geometric median` **gm** (vector) and the spread is the `madgm` scalar. Thus a single scalar t-statistic is obtained for any point **p** in space of any number of dimensions.
+we then generalize `tm_stat` from scalar domain to vector domain of any number of dimensions, defining `tm_statistic` as |**p-gm**|`/madgm`, where **p** is now an observation point in `nd` space. The sample central tendency is now the `geometric median` **gm** vector and the spread is the `madgm` scalar. The (error) distance of observation **p** from **gm** is also a scalar. Thus `tm_statistic` is, just like `tm_stat`, a simple scalar measure, regardless the dimensionality of the vector space.
 
 * `contribution`  
 one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of displacement of `gm`, caused by adding **p** to the set. Generally, outlying points make greater contributions to the `gm` but not as much as to the `centroid`. The contribution depends not only on the radius of **p** but also on the radii of all other existing set points.
@@ -331,7 +331,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 1.2.53** - Added `insideness`.
+* **Version 1.3.0** - Renamed `t_stat -> tm_stat` and `t_statistic -> tm_statistic` to avoid potential confusion with classical t-statistic. Added `insideness` of `nd` points. Improved `hulls` algorithms and their tests. Changed `sigvec` and `dotsig`.
 
 * **Version 1.2.52** - Added explicit `inner_hull` and `outer_hull`.
 

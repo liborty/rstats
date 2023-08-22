@@ -11,9 +11,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     Vec<Vec<U>>: IntoParallelIterator,
     Vec<U>: IntoParallelIterator {
 
-    /// Scalar valued closure for all vectors in self, multiplied by their weights
-    /// Returns also the sum of weights
-    fn scalar_wfn(self,ws: &[U],f: impl Fn(&[T]) -> Result<f64,RE>)
+    /// Applies scalar valued closure to all vectors in self and multiplies by their weights.
+    /// Returns also the sum of weights.
+    fn scalar_wfn(self, ws: &[U], f: impl Fn(&[T]) -> Result<f64,RE>)
         -> Result<(Vec<f64>,f64),RE> {
         let mut wsum = 0_f64;
         let resvec = self.iter().zip(ws).map(|(s,w)|-> Result<f64,RE> {
@@ -23,11 +23,12 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         Ok((resvec,wsum))
     }
 
-    /// Vector valued closure for all vectors in self, multiplied by their weights
-    fn vector_wfn(self,v: &[U],f: impl Fn(&[T]) -> Result<Vec<f64>,RE>)
+    /// Applies vector valued closure to all vectors in self and multiplies by their weights.
+    /// Returns also the sum of weights
+    fn vector_wfn(self, ws: &[U], f: impl Fn(&[T]) -> Result<Vec<f64>,RE>)
         -> Result<(Vec<Vec<f64>>,f64),RE> {
         let mut wsum = 0_f64;
-        let resvecvec = self.iter().zip(v).map(|(s,w)|-> Result<Vec<f64>,RE> {
+        let resvecvec = self.iter().zip(ws).map(|(s,w)|-> Result<Vec<f64>,RE> {
             let wf = w.clone().into();
             wsum += wf;            
             Ok(f(s)?.smult(wf))}).collect::<Result<Vec<Vec<f64>>,RE>>()?;

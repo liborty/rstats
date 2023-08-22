@@ -36,9 +36,9 @@ pub fn fromop<T: Clone + Into<f64>>(f: &T) -> f64 {
     (*f).clone().into()
 }
 
-/// t_statistic in 1d: (value-centre)/dispersion
+/// tm_statistic in 1d: (value-centre)/dispersion
 /// generalized to any measure of central tendency and dispersion
-pub fn t_stat(val: f64, mstats: MStats) -> f64 {
+pub fn tm_stat(val: f64, mstats: MStats) -> f64 {
     (val - mstats.centre) / mstats.dispersion
 }
 
@@ -146,8 +146,8 @@ pub trait Stats {
 /// Vector Algebra on two vectors (represented here as generic slices).
 /// Also included are scalar operations on the `self` vector.
 pub trait Vecg {
-    /// nd t_statistic of self against geometric median and madgm spread
-    fn t_statistic(self, gm: &[f64], madgm: f64) -> Result<f64, RE>;
+    /// nd tm_statistic of self against geometric median and madgm spread
+    fn tm_statistic(self, gm: &[f64], madgm: f64) -> Result<f64, RE>;
     /// Dot product of vector self with column c of matrix v
     fn columnp<U: Clone + Into<f64>>(self, c: usize, v: &[Vec<U>]) -> f64;
     /// Scalar addition to vector
@@ -156,7 +156,7 @@ pub trait Vecg {
     fn smult<U: Into<f64>>(self, s: U) -> Vec<f64>;
     /// Scalar product
     fn dotp<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
-    /// Product with signature vec of hemispheric frequencies
+    /// Product with signature vec of axial projections
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE>;
     /// Cosine of angle between two slices
     fn cosine<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
@@ -318,7 +318,7 @@ pub trait VecVec<T> {
     fn quasimedian(self) -> Result<Vec<f64>, RE>;
     /// Geometric median estimate's error
     fn gmerror(self, gm: &[f64]) -> f64;
-    /// Proportions of points in idx along each +/-axis (hemisphere)
+    /// Sums of projections of points on each +/-axis (by hemispheres) 
     fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE>;
     /// madgm, median of radii from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64, RE>;
@@ -343,13 +343,13 @@ pub trait VecVec<T> {
 /// Methods applicable to slice of vectors of generic end type, plus one other argument
 /// of a similar kind
 pub trait VecVecg<T, U> {
-    /// Scalar valued closure for all vectors in self, multiplied by their weights
+    /// Applies scalar valued closure to all vectors in self and multiplies by their weights
     fn scalar_wfn(
         self,
         ws: &[U],
         f: impl Fn(&[T]) -> Result<f64, RE>,
     ) -> Result<(Vec<f64>, f64), RE>;
-    /// Vector valued closure for all vectors in self, multiplied by their weights
+    /// Applies vector valued closure to all vectors in self and multiplies by their weights
     fn vector_wfn(
         self,
         v: &[U],

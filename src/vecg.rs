@@ -9,9 +9,9 @@ impl<T> Vecg for &[T]
 where
     T: Clone + PartialOrd + Into<f64>
 {
-    /// nd t_statistic of self against geometric median and madgm spread.     
+    /// nd tm_statistic of self against geometric median and madgm spread.     
     /// Unlike in 1d, is always positive.
-    fn t_statistic(self, gm: &[f64], madgm: f64) -> Result<f64, RE> {
+    fn tm_statistic(self, gm: &[f64], madgm: f64) -> Result<f64, RE> {
         Ok(self.vdist::<f64>(gm) / madgm)
     }
 
@@ -44,7 +44,7 @@ where
             .sum::<f64>()
     }
 
-    /// Product with signature vec of hemispheric frequencies.  
+    /// Product with signature vec of axial projections.  
     /// Similar result can be obtained
     /// by projecting onto self all points but that is usually too slow.
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE> {
@@ -55,12 +55,12 @@ where
                 "dotsig: sig vec must have double the dimensions",
             ));
         }
-        let sigunit = sig.vunit()?;
-        let sunit = self.vunit()?;
+ 
+        let sunit = self.vunit()?;        
         let mut ressum = 0_f64;
         for (i, &scomp) in sunit.iter().enumerate() {
             if scomp > 0_f64 {
-                ressum += scomp * sigunit[i];
+                ressum += scomp * sig[i];
                 continue;
             };
             if scomp < 0_f64 {

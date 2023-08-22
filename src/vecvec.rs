@@ -1,5 +1,5 @@
 use crate::{sumn, re_error, RError, RE, MStats, MinMax, MutVecg, Stats, TriangMat, VecVec, Vecg};
-use indxvec::{Mutops, Vecops};
+use indxvec::Vecops;
 use medians::{error::MedError, Medianf64};
 use rayon::prelude::*;
 
@@ -272,13 +272,11 @@ where
         gm.vdist::<f64>(g)
     }
 
-    /// Proportions of points along each +/-axis (hemisphere)
-    /// Points that are perpendicular to axis get included in both +/-ve hemispheres.
-    /// Uses only the selected points specified in idx (e.g. the hull).
-    /// Self should normally be zero median vectors,
-    /// e.g. `self.translate(&median)`
-    fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> {
-        let mut totpoints = idx.len();
+    /// Sums of projections of points on each +/-axis (by hemispheres)
+    /// Points that are perpendicular to the axis are excluded from both +/-ve hemispheres.
+    /// Sums only the points specified in idx (e.g. the outer hull).
+    /// Self should normally be zero median vectors,e.g. `self.translate(&median)`
+    fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> { 
         let dims = self[0].len();
         if self.is_empty() {
             return Err(re_error("empty","sigvec given no data"));
@@ -287,22 +285,14 @@ where
         for &i in idx {
             for (j, component) in self[i].iter().enumerate() {
                 let cf = component.clone().into();
-                if cf == 0. {
-                    totpoints += 1;
-                    hemis[j] += 1.;
-                    hemis[dims + j] += 1.
-                } else if cf > 0. {
-                    hemis[j] += 1.
-                } else  {
-                    hemis[dims + j] += 1.
+                if cf < 0. {
+                    hemis[dims + j] -= cf;
+                    continue;
                 };
-            }
-        }
-        let totf:f64 = totpoints as f64;
-        hemis
-            .iter_mut()
-            .for_each(|x:&mut f64| *x /= totf);
-        Ok(hemis)
+                hemis[j] += cf;
+                };
+            }; 
+        hemis.vunit()
     }
 
     /// madgm median of distances from gm: stable nd data spread measure
@@ -320,47 +310,34 @@ where
             .map(|s| s.vdist(gm)).sum::<f64>()/self.len() as f64 ) 
     }
 
+    /// Outer hull points from their square radii and
+    /// their ascending index `radindex`. Returns subset of `radindex`.  
+    fn outer_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize> {
+        let mut hullindex: Vec<usize> = Vec::new();
+        'bloop: for &b in radindex.iter().rev() { 
+            // test all points in ascending order
+            for &a in &hullindex {
+                // this a lies outside of normal to b => reject b  
+                if self[a].dotp(&self[b]) > sqrads[b] { continue 'bloop; };
+            };
+            hullindex.push(b);  // b passed
+        };      
+        hullindex
+    }
+
     /// Inner hull points from their square radii and 
     /// their ascending index `radindex`. Returns subset of `radindex`.  
     fn inner_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize> {
-        radindex
-            .par_iter()
-            .filter_map(|&b| {
-                // test all points in ascending order
-                for &a in radindex {
-                    // check against all points 'a' up to 'b'
-                    if a == b {
-                        return Some(b);
-                    }; // b passed
-                    // b lies inside of a => immediately reject b  
-                    if self[a].dotp(&self[b]) > sqrads[a] {
-                        break;
-                    };
-                }
-                None
-            })
-            .collect::<Vec<usize>>()
-    }
-
-    /// Outer hull points from their square radii and
-    /// their descending index `radindex`. Returns subset of `radindex`.  
-    fn outer_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize> {
-        radindex
-            .par_iter()
-            .filter_map(|&b| {
-                // test all points, in descending order
-                for &a in radindex {
-                    if a == b {
-                        return Some(b);
-                    }; // b passed
-                    // a lies outside of b => immediately reject b
-                    if self[a].dotp(&self[b]) > sqrads[b] {
-                        break;
-                    };
-                }
-                None
-            })
-            .collect::<Vec<usize>>() 
+        let mut hullindex: Vec<usize> = Vec::new();
+        'bloop: for &b in radindex { 
+            // test all points in ascending order
+            for &a in &hullindex {
+                // b lies outside of normal to this a => reject b  
+                if self[a].dotp(&self[b]) > sqrads[a] { continue 'bloop; };
+            };
+            hullindex.push(b);  // b passed
+        };      
+        hullindex
     }
 
     /// Measure of likelihood of zero median point **p** belonging to a zero median data cloud `self`.
@@ -371,10 +348,10 @@ where
     /// Mahalanobis distance has the same goal but is less specific. 
     /// When self contains only precomputed outer hull points, the computation will be faster.
     fn insideness(self, p: &[f64]) -> usize {
-        let sqrad = p.vmagsq();
+        let sqradp = p.vmagsq();
         let mut count = 0_usize;
         for a in self {
-            if a.dotp(p) > sqrad { count += 1; };
+            if a.dotp(p) > sqradp { count += 1; };
         };
         count
     }
@@ -391,11 +368,11 @@ where
     /// Working with square magnitudes, `|a|^2` saves taking square roots and dividing the dot product by |a|.  
     /// Similarly for the outer hull, where A and B simply swap roles.
     fn hulls(self) -> (Vec<usize>, Vec<usize>) {
-        let sqradii = self.par_iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let mut radindex = sqradii.hashsort_indexed(|x| *x); // ascending square radii
-        let innerindex = self.inner_hull(&sqradii,&radindex);
-        radindex.mutrevs(); // make the order of points descending
+        let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
+        let radindex = sqradii.mergesort_indexed(); // ascending square radii
+        let innerindex = self.inner_hull(&sqradii,&radindex); 
         let outerindex = self.outer_hull(&sqradii,&radindex); 
+        // println!("Sqradii: {}", radindex.iter().map(|&ri| sqradii[ri]).collect::<Vec<_>>().gr());
         (innerindex, outerindex)
     }
 
