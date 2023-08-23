@@ -46,7 +46,7 @@ Any compilation errors arising out of `rstats` crate indicate most likely that s
 
 ## Introduction
 
-`Rstats` has a small footprint. Only the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional ('nd' or 'hyperspace') analysis, i.e. characterising clouds of n points in space of d dimensions.
+`Rstats` has a small footprint. Only the best methods are implemented, primarily with Data Analysis and Machine Learning in mind. They include multidimensional (`nd` or 'hyperspace') analysis, i.e. characterising clouds of n points in space of d dimensions.
 
 Several branches of mathematics: statistics, information theory, set theory and linear algebra are combined in this one consistent crate, based on the abstraction that they all operate on the same data objects (here Rust Vecs). The only difference being that an ordering of their components is sometimes assumed (in linear algebra, set theory) and sometimes it is not (in statistics, information theory, set theory).
 
@@ -88,25 +88,25 @@ our fast multidimensional `geometric median (gm)` algorithms.
 is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. `1d` median is replaced in `nd` by `gm`. Where `mad` was a robust measure of 1d data spread, `madgm` becomes a robust measure of `nd` data spread. We define it as: `median(|`**p**i-**gm**`|,for i=1..n)`, where **p**1..**p**n are a sample of n data points, which are no longer scalars but d dimensional vectors.
 
 * `tm_stat`  
-`t-stat`, defined as `(x-mean)/std`, where std is standard deviation, is similar to familiar `standard(z)-score`, except that its scalar measures of central tendency and spread are obtained from the sample (pivotal quantity), rather than from the assumed population distribution. Here, we define improved `tm_stat` of single scalar observation x as: `(x-median)/mad`, replacing mean by median and std by mad.
+`t-stat`, defined as `(x-mean)/std`, where `std` is standard deviation, is similar to familiar `standard(z)-score`, except that its scalar measures of central tendency and spread are obtained from the sample (pivotal quantity), rather than from the assumed population distribution. Here, we define improved `tm_stat` of single scalar observation x as: `(x-median)/mad`, replacing mean by median and std by mad.
 
 * `tm_statistic`  
-we then generalize `tm_stat` from scalar domain to vector domain of any number of dimensions, defining `tm_statistic` as |**p-gm**|`/madgm`, where **p** is now an observation point in `nd` space. The sample central tendency is now the `geometric median` **gm** vector and the spread is the `madgm` scalar. The (error) distance of observation **p** from **gm** is also a scalar. Thus `tm_statistic` is, just like `tm_stat`, a simple scalar measure, regardless the dimensionality of the vector space.
+we then generalize `tm_stat` from scalar domain to vector domain of any number of dimensions, defining `tm_statistic` as |**p-gm**|`/madgm`, where **p** is now an observation point in `nd` space. The sample central tendency is now the `geometric median` **gm** vector and the spread is the `madgm` scalar. The error distance of observation |**p-gm**| is also a scalar. Thus `tm_statistic` is, just like `tm_stat`, a simple scalar measure, regardless the dimensionality of the vector space. It is always positive.
 
 * `contribution`  
 one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of displacement of `gm`, caused by adding **p** to the set. Generally, outlying points make greater contributions to the `gm` but not as much as to the `centroid`. The contribution depends not only on the radius of **p** but also on the radii of all other existing set points.
 
 * `comediance`  
-another new concept. It is similar to `covariance`. It is a triangular symmetric matrix, obtained by supplying `covar` with the geometric median instead of the usual centroid. Thus `zero mean vectors` are replaced by `zero median vectors` as the data for the covariance calculations. The results are similar but more stable with respect to the outliers.
+is similar to `covariance`. It is a triangular symmetric matrix, obtained by supplying method `covar` with the geometric median instead of the usual centroid. Thus `zero mean vectors` are replaced by `zero median vectors` in the covariance calculations. The results are similar but more stable with respect to the outliers.
 
-* `outer hull` is a subset of all zero median points **p**, such that no other points lie outside the normal plane through **p**. The points that do not satisfy this condition are called the `internal` points.
+* `outer_hull` is a subset of all zero median points **p**, such that no other points lie outside the normal plane through **p**. The points that do not satisfy this condition are called the `internal` points.
 
-* `inner hull` is a subset of all zero median points **p**, that do not lie outside the normal plane of any other point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, when they lie on a hypersphere).
+* `inner_hull` is a subset of all zero median points **p**, that do not lie outside the normal plane of any point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, when they all lie on a hypersphere).
 
-* `insideness` is a measure of likelihood of zero median point **p** belonging to a data cloud s. More specifically, it is the proportion of points belonging to s falling outside the normal through **p**. For example, all outer hull points have by definition `insideness = 0`. This is not nearly as fast as is simple distance of **p** from **gm** but it is more sophisticated, taking into account the local shape of s near **p**. Mahalanobis distance has a similar goal but is less specific. When s contains only precomputed outer hull points, the computation will be somewhat faster.
+* `insideness` is a measure of likelihood of zero median point **p** belonging to a data cloud s. More specifically, it is the number of points belonging to s that are outside the normal through **p**. For example, all outer hull points have by definition `insideness = 0`. This is not nearly as fast to compute as is simple distance of **p** from **gm** but it is more sophisticated, taking into account the local shape of s near **p**. Mahalanobis distance has a similar goal but is less specific. When s contains only outer hull points, the computation will be faster.
 
-* `signature vector`  
-Frequencies of points in all hemispheres. The origin will most often be the **gm**. For a new point **p** that needs to be classified, we can quickly estimate whether it lies in a well populated direction from **gm**. This could be done properly by projecting all the existing points onto unit **p** but that would be too slow, as there are typically too many such points. However, `signature_vector` needs to be precomputed only once and is then the only vector to be projected onto unit **p**. In keeping with the stability properties of medians, `signature vector` is only using counts of points, not their distances from **gm**.
+* `sigvec (signature vector)`  
+Sums of zero median vectors in all coordinate hemispheres. The origin will most often be the **gm**. For a new point **p** that needs to be classified, we can quickly establish how well populated is its direction (from **gm**). This could be done properly by projecting the points directly onto unit **p** but that would be too slow, as there are typically many such points. However, `signature_vector` only needs to be precomputed once and is then the only vector to be projected onto unit **p**.
 
 ## Previously Known Concepts and Terminology
 
