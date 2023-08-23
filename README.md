@@ -1,10 +1,10 @@
-# Rstats [<img alt="crates.io" src="https://img.shields.io/crates/v/Rstats?logo=rust">](https://crates.io/crates/rstats) [<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/liborty/Rstats/HEAD?logo=github">](https://github.com/liborty/Rstats) [![Actions Status](https://github.com/liborty/rstats/actions/workflows/tests.yml/badge.svg)](https://github.com/liborty/rstats/actions)
+# Rstats [![crates.io](https://img.shields.io/crates/v/Rstats?logo=rust)](https://crates.io/crates/rstats) [![GitHub last commit](https://img.shields.io/github/last-commit/liborty/Rstats/HEAD?logo=github)](https://github.com/liborty/Rstats) [![Actions Status](https://github.com/liborty/rstats/actions/workflows/tests.yml/badge.svg)](https://github.com/liborty/rstats/actions)
 
 ## Author: Libor Spacek
 
-This crate is written in 100% safe Rust.
-
 ## Usage
+
+This crate is written in 100% safe Rust.
 
 Insert `Rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
 
@@ -103,7 +103,7 @@ is similar to `covariance`. It is a triangular symmetric matrix, obtained by sup
 
 * `inner_hull` is a subset of all zero median points **p**, that do not lie outside the normal plane of any point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, when they all lie on a hypersphere).
 
-* `insideness` is a measure of likelihood of zero median point **p** belonging to a data cloud s. More specifically, it is the number of points belonging to s that are outside the normal through **p**. For example, all outer hull points have by definition `insideness = 0`. This is not nearly as fast to compute as is simple distance of **p** from **gm** but it is more sophisticated, taking into account the local shape of s near **p**. Mahalanobis distance has a similar goal but is less specific. When s contains only outer hull points, the computation will be faster.
+* `insideness` is a measure of likelihood of zero median point **p** belonging to a data cloud s. More specifically, it is the number of points belonging to s that are outside the normal through **p**. For example, all outer hull points have by definition `insideness = 0`. This is not nearly as fast to compute as is simple distance of **p** from **gm** but it is more sophisticated, taking into account the local shape of s near **p**. Mahalanobis distance has a similar goal but is less specific. When s contains only outer hull points, the computation is faster.
 
 * `sigvec (signature vector)`  
 Sums of zero median vectors in all coordinate hemispheres. The origin will most often be the **gm**. For a new point **p** that needs to be classified, we can quickly establish how well populated is its direction (from **gm**). This could be done properly by projecting the points directly onto unit **p** but that would be too slow, as there are typically many such points. However, `signature_vector` only needs to be precomputed once and is then the only vector to be projected onto unit **p**.
@@ -132,7 +132,7 @@ is the member of the set with the greatest sum of distances to all other members
 is a scaled distance, whereby the scaling is derived from the axis of covariance / comediance of the data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances / comediances are decreased.
 
 * `Cholesky-Banachiewicz matrix decomposition`  
-decomposes any positive definite matrix S (often covariance or comediance) into a product of two triangular matrices: S = LL'. The eigenvalues and the determinant are easily obtained from the diagonal. We implemented it on `TriangMat` for maximum efficiency. Is used by `mahalanobis distance`.
+decomposes any positive definite matrix S (often covariance or comediance matrix) into a product of two triangular matrices: S = LL'. The eigenvalues and the determinant are easily obtained from the diagonal of L. We implemented it on `TriangMat` for maximum efficiency. It is used by `mahalanobis distance`.
 
 * `Householder's decomposition`  
 in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition is not satisfied, Householder's (UR) decomposition is often the next best method. Implemented here with our memory efficient `TriangMat` struct.
@@ -157,9 +157,9 @@ The traits and their methods operate on arguments of their required categories. 
   
 **`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices and wedge and geometric products. All instances of `TriangMat` store only `n*(n+1)/2` items in a single flat vector, instead of `n*n`, thus almost halving the memory requirements. Their transposed versions only set up a flag `kind >=3` that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving some processing as well. All this is put to a good use in our implementation of the matrix decomposition methods.
 
-The vectors' end types (of the actual data) are mostly generic: usually some numeric type. `Copy` trait bounds on these generic input types have been relaxed to `Clone`, to allow you to clone your own complex data end types in any way you choose. There is no difference to the users for ordinary simple types. 
+The vectors' end types (of the actual data) are mostly generic: usually some numeric type. `Copy` trait bounds on these generic input types have been relaxed to `Clone`, to allow you to clone your own complex data end types in any way you choose. There is no difference to the users for ordinary simple types.
 
-The computed results end types are mostly `f64`. 
+The computed results end types are mostly `f64`.
 
 ## Errors
 
@@ -196,6 +196,7 @@ pub type RE = RError<String>;
 ```
 
 Convenience function `re_error` can be used to construct these errors with either String or &str payload messages, as follows:
+
 ```rust
 if denom == 0. {
     return Err(re_error("arith","Attempted division by zero!"));
@@ -204,10 +205,12 @@ if denom == 0. {
 
 ## Structs
 
-### `struct MStats` 
+### `struct MStats`
+
 holds the central tendency of `1d` data, e.g. some kind of mean or median, and its spread measure, e.g. standard deviation or 'mad'.
 
-### `struct TriangMat` 
+### `struct TriangMat`
+
 holds triangular matrices of all kinds, as described in Implementation section above. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
 
 * **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes the transpose). This decomposition is used by `mahalanobis`.
@@ -230,6 +233,7 @@ is a shorthand dummy function to supply to these methods, when the data is alrea
 noop
 |f:&f64| *f
 ```
+
 ### `asop`
 
 When T is a wide primitive type, such as i64, u64, usize, that can only be converted to f64 by explicit truncation, we can use:
