@@ -44,7 +44,7 @@ where
             .sum::<f64>()
     }
 
-    /// Product with signature vec of axial projections.  
+    /// Product of self vector with signature vec of axial projections.  
     /// Similar result can be obtained
     /// by projecting onto self all points but that is usually too slow.
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE> {
