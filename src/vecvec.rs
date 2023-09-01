@@ -310,32 +310,31 @@ where
             .map(|s| s.vdist(gm)).sum::<f64>()/self.len() as f64 ) 
     }
 
-    /// Outer hull points from their square radii and
-    /// their ascending index `radindex`. Returns subset of `radindex`.  
-    fn outer_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize> {
+    /// Outer hull subscripts from their square radii and their sort index
+    fn outer_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize> {
         let mut hullindex: Vec<usize> = Vec::new();
-        'bloop: for &b in radindex.iter().rev() { 
-            // test all points in ascending order
-            for &a in &hullindex {
-                // this a lies outside of normal to b => reject b  
-                if self[a].dotp(&self[b]) > sqrads[b] { continue 'bloop; };
+        // test all points p in descending sqrads order
+        'ploop: for &i in sindex.iter().rev() { 
+            // against existing hull points hp
+            for &hp in &hullindex {
+                // this hp lies outside the normal plane to p => reject p  
+                if self[hp].dotp(&self[i]) > sqrads[i] { continue 'ploop; };
             };
-            hullindex.push(b);  // b passed
+            hullindex.push(i);  // b passed
         };      
         hullindex
     }
 
-    /// Inner hull points from their square radii and 
-    /// their ascending index `radindex`. Returns subset of `radindex`.  
-    fn inner_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize> {
+    /// Inner hull points from their square radii and their sort index
+    fn inner_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize> {
         let mut hullindex: Vec<usize> = Vec::new();
-        'bloop: for &b in radindex { 
+        'ploop: for &i in sindex { 
             // test all points in ascending order
-            for &a in &hullindex {
-                // b lies outside of normal to this a => reject b  
-                if self[a].dotp(&self[b]) > sqrads[a] { continue 'bloop; };
+            for &hp in &hullindex {
+                // this p lies outside of the normal plane to hp => reject p  
+                if self[hp].dotp(&self[i]) > sqrads[hp] { continue 'ploop; };
             };
-            hullindex.push(b);  // b passed
+            hullindex.push(i);  // b passed
         };      
         hullindex
     }
@@ -356,22 +355,23 @@ where
         count
     }
  
-    /// Collects indices of inner (or core) hull and outer hull, from zero median points in self.
-    /// Defining plane of a point A goes through A and is normal to the zero median vector **a**.      
-    /// B is an inner hull point, when it lies inside all other points' defining planes.  
-    /// B is an outer hull point, when there is no other point beyond its own defining plane.
-    /// B can belong to both hulls, as when all the points lie on a hyper-sphere around gm.   
+    /// Collects indices of inner hull and outer hull, from zero median points in self.
+    /// We put a plane trough data point A, normal to its zero median vector **a**.     
+    /// B is an inner hull point, when it lies inside all other points' normal planes.  
+    /// C is an outer hull point, when there is no other point beyond its own normal plane.
+    /// B can belong to both hulls, as when all the points lie on a hyper-sphere around **gm**.   
     /// The testing is done in increasing (decreasing) radius order.  
-    /// B lies outside the defining plane of **a**, when its projection onto unit **a** exceeds `|a|`:    
-    /// `|b|cos(θ) > |a| => a*b > |a|^2`,  
+    /// B lies outside the normal plane of **a**, when its projection onto unit **a** exceeds
+    /// `|a|: |b|cos(θ) > |a| => a*b > |a|^2`,  
     /// such B immediately fails as a candidate for the inner hull.
-    /// Working with square magnitudes, `|a|^2` saves taking square roots and dividing the dot product by |a|.  
+    /// Using square magnitudes, `|a|^2` saves taking square roots and dividing the dot product by |a|.  
     /// Similarly for the outer hull, where A and B simply swap roles.
     fn hulls(self) -> (Vec<usize>, Vec<usize>) {
         let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let radindex = sqradii.mergesort_indexed(); // ascending square radii
-        let innerindex = self.inner_hull(&sqradii,&radindex); 
-        let outerindex = self.outer_hull(&sqradii,&radindex); 
+        let sindex = sqradii.mergesort_indexed(); 
+        // let radindex = sqradii.hashsort_indexed(noop); // ascending square radii
+        let innerindex = self.inner_hull(&sqradii,&sindex); 
+        let outerindex = self.outer_hull(&sqradii,&sindex); 
         // println!("Sqradii: {}", radindex.iter().map(|&ri| sqradii[ri]).collect::<Vec<_>>().gr());
         (innerindex, outerindex)
     }

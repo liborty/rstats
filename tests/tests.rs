@@ -436,8 +436,6 @@ fn hulls() -> Result<(), RE> {
     let median = pts.gmedian(EPS);
     let zeropts = pts.translate(&median)?;
     let (innerhull, outerhull) = zeropts.hulls();
-    let innerpts = innerhull.unindex(&zeropts,true);
-    let outerpts = outerhull.unindex(&zeropts,false);
     if innerhull.is_empty() || outerhull.is_empty() {
         return Err(re_error("arith","no hull points found")) };
     let mad = pts.madgm(&median)?;
@@ -450,20 +448,22 @@ fn hulls() -> Result<(), RE> {
     ); 
     println!(
         "Inner hull min max radii: {} {}\nTheir tm_statistics:\t  {} {}",
-        innerpts.first().expect("Empty hullidx")
+        zeropts[*innerhull.first().expect("Empty hullidx")]
             .vmag()
             .gr(),
-        innerpts.last().expect("Empty hullidx")
+        zeropts[*innerhull.last().expect("Empty hullidx")]
             .vmag()
             .gr(),
-        innerpts.first().unwrap()
+        zeropts[*innerhull.first().unwrap()]
             .tm_statistic(&median, mad)?
             .gr(),
-        innerpts.last().unwrap()
+        zeropts[*innerhull.last().unwrap()]
             .tm_statistic(&median, mad)?
             .gr()
     );
-    let insidecounts:Vec<usize> = innerpts.iter().map(|p| zeropts.insideness(p)).collect();
+ let insidecounts:Vec<usize> = 
+        innerhull.iter()
+        .map(|p| zeropts.insideness(&zeropts[*p])).collect();
     println!("Insideness of innerhull points: {}",insidecounts.gr());
 
     let sigvec = zeropts.sigvec(&innerhull)?;
@@ -488,16 +488,16 @@ fn hulls() -> Result<(), RE> {
     );
     println!(
         "Outer hull min max radii: {} {}\nTheir tm_statistics:\t  {} {}",
-        outerpts.first().expect("Empty hullidx")
+        zeropts[*outerhull.last().expect("Empty hullidx")]
             .vmag()
             .gr(),
-        outerpts.last().expect("Empty hullidx")
+        zeropts[*outerhull.first().expect("Empty hullidx")]
             .vmag()
             .gr(),
-        outerpts.first().unwrap()
+        zeropts[*outerhull.last().unwrap()]
             .tm_statistic(&median, mad)?
             .gr(),
-        outerpts.last().unwrap()
+        zeropts[*outerhull.first().unwrap()]
             .tm_statistic(&median, mad)?
             .gr()
     );

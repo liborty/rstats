@@ -167,8 +167,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         self.vector_fn(|s| Ok(s.vsub(m)))   
     }
 
-    /// Proportions of points along each +/-axis (hemisphere).
-    /// Includes (counts) orthogonal points.
+    /// Weighted sums of points in each hemisphere.
     /// Uses only the points specified in idx (e.g. the convex hull).
     /// Self should normally be zero median vectors, i.e. `self.translate(&median)`
     fn wsigvec(self, idx: &[usize], ws:&[U]) -> Result<Vec<f64>,RE> { 
@@ -179,16 +178,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         for &i in idx { 
             let wf:f64 = ws[i].clone().into();
             wsum += wf;
-            // let zerogm = self[i].vsub::<f64>(gm);
             for (j,component) in self[i].iter().enumerate() {
                 let cf:f64 = component.clone().into();
-                if cf == 0. { 
-                    wsum += wf;
-                    hemis[j] += wf;
-                    hemis[dims+j] += wf;
-                }
-                else if cf > 0. { hemis[j] += wf; }
-                else { hemis[dims+j] += wf; };  
+                if cf < 0. { hemis[dims+j] -= wf*cf; }
+                else { hemis[j] += wf*cf; };  
             };
         };
         hemis.iter_mut().for_each(|hem| *hem /= wsum );

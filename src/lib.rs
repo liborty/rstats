@@ -318,16 +318,16 @@ pub trait VecVec<T> {
     fn quasimedian(self) -> Result<Vec<f64>, RE>;
     /// Geometric median estimate's error
     fn gmerror(self, gm: &[f64]) -> f64;
-    /// Sums of projections of points on each +/-axis (by hemispheres) 
+    /// Sums of points in each hemisphere
     fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE>;
     /// madgm, median of radii from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64, RE>;
     /// stdgm mean of radii from gm: nd data spread estimator
     fn stdgm(self, gm: &[f64]) -> Result<f64, RE>;
-    /// Inner hull points from their square radii and their ascending index `radindex`  
-    fn inner_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize>;    
-    /// Outer hull points from their square radii `self` and their decending index `radindex`
-    fn outer_hull(self, sqrads: &[f64], radindex: &[usize]) -> Vec<usize>;
+    /// Outer hull subscripts from their square radii and their sort index. 
+    fn outer_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>; 
+    /// Inner hull subscripts from their square radii and their sort index.  
+    fn inner_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>;
     /// Measure of likelihood of zero median point **p** belonging to a zero median data cloud `self`.
     fn insideness(self, p: &[f64]) -> usize;
     /// Collects indices of outer and inner hull points, from zero median data    
@@ -379,7 +379,7 @@ pub trait VecVecg<T, U> {
     fn trend(self, eps: f64, v: Vec<Vec<U>>) -> Result<Vec<f64>, RE>;
     /// Subtract m from all points - e.g. transform to zero median form
     fn translate(self, m: &[U]) -> Result<Vec<Vec<f64>>, RE>;
-    /// Proportions of points along each +/-axis (hemisphere)
+    /// Weighted sums of points in each hemisphere
     fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
     /// Dependencies of vector m on each vector in self
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>, RE>;

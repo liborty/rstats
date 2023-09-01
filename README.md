@@ -331,9 +331,11 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 
 ## Trait VecVecg
 
-Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own weight). Matrices multiplications.
+Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own significance weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 1.3.1** - Some more changes to the `hulls` fixed `wsigvec` to be consistent with `sigvec`.
 
 * **Version 1.3.0** - Renamed `t_stat -> tm_stat` and `t_statistic -> tm_statistic` to avoid potential confusion with classical t-statistic. Added `insideness` of `nd` points. Improved `hulls` algorithms and their tests. Changed `sigvec` and `dotsig`.
 
@@ -341,7 +343,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 1.2.51** - Upped dependency on `medians` to version 2.3.
 
-* **Version 1.2.50** - Upped dependency on `indxvec` to version 1.8. Added error checking to 'contribution' methods in trait Vecg.
+* **Version 1.2.50** - Upped dependency on `indxvec` to version 1.8. Added error checking to 'contribution' methods in trait `Vecg`.
 
 * **Version 1.2.49** - Added `wradii`. Some more code rationalizations.
 
