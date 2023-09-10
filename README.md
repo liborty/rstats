@@ -1,4 +1,4 @@
-# Rstats [![crates.io](https://img.shields.io/crates/v/Rstats?logo=rust)](https://crates.io/crates/rstats) [![GitHub last commit](https://img.shields.io/github/last-commit/liborty/Rstats/HEAD?logo=github)](https://github.com/liborty/Rstats) [![Actions Status](https://github.com/liborty/rstats/actions/workflows/tests.yml/badge.svg)](https://github.com/liborty/rstats/actions)
+# Rstats [![crates.io](https://img.shields.io/crates/v/Rstats?logo=rust)](https://crates.io/crates/rstats) [![crates.io](https://img.shields.io/crates/d/rstats?logo=rust)](https://crates.io/crates/rstats) [![GitHub last commit](https://img.shields.io/github/last-commit/liborty/Rstats/HEAD?logo=github)](https://github.com/liborty/Rstats) [![Actions Status](https://github.com/liborty/rstats/actions/workflows/tests.yml/badge.svg)](https://github.com/liborty/rstats/actions)
 
 ## Author: Libor Spacek
 
@@ -6,7 +6,7 @@
 
 This crate is written in 100% safe Rust.
 
-Insert `Rstats = "^1"` in the `Cargo.toml` file, under `[dependencies]`.
+Insert `Rstats = "^1.3"` in the `Cargo.toml` file, under `[dependencies]`.
 
 Use in your source files any of the following structs, as and when needed:
 

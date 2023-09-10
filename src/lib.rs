@@ -27,9 +27,7 @@ pub use medians::{error::MedError, MStats, Median, Medianf64};
 // Auxiliary Functions
 
 /// Convenience dummy function for quantify closure
-pub fn noop(f: &f64) -> f64 {
-    *f
-}
+pub fn noop(f: &f64) -> f64 { *f }
 
 /// Convenience From quantification invocation
 pub fn fromop<T: Clone + Into<f64>>(f: &T) -> f64 {
