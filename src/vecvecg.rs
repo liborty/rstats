@@ -185,7 +185,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 else { hemis[j] += wf*cf; };  
             };
         };
-        hemis.iter_mut().for_each(|hem| *hem /= wsum );
+        for hem in &mut hemis { *hem /= wsum; };
         Ok(hemis)
     } 
 
