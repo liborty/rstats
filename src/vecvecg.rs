@@ -1,5 +1,4 @@
 use crate::{re_error,noop,RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
-// use std::convert::identity;
 use indxvec::Mutops;
 use medians::Medianf64;
 use rayon::prelude::*;
@@ -39,9 +38,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// 1.0-dotproduct with **v**, in range [0,2] 
     fn divs(self, v: &[U]) -> Result<Vec<f64>,RE> { 
         if self.is_empty() { 
-            return Err(re_error("empty","divs given no points")); }; 
+            return re_error("empty","divs given no points")?; }; 
         if self[0].len() != v.len() { 
-            return Err(re_error("size","divs dimensions mismatch")); }; 
+            return re_error("size","divs dimensions mismatch")?; }; 
         let uv = v.vunit()?;
         self.scalar_fn(|p| Ok(1.0-p.vunit()?.dotp(&uv)))
     }
@@ -49,9 +48,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// median of weighted 1.0-dotproducts of **v**, with all in self
     fn wdivs(self, ws:&[U], v: &[f64]) -> Result<(Vec<f64>,f64),RE> { 
         if self.is_empty() { 
-            return Err(re_error("empty","wdivs given no points")); }; 
+            return re_error("empty","wdivs given no points")?; }; 
         if self[0].len() != v.len() { 
-            return Err(re_error("size","wdivs dimensions mismatch")); }; 
+            return re_error("size","wdivs dimensions mismatch")?; }; 
         let uv = v.vunit()?;
         self.scalar_wfn(ws,|p| Ok(1.0-p.vunit()?.dotp(&uv)))
     }
@@ -59,9 +58,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// median of weighted cos deviations from **v**
     fn wdivsmed(self, ws: &[U], v: &[f64]) -> Result<f64,RE> { 
         if self.is_empty() { 
-            return Err(re_error("empty","wmeddivs given no points")); }; 
+            return re_error("empty","wmeddivs given no points")?; }; 
         if self[0].len() != v.len() { 
-            return Err(re_error("size","wmeddivs dimensions mismatch")); }; 
+            return re_error("size","wmeddivs dimensions mismatch")?; }; 
         let (values,wsum) = self.wdivs(ws,v)?;
         Ok((self.len() as f64) * values.median()?/wsum)
     }
@@ -69,18 +68,18 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// weighted radii to all points in self
     fn wradii(self, ws:&[U], gm: &[f64]) -> Result<(Vec<f64>,f64),RE> {
         if self.is_empty() { 
-            return Err(re_error("empty","wradii given no points")); }; 
+            return re_error("empty","wradii given no points")?; }; 
         if self[0].len() != gm.len() { 
-            return Err(re_error("size","wradii dimensions mismatch")); }; 
+            return re_error("size","wradii dimensions mismatch")?; }; 
         self.scalar_wfn(ws, |p| Ok(p.vdist(gm)))
     }
 
     /// wmadgm median of weighted deviations from (weighted) gm: stable nd data spread estimator.
     fn wmadgm(self, ws: &[U], gm: &[f64]) -> Result<f64,RE> { 
         if self.is_empty() { 
-            return Err(re_error("empty","wmadgm given no points")); }; 
+            return re_error("empty","wmadgm given no points")?; }; 
         if self[0].len() != gm.len() { 
-            return Err(re_error("size","wmadgm dimensions mismatch")); }; 
+            return re_error("size","wmadgm dimensions mismatch")?; }; 
         let (values,wsum) = self.scalar_wfn(ws,|p| Ok(p.vdist(gm)))?;
         Ok((self.len() as f64) * values.median()?/wsum)
     }
@@ -88,14 +87,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Rows of matrix self multiplying (column) vector v
     fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { 
-            return Err(re_error("DataError","leftmultv dimensions mismatch")); };
+            return re_error("DataError","leftmultv dimensions mismatch")?; };
         Ok(self.iter().map(|s| s.dotp(v)).collect())
     }
 
     /// Row vector v multipying columns of matrix self
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if v.len() != self.len() { 
-            return Err(re_error("DataError","rightmultv dimensions mismatch")); }; 
+            return re_error("DataError","rightmultv dimensions mismatch")?; }; 
         Ok((0..self[0].len()).map(|colnum| v.columnp(colnum,self)).collect())
     }
 
@@ -105,7 +104,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Result dimensions are self.len() x m[0].len() 
     fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RE> {
         if self[0].len() != m.len() { 
-            return Err(re_error("DataError","matmult dimensions mismatch")); }; 
+            return re_error("DataError","matmult dimensions mismatch")?; }; 
         Ok(self.par_iter().map(|srow| 
             (0..m[0].len()).map(|colnum| srow.columnp(colnum,m)).collect()
             ).collect::<Vec<Vec<f64>>>()) 
@@ -164,7 +163,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// both of which depend on the choice of axis.
      fn translate(self, m:&[U]) -> Result<Vec<Vec<f64>>,RE> { 
         if self[0].len() != m.len() { 
-            return Err(re_error("DataError","translate dimensions mismatch")); }; 
+            return re_error("DataError","translate dimensions mismatch")?; }; 
         self.vector_fn(|s| Ok(s.vsub(m)))   
     }
 
@@ -174,7 +173,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn wsigvec(self, idx: &[usize], ws:&[U]) -> Result<Vec<f64>,RE> { 
         let mut wsum = 0_f64; 
         let dims = self[0].len();
-        if self.len() != ws.len() { return Err(RError::DataError("wtukeyvec weights number mismatch".to_owned())); }; 
+        if self.len() != ws.len() { return re_error("DataError","wsigvec: weights number mismatch")?; }; 
         let mut hemis = vec![0_f64; 2*dims]; 
         for &i in idx { 
             let wf:f64 = ws[i].clone().into();
@@ -193,7 +192,8 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// m is typically a vector of outcomes.
     /// Factors out the entropy of m to save repetition of work
     fn dependencies(self, m:&[U]) -> Result<Vec<f64>,RE> {  
-        if self[0].len() != m.len() { return Err(RError::DataError("dependencies dimensions mismatch".to_owned())); }
+        if self[0].len() != m.len() { 
+            return re_error("DataError","dependencies: dimensions mismatch")?; };
         let entropym = m.entropy();
         return self.par_iter().map(|s| -> Result<f64,RE> {  
             Ok((entropym + s.entropy())/
@@ -203,7 +203,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Individual distances from any point v, typically not a member, to all the members of self.    
     fn dists(self, v:&[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { 
-            return Err(re_error("DataError","dists dimensions mismatch")); }
+            return re_error("DataError","dists dimensions mismatch")?; }
         self.scalar_fn(|p| Ok(p.vdist(v)))
     }
 
@@ -214,7 +214,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// The radius (distance) from gm is far more efficient, once gm has been found.
     fn distsum(self, v: &[U]) -> Result<f64,RE> {
         if self[0].len() != v.len() { 
-            return Err(re_error("DataError","distsum dimensions mismatch")); }
+            return re_error("DataError","distsum dimensions mismatch")?; }
         Ok(self.iter().map(|p| p.vdist(v)).sum::<f64>())
     }
 

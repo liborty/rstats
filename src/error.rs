@@ -69,12 +69,12 @@ impl From<std::io::Error> for RError<String> {
 
 /// Convenience function for building RError<String>  
 /// from short name and payload message, which can be either &str or String
-pub fn re_error(kind: &str, msg: impl Into<String>) -> RE {
+pub fn re_error<T>(kind: &str, msg: impl Into<String>) -> Result<T,RError<String>> {
     match kind {
-        "empty" => RError::NoDataError(msg.into()), 
-        "size"  => RError::DataError(msg.into()), 
-        "arith" => RError::ArithError(msg.into()),
-        "other" => RError::OtherError(msg.into()),
-        _ => RError::OtherError("Wrong error kind given to re_error".into())
+        "empty" => Err(RError::NoDataError(msg.into())), 
+        "size"  => Err(RError::DataError(msg.into())), 
+        "arith" => Err(RError::ArithError(msg.into())),
+        "other" => Err(RError::OtherError(msg.into())),
+        _ => Err(RError::OtherError("Wrong error kind given to re_error".into()))
     }
 }

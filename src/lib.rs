@@ -21,7 +21,7 @@ pub mod vecvecg;
 
 pub use crate::error::{re_error, RError, RE};
 // reexporting useful related methods
-pub use indxvec::{printing::*, MinMax, Printing};
+pub use indxvec::{here,printing::*, MinMax, Printing};
 pub use medians::{error::MedError, MStats, Median, Medianf64};
 
 // Auxiliary Functions
@@ -266,6 +266,8 @@ pub trait Vecu8 {
 /// Methods applicable to a slice of vectors of generic end type.
 /// Operations on a whole set of multidimensional vectors.
 pub trait VecVec<T> {
+    /// Linearly weighted approximate time series derivative at the last point (present time).
+    fn dvdt(self) -> Result<Vec<f64>, RE>; 
     /// Maps a scalar valued closure onto all vectors in self
     fn scalar_fn(self, f: impl Fn(&[T]) -> Result<f64, RE>) -> Result<Vec<f64>, RE>;
     /// Maps vector valued closure onto all vectors in self and collects

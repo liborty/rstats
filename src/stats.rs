@@ -537,7 +537,7 @@ where
     }
 
     /// Linearly weighted approximate time series derivative at the last point (present time).
-    /// Backwards linear weighted mean (half filter) minus the median.
+    /// Weighted sum (backwards half filter), minus the median.
     /// Rising values return positive result and vice versa.
     fn dfdt(self) -> Result<f64, RE> {
         let len = self.len();
@@ -546,12 +546,11 @@ where
                 "dfdt time series too short: {len}"
             )));
         };
-        let mut weight = 0_f64;
+        let mut weight = 0_f64; 
         let mut sumwx = 0_f64;
-        for x in self.iter() {
-            let fx: f64 = x.clone().into();
+        for x in self.iter() { 
             weight += 1_f64;
-            sumwx += weight * fx;
+            sumwx += weight * x.clone().into();
         }
         Ok(sumwx / (sumn(len) as f64) - self.median(fromop)?)
     }

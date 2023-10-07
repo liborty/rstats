@@ -1,4 +1,4 @@
-use crate::{sumn, re_error, RError, RE, MStats, MinMax, MutVecg, Stats, TriangMat, VecVec, Vecg};
+use crate::{here,sumn, re_error, RError, RE, MStats, MinMax, MutVecg, Stats, TriangMat, VecVec, Vecg};
 use indxvec::Vecops;
 use medians::{error::MedError, Medianf64};
 use rayon::prelude::*;
@@ -9,6 +9,25 @@ where
     Vec<Vec<T>>: IntoParallelIterator,
     Vec<T>: IntoParallelIterator
 {
+
+    /// Linearly weighted approximate time series derivative at the last point (present time).
+    /// Weighted average (backwards half filter), minus the median. 
+    fn dvdt(self) -> Result<Vec<f64>, RE> {
+        let len = self.len();
+        if len < 2 {
+            return Err(RError::NoDataError(format!(
+                "dfdt time series too short: {len}"
+            )));
+        };
+        let mut weight = 1_f64; 
+        let mut sumwv:Vec<f64> = self[0].iter().map(|x| x.clone().into()).collect();
+        for v in self.iter().skip(1) { 
+            weight += 1_f64;
+            sumwv.mutvadd(&v.smult(weight));
+        };
+        Ok(sumwv.smult(1.0/(sumn(len) as f64)).vsub(&self.gmedian(1.0E-10)))
+    }
+
     /// Maps scalar valued closure onto all vectors in self and collects
     fn scalar_fn(self,f: impl Fn(&[T]) -> Result<f64,RE>) -> Result<Vec<f64>,RE> {
         self.iter().map(|s|-> Result<f64,RE> {
@@ -243,7 +262,7 @@ where
     /// Radius of a point specified by its subscript.    
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE> {
         if i > self.len() {
-            return Err(re_error("DataError","radius: invalid subscript"));
+            return re_error("DataError",here!("radius: invalid subscript"))?;
         }
         Ok(self[i].vdist::<f64>(gm))
     }
@@ -279,7 +298,7 @@ where
     fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> { 
         let dims = self[0].len();
         if self.is_empty() {
-            return Err(re_error("empty","sigvec given no data"));
+            return re_error("empty",here!("sigvec given no data"))?;
         };
         let mut hemis = vec![0_f64; 2 * dims];
         for &i in idx {
@@ -298,14 +317,14 @@ where
     /// madgm median of distances from gm: stable nd data spread measure
     fn madgm(self, gm: &[f64]) -> Result<f64, RE> {
         if self.is_empty() { 
-            return Err(re_error("NoDataError","madgm given zero length vec!")); };     
+            return re_error("NoDataError","madgm given zero length vec!")?; };     
         Ok(self.radii(gm)?.median()?)
      }
 
     /// stdgm mean of distances from gm: nd data spread measure, aka nd standard deviation
     fn stdgm(self, gm: &[f64]) -> Result<f64,RE> { 
         if self.is_empty() { 
-            return Err(re_error("NoDataError","stdgm given zero length vec!")); };     
+            return re_error("NoDataError","stdgm given zero length vec!")?; };     
         Ok( self.iter()
             .map(|s| s.vdist(gm)).sum::<f64>()/self.len() as f64 ) 
     }

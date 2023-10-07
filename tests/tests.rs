@@ -36,7 +36,7 @@ fn u8() -> Result<(), RE> {
     let d = 5_usize;
     let n = 7_usize;
     println!(
-        "Testing on a random set of {}points in {}d space:",
+        "{YL}Testing on a random set of {}points in {}d space:{UN}",
         n.yl(),
         d.yl()
     );
@@ -50,7 +50,7 @@ fn u8() -> Result<(), RE> {
     println!("Comediances:\n{com}");
     println!("Their Distance: {}", cov.data.vdist(&com.data));
     println!(
-        "Column Median Correlations:\n{}",
+        "Median correlations of data columns:\n{}",
         pt.transpose()
             .crossfeatures(|v1, v2| v1.mediancorr(v2).expect("median corr: crossfeatures u8\n"))?
     );
@@ -76,19 +76,19 @@ fn fstats() -> Result<(), RE> {
     println!("Geometric  Mean  {}", v1.gmeanstd()?);
     println!("Harmonic   Mean  {}", v1.hmeanstd()?);
     println!(
-        "T-statistic of 5 against median {}",
+        "tm_stat of 5 against median {}",
         tm_stat(5., v1.medstats()?).gr()
     );
     println!(
-        "T-statistic of 5 against amean  {}",
+        "tm-stat of 5 against amean  {}",
         tm_stat(5., v1.ameanstd()?).gr()
     );
     println!(
-        "T-statistic of 5 against gmean  {}",
+        "tm-stat of 5 against gmean  {}",
         tm_stat(5., v1.gmeanstd()?).gr()
     );
     println!(
-        "T-statistic of 5 against hmean   {}",
+        "tm-stat of 5 against hmean   {}",
         tm_stat(5., v1.hmeanstd()?).gr()
     );
     println!("Autocorr1:\t{}", v1.autocorr()?.gr());
@@ -100,8 +100,8 @@ fn fstats() -> Result<(), RE> {
     println!("Euclidean dist:\t{}", v2.vdist(&v1).gr());
     println!("Cityblock dist:\t{}", v2.cityblockd(&v1).gr());
     let d = 5_usize;
-    let n = 7_usize;
-    println!("Testing on a random set of {n} points in {d} d space:");
+    let n = 9_usize;
+    println!("{YL}Testing on a random set of {n} points in {d} d space:{UN}");
     let pt = Rnum::newf64().ranvv(d, n)?.getvvf64()?;
     println!(
         "Classical Covariances:\n{}",
@@ -112,7 +112,7 @@ fn fstats() -> Result<(), RE> {
         pt.covar(&pt.gmedian(EPS))?.gr()
     );
     println!(
-        "Column Median Correlations:\n{}",
+        "Median Correlations of data columns:\n{}",
         pt.transpose()
             .crossfeatures(|v1, v2| v1.mediancorr(v2).expect("median corr: crossfeatures f64\n"))?
     );
@@ -175,7 +175,7 @@ fn genericstats() -> Result<(), RE> {
     println!("Autocorrelation: {}", v.autocorr()?.gr());
     println!("dfdt:\t\t {}", v.dfdt()?.gr());
     v.reverse();
-    println!("rev dfdt:\t{}", v.dfdt()?.gr());
+    println!("dfdt(reversed):\t{}", v.dfdt()?.gr());
     Ok(())
 }
 
@@ -232,11 +232,11 @@ fn vecg() -> Result<(), RE> {
 /// numbers of points can differ
 fn trend() -> Result<(), RE> {
     let d = 7_usize;
-    set_seeds(777);
+    // set_seeds(777);
     let rf64 = Rnum::newf64();
     let pts1 = rf64.ranvv(d, 37)?.getvvf64()?;
     let pts2 = rf64.ranvv(d, 50)?.getvvf64()?;
-    println!("\nTrend vector:\n{}\n", pts1.trend(EPS, pts2)?.gr());
+    println!("\nTrend vector (of new random data):\n{}\n", pts1.trend(EPS, pts2)?.gr());
     Ok(())
 }
 
@@ -300,14 +300,15 @@ fn vecvec() -> Result<(), RE> {
     let d = 10_usize;
     let n = 120_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
-    set_seeds(113);
+    // set_seeds(113);
     let ru = Rnum::newu8();
-    let pts = ru.ranvv_in(d, n, 0., 4.)?.getvvu8()?;
-    // println!("\nTest data:\n{}",pts.gr());
+    let pts = ru.ranvv(d,n)?.getvvu8()?;
+    println!("\nFirst data vector:\n{}",pts[0].gr());
     println!("Set joint entropy: {}", pts.jointentropyn()?.gr());
     println!("Set dependence:    {}", pts.dependencen()?.gr());
+    println!("Approximate dv/dt:\n{}", pts.dvdt()?.gr());
     let outcomes = ru.ranv(n)?.getvu8()?;
-    println!("\nTest outcomes:\n{}",outcomes.gr());
+    println!("\nRandom testing outcomes:\n{}",outcomes.gr());
     let transppt = pts.transpose();
     println!(
         "\nDependencies of columns with test outcomes:\n{}",
@@ -437,7 +438,7 @@ fn hulls() -> Result<(), RE> {
     let zeropts = pts.translate(&median)?;
     let (innerhull, outerhull) = zeropts.hulls();
     if innerhull.is_empty() || outerhull.is_empty() {
-        return Err(re_error("arith","no hull points found")) };
+        return re_error("arith","no hull points found")? };
     let mad = pts.madgm(&median)?;
     println!("Madgm: {}", mad.gr());
     println!(

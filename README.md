@@ -335,6 +335,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 1.3.2** - Added `dvdt` - linearly weighted (approximate) time series derivative at the last point (present time). Similar to dfdt but works on vectors and returns a derivative vector. Changed error helper function `re_error` to return Result (Err variant), that can be more conveniently processed upstream with just the ? operator.
+
 * **Version 1.3.1** - Some more changes to the `hulls` fixed `wsigvec` to be consistent with `sigvec`.
 
 * **Version 1.3.0** - Renamed `t_stat -> tm_stat` and `t_statistic -> tm_statistic` to avoid potential confusion with classical t-statistic. Added `insideness` of `nd` points. Improved `hulls` algorithms and their tests. Changed `sigvec` and `dotsig`.

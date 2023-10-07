@@ -1,6 +1,6 @@
 use crate::{
     error::{re_error, RError, RE},
-    fromop, Stats, TriangMat, Vecg
+    here, fromop, Stats, TriangMat, Vecg
 };
 use indxvec::{Indices, Vecops};
 use medians::Median;
@@ -50,12 +50,11 @@ where
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE> {
         let dims = self.len();
         if 2 * dims != sig.len() {
-            return Err(re_error(
+            return re_error(
                 "size",
                 "dotsig: sig vec must have double the dimensions",
-            ));
-        }
- 
+            )?;
+        } 
         let sunit = self.vunit()?;        
         let mut ressum = 0_f64;
         for (i, &scomp) in sunit.iter().enumerate() {
@@ -433,7 +432,7 @@ where
         let dv = self.vsub::<f64>(gm);
         let mag = dv.vmag();
         if !mag.is_normal() {
-            return Err(re_error("arith","point being added is coincident with gm"));
+            return re_error("arith","point being added is coincident with gm")?;
         };
         // adding new unit vector (to approximate zero vector) and rescaling
         let recip = 1f64 / mag; 
@@ -444,7 +443,7 @@ where
     fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64,RE> {
         let mag = self.vdist::<f64>(gm);
         if !mag.is_normal() {
-            return Err(re_error("arith","point being added is coincident with gm"));
+            return re_error("arith",here!("point being added is coincident with gm"))?;
         };
         let recip = 1f64 / mag; // first had to test for division by zero
         Ok((nf + 1.0) / (recips + recip))
@@ -455,7 +454,7 @@ where
         let dv = self.vsub::<f64>(gm);
         let mag = dv.vmag();
         if !mag.is_normal() {
-            return Err(re_error("arith","point being removed is coincident with gm")); 
+            return re_error("arith",here!("point being removed is coincident with gm"))?; 
         };
         let recip = 1f64 / mag; // first had to test for division by zero
         Ok(dv.vunit()?.smult::<f64>(recip / (recip - recips))) // scaling
@@ -466,7 +465,7 @@ where
     fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64,RE> {
         let mag = self.vdist::<f64>(gm);
         if !mag.is_normal() {
-            return Err(re_error("arith","point being removed is coincident with gm")); 
+            return re_error("arith",here!("point being removed is coincident with gm"))?; 
         };
         let recip = 1f64 / mag; // first had to test for division by zero
         Ok((nf - 1.0) / (recip - recips))
