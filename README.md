@@ -195,11 +195,11 @@ if dif <= 0_f64 {
 pub type RE = RError<String>;
 ```
 
-Convenience function `re_error` can be used to construct these errors with either String or &str payload messages, as follows:
+Convenience function `re_error` can be used to construct these errors with either `String` or `&str` message, as follows:
 
 ```rust
 if denom == 0. {
-    return Err(re_error("arith","Attempted division by zero!"));
+    return re_error("arith","Attempted division by zero!")?;
 };
 ```
 
