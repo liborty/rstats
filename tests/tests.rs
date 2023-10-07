@@ -309,6 +309,7 @@ fn vecvec() -> Result<(), RE> {
     println!("Approximate dv/dt:\n{}", pts.dvdt()?.gr());
     let outcomes = ru.ranv(n)?.getvu8()?;
     println!("\nRandom testing outcomes:\n{}",outcomes.gr());
+    println!("wdvdt using outcomes as weithgs:\n{}", pts.wdvdt(&outcomes)?.gr());
     let transppt = pts.transpose();
     println!(
         "\nDependencies of columns with test outcomes:\n{}",

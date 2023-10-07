@@ -35,6 +35,23 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         Ok((resvecvec,wsum))
     } 
 
+    /// Individually time weighted time series derivative of vectors.
+    /// Weighted arithmetic mean, minus the median. 
+    fn wdvdt(self, ws: &[U]) -> Result<Vec<f64>, RE> {
+        let len = self.len();
+        if len < 2 {
+            return re_error("NoDataError","time series too short: {len}");
+        };
+        let mut weightsum:f64 = ws[0].clone().into();
+        let mut sumv:Vec<f64> = self[0].smult(weightsum);
+        for i in 1..len { 
+            let fws = ws[i].clone().into();
+            weightsum += fws;
+            sumv.mutvadd(&self[i].smult(fws));
+        };
+        Ok(sumv.smult(1.0/weightsum).vsub(&self.gmedian(1.0E-10)))
+    }
+
     /// 1.0-dotproduct with **v**, in range [0,2] 
     fn divs(self, v: &[U]) -> Result<Vec<f64>,RE> { 
         if self.is_empty() { 

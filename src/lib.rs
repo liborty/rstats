@@ -144,8 +144,8 @@ pub trait Stats {
 /// Vector Algebra on two vectors (represented here as generic slices).
 /// Also included are scalar operations on the `self` vector.
 pub trait Vecg {
-    /// nd tm_statistic of self against geometric median and madgm spread
-    fn tm_statistic(self, gm: &[f64], madgm: f64) -> Result<f64, RE>;
+    /// nd tm_statistic of self against centre (geometric median) spread (madgm)
+    fn tm_statistic(self, centre: &[f64], spread: f64) -> Result<f64, RE>;
     /// Dot product of vector self with column c of matrix v
     fn columnp<U: Clone + Into<f64>>(self, c: usize, v: &[Vec<U>]) -> f64;
     /// Scalar addition to vector
@@ -355,6 +355,8 @@ pub trait VecVecg<T, U> {
         v: &[U],
         f: impl Fn(&[T]) -> Result<Vec<f64>, RE>,
     ) -> Result<(Vec<Vec<f64>>, f64), RE>;
+    /// Individually weighted time series derivative of vectors
+    fn wdvdt(self, ws: &[U]) -> Result<Vec<f64>, RE>;
     /// 1.0-dotproducts with **v**, in range [0,2]
     fn divs(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// weighted 1.0-dotproduct of **v**, with all in self

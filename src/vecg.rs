@@ -9,10 +9,10 @@ impl<T> Vecg for &[T]
 where
     T: Clone + PartialOrd + Into<f64>
 {
-    /// nd tm_statistic of self against geometric median and madgm spread.     
+    /// nd tm_statistic of self against centre and spread.     
     /// Unlike in 1d, is always positive.
-    fn tm_statistic(self, gm: &[f64], madgm: f64) -> Result<f64, RE> {
-        Ok(self.vdist::<f64>(gm) / madgm)
+    fn tm_statistic(self, centre: &[f64], spread: f64) -> Result<f64, RE> {
+        Ok(self.vdist::<f64>(centre) / spread)
     }
 
     /// Dot product of vector self with column c of matrix v
@@ -52,18 +52,18 @@ where
         if 2 * dims != sig.len() {
             return re_error(
                 "size",
-                "dotsig: sig vec must have double the dimensions",
+                "dotsig: sig vec must have double the dimensions of self",
             )?;
         } 
-        let sunit = self.vunit()?;        
+        let self_unit = self.vunit()?;        
         let mut ressum = 0_f64;
-        for (i, &scomp) in sunit.iter().enumerate() {
-            if scomp > 0_f64 {
-                ressum += scomp * sig[i];
+        for (i, &component) in self_unit.iter().enumerate() {
+            if component > 0_f64 {
+                ressum += component * sig[i];
                 continue;
             };
-            if scomp < 0_f64 {
-                ressum -= scomp * sig[dims + i];
+            if component < 0_f64 {
+                ressum -= component * sig[dims + i];
             };
         }
         Ok(ressum)

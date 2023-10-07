@@ -7,8 +7,7 @@ impl<T> VecVec<T> for &[Vec<T>]
 where
     T: Clone + PartialOrd + Sync + Into<f64>,
     Vec<Vec<T>>: IntoParallelIterator,
-    Vec<T>: IntoParallelIterator
-{
+    Vec<T>: IntoParallelIterator{
 
     /// Linearly weighted approximate time series derivative at the last point (present time).
     /// Weighted average (backwards half filter), minus the median. 
@@ -295,6 +294,7 @@ where
     /// Points that are perpendicular to the axis are excluded from both +/-ve hemispheres.
     /// Sums only the points specified in idx (e.g. the outer hull).
     /// Self should normally be zero median vectors,e.g. `self.translate(&median)`
+    /// Result is normalized to unit vector.
     fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> { 
         let dims = self[0].len();
         if self.is_empty() {
