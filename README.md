@@ -6,8 +6,6 @@
 
 This crate is written in 100% safe Rust.
 
-Insert `Rstats = "^1.3"` in the `Cargo.toml` file, under `[dependencies]`.
-
 Use in your source files any of the following structs, as and when needed:
 
 ```rust  
