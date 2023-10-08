@@ -21,8 +21,8 @@ pub mod vecvecg;
 
 pub use crate::error::{re_error, RError, RE};
 // reexporting useful related methods
-pub use indxvec::{here,printing::*, MinMax, Printing};
-pub use medians::{error::MedError, MStats, Median, Medianf64};
+pub use indxvec::{here, printing::*, MinMax, Printing};
+pub use medians::{error::MedError, Median, Medianf64};
 
 // Auxiliary Functions
 
@@ -36,8 +36,8 @@ pub fn fromop<T: Clone + Into<f64>>(f: &T) -> f64 {
 
 /// tm_statistic in 1d: (value-centre)/dispersion
 /// generalized to any measure of central tendency and dispersion
-pub fn tm_stat(val: f64, mstats: MStats) -> f64 {
-    (val - mstats.centre) / mstats.dispersion
+pub fn tm_stat(val: f64, params: Params) -> f64 {
+    (val - params.centre) / params.spread
 }
 
 /// Sum of natural numbers 1..n.
@@ -57,6 +57,25 @@ pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
         res.push(row);
     }
     res
+}
+
+/// Holds measures of central tendency and spread.
+/// Usually some kind of mean and its associated standard deviation, or median and its MAD
+#[derive(Default)]
+pub struct Params {
+    /// central tendency - (geometric, arithmetic, harmonic means or median)
+    pub centre: f64,
+    /// measure of data spread, typically standard deviation or MAD
+    pub spread: f64,
+}
+impl std::fmt::Display for Params {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{YL}centre: {GR}{:.5}{YL} ± spread: {GR}{:.5}{UN}",
+            self.centre, self.spread
+        )
+    }
 }
 
 /// Compact Triangular Matrix.
@@ -106,27 +125,27 @@ pub trait Stats {
     /// Arithmetic mean
     fn amean(self) -> Result<f64, RE>;
     /// Arithmetic mean and standard deviation
-    fn ameanstd(self) -> Result<MStats, RE>;
+    fn ameanstd(self) -> Result<Params, RE>;
     /// Weighted arithmetic mean
     fn awmean(self) -> Result<f64, RE>;
     /// Weighted arithmetic men and standard deviation
-    fn awmeanstd(self) -> Result<MStats, RE>;
+    fn awmeanstd(self) -> Result<Params, RE>;
     /// Harmonic mean
     fn hmean(self) -> Result<f64, RE>;
     /// Harmonic mean and experimental standard deviation
-    fn hmeanstd(self) -> Result<MStats, RE>;
+    fn hmeanstd(self) -> Result<Params, RE>;
     /// Weighted harmonic mean
     fn hwmean(self) -> Result<f64, RE>;
     /// Weighted harmonic mean and standard deviation
-    fn hwmeanstd(self) -> Result<MStats, RE>;
+    fn hwmeanstd(self) -> Result<Params, RE>;
     /// Geometric mean
     fn gmean(self) -> Result<f64, RE>;
     /// Geometric mean and standard deviation ratio
-    fn gmeanstd(self) -> Result<MStats, RE>;
+    fn gmeanstd(self) -> Result<Params, RE>;
     /// Weighed geometric mean
     fn gwmean(self) -> Result<f64, RE>;
     /// Weighted geometric mean and standard deviation ratio
-    fn gwmeanstd(self) -> Result<MStats, RE>;
+    fn gwmeanstd(self) -> Result<Params, RE>;
     /// Probability density function of a sorted slice
     fn pdf(self) -> Vec<f64>;
     /// Information (entropy) in nats
@@ -136,7 +155,7 @@ pub trait Stats {
     /// Linear transform to interval `[0,1]`
     fn lintrans(self) -> Result<Vec<f64>, RE>;
     /// Linearly weighted approximate time series derivative at the last (present time) point.
-    fn dfdt(self) -> Result<f64, RE>;
+    fn dfdt(self, centre: f64) -> Result<f64, RE>;
     /// Householder reflection
     fn house_reflector(self) -> Vec<f64>;
 }
@@ -267,7 +286,7 @@ pub trait Vecu8 {
 /// Operations on a whole set of multidimensional vectors.
 pub trait VecVec<T> {
     /// Linearly weighted approximate time series derivative at the last point (present time).
-    fn dvdt(self) -> Result<Vec<f64>, RE>; 
+    fn dvdt(self, centre: &[f64]) -> Result<Vec<f64>, RE>; 
     /// Maps a scalar valued closure onto all vectors in self
     fn scalar_fn(self, f: impl Fn(&[T]) -> Result<f64, RE>) -> Result<Vec<f64>, RE>;
     /// Maps vector valued closure onto all vectors in self and collects
@@ -310,8 +329,8 @@ pub trait VecVec<T> {
     fn nxnonmember(self, g: &[f64]) -> (Vec<f64>, Vec<f64>, f64);
     /// Radius of a point specified by its subscript.    
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE>;
-    /// Arith mean and std (in MStats struct), Median and mad, Medoid and Outlier (in MinMax struct)
-    fn eccinfo(self, gm: &[f64]) -> Result<(MStats, MStats, MinMax<f64>), RE>
+    /// Arith mean and std (in Params struct), Median and mad, Medoid and Outlier (in MinMax struct)
+    fn eccinfo(self, gm: &[f64]) -> Result<(Params, Params, MinMax<f64>), RE>
     where
         Vec<f64>: FromIterator<f64>;
     /// Quasi median, recommended only for comparison purposes
@@ -356,7 +375,7 @@ pub trait VecVecg<T, U> {
         f: impl Fn(&[T]) -> Result<Vec<f64>, RE>,
     ) -> Result<(Vec<Vec<f64>>, f64), RE>;
     /// Individually weighted time series derivative of vectors
-    fn wdvdt(self, ws: &[U]) -> Result<Vec<f64>, RE>;
+    fn wdvdt(self, ws: &[U], centre: &[f64]) -> Result<Vec<f64>, RE>;
     /// 1.0-dotproducts with **v**, in range [0,2]
     fn divs(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// weighted 1.0-dotproduct of **v**, with all in self

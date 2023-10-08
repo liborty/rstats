@@ -1,4 +1,4 @@
-use crate::{here,sumn, re_error, RError, RE, MStats, MinMax, MutVecg, Stats, TriangMat, VecVec, Vecg};
+use crate::{here,sumn, re_error, RError, RE, Params, MinMax, MutVecg, Stats, TriangMat, VecVec, Vecg};
 use indxvec::Vecops;
 use medians::{error::MedError, Medianf64};
 use rayon::prelude::*;
@@ -11,7 +11,7 @@ where
 
     /// Linearly weighted approximate time series derivative at the last point (present time).
     /// Weighted average (backwards half filter), minus the median. 
-    fn dvdt(self) -> Result<Vec<f64>, RE> {
+    fn dvdt(self, centre: &[f64]) -> Result<Vec<f64>, RE> {
         let len = self.len();
         if len < 2 {
             return Err(RError::NoDataError(format!(
@@ -24,7 +24,7 @@ where
             weight += 1_f64;
             sumwv.mutvadd(&v.smult(weight));
         };
-        Ok(sumwv.smult(1.0/(sumn(len) as f64)).vsub(&self.gmedian(1.0E-10)))
+        Ok(sumwv.smult(1.0/(sumn(len) as f64)).vsub(centre))
     }
 
     /// Maps scalar valued closure onto all vectors in self and collects
@@ -266,15 +266,17 @@ where
         Ok(self[i].vdist::<f64>(gm))
     }
 
-    /// Arith mean and std (in MStats struct), Median and MAD (in another MStats struct), Medoid and Outlier (in MinMax struct)
+    /// Arith mean and std (in Params struct), Median and MAD (in another Params struct), Medoid and Outlier (in MinMax struct)
     /// of scalar radii of points in self.
     /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
-    fn eccinfo(self, gm: &[f64]) -> Result<(MStats, MStats, MinMax<f64>), RE>
+    fn eccinfo(self, gm: &[f64]) -> Result<(Params, Params, MinMax<f64>), RE>
     where
         Vec<f64>: FromIterator<f64>,
     {
         let rads: Vec<f64> = self.radii(gm)?;
-        Ok((rads.ameanstd()?, rads.medstats()?, rads.minmax()))
+        let radsmed = rads.median()?;
+        let radsmad = rads.mad(radsmed)?;
+        Ok((rads.ameanstd()?, Params{centre:radsmed,spread:radsmad}, rads.minmax()))
     }
 
     /// Quasi median, recommended only for comparison purposes

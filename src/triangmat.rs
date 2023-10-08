@@ -1,4 +1,4 @@
-use crate::{sumn, RError, Stats, TriangMat, Vecg, RE}; // MStats, MinMax, MutVecg, Stats, VecVec };
+use crate::{sumn, re_error, RError, Stats, TriangMat, Vecg, RE}; // MStats, MinMax, MutVecg, Stats, VecVec };
 pub use indxvec::{printing::*, Printing, Vecops};
 
 /// Display implementation for TriangMat
@@ -167,9 +167,7 @@ impl TriangMat {
         let sl = self.data.len();
         // input not long enough to compute anything
         if sl < 3 {
-            return Err(RError::NoDataError(format!(
-                "cholesky needs at least three TriangMat items: {self}"
-            )));
+            return re_error("empty","cholesky needs at least 3x3 TriangMat: {self}")?; 
         };
         // n is the dimension of the implied square matrix.
         // Not needed as an extra argument. We compute it
@@ -177,9 +175,7 @@ impl TriangMat {
         let (n, c) = TriangMat::rowcol(sl);
         // input is not a triangular number, is of wrong size
         if c != 0 {
-            return Err(RError::DataError(
-                "cholesky needs a triangular matrix".to_owned(),
-            ));
+            return re_error("size","cholesky needs a triangular matrix")?;
         };
         let mut res = vec![0.0; sl]; // result L is of the same size as the input
         for i in 0..n {
@@ -197,9 +193,7 @@ impl TriangMat {
                     // dif <= 0 means that the input matrix is not positive definite,
                     // or is ill-conditioned, so we return ArithError
                     if dif <= 0_f64 {
-                        return Err(RError::ArithError(format!(
-                            "cholesky needs a positive definite matrix {dif}"
-                        )));
+                        return re_error("arith","cholesky matrix is not positive definite")?;  
                     };
                     dif.sqrt()
                 }

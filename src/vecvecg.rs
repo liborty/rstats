@@ -36,8 +36,8 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     } 
 
     /// Individually time weighted time series derivative of vectors.
-    /// Weighted arithmetic mean, minus the median. 
-    fn wdvdt(self, ws: &[U]) -> Result<Vec<f64>, RE> {
+    /// Weighted arithmetic mean, minus the centre (geometric median). 
+    fn wdvdt(self, ws: &[U], centre: &[f64]) -> Result<Vec<f64>, RE> {
         let len = self.len();
         if len < 2 {
             return re_error("NoDataError","time series too short: {len}");
@@ -49,7 +49,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             weightsum += fws;
             sumv.mutvadd(&self[i].smult(fws));
         };
-        Ok(sumv.smult(1.0/weightsum).vsub(&self.gmedian(1.0E-10)))
+        Ok(sumv.smult(1.0/weightsum).vsub(centre))
     }
 
     /// 1.0-dotproduct with **v**, in range [0,2] 
@@ -283,18 +283,15 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             let mut nextg = vec![0_f64; self[0].len()];   
             let mut nextrecsum = 0_f64;
             for (x,w) in self.iter().zip(ws) {   
-                // |x-g| done in-place for speed. Could have simply called x.vdist(g)
-                //let mag:f64 = g.vdist::<f64>(&x); 
                 let mag = g.iter().zip(x).map(|(&gi,xi)|(xi.clone().into()-gi).powi(2)).sum::<f64>(); 
                 if mag.is_normal() { 
-                    let rec = w.clone().into()/(mag.sqrt()); // reciprocal of distance (scalar)
+                    let rec = w.clone().into()/(mag.sqrt()); // weight/distance (scalar)
                     // vsum increments by components
                     nextg.iter_mut().zip(x).for_each(|(vi,xi)| *vi += xi.clone().into()*rec); 
                     nextrecsum += rec // add separately the reciprocals for final scaling   
-                } // else simply ignore this point should its distance from g be zero
+                } // else ignore this point should its distance from g be nearly zero
             }
             nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);       
-            // eprintln!("recsum {}, nextrecsum {} diff {}",recsum,nextrecsum,nextrecsum-recsum);
             if nextrecsum-recsum < eps { return Ok(nextg); };  // termination test
             g = nextg;
             recsum = nextrecsum;            

@@ -2,7 +2,7 @@ use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::{Median, Medianf64};
 use ran::{set_seeds, Rnum};
 use rstats::{
-    fromop, noop, tm_stat, unit_matrix, re_error, RE, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
+    fromop, noop, tm_stat, unit_matrix, re_error, RE, Params, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
 };
 use times::benchvvf64;
 
@@ -70,14 +70,15 @@ fn fstats() -> Result<(), RE> {
     println!("Inverse magnitude v1:\n{}", v1.vinverse()?.gr());
     println!("Linear transform of v1:\n{}\n", v1.lintrans()?.gr());
     println!("Magnitudes: {} {}", v1.vmag().gr(), v2.vmag().gr());
-    println!("Median           {}", v1.medstats()?);
+    let v1median = v1.median()?;
+    println!("Median           {}", v1median.gr());
     println!("Harmonic spread  {}", v1.hmad()?.gr());
     println!("Arithmetic Mean  {}", v1.ameanstd()?);
     println!("Geometric  Mean  {}", v1.gmeanstd()?);
     println!("Harmonic   Mean  {}", v1.hmeanstd()?);
     println!(
         "tm_stat of 5 against median {}",
-        tm_stat(5., v1.medstats()?).gr()
+        tm_stat(5., Params{centre:v1median, spread:v1.mad(v1median)?}).gr()
     );
     println!(
         "tm-stat of 5 against amean  {}",
@@ -166,16 +167,17 @@ fn genericstats() -> Result<(), RE> {
     let mut v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?);
-    println!("Median\t\t{}", v.as_slice().medstats(fromop)?);
+    let median = v.as_slice().median(fromop)?;
+    println!("Median\t\t{GR}{}±{}{UN}",median,v.as_slice().mad(median, fromop)?);
     println!("Geometric\t{}", v.gmeanstd()?);
     println!("Harmonic\t{}", v.hmeanstd()?);
     println!("Weighted Arit.\t{}", v.awmeanstd()?);
     println!("Weighted Geom.\t{}", v.gwmeanstd()?);
     println!("Weighted Harm.\t{}", v.hwmeanstd()?);
     println!("Autocorrelation: {}", v.autocorr()?.gr());
-    println!("dfdt:\t\t {}", v.dfdt()?.gr());
+    println!("dfdt:\t\t {}", v.dfdt(median)?.gr());
     v.reverse();
-    println!("dfdt(reversed):\t{}", v.dfdt()?.gr());
+    println!("dfdt(reversed):\t{}", v.dfdt(median)?.gr());
     Ok(())
 }
 
@@ -303,13 +305,16 @@ fn vecvec() -> Result<(), RE> {
     // set_seeds(113);
     let ru = Rnum::newu8();
     let pts = ru.ranvv(d,n)?.getvvu8()?;
-    println!("\nFirst data vector:\n{}",pts[0].gr());
-    println!("Set joint entropy: {}", pts.jointentropyn()?.gr());
-    println!("Set dependence:    {}", pts.dependencen()?.gr());
-    println!("Approximate dv/dt:\n{}", pts.dvdt()?.gr());
+    println!("First data vector:\n{}",pts[0].gr());
+    println!("Joint entropy: {}", pts.jointentropyn()?.gr());
+    println!("Dependence:    {}", pts.dependencen()?.gr());
+    let (median, _vsum, recips) = pts.gmparts(EPS);
+    println!("Approximate dv/dt:\n{}", pts.dvdt(&median)?.gr());
     let outcomes = ru.ranv(n)?.getvu8()?;
     println!("\nRandom testing outcomes:\n{}",outcomes.gr());
-    println!("wdvdt using outcomes as weithgs:\n{}", pts.wdvdt(&outcomes)?.gr());
+    println!("wdvdt using outcomes as weigths:\n{}", pts.wdvdt(&outcomes,&median)?.gr());
+    println!("wdvdt as wgmedian-gmedian:\n{}", pts.wgmedian(&outcomes,EPS)?.vsub(&median).gr());
+    println!("wdvdt as wacentroid-acentroid:\n{}", pts.wacentroid(&outcomes).vsub(&pts.acentroid()).gr());
     let transppt = pts.transpose();
     println!(
         "\nDependencies of columns with test outcomes:\n{}",
@@ -318,7 +323,6 @@ fn vecvec() -> Result<(), RE> {
     println!(
         "Correlations with outcomes:\n{}",
         transppt.scalar_fn(|column| Ok(column.correlation(&outcomes)))?.gr());
-    let (median, _vsum, recips) = pts.gmparts(EPS);
     let (eccstd, eccmed, eccecc) = pts.eccinfo(&median[..])?;
     let medoid = &pts[eccecc.minindex];
     println!("Medoid: {}", medoid.gr());
@@ -373,7 +377,7 @@ fn vecvec() -> Result<(), RE> {
 
     let seccs = pts.radii(&median)?.sorth(noop, true);
     // println!("\nSorted eccs: {}\n", seccs));
-    let lqcnt = seccs.binsearch(&(eccmed.centre - eccmed.dispersion));
+    let lqcnt = seccs.binsearch(&(eccmed.centre - eccmed.spread));
     println!(
         "Inner quarter of points: {} within radius: {}",
         lqcnt.start.gr(),
@@ -386,7 +390,7 @@ fn vecvec() -> Result<(), RE> {
         medcnt.gr(),
         seccs[medcnt - 1].gr()
     );
-    let uqcnt = seccs.binsearch(&(eccmed.centre + eccmed.dispersion));
+    let uqcnt = seccs.binsearch(&(eccmed.centre + eccmed.spread));
     println!(
         "Inner three quarters:    {} within radius: {}",
         uqcnt.start.gr(),

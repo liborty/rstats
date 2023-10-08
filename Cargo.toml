@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "1.3.3"
+version = "2.0.0"
 authors = ["Libor Spacek"]
 edition = "2021"
 description = "Statistics, Information Measures, Data Analysis, Linear Algebra, Clifford Algebra, Machine Learning, Geometric Median, Matrix Decompositions, Mahalanobis Distance, Hulls, Multithreading.."

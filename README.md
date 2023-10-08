@@ -11,7 +11,7 @@ Insert `Rstats = "^1.3"` in the `Cargo.toml` file, under `[dependencies]`.
 Use in your source files any of the following structs, as and when needed:
 
 ```rust  
-use Rstats::{RE,RError,TriangMat,Mstats,MinMax};
+use Rstats::{RE,RError,Params,TriangMat,MinMax};
 ```
 
 and any of the following traits:
@@ -88,10 +88,10 @@ our fast multidimensional `geometric median (gm)` algorithms.
 is our generalisation of `mad` (median of absolute deviations from median), to n dimensions. `1d` median is replaced in `nd` by `gm`. Where `mad` was a robust measure of 1d data spread, `madgm` becomes a robust measure of `nd` data spread. We define it as: `median(|`**p**i-**gm**`|,for i=1..n)`, where **p**1..**p**n are a sample of n data points, which are no longer scalars but d dimensional vectors.
 
 * `tm_stat`  
-`t-stat`, defined as `(x-mean)/std`, where `std` is standard deviation, is similar to familiar `standard(z)-score`, except that its scalar measures of central tendency and spread are obtained from the sample (pivotal quantity), rather than from the assumed population distribution. Here, we define improved `tm_stat` of single scalar observation x as: `(x-median)/mad`, replacing mean by median and std by mad.
+`t-stat`, defined as `(x-mean)/std`, where `std` is standard deviation, is similar to familiar `standard(z)-score`, except that its scalar measures of central tendency and spread are obtained from the sample (pivotal quantity), rather than from the assumed population distribution. Here, we define generalized `tm_stat` of single scalar observation x as: `(x-centre)/spread`, with the recommendation to replace mean by median and std by mad, whenever possible.
 
 * `tm_statistic`  
-we then generalize `tm_stat` from scalar domain to vector domain of any number of dimensions, defining `tm_statistic` as |**p-gm**|`/madgm`, where **p** is now an observation point in `nd` space. The sample central tendency is now the `geometric median` **gm** vector and the spread is the `madgm` scalar. The error distance of observation |**p-gm**| is also a scalar. Thus `tm_statistic` is, just like `tm_stat`, a simple scalar measure, regardless the dimensionality of the vector space. It is always positive.
+we then generalize `tm_stat` from scalar domain to vector domain of any number of dimensions, defining `tm_statistic` as |**p-gm**|`/madgm`, where **p** is now an observation point in `nd` space. The sample central tendency is now the `geometric median` **gm** vector and the spread is the `madgm` scalar. The error distance of observation |**p-gm**| is also a scalar. Thus the co-domain of `tm_statistic` is again a simple scalar, regardless of the dimensionality of the vector space. It is always positive.
 
 * `contribution`  
 one of the key questions of Machine Learning (ML) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of displacement of `gm`, caused by adding **p** to the set. Generally, outlying points make greater contributions to the `gm` but not as much as to the `centroid`. The contribution depends not only on the radius of **p** but also on the radii of all other existing set points.
@@ -182,12 +182,11 @@ Each of its enum variants also carries a generic payload `T`. Most commonly this
 
 ```rust
 if dif <= 0_f64 {
-    return Err(RError::ArithError(format!(
-        "cholesky needs a positive definite matrix {}", dif )));
+    return Err(RError::ArithError("cholesky needs a positive definite matrix".to_owned())));
 };
 ```
 
-`format!(...)` is used to insert values of variables to the payload String, as shown. These errors are returned and can then be automatically converted (with `?`) to users' own errors. Some such error conversions are implemented at the bottom of `errors.rs` file and used in `tests.rs`.
+`format!(...)` can be used to insert (debugging) run-time values to the payload String. These errors are returned and can then be automatically converted (with `?`) to users' own errors. Some such error conversions are implemented at the bottom of `errors.rs` file and used in `tests.rs`.
 
  There is a type alias shortening return declarations to, e.g.: `Result<Vec<f64>,RE>`, where
 
@@ -195,11 +194,11 @@ if dif <= 0_f64 {
 pub type RE = RError<String>;
 ```
 
-Convenience function `re_error` can be used to construct these errors with either `String` or `&str` message, as follows:
+Convenience function `re_error` is used to simplify constructing and returning these errors. Its message argument can be either a literal `&str`, or a `String`, e.g. constructed by `format!`. It returns a Result, thus it needs `?` operator to unpack its Err variant.
 
 ```rust
-if denom == 0. {
-    return re_error("arith","Attempted division by zero!")?;
+if dif <= 0_f64 {
+    return re_error("arith","cholesky needs a positive definite matrix")?;
 };
 ```
 
@@ -335,9 +334,11 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.0.0** - Renamed `MStats` -> `Params` and its variant `dispersion` -> `spread`. This may cause some backwards incompatibilities, hence the new major version. Added 'centre' as an argument to `dfdt`,`dvdt`,`wdvdt`, so that it does not have to be recomputed.
+
 * **Version 1.3.3** - Added `wdvdt`- individually weighted time series derivative (weighted arithmetic mean minus geometric median).
 
-* **Version 1.3.2** - Added `dvdt` - linearly weighted (approximate) time series derivative at the last point (present time). Similar to dfdt but works on vectors and returns a derivative vector. Changed error helper function `re_error` to return Result (Err variant), that can be more conveniently processed upstream with just the ? operator.
+* **Version 1.3.2** - Added `dvdt` - linearly weighted (approximate) time series derivative at the last point (present time). Similar to `dfdt` but works on vectors and returns a derivative vector. Changed error helper function `re_error` to return Result (Err variant), that can be more conveniently processed upstream with just the ? operator.
 
 * **Version 1.3.1** - Some more changes to the `hulls` fixed `wsigvec` to be consistent with `sigvec`.
 

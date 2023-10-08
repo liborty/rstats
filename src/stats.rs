@@ -1,4 +1,4 @@
-use crate::{error::RError, fromop, sumn, MStats, MutVecg, Stats, Vecg, RE};
+use crate::{error::RError, fromop, sumn, Params, MutVecg, Stats, Vecg, RE};
 use indxvec::Vecops;
 use medians::{Median, Medianf64};
 
@@ -125,9 +125,9 @@ where
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.ameanstd().unwrap();
     /// assert_eq!(res.centre,7.5_f64);
-    /// assert_eq!(res.dispersion,4.031128874149275_f64);
+    /// assert_eq!(res.spread,4.031128874149275_f64);
     /// ```
-    fn ameanstd(self) -> Result<MStats, RE> {
+    fn ameanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
@@ -143,9 +143,9 @@ where
             })
             .sum::<f64>()
             / nf;
-        Ok(MStats {
+        Ok(Params {
             centre: mean,
-            dispersion: (sx2 / nf - mean.powi(2)).sqrt(),
+            spread: (sx2 / nf - mean.powi(2)).sqrt(),
         })
     }
 
@@ -184,9 +184,9 @@ where
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.awmeanstd().unwrap();
     /// assert_eq!(res.centre,9.666666666666666_f64);
-    /// assert_eq!(res.dispersion,3.399346342395192_f64);
+    /// assert_eq!(res.spread,3.399346342395192_f64);
     /// ```
-    fn awmeanstd(self) -> Result<MStats, RE> {
+    fn awmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
@@ -205,9 +205,9 @@ where
             })
             .sum::<f64>()
             / nf;
-        Ok(MStats {
+        Ok(Params {
             centre,
-            dispersion: (sx2 / nf - centre.powi(2)).sqrt(),
+            spread: (sx2 / nf - centre.powi(2)).sqrt(),
         })
     }
 
@@ -242,9 +242,9 @@ where
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.hmeanstd().unwrap();
     /// assert_eq!(res.centre,4.305622526633627_f64);
-    /// assert_eq!(res.dispersion,1.1996764516690959_f64);
+    /// assert_eq!(res.spread,1.1996764516690959_f64);
     /// ```
-    fn hmeanstd(self) -> Result<MStats, RE> {
+    fn hmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
@@ -262,9 +262,9 @@ where
             sx += rx;
         }
         let recipmean = sx / nf;
-        Ok(MStats {
+        Ok(Params {
             centre: 1.0 / recipmean,
-            dispersion: ((sx2 / nf - recipmean.powi(2)) / (recipmean.powi(4)) / nf).sqrt(),
+            spread: ((sx2 / nf - recipmean.powi(2)) / (recipmean.powi(4)) / nf).sqrt(),
         })
     }
     /// Linearly weighted harmonic mean of an f64 slice.    
@@ -302,9 +302,9 @@ where
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.hmeanstd().unwrap();
     /// assert_eq!(res.centre,4.305622526633627_f64);
-    /// assert_eq!(res.dispersion,1.1996764516690959_f64);
+    /// assert_eq!(res.spread,1.1996764516690959_f64);
     /// ```
-    fn hwmeanstd(self) -> Result<MStats, RE> {
+    fn hwmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
@@ -323,9 +323,9 @@ where
             sx2 += w / (fx * fx);
         }
         let recipmean = sx / nf;
-        Ok(MStats {
+        Ok(Params {
             centre: 1.0 / recipmean,
-            dispersion: ((sx2 / nf - recipmean.powi(2)) / (recipmean.powi(4)) / nf).sqrt(),
+            spread: ((sx2 / nf - recipmean.powi(2)) / (recipmean.powi(4)) / nf).sqrt(),
         })
     }
 
@@ -367,9 +367,9 @@ where
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.gmeanstd().unwrap();
     /// assert_eq!(res.centre,6.045855171418503_f64);
-    /// assert_eq!(res.dispersion,2.1084348239406303_f64);
+    /// assert_eq!(res.spread,2.1084348239406303_f64);
     /// ```
-    fn gmeanstd(self) -> Result<MStats, RE> {
+    fn gmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
@@ -388,9 +388,9 @@ where
             sx2 += lx * lx
         }
         sum /= n as f64;
-        Ok(MStats {
+        Ok(Params {
             centre: sum.exp(),
-            dispersion: (sx2 / (n as f64) - sum.powi(2)).sqrt().exp(),
+            spread: (sx2 / (n as f64) - sum.powi(2)).sqrt().exp(),
         })
     }
 
@@ -434,9 +434,9 @@ where
     /// let v1 = vec![1_f64,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.];
     /// let res = v1.gwmeanstd().unwrap();
     /// assert_eq!(res.centre,8.8185222496341_f64);
-    /// assert_eq!(res.dispersion,1.626825493266009_f64);
+    /// assert_eq!(res.spread,1.626825493266009_f64);
     /// ```
-    fn gwmeanstd(self) -> Result<MStats, RE> {
+    fn gwmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
@@ -458,9 +458,9 @@ where
         }
         let nf = sumn(n) as f64;
         sum /= nf;
-        Ok(MStats {
+        Ok(Params {
             centre: sum.exp(),
-            dispersion: (sx2 / nf - sum.powi(2)).sqrt().exp(),
+            spread: (sx2 / nf - sum.powi(2)).sqrt().exp(),
         })
     }
 
@@ -539,7 +539,7 @@ where
     /// Linearly weighted approximate time series derivative at the last point (present time).
     /// Weighted sum (backwards half filter), minus the median.
     /// Rising values return positive result and vice versa.
-    fn dfdt(self) -> Result<f64, RE> {
+    fn dfdt(self, centre: f64) -> Result<f64, RE> {
         let len = self.len();
         if len < 2 {
             return Err(RError::NoDataError(format!(
@@ -552,7 +552,7 @@ where
             weight += 1_f64;
             sumwx += weight * x.clone().into();
         }
-        Ok(sumwx / (sumn(len) as f64) - self.median(fromop)?)
+        Ok(sumwx / (sumn(len) as f64) - centre)
     }
 
     /// Householder reflector
