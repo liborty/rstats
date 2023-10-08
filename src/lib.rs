@@ -173,7 +173,7 @@ pub trait Vecg {
     fn smult<U: Into<f64>>(self, s: U) -> Vec<f64>;
     /// Scalar product
     fn dotp<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
-    /// Product of self with sigvec of axial projections
+    /// Product of unit self with sigvec of axial projections
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE>;
     /// Cosine of angle between two slices
     fn cosine<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
