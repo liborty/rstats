@@ -44,6 +44,7 @@ where
             .sum::<f64>()
     }
 
+    /// Measure p of cloud density in self direction:`0 <= p <= 1`
     /// Product of unit self vector with signature vec of axial projections.  
     /// Similar result can be obtained
     /// by projecting onto self all points but that is usually too slow.

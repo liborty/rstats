@@ -79,18 +79,15 @@ impl std::fmt::Display for Params {
 }
 
 /// Compact Triangular Matrix.
-/// TriangMat is typically result of some matrix calculations,
+/// TriangMat is typically a result of some matrix calculations,
 /// so concrete end-type f64 is used for simplicity and accuracy.
-/// Data is of length `n*(n+1)/2` instead of `n*n`, saving memory.  
-/// `.kind == 0` is plain lower triangular matrix.  
-/// `.kind == 1` is antisymmetric square matrix.  
-/// `.kind == 2` is symmetric square matrix.  
-/// `.kind == 3` is upper triangular matrix (transposed lower).  
-/// `.kind == 4` is upper (transposed lower), antisymmetric.  
-/// `.kind == 5` is unnecessary, as transposed symmetric matrix is unchanged.  
-/// Simply adding (or subtracting) 3 to .kind implicitly transposes the matrix.
+/// TraingMat stores and manipulates triangular matrices, which
+/// may also compactly represent square symmetric and antisymmetric matrices.
+/// Its data is of length `(n+1)*n/2` instead of `n*n` for the full matrix,
+/// Kind is a numerical encoding 0..5 of the kind of the matrix,
+/// for trivial implicit transposition by adding 3.
 /// `.kind > 2 are all transposed, individual variants are determined by kind % 3.
-/// The full size of the implied square matrix, nxn, is not explicitly stored.
+
 /// It is obtained by solving the quadratic equation: `n^2+n-2s=0` =>
 /// `n=((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize;`
 /// where s = `triangmat.len()` = `n*(n+1)/2`
@@ -173,7 +170,7 @@ pub trait Vecg {
     fn smult<U: Into<f64>>(self, s: U) -> Vec<f64>;
     /// Scalar product
     fn dotp<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
-    /// Product of unit self with sigvec of axial projections
+    /// Sigvec product with unit self: measure of cloud density in self direction:`0 <=  s <= 1`
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE>;
     /// Cosine of angle between two slices
     fn cosine<U: Clone + Into<f64>>(self, v: &[U]) -> f64;

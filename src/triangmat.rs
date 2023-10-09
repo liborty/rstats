@@ -1,35 +1,40 @@
-use crate::{sumn, re_error, RError, Stats, TriangMat, Vecg, RE}; // MStats, MinMax, MutVecg, Stats, VecVec };
+use crate::{re_error, sumn, RError, Stats, TriangMat, Vecg, RE}; // MStats, MinMax, MutVecg, Stats, VecVec };
 pub use indxvec::{printing::*, Printing, Vecops};
+
+/// Meanings of 'kind' field. Note that 'Upper Symmetric' would represent the same full matrix as
+/// 'Lower Symmetric', so it is not used (lower symmetric matrix is never transposed)
+const KINDS: [&str; 5] = [
+    "Lower",
+    "Lower antisymmetric",
+    "Lower symmetric",
+    "Upper",
+    "Upper antisymmetric",
+];
 
 /// Display implementation for TriangMat
 impl std::fmt::Display for TriangMat {
     fn fmt<'a>(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let dim = Self::rowcol(self.data.len()).0;
+        let dim = Self::dim(self);
         write!(
             f,
-            "{YL}{} {} matrix {dim}x{dim}:\n{}",
-            match self.kind % 3 {
-                0 => "Non symmetric",
-                1 => "Anti symmetric",
-                _ => "Symmetric", // 2
-            },
-            if self.kind > 2 {
-                "transposed upper triangular"
-            } else {
-                "lower triangular"
-            },
+            "{YL}{} ({dim}x{dim}) triangular matrix:\n{}",
+            KINDS[self.kind],
             self.to_triangle().gr()
         )
     }
 }
 
 /// Implementation of associated functions for struct TriangleMat.
-/// End type is f64 here, as triangular matrices will be mostly computed,
-/// so we may as well keep it simple.    
+/// End type is f64, as triangular matrices will be mostly computed
 impl TriangMat {
     /// Length of the data vec
     pub fn len(&self) -> usize {
         self.data.len()
+    }
+    /// Dimension of the implied full (square) matrix
+    /// from the quadratic equation: `n^2 + n - 2l = 0`
+    pub fn dim(&self) -> usize {
+        ((((8 * self.data.len() + 1) as f64).sqrt() - 1.) / 2.) as usize
     }
     /// Empty TriangMat test
     pub fn is_empty(&self) -> bool {
@@ -52,13 +57,19 @@ impl TriangMat {
     pub fn diagonal(&self) -> Vec<f64> {
         let mut next = 0_usize;
         let mut skip = 1;
-        self.data.iter().enumerate().filter_map(|(i,&x)| 
-            if i == next { 
-                skip += 1; 
-                next = i + skip; 
-                Some(x) 
-            } else { None }
-        ).collect::<Vec<f64>>()
+        self.data
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &x)| {
+                if i == next {
+                    skip += 1;
+                    next = i + skip;
+                    Some(x)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<f64>>()
     }
     /// Generates new unit (symmetric) TriangMat matrix of size (n+1)*n/2
     pub fn unit(n: usize) -> Self {
@@ -74,11 +85,11 @@ impl TriangMat {
     }
     /// Eigenvalues (obtainable only from Cholesky L matrix)
     pub fn eigenvalues(&self) -> Vec<f64> {
-        self.diagonal().iter().map(|&x| x*x ).collect::<Vec<f64>>()
+        self.diagonal().iter().map(|&x| x * x).collect::<Vec<f64>>()
     }
     /// Determinant (obtainable only from Cholesky L matrix)
     pub fn determinant(&self) -> f64 {
-        self.diagonal().iter().map(|&x| x*x ).product()
+        self.diagonal().iter().map(|&x| x * x).product()
     }
 
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
@@ -86,7 +97,7 @@ impl TriangMat {
     /// Enables memory efficient representation of triangular matrices as one flat vector.
     pub fn rowcol(s: usize) -> (usize, usize) {
         let row = ((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize; // cast truncates, like .floor()
-        let column = s - row * (row + 1) / 2; // subtracting the preceding triangular number
+        let column = s - row * (row + 1) / 2; // subtracting the last triangular number (of whole rows)
         (row, column)
     }
 
@@ -108,10 +119,9 @@ impl TriangMat {
 
     /// TriangMat trivial implicit transposition
     pub fn transpose(&mut self) {
-        if self.kind > 2 {
-            self.kind -= 3;
-        } else {
+        if self.kind != 2 {
             self.kind += 3;
+            self.kind %= 6;
         }
     }
 
@@ -167,7 +177,7 @@ impl TriangMat {
         let sl = self.data.len();
         // input not long enough to compute anything
         if sl < 3 {
-            return re_error("empty","cholesky needs at least 3x3 TriangMat: {self}")?; 
+            return re_error("empty", "cholesky needs at least 3x3 TriangMat: {self}")?;
         };
         // n is the dimension of the implied square matrix.
         // Not needed as an extra argument. We compute it
@@ -175,7 +185,7 @@ impl TriangMat {
         let (n, c) = TriangMat::rowcol(sl);
         // input is not a triangular number, is of wrong size
         if c != 0 {
-            return re_error("size","cholesky needs a triangular matrix")?;
+            return re_error("size", "cholesky needs a triangular matrix")?;
         };
         let mut res = vec![0.0; sl]; // result L is of the same size as the input
         for i in 0..n {
@@ -193,7 +203,7 @@ impl TriangMat {
                     // dif <= 0 means that the input matrix is not positive definite,
                     // or is ill-conditioned, so we return ArithError
                     if dif <= 0_f64 {
-                        return re_error("arith","cholesky matrix is not positive definite")?;  
+                        return re_error("arith", "cholesky matrix is not positive definite")?;
                     };
                     dif.sqrt()
                 }

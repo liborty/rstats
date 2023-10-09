@@ -332,6 +332,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.0.1** - Added `TriangMat::dim()` and tidied up some comments.
+
 * **Version 2.0.0** - Renamed `MStats` -> `Params` and its variant `dispersion` -> `spread`. This may cause some backwards incompatibilities, hence the new major version. Added 'centre' as an argument to `dfdt`,`dvdt`,`wdvdt`, so that it does not have to be recomputed.
 
 * **Version 1.3.3** - Added `wdvdt`- individually weighted time series derivative (weighted arithmetic mean minus geometric median).

@@ -249,7 +249,7 @@ fn triangmat() -> Result<(), RE> {
     let d = 10_usize;
     let n = 90_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
-    set_seeds(1133);
+    // set_seeds(1133);
     let ru = Rnum::newf64();
     let pts = ru.ranvv_in(d, n, 0.0, 4.0)?.getvvf64()?;
     // println!("\nTest data:\n{}",pts.gr());
@@ -258,17 +258,16 @@ fn triangmat() -> Result<(), RE> {
     println!("Comediance matrix:\n{cov}");
     let chol = cov.cholesky()?;
     println!("Cholesky L matrix:\n{chol}");
-    println!("Eigenvalues of the comediance matrix:\n{}",chol.eigenvalues().gr());
-    println!("Determinant of the comediance matrix:\n{}",chol.determinant().gr());
-    let pta = ru.ranv(d)?.getvf64()?;
-    let ptb = ru.ranv(d)?.getvf64()?;
-    let d = pta.vsub(&ptb);
+    println!("Sorted eigenvalues of the comediance matrix from Cholesky decomposition:\n{}",
+        chol.eigenvalues().sortm(false).gr());
+    println!("Determinant of the comediance matrix (their product): {}",chol.determinant().gr());
+    let d = ru.ranv(d)?.getvf64()?;
     let dmag = d.vmag();
     let mahamag = chol.mahalanobis(&d)?;
-    println!("Test vector d = a-b:\n{}", d.gr());
+    println!("Random test vector:\n{}", d.gr());
     println!(
-        "Euclidian magnitude   {GR}{:>8.4}{UN}\
-        \nMahalanobis magnitude {GR}{:>8.4}{UN}\
+        "Its Euclidian magnitude   {GR}{:>8.8}{UN}\
+        \nIts Mahalanobis magnitude {GR}{:>8.8}{UN}\
         \nScale factor: {GR}{:>0.8}{UN}",
         dmag,
         mahamag,
@@ -282,7 +281,7 @@ fn mat() -> Result<(), RE> {
     let d = 10_usize;
     let n = 12_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
-    set_seeds(1133);
+    // set_seeds(1133);
     let ru = Rnum::newf64();
     let m = ru.ranvv(d, n)?.getvvf64()?;
     println!("\nTest matrix M:\n{}", m.gr());
