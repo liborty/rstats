@@ -466,9 +466,12 @@ fn hulls() -> Result<(), RE> {
             .tm_statistic(&median, mad)?
             .gr()
     );
- let insidecounts:Vec<usize> = 
+    let radii = pts.radii(&median)?; 
+    let mut radindex = radii.hashsort_indexed(noop);
+    radindex.reverse();
+    let insidecounts:Vec<usize> = 
         innerhull.iter()
-        .map(|p| zeropts.insideness(&zeropts[*p])).collect();
+        .map(|p| zeropts.insideness(&radindex,&zeropts[*p])).collect();
     println!("Insideness of innerhull points: {}",insidecounts.gr());
 
     let sigvec = zeropts.sigvec(&innerhull)?;

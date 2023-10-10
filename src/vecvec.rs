@@ -360,18 +360,19 @@ where
         hullindex
     }
 
-    /// Measure of likelihood of zero median point **p** belonging to a zero median data cloud `self`.
-    /// This is not nearly as fast as is simple distance of **p** from **gm** but it is more sophisticated,
+    /// Measure of likelihood of zero median point **p** belonging to zero median data cloud `self`.
+    /// This is not nearly as fast as is simple distance of **p** from **gm** but it is 
     /// taking into account the local shape of s near **p**. 
-    /// Returns the number of points belonging to s falling outside the normal through **p**.
-    /// All outer hull points have by definition `insideness = 0`.
-    /// Mahalanobis distance has the same goal but is less specific. 
-    /// When self contains only precomputed outer hull points, the computation will be faster.
-    fn insideness(self, p: &[f64]) -> usize {
-        let sqradp = p.vmagsq();
+    /// Returns the number of points in self falling outside the normal through **p**.
+    /// All outer hull points have by definition `insideness = 0`. 
+    /// Descending sort index (of self) is used for efficiency.
+    fn insideness(self, descending_index: &[usize], p: &[f64]) -> usize {
+        let p2 = p.vmagsq();
         let mut count = 0_usize;
-        for a in self {
-            if a.dotp(p) > sqradp { count += 1; };
+        for &i in descending_index {
+            let s = &self[i];
+            if s.vmagsq() < p2 { break; }; // no more enclosing points
+            if s.dotp(p) > p2 { count += 1; };
         };
         count
     }

@@ -203,7 +203,21 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         };
         for hem in &mut hemis { *hem /= wsum; };
         Ok(hemis)
-    } 
+    }
+
+    /// Weighted likelihood of zero median point **p** belonging to zero median data cloud `self`.
+    /// Weights ws should have ideally been normalized (divided by their sum), so that the result
+    /// will be in [0,1]. The weights are associated 1-1 with the vectors of self.
+    fn winsideness(self, descending_index: &[usize], ws:&[U], p: &[f64]) -> f64 { 
+        let p2 = p.vmagsq();
+        let mut res = 0_f64;
+        for &i in descending_index {
+            let s = &self[i];
+            if s.vmagsq() < p2 { break; }; // no more enclosing points
+            if s.dotp(p) > p2 { res += ws[i].clone().into(); };
+        };
+        res
+    }
 
     /// Dependencies of m on each vector in self
     /// m is typically a vector of outcomes.

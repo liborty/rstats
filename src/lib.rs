@@ -344,8 +344,8 @@ pub trait VecVec<T> {
     fn outer_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>; 
     /// Inner hull subscripts from their square radii and their sort index.  
     fn inner_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>;
-    /// Measure of likelihood of zero median point **p** belonging to a zero median data cloud `self`.
-    fn insideness(self, p: &[f64]) -> usize;
+    /// Measure of likelihood of zero median point **p** belonging to zero median data cloud `self`.
+    fn insideness(self, descending_index: &[usize], p: &[f64]) -> usize; 
     /// Collects indices of outer and inner hull points, from zero median data    
     fn hulls(self) -> (Vec<usize>, Vec<usize>);
     /// New algorithm for geometric median, to accuracy eps    
@@ -399,6 +399,8 @@ pub trait VecVecg<T, U> {
     fn translate(self, m: &[U]) -> Result<Vec<Vec<f64>>, RE>;
     /// Weighted sums of points in each hemisphere
     fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
+    /// Weighted likelihood of zero median point **p** belonging to zero median data cloud `self`.
+    fn winsideness(self, descending_index: &[usize], ws:&[U], p: &[f64]) -> f64;
     /// Dependencies of vector m on each vector in self
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>, RE>;
     /// Sum of distances from arbitrary point (v) to all the points in self      

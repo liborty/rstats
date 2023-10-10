@@ -332,6 +332,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.0.2** - Significantly speeded up `insideness` and added weighted version `winsideness` to `VecVecg` trait.
+
 * **Version 2.0.1** - Added `TriangMat::dim()` and tidied up some comments.
 
 * **Version 2.0.0** - Renamed `MStats` -> `Params` and its variant `dispersion` -> `spread`. This may cause some backwards incompatibilities, hence the new major version. Added 'centre' as an argument to `dfdt`,`dvdt`,`wdvdt`, so that it does not have to be recomputed.
