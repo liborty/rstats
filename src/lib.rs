@@ -400,7 +400,7 @@ pub trait VecVecg<T, U> {
     /// Weighted sums of points in each hemisphere
     fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
     /// Weighted likelihood of zero median point **p** belonging to zero median data cloud `self`.
-    fn winsideness(self, descending_index: &[usize], ws:&[U], p: &[f64]) -> f64;
+    fn wdepth(self, descending_index: &[usize], ws:&[U], p: &[f64]) -> Result<f64,RE>;
     /// Dependencies of vector m on each vector in self
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>, RE>;
     /// Sum of distances from arbitrary point (v) to all the points in self      

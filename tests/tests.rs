@@ -513,13 +513,14 @@ fn hulls() -> Result<(), RE> {
         .collect::<Result<Vec<f64>,RE>>()?
         .gr()
     );
-
+    /*
     println!("Depths of all points: {}",
     (0..pts.len()) 
         .map(|p| zeropts.depth(&radindex,&zeropts[p]))
         .collect::<Result<Vec<f64>,RE>>()?
         .gr()
     );
+    */
 
     let sigvec = zeropts.sigvec(&outerhull)?;
     println!(

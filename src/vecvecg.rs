@@ -205,20 +205,21 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         Ok(hemis)
     }
 
-    /// Weighted likelihood of zero median point **p** belonging to zero median data cloud `self`.
-    /// Descending sort index is used for efficiency.
-    /// It should be obtained from radii magnitudes of self vectors.
+    /// Likelihood of zero median point **p** belonging to zero median data cloud `self`,
+    /// based on the cloud's shape outside of normal plane through **p**. 
+    /// Returns the weighted sum of unit vectors of its outside points, projected onto unit **p**. 
+    /// Index should be in the descending order of magnitudes of self points (for efficiency).
     /// Weights ws should have ideally been normalized (divided by their sum), so that the result
     /// will be in [0,1]. The weights are associated 1-1 with the vectors of self.
-    fn winsideness(self, descending_index: &[usize], ws:&[U], p: &[f64]) -> f64 { 
+    fn wdepth(self, descending_index: &[usize], ws:&[U], p: &[f64]) -> Result<f64,RE> {
         let p2 = p.vmagsq();
-        let mut res = 0_f64;
+        let mut sumvec = vec![0_f64;p.len()]; 
         for &i in descending_index {
             let s = &self[i];
-            if s.vmagsq() < p2 { break; }; // no more enclosing points
-            if s.dotp(p) > p2 { res += ws[i].clone().into(); };
+            if s.vmagsq() <= p2 { break; }; // no more outside points
+            if s.dotp(p) > p2 { sumvec.mutvadd(&s.vunit()?.smult(ws[i].clone().into())) };
         };
-        res
+        Ok(sumvec.dotp(&p.vunit()?))
     }
 
     /// Dependencies of m on each vector in self

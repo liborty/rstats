@@ -332,6 +332,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.0.4** - Made a corresponding change: `winsideness` -> `wdepth`.
+
 * **Version 2.0.3** - Improved `insideness` to be projection of a sum of unit vectors instead of just a simple count. Renamed it to `depth` to avoid confusion. Also some fixes to `hulls`.
 
 * **Version 2.0.2** - Significantly speeded up `insideness` and added weighted version `winsideness` to `VecVecg` trait.
