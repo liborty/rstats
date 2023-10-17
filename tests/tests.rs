@@ -245,6 +245,7 @@ fn trend() -> Result<(), RE> {
 #[test]
 fn triangmat() -> Result<(), RE> {
     println!("\n{}", TriangMat::unit(7).gr());
+    println!("\n{}", TriangMat::unit(7).to_full().gr());   
     println!("Diagonal: {}",TriangMat::unit(7).diagonal().gr());
     let d = 10_usize;
     let n = 90_usize;
@@ -434,7 +435,7 @@ fn hulls() -> Result<(), RE> {
     let d = 3_usize;
     let n = 777_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
-    // set_seeds(113);
+    // set_seeds(77777);
     let rf = Rnum::newf64();
     let pts = rf.ranvv(d, n)?.getvvf64()?;
     // let wts = rf.ranv_in(n, 0., 100.).getvf64()?;
@@ -443,8 +444,8 @@ fn hulls() -> Result<(), RE> {
     let (innerhull, outerhull) = zeropts.hulls();
     if innerhull.is_empty() || outerhull.is_empty() {
         return re_error("arith","no hull points found")? };
-    let mad = pts.madgm(&median)?;
-    println!("Madgm: {}", mad.gr());
+    let mad = zeropts.madgm(&median)?;
+    println!("Madgm of zeropts: {}", mad.gr());
     println!(
         "\nInner hull has {}/{} points:\n{}",
         innerhull.len().gr(),
@@ -459,33 +460,29 @@ fn hulls() -> Result<(), RE> {
         zeropts[*innerhull.last().expect("Empty hullidx")]
             .vmag()
             .gr(),
-        zeropts[*innerhull.first().unwrap()]
+        pts[*innerhull.first().unwrap()]
             .tm_statistic(&median, mad)?
             .gr(),
-        zeropts[*innerhull.last().unwrap()]
+        pts[*innerhull.last().unwrap()]
             .tm_statistic(&median, mad)?
             .gr()
     );
-    let radii = pts.radii(&median)?; 
-    let mut radindex = radii.hashsort_indexed(noop);
+    let sqradii = zeropts.scalar_fn(|p|Ok(p.vmagsq()))?; 
+    let mut radindex = sqradii.mergesort_indexed();
     radindex.reverse();
-    let insidecounts:Vec<usize> = 
-        innerhull.iter()
-        .map(|p| zeropts.insideness(&radindex,&zeropts[*p])).collect();
-    println!("Insideness of innerhull points: {}",insidecounts.gr());
+    println!("Depths of innerhull points: {}",
+    innerhull
+        .iter()
+        .map(|&p| zeropts.depth(&radindex,&zeropts[p]))
+        .collect::<Result<Vec<f64>,RE>>()?
+        .gr()
+    );
+
 
     let sigvec = zeropts.sigvec(&innerhull)?;
     println!(
         "Inner hull sigvec: {}",
         sigvec.gr()
-    );
-    println!(
-        "Dotsigs: {}",
-        innerhull
-            .iter()
-            .map(|&hi| zeropts[hi].dotsig(&sigvec))
-            .collect::<Result<Vec<f64>, RE>>()?
-            .gr()
     );
 
     println!(
@@ -502,12 +499,26 @@ fn hulls() -> Result<(), RE> {
         zeropts[*outerhull.first().expect("Empty hullidx")]
             .vmag()
             .gr(),
-        zeropts[*outerhull.last().unwrap()]
+        pts[*outerhull.last().unwrap()]
             .tm_statistic(&median, mad)?
             .gr(),
-        zeropts[*outerhull.first().unwrap()]
+        pts[*outerhull.first().unwrap()]
             .tm_statistic(&median, mad)?
             .gr()
+    );
+    println!("Depths of outerhull points: {}",
+    outerhull
+        .iter()
+        .map(|&p| zeropts.depth(&radindex,&zeropts[p]))
+        .collect::<Result<Vec<f64>,RE>>()?
+        .gr()
+    );
+
+    println!("Depths of all points: {}",
+    (0..pts.len()) 
+        .map(|p| zeropts.depth(&radindex,&zeropts[p]))
+        .collect::<Result<Vec<f64>,RE>>()?
+        .gr()
     );
 
     let sigvec = zeropts.sigvec(&outerhull)?;
@@ -515,17 +526,10 @@ fn hulls() -> Result<(), RE> {
         "Outer hull sigvec: {}",
         sigvec.gr()
     );
-    println!(
-        "Dotsigs: {}",
-        outerhull
-            .iter()
-            .map(|&hi| zeropts[hi].dotsig(&sigvec))
-            .collect::<Result<Vec<f64>, RE>>()?
-            .gr()
-    );
+
     let allptsig = zeropts.sigvec(&Vec::from_iter(0..zeropts.len()))?;
     println!(
-        "\nAll points sigvec: {}",
+        "\nSigvec from all points: {}",
         allptsig.gr() 
     );
     Ok(())

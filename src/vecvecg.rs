@@ -206,6 +206,8 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     }
 
     /// Weighted likelihood of zero median point **p** belonging to zero median data cloud `self`.
+    /// Descending sort index is used for efficiency.
+    /// It should be obtained from radii magnitudes of self vectors.
     /// Weights ws should have ideally been normalized (divided by their sum), so that the result
     /// will be in [0,1]. The weights are associated 1-1 with the vectors of self.
     fn winsideness(self, descending_index: &[usize], ws:&[U], p: &[f64]) -> f64 { 
@@ -458,10 +460,10 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 let mut covsub = 0_usize; // subscript into the flattened array cov
                 let vm = p.vsub(m);  // zero mean vector
                 let wf = w.clone().into(); // f64 weight for this point
-                vm.iter().enumerate().for_each(|(i,thisc)| 
-                    // its products up to and including the diagonal (itself)
+                vm.iter().enumerate().for_each(|(i,component)| 
+                    // its products up to and including the diagonal
                     vm.iter().take(i+1).for_each(|vmi| { 
-                        pair.0[covsub] += wf*thisc*vmi;
+                        pair.0[covsub] += wf*component*vmi;
                         covsub += 1;
                         }));
                 pair.1 += wf; 

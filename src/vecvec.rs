@@ -294,8 +294,8 @@ where
 
     /// Sums of projections of points on each +/-axis (by hemispheres)
     /// Points that are perpendicular to the axis are excluded from both +/-ve hemispheres.
-    /// Sums only the points specified in idx (e.g. the outer hull).
-    /// Self should normally be zero median vectors,e.g. `self.translate(&median)`
+    /// Sums only those points specified in idx.
+    /// Self should normally be zero median vectors,e.g. `self.translate(&geometric_median)`
     /// Result is normalized to unit vector.
     fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> { 
         let dims = self[0].len();
@@ -334,14 +334,16 @@ where
     /// Outer hull subscripts from their square radii and their sort index
     fn outer_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize> {
         let mut hullindex: Vec<usize> = Vec::new();
-        // test all points p in descending sqrads order
-        'ploop: for &i in sindex.iter().rev() { 
-            // against existing hull points hp
-            for &hp in &hullindex {
-                // this hp lies outside the normal plane to p => reject p  
-                if self[hp].dotp(&self[i]) > sqrads[i] { continue 'ploop; };
+        let len = sindex.len();
+        // test ipoints in descending sqrads order
+        'ploop: for i in (0..len).rev() {
+            let ipoint = &self[sindex[i]];
+            // against jpoints with greater radius
+            for j in (i+1..len).rev() {  
+                // this jpoint lies outside the normal plane to ipoint => reject ipoint  
+                if self[sindex[j]].dotp(ipoint) > sqrads[sindex[i]] { continue 'ploop; };
             };
-            hullindex.push(i);  // b passed
+            hullindex.push(sindex[i]);  // passed
         };      
         hullindex
     }
@@ -349,38 +351,39 @@ where
     /// Inner hull points from their square radii and their sort index
     fn inner_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize> {
         let mut hullindex: Vec<usize> = Vec::new();
-        'ploop: for &i in sindex { 
-            // test all points in ascending order
-            for &hp in &hullindex {
-                // this p lies outside of the normal plane to hp => reject p  
-                if self[hp].dotp(&self[i]) > sqrads[hp] { continue 'ploop; };
+        let len = sindex.len();
+        // test ipoints in ascending sqrads order
+        'ploop: for i in 0..len {  
+            let ipoint = &self[sindex[i]];
+            // against jpoints with smaller radius
+            for j in 0..i { 
+                // this jpoint lies inside ipoint => reject ipoint  
+                if self[sindex[j]].dotp(ipoint) > sqrads[sindex[j]] { continue 'ploop; };
             };
-            hullindex.push(i);  // b passed
+            hullindex.push(sindex[i]);  // ipoint passed
         };      
         hullindex
     }
 
-    /// Measure of likelihood of zero median point **p** belonging to zero median data cloud `self`.
-    /// This is not nearly as fast as is simple distance of **p** from **gm** but it is 
-    /// taking into account the local shape of s near **p**. 
-    /// Returns the number of points in self falling outside the normal through **p**.
-    /// All outer hull points have by definition `insideness = 0`. 
-    /// Descending sort index (of self) is used for efficiency.
-    fn insideness(self, descending_index: &[usize], p: &[f64]) -> usize {
+    /// Likelihood of zero median point **p** belonging to zero median data cloud `self`,
+    /// based on the cloud's shape outside of normal plane through **p**. 
+    /// Returns the sum of unit vectors of its outside points, projected onto unit **p**. 
+    /// Index should be in the descending order of magnitudes of self points (for efficiency).
+    fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64,RE> {
         let p2 = p.vmagsq();
-        let mut count = 0_usize;
+        let mut sumvec = vec![0_f64;p.len()]; 
         for &i in descending_index {
-            let s = &self[i];
-            if s.vmagsq() < p2 { break; }; // no more enclosing points
-            if s.dotp(p) > p2 { count += 1; };
+            let s = &self[descending_index[i]];
+            if s.vmagsq() <= p2 { break; }; // no more outside points
+            if s.dotp(p) > p2 { sumvec.mutvadd(&s.vunit()?) };
         };
-        count
+        Ok(sumvec.dotp(&p.vunit()?))
     }
  
     /// Collects indices of inner hull and outer hull, from zero median points in self.
     /// We put a plane trough data point A, normal to its zero median vector **a**.     
     /// B is an inner hull point, when it lies inside all other points' normal planes.  
-    /// C is an outer hull point, when there is no other point beyond its own normal plane.
+    /// C is an outer hull point, when there is no other point outside its own normal plane.
     /// B can belong to both hulls, as when all the points lie on a hyper-sphere around **gm**.   
     /// The testing is done in increasing (decreasing) radius order.  
     /// B lies outside the normal plane of **a**, when its projection onto unit **a** exceeds
@@ -390,11 +393,9 @@ where
     /// Similarly for the outer hull, where A and B simply swap roles.
     fn hulls(self) -> (Vec<usize>, Vec<usize>) {
         let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let sindex = sqradii.mergesort_indexed(); 
-        // let radindex = sqradii.hashsort_indexed(noop); // ascending square radii
+        let sindex = sqradii.mergesort_indexed();  
         let innerindex = self.inner_hull(&sqradii,&sindex); 
         let outerindex = self.outer_hull(&sqradii,&sindex); 
-        // println!("Sqradii: {}", radindex.iter().map(|&ri| sqradii[ri]).collect::<Vec<_>>().gr());
         (innerindex, outerindex)
     }
 
@@ -442,7 +443,7 @@ where
         (
             vsum.iter().map(|vi| vi / recip).collect::<Vec<f64>>(),
             vsum,
-            recip,
+            recip
         )
     }
 

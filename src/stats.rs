@@ -48,9 +48,9 @@ where
         if self.is_empty() {
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        let mag = self.vmagsq();
-        if mag > 0.0 {
-            Ok(self.iter().map(|x| x.clone().into() / mag).collect())
+        let vmagsq = self.vmagsq();
+        if vmagsq > 0.0 {
+            Ok(self.iter().map(|x| x.clone().into() / vmagsq).collect())
         } else {
             Err(RError::DataError(
                 "no inverse of zero vector magnitude".to_owned(),

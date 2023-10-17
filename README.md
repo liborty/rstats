@@ -101,7 +101,7 @@ is similar to `covariance`. It is a triangular symmetric matrix, obtained by sup
 
 * `inner_hull` is a subset of all zero median points **p**, that do not lie outside the normal plane of any point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, when they all lie on a hypersphere).
 
-* `insideness` is a measure of likelihood of a zero median point **p** belonging to a data cloud. More specifically, it is the number of points belonging to s that lie outside the normal through **p**. For example, all outer hull points have by their definition `insideness = 0`. Mahalanobis distance has a similar goal but it says nothing about how well enclosed **p** is. Whereas `tm_statistic` only informs about the probability pertaining to the whole cloud, not to its local shape near **p**.
+* `depth` is a measure of likelihood of a zero median point **p** belonging to a data cloud. More specifically, it is the projection onto unit **p** of a sum of unit vectors that lie outside the normal through **p**. For example, all outer hull points have by their definition `depth = 0`, whereas the inner hull points have high values of depth. This is intended as an improvement on Mahalanobis distance which has a similar goal but says nothing about how well enclosed **p** is. Whereas `tm_statistic` only informs about the probability pertaining to the whole cloud, not to its local shape near **p**.
 
 * `sigvec (signature vector)`  
 Sums of zero median vectors in all coordinate hemispheres. The origin will most often be  **gm**. For a new point **p** that needs to be classified, we can quickly estimate how well populated is its direction (from **gm**). This could be done properly by projecting all the points directly onto unit **p** but this is usually impractically slow, as there are typically many such points. However, `signature_vector` only needs to be precomputed once and is then the only vector to be projected onto unit **p**.
@@ -331,6 +331,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own significance weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 2.0.3** - Improved `insideness` to be projection of a sum of unit vectors instead of just a simple count. Renamed it to `depth` to avoid confusion. Also some fixes to `hulls`.
 
 * **Version 2.0.2** - Significantly speeded up `insideness` and added weighted version `winsideness` to `VecVecg` trait.
 
