@@ -78,19 +78,15 @@ impl std::fmt::Display for Params {
     }
 }
 
-/// Compact Triangular Matrix.
-/// TriangMat is typically a result of some matrix calculations,
-/// so concrete end-type f64 is used for simplicity and accuracy.
-/// TraingMat stores and manipulates triangular matrices, which
-/// may also compactly represent square symmetric and antisymmetric matrices.
-/// Its data is of length `(n+1)*n/2` instead of `n*n` for the full matrix,
-/// Kind is a numerical encoding 0..5 of the kind of the matrix,
-/// for trivial implicit transposition by adding 3.
-/// `.kind > 2 are all transposed, individual variants are determined by kind % 3.
-
-/// It is obtained by solving the quadratic equation: `n^2+n-2s=0` =>
-/// `n=((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize;`
-/// where s = `triangmat.len()` = `n*(n+1)/2`
+/// Compact Triangular Matrix.  
+/// TriangMat stores and manipulates triangular matrices.
+/// It also compactly represents square symmetric and antisymmetric matrices.
+/// TriangMat is typically produced by some matrix calculations,
+/// so the end-type for its data is f64.  
+/// The actual length of its data is `triangmat.len() = n*(n+1)/2`.  
+/// The dimension of the implied nxn matrix is `n = triangmat.dim()`.  
+/// The kind (field) of the TriangMat is encoded as 0..5. This enables
+/// trivial transpositions by: `(kind+3) % 6`.
 #[derive(Default, Clone)]
 pub struct TriangMat {
     /// Matrix kind encoding: 0=plain, 1=antisymmetric, 2=symmetric, +3=transposed
