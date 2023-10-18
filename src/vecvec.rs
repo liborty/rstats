@@ -374,8 +374,9 @@ where
         let mut sumvec = vec![0_f64;p.len()]; 
         for &i in descending_index {
             let s = &self[i];
-            if s.vmagsq() <= p2 { break; }; // no more outside points
-            if s.dotp(p) > p2 { sumvec.mutvadd(&s.vunit()?) };
+            let ssq = s.vmagsq();
+            if ssq <= p2 { break; }; // no more outside points
+            if s.dotp(p) > p2 { sumvec.mutvadd(&s.smult(1.0/(ssq.sqrt()))) };
         };
         Ok(sumvec.dotp(&p.vunit()?))
     }

@@ -209,15 +209,15 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// based on the cloud's shape outside of normal plane through **p**. 
     /// Returns the weighted sum of unit vectors of its outside points, projected onto unit **p**. 
     /// Index should be in the descending order of magnitudes of self points (for efficiency).
-    /// Weights ws should have ideally been normalized (divided by their sum), so that the result
-    /// will be in [0,1]. The weights are associated 1-1 with the vectors of self.
+    /// Weights ws are associated 1-1 with the points (vectors) of self.
     fn wdepth(self, descending_index: &[usize], ws:&[U], p: &[f64]) -> Result<f64,RE> {
         let p2 = p.vmagsq();
         let mut sumvec = vec![0_f64;p.len()]; 
         for &i in descending_index {
             let s = &self[i];
-            if s.vmagsq() <= p2 { break; }; // no more outside points
-            if s.dotp(p) > p2 { sumvec.mutvadd(&s.vunit()?.smult(ws[i].clone().into())) };
+            let ssq = s.vmagsq();
+            if ssq <= p2 { break; }; // no more outside points
+            if s.dotp(p) > p2 { sumvec.mutvadd(&s.smult(ws[i].clone().into()/ssq.sqrt())) };
         };
         Ok(sumvec.dotp(&p.vunit()?))
     }
