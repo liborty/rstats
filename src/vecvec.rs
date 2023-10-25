@@ -274,15 +274,15 @@ where
         Vec<f64>: FromIterator<f64>,
     {
         let rads: Vec<f64> = self.radii(gm)?;
-        let radsmed = rads.median()?;
-        let radsmad = rads.mad(radsmed)?;
+        let radsmed = rads.medf_unchecked();
+        let radsmad = rads.madf(radsmed);
         Ok((rads.ameanstd()?, Params{centre:radsmed,spread:radsmad}, rads.minmax()))
     }
 
     /// Quasi median, recommended only for comparison purposes
     fn quasimedian(self) -> Result<Vec<f64>, RE> {
         Ok((0..self[0].len()) 
-            .map(|colnum| self.column(colnum).median())
+            .map(|colnum| self.column(colnum).medf_checked())
             .collect::<Result<Vec<f64>, MedError<String>>>()?)
     }
 
@@ -292,11 +292,10 @@ where
         gm.vdist::<f64>(g)
     }
 
-    /// Sums of projections of points on each +/-axis (by hemispheres)
-    /// Points that are perpendicular to the axis are excluded from both +/-ve hemispheres.
-    /// Sums only those points specified in idx.
-    /// Self should normally be zero median vectors,e.g. `self.translate(&geometric_median)`
-    /// Result is normalized to unit vector.
+    /// Proportional projections on each +/- axis (by hemispheres).
+    /// Adds only points that are specified in idx.
+    /// Self should be zero median vectors, previously obtained by `self.translate(&gm)`.
+    /// The result is normalized to unit vector.
     fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> { 
         let dims = self[0].len();
         if self.is_empty() {
@@ -320,7 +319,7 @@ where
     fn madgm(self, gm: &[f64]) -> Result<f64, RE> {
         if self.is_empty() { 
             return re_error("NoDataError","madgm given zero length vec!")?; };     
-        Ok(self.radii(gm)?.median()?)
+        Ok(self.radii(gm)?.medf_unchecked())
      }
 
     /// stdgm mean of distances from gm: nd data spread measure, aka nd standard deviation

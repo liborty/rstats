@@ -31,8 +31,8 @@ fn u8() -> Result<(), RE> {
     println!("Joint Entropyu8:{}", v1.jointentropyu8(&v2)?.gr());
     println!("Dependence:   {}", v1.dependence(&v2)?.gr()); // generic
     println!("Dependenceu8: {}", v1.dependenceu8(&v2)?.gr()); // u8
-    println!("Median v1: {}", v1.as_slice().medstats(|&x| x.into())?);
-    println!("Median v2: {}", v2.as_slice().medstats(fromop)?);
+    println!("Median v1: {}", v1.qmedian_by(&mut |a:&u8,b| a.cmp(b), fromop)?);
+    println!("Median v2: {}", v2.qmedian_by(&mut |a:&u8,b| a.cmp(b), fromop)?);
     let d = 5_usize;
     let n = 7_usize;
     println!(
@@ -52,7 +52,7 @@ fn u8() -> Result<(), RE> {
     println!(
         "Median correlations of data columns:\n{}",
         pt.transpose()
-            .crossfeatures(|v1, v2| v1.mediancorr(v2).expect("median corr: crossfeatures u8\n"))?
+            .crossfeatures(|v1, v2| v1.medf_correlation(v2).expect("median corr: crossfeatures u8\n"))?
     );
     Ok(())
 }
@@ -70,7 +70,7 @@ fn fstats() -> Result<(), RE> {
     println!("Inverse magnitude v1:\n{}", v1.vinverse()?.gr());
     println!("Linear transform of v1:\n{}\n", v1.lintrans()?.gr());
     println!("Magnitudes: {} {}", v1.vmag().gr(), v2.vmag().gr());
-    let v1median = v1.median()?;
+    let v1median = v1.medf_unchecked();
     println!("Median           {}", v1median.gr());
     println!("Harmonic spread  {}", v1.hmad()?.gr());
     println!("Arithmetic Mean  {}", v1.ameanstd()?);
@@ -78,7 +78,7 @@ fn fstats() -> Result<(), RE> {
     println!("Harmonic   Mean  {}", v1.hmeanstd()?);
     println!(
         "tm_stat of 5 against median {}",
-        tm_stat(5., Params{centre:v1median, spread:v1.mad(v1median)?}).gr()
+        tm_stat(5., Params{centre:v1median, spread:v1.madf(v1median)}).gr()
     );
     println!(
         "tm-stat of 5 against amean  {}",
@@ -115,7 +115,7 @@ fn fstats() -> Result<(), RE> {
     println!(
         "Median Correlations of data columns:\n{}",
         pt.transpose()
-            .crossfeatures(|v1, v2| v1.mediancorr(v2).expect("median corr: crossfeatures f64\n"))?
+            .crossfeatures(|v1, v2| v1.medf_correlation(v2).expect("median corr: crossfeatures f64\n"))?
     );
     Ok(())
 }
@@ -128,13 +128,13 @@ fn ustats() -> Result<(), RE> {
     println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
     println!(
         "Median:          {GR}{:>14.10}{UN}",
-        v1.as_slice().median(fromop)?
+        v1.qmedian_by(&mut |a:&u8,b| a.cmp(b), fromop)?
     );
     println!("Geometric mean:  {GR}{:>14.10}{UN}", v1.gmean()?);
     println!("Harmonic mean:   {GR}{:>14.10}{UN}", v1.hmean()?);
     println!("Magnitude:       {GR}{:>14.10}{UN}", v1.vmag());
     println!("Arithmetic {}", v1.ameanstd()?);
-    println!("Median     {}", v1.as_slice().medstats(fromop)?);
+    println!("Median     {}", v1.qmedian_by(&mut |a:&u8,b| a.cmp(b), fromop)?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
@@ -148,15 +148,11 @@ fn intstats() -> Result<(), RE> {
     println!("\n{}", (&v).gr());
     let v1: Vec<f64> = v.iter().map(|i| *i as f64).collect(); // downcast to f64 here
     println!("Linear transform:\n{}", v1.lintrans()?.gr());
-    println!("Arithmetic mean:{}", v1.amean()?.gr());
-    println!("Median:       {GR}{:>14.10}{UN}", v1.median()?);
-    println!("Geometric mean:\t{}", v1.gmean()?.gr());
-    println!("Harmonic mean:\t{}", v1.hmean()?.gr());
-    // println!("Magnitude:\t{}",v1.vmag()));
-    println!("Arithmetic {}", v1.ameanstd()?);
-    println!("Median     {}", v1.medstats()?);
-    println!("Geometric  {}", v1.gmeanstd()?);
-    println!("Harmonic   {}", v1.hmeanstd()?);
+    println!("Arithmetic\t{}", v1.ameanstd()?);
+    let median = v1.medf_unchecked();
+    println!("Median\t\t{}",Params{centre:median,spread:v1.madf(median)});
+    println!("Geometric:\t{}", v1.gmeanstd()?);
+    println!("Harmonic:\t{}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
     Ok(())
 }
@@ -167,8 +163,8 @@ fn genericstats() -> Result<(), RE> {
     let mut v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?);
-    let median = v.as_slice().median(fromop)?;
-    println!("Median\t\t{GR}{}±{}{UN}",median,v.as_slice().mad(median, fromop)?);
+    let median = v.qmedian_by(&mut |a,b| a.cmp(b), fromop)?;
+    println!("Median\t\t{}",Params{centre:median,spread:v.mad(median, fromop)});
     println!("Geometric\t{}", v.gmeanstd()?);
     println!("Harmonic\t{}", v.hmeanstd()?);
     println!("Weighted Arit.\t{}", v.awmeanstd()?);
@@ -191,7 +187,7 @@ fn vecg() -> Result<(), RE> {
     ];
     println!("v2: {}", (&v2).gr());
     println!("Lexical order v1<v2:\t{}", (v1 < v2).gr());
-    println!("Median Correlation:\t{}", v1.mediancorr(&v2)?.gr());
+    println!("Median Correlation:\t{}", v1.medf_correlation(&v2)?.gr());
     println!("Pearson's Correlation:\t{}", v1.correlation(&v2).gr());
     println!("Kendall's Correlation:\t{}", v1.kendalcorr(&v2).gr());
     println!("Spearman's Correlation:\t{}", v1.spearmancorr(&v2).gr());
@@ -338,7 +334,7 @@ fn vecvec() -> Result<(), RE> {
     let md = dists.minmax();
     println!("Medoid and Outlier Total Distances:\n{md}");
     println!("Centroid of total Distances {}", dists.ameanstd()?);
-    println!("Median of total distances   {}", dists.medstats()?);
+    println!("Median of total distances   {}", dists.medf_unchecked());
     println!(
         "GM's total distances:        {}",
         pts.distsum(&median)?.gr()
@@ -421,7 +417,7 @@ fn vecvec() -> Result<(), RE> {
         "\nContributions of removing data points, summary:\n{}\nCentroid: {}\nMedian: {}",
         contribs.minmax(),
         contribs.ameanstd()?,
-        contribs.medstats()?
+        contribs.medf_unchecked()
     );
     println!("\nWeighted madgm: {}",pts.wmadgm(&outcomes,&median)?.gr());
     println!("Weighted divs median: {}",pts.wdivsmed(&outcomes,&median)?.gr()); 
@@ -530,8 +526,8 @@ fn hulls() -> Result<(), RE> {
 
     let allptsig = zeropts.sigvec(&Vec::from_iter(0..zeropts.len()))?;
     println!(
-        "\nSigvec from all points: {}",
-        allptsig.gr() 
+        "\nSigvec from all points: {} mod: {}",
+        allptsig.gr(), allptsig.vmag().gr()
     );
     Ok(())
 }

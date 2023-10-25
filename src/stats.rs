@@ -1,10 +1,10 @@
-use crate::{error::RError, fromop, sumn, Params, MutVecg, Stats, Vecg, RE};
+use crate::{error::RError, re_error, sumn, Params, MutVecg, Stats, Vecg, RE};
 use indxvec::Vecops;
-use medians::{Median, Medianf64};
+use medians::Medianf64;
 
 impl<T> Stats for &[T]
 where
-   T: Clone + PartialOrd + Into<f64>,
+   T: Clone + PartialOrd + Into<f64>
 {
     /// Vector magnitude
     fn vmag(self) -> f64 {
@@ -87,18 +87,19 @@ where
         if n == 0 {
             return Err(RError::NoDataError("empty self vec".to_owned()));
         };
-        let recmedian = 1.0 / self.median(fromop)?;
+        let fself = self.iter().map(|x| x.clone().into()).collect::<Vec<f64>>();
+        let recmedian = 1.0 / fself.medf_checked()?;
         let recmad = self
             .iter()
             .map(|x| -> Result<f64, RE> {
                 let fx: f64 = x.clone().into();
                 if !fx.is_normal() {
-                    return Err(RError::ArithError("attempt to divide by zero".to_owned()));
+                    return re_error("ArithError","attempt to divide by zero");
                 };
                 Ok((recmedian - 1.0 / fx).abs())
             })
             .collect::<Result<Vec<f64>, RE>>()?
-            .median()?;
+            .medf_unchecked();
         Ok(recmedian / recmad)
     }
 

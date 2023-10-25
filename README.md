@@ -104,7 +104,7 @@ is similar to `covariance`. It is a triangular symmetric matrix, obtained by sup
 * `depth` is a measure of likelihood of a zero median point **p** belonging to a data cloud. More specifically, it is the projection onto unit **p** of a sum of unit vectors that lie outside the normal through **p**. For example, all outer hull points have by their definition `depth = 0`, whereas the inner hull points have high values of depth. This is intended as an improvement on Mahalanobis distance which has a similar goal but says nothing about how well enclosed **p** is. Whereas `tm_statistic` only informs about the probability pertaining to the whole cloud, not to its local shape near **p**.
 
 * `sigvec (signature vector)`  
-Sums of zero median vectors in all coordinate hemispheres. The origin will most often be  **gm**. For a new point **p** that needs to be classified, we can quickly estimate how well populated is its direction (from **gm**). This could be done properly by projecting all the points directly onto unit **p** but this is usually impractically slow, as there are typically many such points. However, `signature_vector` only needs to be precomputed once and is then the only vector to be projected onto unit **p**.
+Proportional projections of a cloud of zero median vectors on all hemispheric axis. When a new zero median point **p** needs to be classified, we can quickly estimate how well populated is its direction from **gm**. Similar could be done by projecting all the points directly onto **p** but this is usually impractically slow, as there are typically very many such points. However, `signature_vector` only needs to be precomputed once and is then the only vector to be projected onto **p**.
 
 ## Previously Known Concepts and Terminology
 
@@ -332,6 +332,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.0.5** - Corrected `wsigvec` to also return normalized result. Updated dependency `Medians` to faster version 3.0.1.
+
 * **Version 2.0.4** - Made a corresponding change: `winsideness` -> `wdepth`.
 
 * **Version 2.0.3** - Improved `insideness` to be projection of a sum of unit vectors instead of just a simple count. Renamed it to `depth` to avoid confusion. Also some fixes to `hulls`.
@@ -366,7 +368,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 1.2.44** - Swapped the sign of `wedge` so it agrees with convention.
 
-* **Version 1.2.43** - Removed `pseudoscalar` method. The `sine` method now computes the correct oriented magnitude of the 2-blade directly from the wedge product. Added geometric product `geometric`. Added some methods to struct `TriangMat` for completeness. In particular, `eigenvalues` and `determinant`, which are both easily obtained after successful Cholesky decomposition.
+* **Version 1.2.43** - Removed `pseudoscalar` method. The `sine` method now computes the correct oriented magnitude of the 2-blade directly from the wedge product. Added geometric product `geometric`. Added some methods to `struct TriangMat` for completeness. In particular, `eigenvalues` and `determinant`, which are both easily obtained after successful Cholesky decomposition.
 
 * **Version 1.2.42** - Added `wedge` (product of Exterior Algebra), `pseudoscalar` and `sine` to trait Vecg. The sine method now always returns the correct anti reflexive sign, in any number of dimensions. The sign flips when the order of the vector operands is exchanged.
 

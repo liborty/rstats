@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "2.0.4"
+version = "2.0.5"
 authors = ["Libor Spacek"]
 edition = "2021"
 description = "Statistics, Information Measures, Data Analysis, Linear Algebra, Clifford Algebra, Machine Learning, Geometric Median, Matrix Decompositions, Mahalanobis Distance, Hulls, Multithreading.."
@@ -22,7 +22,7 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 rayon = "1.8"
 indxvec = "1.8"
-medians = "2.3"   
+medians = "3.0"   
 ran = "1.1"
 [dev-dependencies]
 times = "1.0"

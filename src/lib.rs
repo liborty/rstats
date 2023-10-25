@@ -166,7 +166,7 @@ pub trait Vecg {
     fn smult<U: Into<f64>>(self, s: U) -> Vec<f64>;
     /// Scalar product
     fn dotp<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
-    /// Sigvec product with unit self: measure of cloud density in self direction:`0 <=  s <= 1`
+    /// Sigvec product with (zero median) vector self. Cloud density d in its direction:`0 <=  d <= |self|`
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE>;
     /// Cosine of angle between two slices
     fn cosine<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
@@ -330,7 +330,7 @@ pub trait VecVec<T> {
     fn quasimedian(self) -> Result<Vec<f64>, RE>;
     /// Geometric median estimate's error
     fn gmerror(self, gm: &[f64]) -> f64;
-    /// Sums of points in each hemisphere
+    /// Proportional projections on each +/- axis (by hemispheres)
     fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE>;
     /// madgm, median of radii from geometric median: stable nd data spread estimator
     fn madgm(self, gm: &[f64]) -> Result<f64, RE>;

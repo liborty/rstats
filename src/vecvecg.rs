@@ -79,7 +79,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         if self[0].len() != v.len() { 
             return re_error("size","wmeddivs dimensions mismatch")?; }; 
         let (values,wsum) = self.wdivs(ws,v)?;
-        Ok((self.len() as f64) * values.median()?/wsum)
+        Ok((self.len() as f64) * values.medf_unchecked()/wsum)
     }
  
     /// weighted radii to all points in self
@@ -98,7 +98,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         if self[0].len() != gm.len() { 
             return re_error("size","wmadgm dimensions mismatch")?; }; 
         let (values,wsum) = self.scalar_wfn(ws,|p| Ok(p.vdist(gm)))?;
-        Ok((self.len() as f64) * values.median()?/wsum)
+        Ok((self.len() as f64) * values.medf_unchecked()/wsum)
     }
 
     /// Rows of matrix self multiplying (column) vector v
@@ -202,7 +202,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             };
         };
         for hem in &mut hemis { *hem /= wsum; };
-        Ok(hemis)
+        hemis.vunit()
     }
 
     /// Likelihood of zero median point **p** belonging to zero median data cloud `self`,

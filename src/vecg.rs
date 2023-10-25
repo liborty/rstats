@@ -1,9 +1,10 @@
 use crate::{
     error::{re_error, RError, RE},
-    here, fromop, Stats, TriangMat, Vecg
+    here, Stats, TriangMat, Vecg
 };
 use indxvec::{Indices, Vecops};
 use medians::Median;
+use core::convert::identity;
 
 impl<T> Vecg for &[T]
 where
@@ -44,10 +45,9 @@ where
             .sum::<f64>()
     }
 
-    /// Measure p of cloud density in self direction:`0 <= p <= 1`
-    /// Product of unit self vector with signature vec of axial projections.  
-    /// Similar result can be obtained
-    /// by projecting onto self all points but that is usually too slow.
+    /// Measure d of cloud density in (zero median) self direction:`0 <= d <= |self|` 
+    /// Product with signature vec of axial projections of some cloud.  
+    /// Similar result can be obtained by projecting all points onto self but that is usually too slow.
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE> {
         let dims = self.len();
         if 2 * dims != sig.len() {
@@ -55,10 +55,10 @@ where
                 "size",
                 "dotsig: sig vec must have double the dimensions of self",
             )?;
-        } 
-        let self_unit = self.vunit()?;        
+        }    
         let mut ressum = 0_f64;
-        for (i, &component) in self_unit.iter().enumerate() {
+        for (i, c) in self.iter().enumerate() {
+            let component = c.clone().into();
             if component > 0_f64 {
                 ressum += component * sig[i];
                 continue;
@@ -216,7 +216,9 @@ where
 
     /// We define vector median correlation similarity in the interval [0,1] as
     fn vcorrsim(self, v:Self) -> f64 {
-        (1.0 + self.mediancorr(v, fromop).expect("vcorrsim: mediancorr failed")) / 2.0
+        (1.0 + self.med_correlation(v, &mut |a,b| a.partial_cmp(b)
+            .expect("vcorrsim: failed partial_cmp"),
+            |a| identity(a.clone().into())).expect("vcorrsim: mediancorr failed")) / 2.0
     }
 
     /// Lower triangular covariance matrix for a single vector.
