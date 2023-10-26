@@ -2,7 +2,7 @@ use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::{Median, Medianf64};
 use ran::{set_seeds, Rnum};
 use rstats::{
-    fromop, noop, tm_stat, unit_matrix, re_error, RE, Params, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
+    fromop, noop, tm_stat, unit_matrix, re_error, RE, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
 };
 use times::benchvvf64;
 
@@ -70,26 +70,25 @@ fn fstats() -> Result<(), RE> {
     println!("Inverse magnitude v1:\n{}", v1.vinverse()?.gr());
     println!("Linear transform of v1:\n{}\n", v1.lintrans()?.gr());
     println!("Magnitudes: {} {}", v1.vmag().gr(), v2.vmag().gr());
-    let v1median = v1.medf_unchecked();
-    println!("Median           {}", v1median.gr());
     println!("Harmonic spread  {}", v1.hmad()?.gr());
     println!("Arithmetic Mean  {}", v1.ameanstd()?);
+    println!("Median & Mad     {}", v1.medmad()?);
     println!("Geometric  Mean  {}", v1.gmeanstd()?);
     println!("Harmonic   Mean  {}", v1.hmeanstd()?);
     println!(
         "tm_stat of 5 against median {}",
-        tm_stat(5., Params{centre:v1median, spread:v1.madf(v1median)}).gr()
+        tm_stat(5., v1.medmad()?).gr()
     );
     println!(
-        "tm-stat of 5 against amean  {}",
+        "tm_stat of 5 against amean  {}",
         tm_stat(5., v1.ameanstd()?).gr()
     );
     println!(
-        "tm-stat of 5 against gmean  {}",
+        "tm_stat of 5 against gmean  {}",
         tm_stat(5., v1.gmeanstd()?).gr()
     );
     println!(
-        "tm-stat of 5 against hmean   {}",
+        "tm_stat of 5 against hmean   {}",
         tm_stat(5., v1.hmeanstd()?).gr()
     );
     println!("Autocorr1:\t{}", v1.autocorr()?.gr());
@@ -134,7 +133,7 @@ fn ustats() -> Result<(), RE> {
     println!("Harmonic mean:   {GR}{:>14.10}{UN}", v1.hmean()?);
     println!("Magnitude:       {GR}{:>14.10}{UN}", v1.vmag());
     println!("Arithmetic {}", v1.ameanstd()?);
-    println!("Median     {}", v1.qmedian_by(&mut |a:&u8,b| a.cmp(b), fromop)?);
+    println!("Median     {}", v1.medmad()?);
     println!("Geometric  {}", v1.gmeanstd()?);
     println!("Harmonic   {}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
@@ -149,8 +148,7 @@ fn intstats() -> Result<(), RE> {
     let v1: Vec<f64> = v.iter().map(|i| *i as f64).collect(); // downcast to f64 here
     println!("Linear transform:\n{}", v1.lintrans()?.gr());
     println!("Arithmetic\t{}", v1.ameanstd()?);
-    let median = v1.medf_unchecked();
-    println!("Median\t\t{}",Params{centre:median,spread:v1.madf(median)});
+    println!("Median\t\t{}",v1.medmad()?);
     println!("Geometric:\t{}", v1.gmeanstd()?);
     println!("Harmonic:\t{}", v1.hmeanstd()?);
     println!("Autocorrelation:{}", v1.autocorr()?.gr());
@@ -163,14 +161,14 @@ fn genericstats() -> Result<(), RE> {
     let mut v = vec![1_i32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
     println!("Arithmetic\t{}", v.ameanstd()?);
-    let median = v.qmedian_by(&mut |a,b| a.cmp(b), fromop)?;
-    println!("Median\t\t{}",Params{centre:median,spread:v.mad(median, fromop)});
+    println!("Median\t\t{}",v.medmad()?);
     println!("Geometric\t{}", v.gmeanstd()?);
     println!("Harmonic\t{}", v.hmeanstd()?);
     println!("Weighted Arit.\t{}", v.awmeanstd()?);
     println!("Weighted Geom.\t{}", v.gwmeanstd()?);
     println!("Weighted Harm.\t{}", v.hwmeanstd()?);
     println!("Autocorrelation: {}", v.autocorr()?.gr());
+    let median = v.qmedian_by(&mut |a,b| a.cmp(b), fromop)?;
     println!("dfdt:\t\t {}", v.dfdt(median)?.gr());
     v.reverse();
     println!("dfdt(reversed):\t{}", v.dfdt(median)?.gr());
@@ -216,7 +214,7 @@ fn vecg() -> Result<(), RE> {
             .gr()
     );
     println!("Cos Similarity [0,1]:\t{}", v1.vsim(&v2).gr());
-    println!("Cor Similarity [0,1]:\t{}", v1.vcorrsim(&v2).gr());
+    println!("Cor Similarity [0,1]:\t{}", v1.vcorrsim(&v2)?.gr());
     println!("Cos Dissimilarity:\t{}", v1.vdisim(&v2).gr());
     println!("[1,2,3].kron(&[4,5]):\t{}", [1, 2, 3].kron(&[4, 5]).gr());
     let outerp = [1, 2, 3].outer(&[4, 5]);

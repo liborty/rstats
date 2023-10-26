@@ -117,6 +117,8 @@ pub trait Stats {
     fn hmad(self) -> Result<f64, RE>;
     /// Arithmetic mean
     fn amean(self) -> Result<f64, RE>;
+    /// Median and Mad packed into Params struct
+    fn medmad(self) -> Result<Params, RE>;
     /// Arithmetic mean and standard deviation
     fn ameanstd(self) -> Result<Params, RE>;
     /// Weighted arithmetic mean
@@ -194,8 +196,8 @@ pub trait Vecg {
     fn varc<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> f64;
     /// Vector similarity S in the interval `[0,1]: S = (1+cos(theta))/2`
     fn vsim<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
-    /// Median correlation similarity in the interval [0,1]
-    fn vcorrsim(self, v: Self) -> f64;
+    /// Median correlation similarity of vectors, range [0,1]
+    fn vcorrsim(self, v:Self) -> Result<f64, RE>;
     /// Positive dotp [0,2|a||b|]
     fn pdotp<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> f64;
     /// We define vector dissimilarity D in the interval `[0,1]: D = 1-S = (1-cos(theta))/2`

@@ -1,6 +1,7 @@
-use crate::{error::RError, re_error, sumn, Params, MutVecg, Stats, Vecg, RE};
+use crate::{error::RError, re_error, sumn, fromop, Params, MutVecg, Stats, Vecg, RE};
 use indxvec::Vecops;
-use medians::Medianf64;
+use medians::{Medianf64,Median};
+use core::cmp::Ordering::*;
 
 impl<T> Stats for &[T]
 where
@@ -115,8 +116,15 @@ where
         if n > 0 {
             Ok(self.iter().map(|x| x.clone().into()).sum::<f64>() / (n as f64))
         } else {
-            Err(RError::NoDataError("empty self vec".to_owned()))
+            re_error("NoDataError","empty self vec")
         }
+    }
+
+    /// Median and Mad packed into in Params struct
+    fn medmad(self) -> Result<Params, RE> {
+        let median = self.qmedian_by(&mut |a,b| a
+            .partial_cmp(b).unwrap_or(Equal), fromop)?;
+        Ok(Params{centre:median,spread:self.mad(median, fromop)})
     }
 
     /// Arithmetic mean and (population) standard deviation
