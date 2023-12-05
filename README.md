@@ -74,7 +74,7 @@ For more detailed comments, plus some examples, see [rstats in docs.rs](https://
 
 ## New Concepts and their Definitions
 
-* `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in 1d), or to the **gm** (in `nd`). They are our alternative to the commonly used `zero mean points`, obtained by moving the origin to the arithmetic mean (in 1d) or to the arithmetic centroid (in `nd`).
+* `zero median points` (or vectors) are obtained by moving the origin of the coordinate system to the median (in `1d`), or to the **gm** (in `nd`). They are our alternative to the commonly used `zero mean points`, obtained by moving the origin to the arithmetic mean (in 1d) or to the arithmetic centroid (in `nd`).
 
 * `median correlation` between two 1d sets of the same length.  
 We define this correlation similarly to Pearson, as cosine of an angle between two normalised samples, interpreted as coordinate vectors. Pearson first normalises each set by subtracting its mean from all components. Whereas we subtract the median (cf. zero median points above). This conceptual clarity is one of the benefits of interpreting a data sample of length `d` as a single vector in `d` dimensional space.
@@ -83,7 +83,7 @@ We define this correlation similarly to Pearson, as cosine of an angle between t
 our fast multidimensional `geometric median` (**gm**) algorithms.
 
 * `madgm` (median of distances from `gm`)  
-is our generalisation of `mad` (**m**edian of **a**bsolute **d**ifferences from median), to n dimensions. `1d` median is replaced in `nd` by **gm**. Where `mad` was a robust measure of 1d data spread, `madgm` becomes a robust measure of `nd` data spread. We define it as: `median(|`**p**i-**gm**`|,for i=1..n)`, where **p**1..**p**n are a sample of n data points, which are no longer scalars but d dimensional vectors.
+is our generalisation of `mad` (**m**edian of **a**bsolute **d**ifferences from median), to n dimensions. `1d` median is replaced in `nd` by **gm**. Where `mad` was a robust measure of 1d data spread, `madgm` becomes a robust measure of `nd` data spread. We define it as: `median(|`**p**i-**gm**`|,i=1..n)`, where **p**1..**p**n are a sample of n data points, which are no longer scalars but d dimensional vectors.
 
 * `tm_stat`  
 `t-stat`, defined as `(x-mean)/std`, where `std` is the standard deviation, is similar to well known `standard z-score`, except that its scalar measures of central tendency and spread are obtained from the sample (pivotal quantity), rather than from any old assumed population distribution. We define our generalized `tm_stat` of a single scalar observation x as: `(x-centre)/spread`, with the recommendation to replace mean by median and std by mad, whenever possible.
