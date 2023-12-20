@@ -1,6 +1,6 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::{Median, Medianf64};
-use ran::{set_seeds, Rnum};
+use ran::*;
 use rstats::{
     fromop, noop, tm_stat, unit_matrix, re_error, RE, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
 };
@@ -41,7 +41,7 @@ fn u8() -> Result<(), RE> {
         d.yl()
     );
     set_seeds(77777);
-    let pt = Rnum::newu8().ranvv(d, n)?.getvvu8()?;
+    let pt = ranvv_u8(n,d)?;
     println!("Acentroid:\n{}", pt.acentroid().gr());
     println!("G-median :\n{}", pt.gmedian(EPS).gr());
     let cov = pt.covar(&pt.acentroid())?;
@@ -102,7 +102,7 @@ fn fstats() -> Result<(), RE> {
     let d = 5_usize;
     let n = 9_usize;
     println!("{YL}Testing on a random set of {n} points in {d} d space:{UN}");
-    let pt = Rnum::newf64().ranvv(d, n)?.getvvf64()?;
+    let pt = ranvv_f64(n,d)?;
     println!(
         "Classical Covariances:\n{}",
         pt.covar(&pt.acentroid())?.gr()
@@ -122,7 +122,7 @@ fn fstats() -> Result<(), RE> {
 #[test]
 fn ustats() -> Result<(), RE> {
     set_seeds(1234567);
-    let v1 = Rnum::newu8().ranv(20)?.getvu8()?;
+    let v1 = ranv_u8(20)?;
     println!("\n{}", (&v1).gr());
     println!("Arithmetic mean: {GR}{:>14.10}{UN}", v1.amean()?);
     println!(
@@ -229,9 +229,8 @@ fn vecg() -> Result<(), RE> {
 fn trend() -> Result<(), RE> {
     let d = 7_usize;
     // set_seeds(777);
-    let rf64 = Rnum::newf64();
-    let pts1 = rf64.ranvv(d, 37)?.getvvf64()?;
-    let pts2 = rf64.ranvv(d, 50)?.getvvf64()?;
+    let pts1 = ranvv_f64(37,d)?;
+    let pts2 = ranvv_f64(50,d)?;
     println!("\nTrend vector (of new random data):\n{}\n", pts1.trend(EPS, pts2)?.gr());
     Ok(())
 }
@@ -245,8 +244,7 @@ fn triangmat() -> Result<(), RE> {
     let n = 90_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
     // set_seeds(1133);
-    let ru = Rnum::newf64();
-    let pts = ru.ranvv_in(d, n, 0.0, 4.0)?.getvvf64()?;
+    let pts = ranvv_f64_range(n,d, 0.0..=4.0)?;
     // println!("\nTest data:\n{}",pts.gr());
     // let transppt = pts.transpose();
     let cov = pts.covar(&pts.par_gmedian(EPS))?;
@@ -256,7 +254,7 @@ fn triangmat() -> Result<(), RE> {
     println!("Sorted eigenvalues of the comediance matrix from Cholesky decomposition:\n{}",
         chol.eigenvalues().sortm(false).gr());
     println!("Determinant of the comediance matrix (their product): {}",chol.determinant().gr());
-    let d = ru.ranv(d)?.getvf64()?;
+    let d = ranv_f64(d)?;
     let dmag = d.vmag();
     let mahamag = chol.mahalanobis(&d)?;
     println!("Random test vector:\n{}", d.gr());
@@ -276,13 +274,12 @@ fn mat() -> Result<(), RE> {
     let d = 10_usize;
     let n = 12_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
-    // set_seeds(1133);
-    let ru = Rnum::newf64();
-    let m = ru.ranvv(d, n)?.getvvf64()?;
+    // set_seeds(1133); 
+    let m = ranvv_f64(n,d)?;
     println!("\nTest matrix M:\n{}", m.gr());
     let t = m.transpose();
     println!("\nTransposed matrix T:\n{}", t.gr());
-    let v = ru.ranv(d)?.getvf64()?;
+    let v = ranv_f64(d)?;
     println!("\nVector V:\n{}", v.gr());
     println!("\nMV:\n{}", m.leftmultv(&v)?.gr());
     println!("\nVT:\n{}", t.rightmultv(&v)?.gr());
@@ -297,14 +294,13 @@ fn vecvec() -> Result<(), RE> {
     let n = 120_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
     // set_seeds(113);
-    let ru = Rnum::newu8();
-    let pts = ru.ranvv(d,n)?.getvvu8()?;
+    let pts = ranvv_u8(n,d)?;
     println!("First data vector:\n{}",pts[0].gr());
     println!("Joint entropy: {}", pts.jointentropyn()?.gr());
     println!("Dependence:    {}", pts.dependencen()?.gr());
     let (median, _vsum, recips) = pts.gmparts(EPS);
     println!("Approximate dv/dt:\n{}", pts.dvdt(&median)?.gr());
-    let outcomes = ru.ranv(n)?.getvu8()?;
+    let outcomes = ranv_u8(n)?;
     println!("\nRandom testing outcomes:\n{}",outcomes.gr());
     println!("wdvdt using outcomes as weigths:\n{}", pts.wdvdt(&outcomes,&median)?.gr());
     println!("wdvdt as wgmedian-gmedian:\n{}", pts.wgmedian(&outcomes,EPS)?.vsub(&median).gr());
@@ -430,8 +426,7 @@ fn hulls() -> Result<(), RE> {
     let n = 777_usize;
     println!("Testing on a random set of {n} points in {d} dimensional space");
     // set_seeds(77777);
-    let rf = Rnum::newf64();
-    let pts = rf.ranvv(d, n)?.getvvf64()?;
+    let pts = ranvv_f64(n,d)?;
     // let wts = rf.ranv_in(n, 0., 100.).getvf64()?;
     let median = pts.gmedian(EPS);
     let zeropts = pts.translate(&median)?;
@@ -588,7 +583,6 @@ fn geometric_medians() -> Result<(), RE> {
                                // Rnum specifies the type of the random numbers required
     println!("\n{YL}Timing Comparisons (in nanoseconds){UN}");
     benchvvf64(
-        Rnum::newf64(),
         100,
         1000..1500,
         200,
@@ -608,7 +602,7 @@ fn geometric_medians() -> Result<(), RE> {
     let mut sump = 0_f64;
     let mut gm: Vec<f64>;
     for _i in 1..ITERATIONS {
-        let pts = Rnum::newf64().ranvv(d, n)?.getvvf64()?;
+        let pts = ranvv_f64(n,d)?;
         gm = pts.gmedian(EPS);
         sumg += pts.gmerror(&gm);
         gm = pts.par_gmedian(EPS);

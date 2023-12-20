@@ -332,6 +332,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.0.7** - Updated to `ran 2.0`.
+
 * **Version 2.0.6** - Added convenience method `medmad` to Stats trait. It packs median and mad into `struct Params`, similarly to `ameanstd` and others. Consequently simplified the printouts in some tests.
 
 * **Version 2.0.5** - Corrected `wsigvec` to also return normalized result. Updated dependency `Medians` to faster version 3.0.1.
