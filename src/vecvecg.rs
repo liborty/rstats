@@ -186,22 +186,20 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
 
     /// Weighted sums of points in each hemisphere.
     /// Uses only the points specified in idx (e.g. the convex hull).
-    /// Self should normally be zero median vectors, i.e. `self.translate(&median)`
-    fn wsigvec(self, idx: &[usize], ws:&[U]) -> Result<Vec<f64>,RE> { 
-        let mut wsum = 0_f64; 
+    /// Self should normally be zero median vectors, i.e. `self.translate(&median)`.  
+    /// The result is normalized to unit vector.
+    fn wsigvec(self, idx: &[usize], ws:&[U]) -> Result<Vec<f64>,RE> {   
         let dims = self[0].len();
         if self.len() != ws.len() { return re_error("DataError","wsigvec: weights number mismatch")?; }; 
         let mut hemis = vec![0_f64; 2*dims]; 
         for &i in idx { 
-            let wf:f64 = ws[i].clone().into();
-            wsum += wf;
+            let wf:f64 = ws[i].clone().into();           
             for (j,component) in self[i].iter().enumerate() {
                 let cf:f64 = component.clone().into();
                 if cf < 0. { hemis[dims+j] -= wf*cf; }
                 else { hemis[j] += wf*cf; };  
             };
         };
-        for hem in &mut hemis { *hem /= wsum; };
         hemis.vunit()
     }
 
