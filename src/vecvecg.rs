@@ -262,37 +262,13 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             .collect::<Vec<f64>>();
         res.muthashsort(noop);
         Ok(res)
-    } 
-
-    /// Like wgmparts, except only does one iteration from any non-member point g
-    fn wnxnonmember(self, ws:&[U], g:&[f64]) -> Result<(Vec<f64>,Vec<f64>,f64),RE> {
-        if self.len() != ws.len() { 
-            return Err(RError::DataError("wnxnonmember and ws lengths mismatch".to_owned())); };
-        if self[0].len() != g.len() { 
-            return Err(RError::DataError("wnxnonmember self and gm dimensions mismatch".to_owned())); };
-        // vsum is the sum vector of unit vectors towards the points
-        let mut vsum = vec![0_f64; self[0].len()];
-        let mut recip = 0_f64;
-        for (x,w) in self.iter().zip(ws) { 
-            // |x-p| done in-place for speed. Could have simply called x.vdist(p)
-            let mag:f64 = x.iter().zip(g).map(|(xi,&gi)|(xi.clone().into()-gi).powi(2)).sum::<f64>(); 
-            if mag.is_normal() { // ignore this point should distance be zero
-                let rec = w.clone().into()/(mag.sqrt()); // reciprocal of distance (scalar)
-                // vsum increments by components
-                vsum.iter_mut().zip(x).for_each(|(vi,xi)| *vi += xi.clone().into()*rec); 
-                 recip += rec // add separately the reciprocals for final scaling   
-            }
-        }
-        Ok(( vsum.iter().map(|vi| vi / recip).collect::<Vec<f64>>(),        
-            vsum,
-            recip ))
-    }    
+    }
 
     /// Weighted Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
     fn wgmedian(self, ws:&[U], eps: f64) -> Result<Vec<f64>,RE> { 
         if self.len() != ws.len() { 
             return Err(RError::DataError("wgmedian and ws lengths mismatch".to_owned())); };
-        let mut g = self.acentroid(); // start iterating from the Centre 
+        let mut g = self.wacentroid(ws); // start iterating from the weighted centre 
         let mut recsum = 0f64;
         loop { // vector iteration till accuracy eps is exceeded  
             let mut nextg = vec![0_f64; self[0].len()];   
@@ -325,7 +301,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn par_wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>,RE> { 
         if self.len() != ws.len() { 
             return Err(RError::DataError("wgmedian and ws lengths mismatch".to_owned())); };
-        let mut g = self.acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
+        let mut g = self.wacentroid(ws); // start iterating from the weighted centre or from vec![0_f64; self[0].len()]
         let mut recsum = 0_f64;
         loop {
             // vector iteration till accuracy eps is exceeded
@@ -373,7 +349,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn wgmparts(self, ws:&[U], eps: f64) -> Result<(Vec<f64>,Vec<f64>,f64),RE> { 
         if self.len() != ws.len() { 
             return Err(RError::DataError("wgmparts and ws lengths mismatch".to_owned())); };
-        let mut g = self.acentroid(); // start iterating from the Centre
+        let mut g = self.wacentroid(ws); // start iterating from the weighted centre
         let mut recsum = 0f64; 
         loop { // vector iteration till accuracy eps is exceeded  
             let mut nextg = vec![0_f64; self[0].len()];   

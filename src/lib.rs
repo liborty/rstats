@@ -407,8 +407,6 @@ pub trait VecVecg<T, U> {
     fn dists(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// Weighted sorted weighted radii magnitudes, normalised
     fn wsortedrads(self, ws: &[U], gm: &[f64]) -> Result<Vec<f64>, RE>;
-    /// Like wgmparts, except only does one iteration from any non-member point g
-    fn wnxnonmember(self, ws: &[U], g: &[f64]) -> Result<(Vec<f64>, Vec<f64>, f64), RE>;
     /// The weighted geometric median to accuracy eps
     fn wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
     /// Parallel (multithreaded) implementation of the weighted Geometric Median.  

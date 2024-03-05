@@ -519,7 +519,7 @@ fn hulls() -> Result<(), RE> {
 
     let allptsig = zeropts.sigvec(&Vec::from_iter(0..zeropts.len()))?;
     println!(
-        "\nSigvec from all points: {} mod: {}",
+        "\nSigvec for all points: {} mod: {}",
         allptsig.gr(), allptsig.vmag().gr()
     );
     Ok(())
