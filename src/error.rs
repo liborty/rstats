@@ -1,4 +1,4 @@
-use medians::error::MedError;
+use medians::MedError;
 use ran::RanError;
 use std::error::Error;
 use std::fmt;

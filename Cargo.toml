@@ -22,7 +22,7 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 rayon = "1.9"
 indxvec = "1.8"
-medians = "3.0"   
+medians = "3.0.8"   
 ran = "2.0"
 [dev-dependencies]
 times = "1.0"

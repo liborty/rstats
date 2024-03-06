@@ -22,7 +22,7 @@ pub mod vecvecg;
 pub use crate::error::{re_error, RError, RE};
 // reexporting useful related methods
 pub use indxvec::{here, printing::*, MinMax, Printing};
-pub use medians::{error::MedError, Median, Medianf64};
+pub use medians::{MedError, Median, Medianf64};
 
 // Auxiliary Functions
 

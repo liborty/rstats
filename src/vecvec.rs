@@ -1,6 +1,6 @@
 use crate::{here,sumn, re_error, RError, RE, Params, MinMax, MutVecg, Stats, TriangMat, VecVec, Vecg};
 use indxvec::Vecops;
-use medians::{error::MedError, Medianf64};
+use medians::{MedError, Medianf64};
 use rayon::prelude::*;
 
 impl<T> VecVec<T> for &[Vec<T>]
