@@ -332,6 +332,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.0.9** - Pruned some rarely used methods, simplified `gmparts` and `gmerror`.
+
 * **Version 2.0.8**' - Changed initial guess in iterative weighted gm methods to weighted mean. This, being more accurate than plain mean, leads to fewer iterations. Updated some dependecies.
 
 * **Version 2.0.7** - Updated to `ran 2.0`.

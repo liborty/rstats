@@ -346,7 +346,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     }
     
     /// Like `gmedian` but returns also the sum of unit vecs and the sum of reciprocals. 
-    fn wgmparts(self, ws:&[U], eps: f64) -> Result<(Vec<f64>,Vec<f64>,f64),RE> { 
+    fn wgmparts(self, ws:&[U], eps: f64) -> Result<(Vec<f64>,f64),RE> { 
         if self.len() != ws.len() { 
             return Err(RError::DataError("wgmparts and ws lengths mismatch".to_owned())); };
         let mut g = self.wacentroid(ws); // start iterating from the weighted centre
@@ -367,8 +367,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             }
             if nextrecsum-recsum < eps { 
                 return Ok((
-                    nextg.iter().map(|&gi| gi/nextrecsum).collect::<Vec<f64>>(),
-                    nextg,
+                    nextg.iter().map(|&gi| gi/nextrecsum).collect::<Vec<f64>>(),    
                     nextrecsum
                 )); }; // termination        
             nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);

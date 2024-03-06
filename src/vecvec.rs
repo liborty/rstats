@@ -286,12 +286,6 @@ where
             .collect::<Result<Vec<f64>, MedError<String>>>()?)
     }
 
-    /// Geometric median's estimated error
-    fn gmerror(self, g: &[f64]) -> f64 {
-        let (gm, _, _) = self.nxnonmember(g);
-        gm.vdist::<f64>(g)
-    }
-
     /// Proportional projections on each +/- axis (by hemispheres).
     /// Adds only points that are specified in idx.
     /// Self should be zero median vectors, previously obtained by `self.translate(&gm)`.
@@ -399,52 +393,11 @@ where
         (innerindex, outerindex)
     }
 
-    /// Initial (first) point for geometric medians.
-    fn firstpoint(self) -> Vec<f64> {
-        let mut rsum = 0_f64;
-        let mut vsum = vec![0_f64; self[0].len()];
-        for p in self {
-            let mag = p.iter().map(|pi| pi.clone().into().powi(2)).sum::<f64>(); // vmag();
-            if mag.is_normal() {
-                // skip if p is at the origin
-                let rec = 1.0_f64 / (mag.sqrt());
-                // the sum of reciprocals of magnitudes for the final scaling
-                rsum += rec;
-                // add this unit vector to their sum
-                vsum.mutvadd::<f64>(&p.smult::<f64>(rec))
-            }
-        }
-        vsum.mutsmult::<f64>(1.0 / rsum); // scale by the sum of reciprocals
-        vsum // good initial gm
-    }
-
-    /// Like gmparts, except only does one iteration from any non-member point g
-    fn nxnonmember(self, g: &[f64]) -> (Vec<f64>, Vec<f64>, f64) {
-        // vsum is the sum vector of unit vectors towards the points
-        let mut vsum = vec![0_f64; self[0].len()];
-        let mut recip = 0_f64;
-        for x in self {
-            // |x-p| done in-place for speed. Could have simply called x.vdist(p)
-            let mag: f64 = x
-                .iter()
-                .zip(g)
-                .map(|(xi, &gi)| (xi.clone().into() - gi).powi(2))
-                .sum::<f64>();
-            if mag.is_normal() {
-                // ignore this point should distance be zero
-                let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
-                                                  // vsum increments by components
-                vsum.iter_mut()
-                    .zip(x)
-                    .for_each(|(vi, xi)| *vi += xi.clone().into() * rec);
-                recip += rec // add separately the reciprocals for final scaling
-            }
-        }
-        (
-            vsum.iter().map(|vi| vi / recip).collect::<Vec<f64>>(),
-            vsum,
-            recip
-        )
+    /// Geometric median's residual error
+    fn gmerror(self, g: &[f64]) -> Result<f64, RE> {
+        let mut unitvecssum = vec![0_f64; self[0].len()];
+        for v in self { unitvecssum.mutvadd(&v.vsub(g).vunit()?); };
+        Ok(unitvecssum.vmag())
     }
 
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
@@ -512,7 +465,6 @@ where
                             .zip(&g)
                             .map(|(vi, gi)| (vi.clone().into() - gi).powi(2))
                             .sum();
-                        // let (mut vecsum, mut recsum) = pair;
                         if mag > eps {
                             let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
                             for (vi, gi) in p.iter().zip(&mut pair.0) {
@@ -541,8 +493,8 @@ where
         }
     }
 
-    /// Like `gmedian` but returns also the sum of unit vecs and the sum of reciprocals.
-    fn gmparts(self, eps: f64) -> (Vec<f64>, Vec<f64>, f64) {
+    /// Like `gmedian` but returns also the sum of reciprocals.
+    fn gmparts(self, eps: f64) -> (Vec<f64>, f64) {
         let mut g = self.acentroid(); // start iterating from the Centre
         let mut recsum = 0f64;
         loop {
@@ -573,8 +525,7 @@ where
                     nextg
                         .iter()
                         .map(|&gi| gi / nextrecsum)
-                        .collect::<Vec<f64>>(),
-                    nextg,
+                        .collect::<Vec<f64>>(), 
                     nextrecsum,
                 );
             }; // termination

@@ -203,7 +203,7 @@ fn vecg() -> Result<(), RE> {
     println!("Independence:\t\t{}", v1.independence(&v2)?.gr());
     println!("Wedge product:\n{}",v1.wedge(&v2).gr());
     println!("Geometric product:\n{}",v1.geometric(&v2).gr());
-    println!("Sine: {} {} {YL}{}{UN}",v1.sine(&v2).gr(),v2.sine(&v1).gr(),v1.varea(&v2)/v1.vmag()/v2.vmag());
+    println!("Sine: {} {} check: {}",v1.sine(&v2).gr(),v2.sine(&v1).gr(),(v1.varea(&v2)/v1.vmag()/v2.vmag()).gr());
     println!("Cosine:\t\t\t{}", v1.cosine(&v2).gr());
     println!("cos^2+sin^2 check:\t{}", (v1.cosine(&v2).powi(2)+v1.sine(&v2).powi(2)).gr());
     println!(
@@ -298,7 +298,7 @@ fn vecvec() -> Result<(), RE> {
     println!("First data vector:\n{}",pts[0].gr());
     println!("Joint entropy: {}", pts.jointentropyn()?.gr());
     println!("Dependence:    {}", pts.dependencen()?.gr());
-    let (median, _vsum, recips) = pts.gmparts(EPS);
+    let (median,recipsum) = pts.gmparts(EPS);
     println!("Approximate dv/dt:\n{}", pts.dvdt(&median)?.gr());
     let outcomes = ranv_u8(n)?;
     println!("\nRandom testing outcomes:\n{}",outcomes.gr());
@@ -321,9 +321,6 @@ fn vecvec() -> Result<(), RE> {
     let gcentroid = pts.gcentroid()?;
     let acentroid = pts.acentroid();
     let quasimed = pts.quasimedian()?;
-    let firstp = pts.firstpoint();
-
-    println!("Mean reciprocal of radius: {}", (recips / d as f64).gr());
     let dists = pts.distsums();
     let md = dists.minmax();
     println!("Medoid and Outlier Total Distances:\n{md}");
@@ -354,11 +351,10 @@ fn vecvec() -> Result<(), RE> {
         pts.radius(radsindex[0], &median)? / pts.radius(radsindex[radsindex.len() - 1], &median)?
     );
     println!("Madgm:               {}", pts.madgm(&median)?.gr());
-    println!("Median's error:      {GR}{:e}{UN}", pts.gmerror(&median));
+    println!("Median's error:      {}", pts.gmerror(&median)?.gr());
     println!("Stdgm:               {}", pts.stdgm(&median)?.gr());
     println!("ACentroid's radius:  {}", acentroid.vdist(&median).gr());
     println!("Quasimed's radius:   {}", quasimed.vdist(&median).gr());
-    println!("Firstpoint's radius: {}", firstp.vdist(&median).gr());
     println!("GCentroid's radius:  {}", gcentroid.vdist(&median).gr());
     println!("HCentroid's radius:  {}", hcentroid.vdist(&median).gr());
     println!("Medoid's radius:     {}", medoid.vdist(&median).gr());
@@ -391,21 +387,21 @@ fn vecvec() -> Result<(), RE> {
 
     println!(
         "\nContribution of adding acentroid:    {}",
-        acentroid.contrib_newpt(&median, recips, nf)?.gr()
+        acentroid.contrib_newpt(&median, recipsum, nf)?.gr()
     );
     println!(
         "Contribution of adding gcentroid:    {}",
-        gcentroid.contrib_newpt(&median, recips, nf)?.gr()
+        gcentroid.contrib_newpt(&median, recipsum, nf)?.gr()
     );
     println!(
         "Contribution of removing gcentroid: {}",
         gcentroid
-            .contrib_oldpt(&median, recips + 1.0 / median.vdist(&gcentroid), nf)? 
+            .contrib_oldpt(&median, recipsum + 1.0 / median.vdist(&gcentroid), nf)? 
             .gr()
     );
     let contribs = pts
         .iter()
-        .map(|p|-> Result<f64,RE> { p.contrib_oldpt(&median, recips, nf)})
+        .map(|p|-> Result<f64,RE> { p.contrib_oldpt(&median, recipsum, nf)})
         .collect::<Result<Vec<f64>,RE>>()?;
     println!(
         "\nContributions of removing data points, summary:\n{}\nCentroid: {}\nMedian: {}",
@@ -581,7 +577,7 @@ fn geometric_medians() -> Result<(), RE> {
     ];
     set_seeds(7777777777_u64); // intialise random numbers generator
                                // Rnum specifies the type of the random numbers required
-    println!("\n{YL}Timing Comparisons (in nanoseconds){UN}");
+    println!("\n{YL}Timing Comparisons (in nanoseconds):   {UN}");
     benchvvf64(
         100,
         1000..1500,
@@ -594,7 +590,7 @@ fn geometric_medians() -> Result<(), RE> {
     let n = 100_usize;
     let d = 1000_usize;
     set_seeds(7777777);
-    println!("\n{YL}Total errors for {ITERATIONS} repeats of {n} points in {d} dimensions{UN}\n");
+    println!("\n{RD}Total errors for {ITERATIONS} repeats of {n} points in {d} dimensions:{UN}\n");
     let mut sumg = 0_f64;
     let mut sumr = 0_f64;
     let mut sumq = 0_f64;
@@ -604,15 +600,15 @@ fn geometric_medians() -> Result<(), RE> {
     for _i in 1..ITERATIONS {
         let pts = ranvv_f64(n,d)?;
         gm = pts.gmedian(EPS);
-        sumg += pts.gmerror(&gm);
+        sumg += pts.gmerror(&gm)?;
         gm = pts.par_gmedian(EPS);
-        sumr += pts.gmerror(&gm);
+        sumr += pts.gmerror(&gm)?;
         gm = pts.quasimedian()?;
-        sumq += pts.gmerror(&gm);
+        sumq += pts.gmerror(&gm)?;
         gm = pts.acentroid();
-        summ += pts.gmerror(&gm);
+        summ += pts.gmerror(&gm)?;
         gm = pts.par_acentroid();
-        sump += pts.gmerror(&gm);
+        sump += pts.gmerror(&gm)?;
     }
     println!("{MG}par_gmedian   {GR}{sumr:.10}{UN}");
     println!("{MG}gmedian       {GR}{sumg:.10}{UN}");

@@ -314,15 +314,11 @@ pub trait VecVec<T> {
     fn gcentroid(self) -> Result<Vec<f64>, RE>;
     /// Harmonic Centroid = harmonic mean of a set of points
     fn hcentroid(self) -> Result<Vec<f64>, RE>;
-    /// Possible first iteration point for geometric medians
-    fn firstpoint(self) -> Vec<f64>;
     /// Sums of distances from each point to all other points
     fn distsums(self) -> Vec<f64>;
     /// Medoid distance, its index, outlier distance, its index
     fn medout(self, gm: &[f64]) -> Result<MinMax<f64>, RE>;
-    /// Like gmparts, except only does one iteration from any non-member point g
-    fn nxnonmember(self, g: &[f64]) -> (Vec<f64>, Vec<f64>, f64);
-    /// Radius of a point specified by its subscript.    
+     /// Radius of a point specified by its subscript.    
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE>;
     /// Arith mean and std (in Params struct), Median and mad, Medoid and Outlier (in MinMax struct)
     fn eccinfo(self, gm: &[f64]) -> Result<(Params, Params, MinMax<f64>), RE>
@@ -330,8 +326,6 @@ pub trait VecVec<T> {
         Vec<f64>: FromIterator<f64>;
     /// Quasi median, recommended only for comparison purposes
     fn quasimedian(self) -> Result<Vec<f64>, RE>;
-    /// Geometric median estimate's error
-    fn gmerror(self, gm: &[f64]) -> f64;
     /// Proportional projections on each +/- axis (by hemispheres)
     fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE>;
     /// madgm, median of radii from geometric median: stable nd data spread estimator
@@ -346,12 +340,14 @@ pub trait VecVec<T> {
     fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64,RE>; 
     /// Collects indices of outer and inner hull points, from zero median data    
     fn hulls(self) -> (Vec<usize>, Vec<usize>);
+    /// Geometric median's residual error
+    fn gmerror(self, g: &[f64]) -> Result<f64, RE>;
     /// New algorithm for geometric median, to accuracy eps    
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.
     fn par_gmedian(self, eps: f64) -> Vec<f64>;
-    /// Like `gmedian` but returns the sum of unit vecs and the sum of reciprocals of distances.
-    fn gmparts(self, eps: f64) -> (Vec<f64>, Vec<f64>, f64);
+    /// Like `gmedian` but returns also the sum of reciprocals of distances
+    fn gmparts(self, eps: f64) -> (Vec<f64>, f64);
 }
 
 /// Methods applicable to slice of vectors of generic end type, plus one other argument
@@ -411,8 +407,8 @@ pub trait VecVecg<T, U> {
     fn wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
     /// Parallel (multithreaded) implementation of the weighted Geometric Median.  
     fn par_wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
-    /// Like `wgmedian` but returns also the sum of unit vecs and the sum of reciprocals.
-    fn wgmparts(self, ws: &[U], eps: f64) -> Result<(Vec<f64>, Vec<f64>, f64), RE>;
+    /// Like `wgmedian` but returns also the sum of reciprocals.
+    fn wgmparts(self, ws: &[U], eps: f64) -> Result<(Vec<f64>, f64), RE>;
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med: &[U]) -> Result<TriangMat, RE>;
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
