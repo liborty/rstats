@@ -20,9 +20,9 @@ include = [
 maintenance = { status = "actively-developed" }
 [lib]
 [dependencies]
-rayon = "1.9"
-indxvec = "1.8"
-medians = "3.0.8"   
-ran = "2.0"
+rayon = "1"
+indxvec = "1"
+medians = "3"   
+ran = "2"
 [dev-dependencies]
-times = "1.0"
+times = "1"

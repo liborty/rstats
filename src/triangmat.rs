@@ -71,7 +71,7 @@ impl TriangMat {
             })
             .collect::<Vec<f64>>()
     }
-    /// Generates new unit (symmetric) TriangMat matrix of size (n+1)*n/2
+    /// New unit (symmetric) TriangMat matrix with total data size `n*(n+1)/2`
     pub fn unit(n: usize) -> Self {
         let mut data = Vec::new();
         for i in 0..n {
@@ -83,11 +83,11 @@ impl TriangMat {
         }
         TriangMat { kind: 2, data }
     }
-    /// Eigenvalues (obtainable only from Cholesky L matrix)
+    /// Eigenvalues (obtainable from Cholesky L matrix)
     pub fn eigenvalues(&self) -> Vec<f64> {
         self.diagonal().iter().map(|&x| x * x).collect::<Vec<f64>>()
     }
-    /// Determinant (obtainable only from Cholesky L matrix)
+    /// Determinant (obtainable from Cholesky L matrix)
     pub fn determinant(&self) -> f64 {
         self.diagonal().iter().map(|&x| x * x).product()
     }
@@ -96,7 +96,7 @@ impl TriangMat {
     /// (row,column) coordinates within a lower/upper triangular matrix.
     /// Enables memory efficient representation of triangular matrices as one flat vector.
     pub fn rowcol(s: usize) -> (usize, usize) {
-        let row = ((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize; // cast truncates, like .floor()
+        let row = ((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize; // cast truncates like .floor()
         let column = s - row * (row + 1) / 2; // subtracting the last triangular number (of whole rows)
         (row, column)
     }
@@ -217,13 +217,15 @@ impl TriangMat {
     }
 
     /// Mahalanobis scaled magnitude m(d) of a (column) vector d.
-    /// Self is a decomposed lower triangular matrix L, as returned by `cholesky`
-    /// from covariance/comediance positive definite matrix C = LL'.
+    /// Self is the decomposed lower triangular matrix L, as returned by `cholesky`
+    /// decomposition of covariance/comediance positive definite matrix: C = LL',
+    /// where ' denotes transpose. Mahalanobis distance is defined as:    
     /// `m(d) = sqrt(d'inv(C)d) = sqrt(d'inv(LL')d) = sqrt(d'inv(L')inv(L)d)`,
-    /// where ' denotes transpose and `inv()` denotes inverse.
-    /// Putting Lx = d and solving for x by forward substitution, we obtain `x = inv(L)d`
-    /// substituting x into the above: `=> m(d) = sqrt(x'x) = |x|.
-    /// We stay in the compact triangular form all the way from C to m(d).
+    /// where `inv()` denotes matrix inverse, which is not explicitly computed.  
+    /// Let  `x = inv(L)d` ( and therefore also  `x' = d'inv(L')` ).
+    /// Substituting x into the above definition: `m(d) = sqrt(x'x) = |x|.  
+    /// We obtain x by setting Lx = d and solving by forward substitution. 
+    /// All the calculations are done in the compact triangular form.
     pub fn mahalanobis<U>(&self, d: &[U]) -> Result<f64, RE>
     where
         U: Copy + PartialOrd + std::fmt::Display,
