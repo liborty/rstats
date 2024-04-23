@@ -203,7 +203,7 @@ if dif <= 0_f64 {
 
 ## Structs
 
-### `struct MStats`
+### `struct Params`
 
 holds the central tendency of `1d` data, e.g. some kind of mean or median, and its spread measure, e.g. standard deviation or 'mad'.
 
