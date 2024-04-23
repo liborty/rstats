@@ -242,8 +242,7 @@ fn triangmat() -> Result<(), RE> {
     println!("Diagonal: {}",TriangMat::unit(7).diagonal().gr());
     let d = 10_usize;
     let n = 90_usize;
-    println!("Testing on a random set of {n} points in {d} dimensional space");
-    // set_seeds(1133);
+    println!("Testing on a random set of {n} points in {d} dimensional space"); 
     let pts = ranvv_f64_range(n,d, 0.0..=4.0)?;
     // println!("\nTest data:\n{}",pts.gr());
     // let transppt = pts.transpose();
@@ -251,9 +250,10 @@ fn triangmat() -> Result<(), RE> {
     println!("Comediance matrix:\n{cov}");
     let chol = cov.cholesky()?;
     println!("Cholesky L matrix:\n{chol}");
-    println!("Sorted eigenvalues of the comediance matrix from Cholesky decomposition:\n{}",
-        chol.eigenvalues().sortm(false).gr());
-    println!("Determinant of the comediance matrix (their product): {}",chol.determinant().gr());
+    println!("Eigenvalues by Cholesky decomposition:\n{}",
+        chol.eigenvalues().gr());
+    println!("Determinant (their product): {}",chol.determinant().gr());
+    println!("Variances of the original data by summing principal components:\n{}",cov.variances()?.gr());
     let d = ranv_f64(d)?;
     let dmag = d.vmag();
     let mahamag = chol.mahalanobis(&d)?;

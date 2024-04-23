@@ -1,4 +1,4 @@
-use crate::{re_error, sumn, RError, Stats, TriangMat, Vecg, RE}; // MStats, MinMax, MutVecg, Stats, VecVec };
+use crate::{re_error, sumn, RError, Stats, TriangMat, Vecg, MutVecg, RE}; // MStats, MinMax, MutVecg, Stats, VecVec };
 pub use indxvec::{printing::*, Printing, Vecops};
 
 /// Meanings of 'kind' field. Note that 'Upper Symmetric' would represent the same full matrix as
@@ -83,13 +83,32 @@ impl TriangMat {
         }
         TriangMat { kind: 2, data }
     }
-    /// Eigenvalues (obtainable from Cholesky L matrix)
+    /// Eigenvalues from Cholesky L matrix
     pub fn eigenvalues(&self) -> Vec<f64> {
         self.diagonal().iter().map(|&x| x * x).collect::<Vec<f64>>()
     }
-    /// Determinant (obtainable from Cholesky L matrix)
+    /// Determinant from Cholesky L matrix
     pub fn determinant(&self) -> f64 {
         self.diagonal().iter().map(|&x| x * x).product()
+    }
+    /// Normalized full eigenvectors from triangular covariance matrix.
+    /// Can be used together with eigenvalues for Principal Components Analysis.  
+    /// Covariance matrix is symmetric, so
+    /// we use its rows as eigenvectors (no need to transpose it)
+    pub fn eigenvectors(&self) -> Vec<Vec<f64>> {
+        let mut fullcov = self.to_full(); 
+        fullcov.iter_mut().for_each(|eigenvector| eigenvector.munit());
+        fullcov
+    }
+    /// Independent variances along the original axes (dimensions),  
+    /// from triangular covariance matrix. 
+    pub fn variances(&self) -> Result< Vec<f64>, RE > {
+        let eigenvalues = self.cholesky()?.eigenvalues();
+        let eigenvectors = self.eigenvectors();
+        let mut result = vec![0_f64;eigenvalues.len()];
+        eigenvectors.iter().zip(eigenvalues).for_each(
+            |(eigenvector, eigenvalue)| result.mutvadd(&eigenvector.smult(eigenvalue)));
+        Ok(result)
     }
 
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
