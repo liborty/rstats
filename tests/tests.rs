@@ -2,7 +2,7 @@ use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::{Median, Medianf64};
 use ran::*;
 use rstats::{
-    fromop, noop, tm_stat, unit_matrix, re_error, RE, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
+    fromop, tm_stat, unit_matrix, re_error, RE, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
 };
 use times::benchvvf64;
 
@@ -361,7 +361,7 @@ fn vecvec() -> Result<(), RE> {
     println!("Outlier's radius:    {}", outlier.vdist(&median).gr());
     println!("Outlier to Medoid:   {}", outlier.vdist(medoid).gr());
 
-    let seccs = pts.radii(&median)?.sorth(noop, true);
+    let seccs = pts.radii(&median)?.sorth(|f| *f, true);
     // println!("\nSorted eccs: {}\n", seccs));
     let lqcnt = seccs.binsearch(&(eccmed.centre - eccmed.spread));
     println!(

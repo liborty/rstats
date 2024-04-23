@@ -1,4 +1,4 @@
-use crate::{re_error,noop,RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
+use crate::{re_error,RError,RE,Stats,TriangMat,Vecg,MutVecg,VecVecg,VecVec};
 use indxvec::Mutops;
 use medians::Medianf64;
 use rayon::prelude::*;
@@ -260,7 +260,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         let wnorm = 1.0 / wf.iter().sum::<f64>(); 
         let mut res = self.iter().map(|s| wnorm*s.vdist::<f64>(gm))
             .collect::<Vec<f64>>();
-        res.muthashsort(noop);
+        res.muthashsort(|f| *f);
         Ok(res)
     }
 

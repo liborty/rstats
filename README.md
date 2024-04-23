@@ -86,20 +86,21 @@ our fast multidimensional `geometric median` (**gm**) algorithms.
 is our generalisation of `mad` (**m**edian of **a**bsolute **d**ifferences from median), to n dimensions. `1d` median is replaced in `nd` by **gm**. Where `mad` was a robust measure of 1d data spread, `madgm` becomes a robust measure of `nd` data spread. We define it as: `median(`**|pi-gm|**,`i=1..n)`, where **p1`..`pn** are a sample of n data points, each of which is now a vector.
 
 * `tm_stat`  
-`t-stat`, defined as `(x-mean)/std`, where `std` is the standard deviation. It is similar to the well known `standard z-score`, except that its scalar measures of central tendency and spread are obtained from the sample (pivotal quantity), rather than from any old assumed population distribution. We define our generalized `tm_stat` of a single scalar observation x as: `(x-centre)/spread`, with the recommendation to replace mean by median and `std` by `mad`, whenever possible.
+ We define our generalized `tm_stat` of a single scalar observation x as: `(x-centre)/spread`, with the recommendation to replace mean by median and `std` by `mad`, whenever possible. Compare with common `t-stat`, defined as `(x-mean)/std`, where `std` is the standard deviation.  
+ These are similar to the well known `standard z-score`, except that the central tendency and spread are obtained from the sample (pivotal quantity), rather than from any old assumed population distribution.
 
 * `tm_statistic`  
-we now generalize `tm_stat` from scalar domain to vector domain of any number of dimensions, defining `tm_statistic` as **|p-gm|**`/madgm`, where **p** is a single observation point in `nd` space. The sample central tendency is now the `geometric median` **gm** vector and the spread is the `madgm` scalar. The error distance of observation **p** from the median **|p-gm|** (`the radius of` **p**) is also a scalar. Thus the co-domain of `tm_statistic` is again a simple positive scalar, regardless of the dimensionality of the vector space in question.
+we now generalize `tm_stat` from scalar domain to vector domain of any number of dimensions, defining `tm_statistic` as |**p-gm**|`/madgm`, where **p** is a single observation point in `nd` space. For sample central tendency now serves the `geometric median` **gm** vector and the spread is the `madgm` scalar (see above). The error distance of observation **p** from the median: **|p-gm|**, is also a scalar. Thus the co-domain of `tm_statistic` is a simple positive scalar, regardless of the dimensionality of the vector space in question.
 
 * `contribution`  
-one of the key questions of Machine Learning (`ML`) is how to quantify the contribution that each example point (typically a member of some large `nd` set) makes to the recognition concept, or outcome class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of displacement of `gm`, caused by adding **p** to the set. Generally, outlying points make greater contributions to the `gm` but not as much as to the `centroid`. The contribution depends not only on the radius of **p** but also on the radii of all other existing set points and on their number.
+one of the key questions of Machine Learning is how to quantify the contribution that each example (typically represented as a member of some large `nd` set) makes to the recognition concept, or outcome class, represented by that set. In answer to this, we define the `contribution` of a point **p** as the magnitude of displacement of `gm`, caused by adding **p** to the set. Generally, outlying points make greater contributions to the `gm` but not as much as to the `centroid`. The contribution depends not only on the radius of **p** but also on the radii of all other existing set points and on their number.
 
 * `comediance`  
 is similar to `covariance`. It is a triangular symmetric matrix, obtained by supplying method `covar` with the geometric median instead of the usual centroid. Thus `zero mean vectors` are replaced by `zero median vectors` in the covariance calculations. The results are similar but more stable with respect to the outliers.
 
 * `outer_hull` is a subset of all zero median points **p**, such that no other points lie outside the normal plane through **p**. The points that do not satisfy this condition are called the `internal` points.
 
-* `inner_hull` is a subset of all zero median points **p**, that do not lie outside the normal plane of any point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls (as, for example, when they all lie on a hypersphere).
+* `inner_hull` is a subset of all zero median points **p**, that do not lie outside the normal plane of any other point. Note that in a highly dimensional space up to all points may belong to both the inner and the outer hulls, as, for example, when they all lie on the same hypersphere.
 
 * `depth` is a measure of likelihood of a zero median point **p** belonging to a data cloud. More specifically, it is the projection onto unit **p** of a sum of unit vectors that lie outside the normal through **p**. For example, all outer hull points have by their definition `depth = 0`, whereas the inner hull points have high values of depth. This is intended as an improvement on Mahalanobis distance which has a similar goal but says nothing about how well enclosed **p** is. Whereas `tm_statistic` only informs about the probability pertaining to the whole cloud, not to its local shape near **p**.
 
@@ -127,13 +128,13 @@ is the member of the set with the least sum of distances to all other members. E
 is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the **gm** (has the maximum radius).
 
 * `Mahalanobis distance`  
-is a scaled distance, whereby the scaling is derived from the axes of covariances / comediances of the data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances / comediances are decreased. Requires matrix decomposition.
+is a scaled distance, whereby the scaling is derived from the axes of covariances / `comediances` of the data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances / `comediances` are decreased. Requires matrix decomposition.
 
 * `Cholesky-Banachiewicz matrix decomposition`  
-decomposes any positive definite matrix S (often covariance or comediance matrix) into a product of two triangular matrices: S = LL'. The eigenvalues and the determinant are easily obtained from the diagonal of L. We implemented it on `TriangMat` for maximum efficiency. It is used by `mahalanobis distance`.
+decomposes any positive definite matrix S (often covariance or comediance matrix) into a product of two triangular matrices: `S = LL'`. The eigenvalues and the determinant are easily obtained from the diagonal of L. The eigenvectors from S. We implemented it on `TriangMat` for maximum efficiency. It is used by `mahalanobis distance` and `variances`.
 
 * `Householder's decomposition`  
-in cases where the precondition (positive definite matrix) for the Cholesky-Banachiewicz (LL') decomposition is not satisfied, Householder's (UR) decomposition is often used as the next best method. It is implemented here on our efficient `struct TriangMat`.
+in cases where the precondition (positive definite matrix S) for the Cholesky-Banachiewicz decomposition is not satisfied, Householder's (UR) decomposition is often used as the next best method. It is implemented here on our efficient `struct TriangMat`.
 
 * `wedge product, geometric product`  
 products of the Grassman and Clifford algebras, respectively. Wedge product is used here to generalize the cross product of two vectors into any number of dimensions, determining the correct sign (sidedness of their common plane).
@@ -210,7 +211,7 @@ holds the central tendency of `1d` data, e.g. some kind of mean or median, and i
 
 holds triangular matrices of all kinds, as described in Implementation section above. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
 
-* **Cholesky-Banachiewicz** matrix decomposition: M = LL' (where ' denotes the transpose). This decomposition is used by `mahalanobis`.
+* **Cholesky-Banachiewicz** matrix decomposition: `S = LL'` (where ' denotes the transpose). This decomposition is used by `mahalanobis`, `variances`, etc.
 * **Mahalanobis Distance**
 * **Householder UR** (M = QR) matrix decomposition
 
@@ -218,22 +219,15 @@ Some methods implemented for `VecVecg` also produce `TriangMat` matrices, specif
 
 ## Quantify Functions (Dependency Injection)
 
-Most methods in `medians` and some in `indxvec` crates, e.g. `hashort`, `find_any` and `find_all`, require explicit closure passed to them, usually to tell them how to quantify input data of any  type T, into f64. Variety of different quantifying methods can then be dynamically employed.
+Most methods in `medians` and some in `indxvec` crates, e.g. `hashort`, `find_any` and `find_all`, require explicit closure passed to them, usually to tell them how to quantify input data of any type T, into f64. Variety of different quantifying methods can then be dynamically employed.
 
-For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, or the numerical value of its consonants, etc. Then we can sort them or find their means / medians / spreads under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute any of them on demand.
+For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, or the numerical value of its consonants, etc. Then we can sort them or find their means / medians / spreads under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute any of them on custom demand.
 
-### `noop`
-
-is a shorthand dummy function to supply to these methods, when the data is already of `f64` end type. The second line is the full equivalent version that can be used instead:
-
-```rust
-noop
-|f:&f64| *f
-```
+When the data is already of the required end-type, just use the 'dummy' closure `|f| *f`
 
 ### `asop`
 
-When T is a wide primitive type, such as i64, u64, usize, that can only be converted to f64 by explicit truncation, we can use:
+When T is a wide primitive type, such as i64, u64, usize, that can only be converted to f64 by explicit truncation, we can use (with some loss of accuracy):
 
 ```rust
 |f:&T| *f as f64
@@ -241,14 +235,14 @@ When T is a wide primitive type, such as i64, u64, usize, that can only be conve
 
 ### `fromop`
 
-When T is a narrow numeric type, or is convertible by an existing `From` implementation, and `f64:From<T>` has been duly added everywhere as a trait bound, then we can pass in one of these:
+When T is a narrow numeric type, or T is convertible by an existing `From` implementation, and `f64:From<T>, T:Clone` have been duly added everywhere as trait bounds, then we can pass in:
 
 ```rust
 fromop
 |f:&T| (*f).clone().into()
 ```
 
-All other cases were previously only possible with manual implementation written for the (global) `From` trait for each type and each different quantification method, whereby the different implementations of `From` would conflict with each other. Now the user can simply pass in a custom 'quantify' closure. This generality is obtained at the price of a small inconvenience: using the above signature closures in simple cases.
+The last case previously required manual implementations written for the (global) `From` trait for each type and each different quantification method, whereby the different implementations of `From` would conflict with each other. Now the user can simply implement all custom quantifications within the closures. This generality is obtained at the price of a small inconvenience: using the above signature closures even in simple cases.
 
 ## Auxiliary Functions
 
