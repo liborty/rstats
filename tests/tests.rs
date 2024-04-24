@@ -458,11 +458,18 @@ fn hulls() -> Result<(), RE> {
     let sqradii = zeropts.scalar_fn(|p|Ok(p.vmagsq()))?; 
     let mut radindex = sqradii.mergesort_indexed();
     radindex.reverse();
-    println!("Depths of innerhull points: {}",
+    println!("Depths of innerhull points:\n{}",
     innerhull
         .iter()
         .map(|&p| zeropts.depth(&radindex,&zeropts[p]))
         .collect::<Result<Vec<f64>,RE>>()?
+        .gr()
+    );
+    println!("Depths ratios of innerhull points:\n{}",
+    innerhull
+        .iter()
+        .map(|&p| zeropts.depth_ratio(&radindex,&zeropts[p]))
+        .collect::<Vec<f64>>()
         .gr()
     );
 
@@ -501,15 +508,6 @@ fn hulls() -> Result<(), RE> {
         .collect::<Result<Vec<f64>,RE>>()?
         .gr()
     );
-    /*
-    println!("Depths of all points: {}",
-    (0..pts.len()) 
-        .map(|p| zeropts.depth(&radindex,&zeropts[p]))
-        .collect::<Result<Vec<f64>,RE>>()?
-        .gr()
-    );
-    */
-
     let sigvec = zeropts.sigvec(&outerhull)?;
     println!(
         "Outer hull sigvec: {}",

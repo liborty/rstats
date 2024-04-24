@@ -334,7 +334,9 @@ pub trait VecVec<T> {
     /// Inner hull subscripts from their square radii and their sort index.  
     fn inner_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>; 
     /// Measure of likelihood of zero median point **p** belonging to zero median data cloud `self`.
-    fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64,RE>; 
+    fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64,RE>;
+    /// The proportion of points outside of the normal plane through **p** 
+    fn depth_ratio(self, descending_index: &[usize], p: &[f64]) -> f64;
     /// Collects indices of outer and inner hull points, from zero median data    
     fn hulls(self) -> (Vec<usize>, Vec<usize>);
     /// Geometric median's residual error

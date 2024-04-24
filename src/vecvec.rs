@@ -359,19 +359,34 @@ where
     }
 
     /// Likelihood of zero median point **p** belonging to zero median data cloud `self`,
-    /// based on the points outside of normal plane through **p**. 
+    /// based on the points outside of the normal plane through **p**. 
     /// Returns the sum of unit vectors of its outside points, projected onto unit **p**. 
     /// Index should be in the descending order of magnitudes of self points (for efficiency).
     fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64,RE> {
-        let p2 = p.vmagsq();
+        let psq = p.vmagsq();
         let mut sumvec = vec![0_f64;p.len()]; 
         for &i in descending_index {
             let s = &self[i];
             let ssq = s.vmagsq();
-            if ssq <= p2 { break; }; // no more outside points
-            if s.dotp(p) > p2 { sumvec.mutvadd(&s.smult(1.0/(ssq.sqrt()))) };
+            if ssq <= psq { break; }; // no more outside points
+            if s.dotp(p) > psq { sumvec.mutvadd(&s.smult(1.0/(ssq.sqrt()))) };
         };
         Ok(sumvec.dotp(&p.vunit()?))
+    }
+
+    /// Likelihood of zero median point **p** belonging to zero median data cloud `self`,
+    /// based on the proportion of points outside of the normal plane through **p**. 
+    /// Index should be in the descending order of magnitudes of self points (for efficiency).
+    fn depth_ratio(self, descending_index: &[usize], p: &[f64]) -> f64 {
+        let psq = p.vmagsq();
+        let mut num = 0_f64; 
+        for &i in descending_index {
+            let s = &self[i];
+            let ssq = s.vmagsq();
+            if ssq <= psq { break; }; // no more outside points
+            if s.dotp(p) > psq { num += 1.0; };
+        };
+        num/(self.len() as f64)
     }
  
     /// Collects indices of inner hull and outer hull, from zero median points in self.

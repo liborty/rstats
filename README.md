@@ -326,7 +326,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 2.0.11** - removed not so useful `variances`. Tidied up error processing in `vecveg.rs`. Added to it `serial_covar` and `serial_wcovar` for when heavy loading of all the cores may not be wanted.
+* **Version 2.0.12** - added `depth_ratio`.
+
+* **Version 2.0.11** - removed not so useful `variances`. Tidied up error processing in `vecvecg.rs`. Added to it `serial_covar` and `serial_wcovar` for when heavy loading of all the cores may not be wanted.
 
 * **Version 2.0.10** - Added to struct TriangMat `eigenvectors` (enabling PCA).
 
@@ -349,35 +351,3 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 2.0.1** - Added `TriangMat::dim()` and tidied up some comments.
 
 * **Version 2.0.0** - Renamed `MStats` -> `Params` and its variant `dispersion` -> `spread`. This may cause some backwards incompatibilities, hence the new major version. Added 'centre' as an argument to `dfdt`,`dvdt`,`wdvdt`, so that it does not have to be recomputed.
-
-* **Version 1.3.3** - Added `wdvdt`- individually weighted time series derivative (weighted arithmetic mean minus geometric median).
-
-* **Version 1.3.2** - Added `dvdt` - linearly weighted (approximate) time series derivative at the last point (present time). Similar to `dfdt` but works on vectors and returns a derivative vector. Changed error helper function `re_error` to return Result (Err variant), that can be more conveniently processed upstream with just the ? operator.
-
-* **Version 1.3.1** - Some more changes to the `hulls` fixed `wsigvec` to be consistent with `sigvec`.
-
-* **Version 1.3.0** - Renamed `t_stat -> tm_stat` and `t_statistic -> tm_statistic` to avoid potential confusion with classical t-statistic. Added `insideness` of `nd` points. Improved `hulls` algorithms and their tests. Changed `sigvec` and `dotsig`.
-
-* **Version 1.2.52** - Added explicit `inner_hull` and `outer_hull`.
-
-* **Version 1.2.51** - Upped dependency on `medians` to version 2.3.
-
-* **Version 1.2.50** - Upped dependency on `indxvec` to version 1.8. Added error checking to 'contribution' methods in trait `Vecg`.
-
-* **Version 1.2.49** - Added `wradii`. Some more code rationalizations.
-
-* **Version 1.2.48** - Added also weighted `scalar_wfn` and `vector_wfn` to trait `VecVecg`. Also `wdivsmed`.
-
-* **Version 1.2.47** - Added `scalar_fn` and `vector_fn` to trait `VecVec`. These apply arbitrary scalar valued or vector valued closures to all vectors in self. This generality allows some code rationalization.
-
-* **Version 1.2.45** - Completed trait bounds relaxation and simplification. Some minor documentation improvements.
-
-* **Version 1.2.44** - Swapped the sign of `wedge` so it agrees with convention.
-
-* **Version 1.2.43** - Removed `pseudoscalar` method. The `sine` method now computes the correct oriented magnitude of the 2-blade directly from the wedge product. Added geometric product `geometric`. Added some methods to `struct TriangMat` for completeness. In particular, `eigenvalues` and `determinant`, which are both easily obtained after successful Cholesky decomposition.
-
-* **Version 1.2.42** - Added `wedge` (product of Exterior Algebra), `pseudoscalar` and `sine` to trait Vecg. The sine method now always returns the correct anti reflexive sign, in any number of dimensions. The sign flips when the order of the vector operands is exchanged.
-
-* **Version 1.2.41** - Added `anglestat` to `VecVecg` trait. Added convenience function `re_error`. Relaxed trait bounds in `Vecg` trait: `U:Copy -> U:Clone`. Renamed `tukeydot`,`tukeyvec`,`wtukeyvec` to more descriptive `sigdot`,`sigvec`,`wsigvec` and made them include orthogonal points.
-
-* **Version 1.2.40** - Fixed dependencies in `times 1.0.10` as well.
