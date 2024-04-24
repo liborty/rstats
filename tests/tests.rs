@@ -104,8 +104,12 @@ fn fstats() -> Result<(), RE> {
     println!("{YL}Testing on a random set of {n} points in {d} d space:{UN}");
     let pt = ranvv_f64(n,d)?;
     println!(
-        "Classical Covariances:\n{}",
+        "Classical Covariances (multithreading implementation):\n{}",
         pt.covar(&pt.acentroid())?.gr()
+    );
+    println!(
+        "Classical Covariances (serial implementation):\n{}",
+        pt.serial_covar(&pt.acentroid())?.gr()
     );
     println!(
         "Comediances (covariances of zero median data):\n{}",
@@ -252,8 +256,7 @@ fn triangmat() -> Result<(), RE> {
     println!("Cholesky L matrix:\n{chol}");
     println!("Eigenvalues by Cholesky decomposition:\n{}",
         chol.eigenvalues().gr());
-    println!("Determinant (their product): {}",chol.determinant().gr());
-    println!("Variances of the original data by summing principal components:\n{}",cov.variances()?.gr());
+    println!("Determinant (their product): {}",chol.determinant().gr());  
     let d = ranv_f64(d)?;
     let dmag = d.vmag();
     let mahamag = chol.mahalanobis(&d)?;
@@ -278,13 +281,13 @@ fn mat() -> Result<(), RE> {
     let m = ranvv_f64(n,d)?;
     println!("\nTest matrix M:\n{}", m.gr());
     let t = m.transpose();
-    println!("\nTransposed matrix T:\n{}", t.gr());
+    println!("\nTransposed matrix M':\n{}", t.gr());
     let v = ranv_f64(d)?;
     println!("\nVector V:\n{}", v.gr());
     println!("\nMV:\n{}", m.leftmultv(&v)?.gr());
-    println!("\nVT:\n{}", t.rightmultv(&v)?.gr());
-    println!("\nMT:\n{}", t.matmult(&m)?.gr());
-    println!("\nTM:\n{}", m.matmult(&t)?.gr());
+    println!("\nVM':\n{}", t.rightmultv(&v)?.gr());
+    println!("\nMM':\n{}", t.matmult(&m)?.gr());
+    println!("\nM'M:\n{}", m.matmult(&t)?.gr());
     Ok(())
 }
 

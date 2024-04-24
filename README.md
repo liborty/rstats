@@ -326,7 +326,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 2.0.10** - Added to struct TriangMat `eigenvectors` (enabling PCA) and `variances` which compute variances of the data cloud along the original axes, by projecting on them and summing the eigenvalue weighted principal components.
+* **Version 2.0.11** - removed not so useful `variances`. Tidied up error processing in `vecveg.rs`. Added to it `serial_covar` and `serial_wcovar` for when heavy loading of all the cores may not be wanted.
+
+* **Version 2.0.10** - Added to struct TriangMat `eigenvectors` (enabling PCA).
 
 * **Version 2.0.9** - Pruned some rarely used methods, simplified `gmparts` and `gmerror`, updated dependencies.
 

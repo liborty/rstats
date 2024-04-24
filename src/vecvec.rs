@@ -359,7 +359,7 @@ where
     }
 
     /// Likelihood of zero median point **p** belonging to zero median data cloud `self`,
-    /// based on the cloud's shape outside of normal plane through **p**. 
+    /// based on the points outside of normal plane through **p**. 
     /// Returns the sum of unit vectors of its outside points, projected onto unit **p**. 
     /// Index should be in the descending order of magnitudes of self points (for efficiency).
     fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64,RE> {

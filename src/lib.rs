@@ -407,7 +407,11 @@ pub trait VecVecg<T, U> {
     /// Like `wgmedian` but returns also the sum of reciprocals.
     fn wgmparts(self, ws: &[U], eps: f64) -> Result<(Vec<f64>, f64), RE>;
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
+    fn serial_covar(self, mid:&[U]) -> Result<TriangMat,RE>;
+    /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn covar(self, med: &[U]) -> Result<TriangMat, RE>;
+    /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
+    fn serial_wcovar(self, ws: &[U], m: &[U]) -> Result<TriangMat, RE>;
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
     fn wcovar(self, ws: &[U], m: &[f64]) -> Result<TriangMat, RE>;
 }

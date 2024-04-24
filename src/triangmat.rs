@@ -100,17 +100,7 @@ impl TriangMat {
         fullcov.iter_mut().for_each(|eigenvector| eigenvector.munit());
         fullcov
     }
-    /// Independent variances along the original axes (dimensions),  
-    /// from triangular covariance matrix. 
-    pub fn variances(&self) -> Result< Vec<f64>, RE > {
-        let eigenvalues = self.cholesky()?.eigenvalues();
-        let eigenvectors = self.eigenvectors();
-        let mut result = vec![0_f64;eigenvalues.len()];
-        eigenvectors.iter().zip(eigenvalues).for_each(
-            |(eigenvector, eigenvalue)| result.mutvadd(&eigenvector.smult(eigenvalue)));
-        Ok(result)
-    }
-
+  
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
     /// (row,column) coordinates within a lower/upper triangular matrix.
     /// Enables memory efficient representation of triangular matrices as one flat vector.

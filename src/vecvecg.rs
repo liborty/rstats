@@ -40,7 +40,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn wdvdt(self, ws: &[U], centre: &[f64]) -> Result<Vec<f64>, RE> {
         let len = self.len();
         if len < 2 {
-            return re_error("NoDataError","time series too short: {len}");
+            return re_error("empty","time series too short: {len}");
         };
         let mut weightsum:f64 = ws[0].clone().into();
         let mut sumv:Vec<f64> = self[0].smult(weightsum);
@@ -104,14 +104,14 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Rows of matrix self multiplying (column) vector v
     fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { 
-            return re_error("DataError","leftmultv dimensions mismatch")?; };
+            return re_error("size","leftmultv dimensions mismatch")?; };
         Ok(self.iter().map(|s| s.dotp(v)).collect())
     }
 
     /// Row vector v multipying columns of matrix self
     fn rightmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if v.len() != self.len() { 
-            return re_error("DataError","rightmultv dimensions mismatch")?; }; 
+            return re_error("size","rightmultv dimensions mismatch")?; }; 
         Ok((0..self[0].len()).map(|colnum| v.columnp(colnum,self)).collect())
     }
 
@@ -121,7 +121,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Result dimensions are self.len() x m[0].len() 
     fn matmult(self,m: &[Vec<U>]) -> Result<Vec<Vec<f64>>,RE> {
         if self[0].len() != m.len() { 
-            return re_error("DataError","matmult dimensions mismatch")?; }; 
+            return re_error("size","matmult dimensions mismatch")?; }; 
         Ok(self.par_iter().map(|srow| 
             (0..m[0].len()).map(|colnum| srow.columnp(colnum,m)).collect()
             ).collect::<Vec<Vec<f64>>>()) 
@@ -180,7 +180,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// both of which depend on the choice of axis.
      fn translate(self, m:&[U]) -> Result<Vec<Vec<f64>>,RE> { 
         if self[0].len() != m.len() { 
-            return re_error("DataError","translate dimensions mismatch")?; }; 
+            return re_error("size","translate dimensions mismatch")?; }; 
         self.vector_fn(|s| Ok(s.vsub(m)))   
     }
 
@@ -225,7 +225,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Factors out the entropy of m to save repetition of work
     fn dependencies(self, m:&[U]) -> Result<Vec<f64>,RE> {  
         if self[0].len() != m.len() { 
-            return re_error("DataError","dependencies: dimensions mismatch")?; };
+            return re_error("size","dependencies: dimensions mismatch")?; };
         let entropym = m.entropy();
         return self.par_iter().map(|s| -> Result<f64,RE> {  
             Ok((entropym + s.entropy())/
@@ -235,7 +235,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Individual distances from any point v, typically not a member, to all the members of self.    
     fn dists(self, v:&[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { 
-            return re_error("DataError","dists dimensions mismatch")?; }
+            return re_error("size","dists dimensions mismatch")?; }
         self.scalar_fn(|p| Ok(p.vdist(v)))
     }
 
@@ -246,16 +246,16 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// The radius (distance) from gm is far more efficient, once gm has been found.
     fn distsum(self, v: &[U]) -> Result<f64,RE> {
         if self[0].len() != v.len() { 
-            return re_error("DataError","distsum dimensions mismatch")?; }
+            return re_error("size","distsum dimensions mismatch")?; }
         Ok(self.iter().map(|p| p.vdist(v)).sum::<f64>())
     }
 
     /// Sorted weighted radii to all member points from the Geometric Median.
     fn wsortedrads(self, ws: &[U], gm:&[f64]) -> Result<Vec<f64>,RE> {
         if self.len() != ws.len() { 
-            return Err(RError::DataError("wsortedrads self and ws lengths mismatch".to_owned())); };
+            return re_error("size","wsortedrads self and ws lengths mismatch")?; };
         if self[0].len() != gm.len() { 
-            return Err(RError::DataError("wsortedrads self and gm dimensions mismatch".to_owned())); };
+            return re_error("size","wsortedrads self and gm dimensions mismatch")?; };
         let wf = ws.iter().map(|x| x.clone().into()).collect::<Vec<f64>>();
         let wnorm = 1.0 / wf.iter().sum::<f64>(); 
         let mut res = self.iter().map(|s| wnorm*s.vdist::<f64>(gm))
@@ -267,7 +267,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     /// Weighted Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
     fn wgmedian(self, ws:&[U], eps: f64) -> Result<Vec<f64>,RE> { 
         if self.len() != ws.len() { 
-            return Err(RError::DataError("wgmedian and ws lengths mismatch".to_owned())); };
+            return re_error("size","wgmedian and ws lengths mismatch")?; };
         let mut g = self.wacentroid(ws); // start iterating from the weighted centre 
         let mut recsum = 0f64;
         loop { // vector iteration till accuracy eps is exceeded  
@@ -376,6 +376,59 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         }
     }
 
+    /// Symmetric covariance matrix. Becomes comediance when supplied argument `mid`  
+    /// is the geometric median instead of the centroid.
+    /// Indexing is always in this order: (row,column) (left to right, top to bottom).
+    fn serial_covar(self, mid:&[U]) -> Result<TriangMat,RE> {
+        let d = self[0].len(); // dimension of the vector(s)
+        if d != mid.len() { 
+            return re_error("data","serial_covar self and mid dimensions mismatch")? }; 
+		let mut covsums = vec![0_f64; (d+1)*d/2];
+ 		for p in self { 
+            let mut covsub = 0_usize; // subscript into the flattened array cov
+            let zp = p.vsub(mid);     // zero mean/median vector
+            zp.iter().enumerate().for_each(|(i,thisc)| 
+                  // its products up to and including the diagonal 
+                  zp.iter().take(i+1).for_each(|otherc| { 
+                      covsums[covsub] += thisc*otherc;
+                      covsub += 1;
+                  }) )
+        };
+        // now compute the means and return
+        let lf = self.len() as f64;
+        for c in covsums.iter_mut() { *c /= lf }; 
+        Ok(TriangMat{ kind:2,data:covsums }) // kind 2 = symmetric, non transposed
+    }
+
+    /// Symmetric covariance matrix for weighted vectors.
+	 /// Becomes comediance when supplied argument `mid`  
+    /// is the geometric median instead of the centroid.
+    /// Indexing is always in this order: (row,column) (left to right, top to bottom).
+    fn serial_wcovar(self, ws:&[U], mid:&[U]) -> Result<TriangMat,RE> {
+        let d = self[0].len(); // dimension of the vector(s)
+        if d != mid.len() { 
+            return re_error("data","serial_wcovar self and mid dimensions mismatch")? };
+        if self.len() != ws.len() { 
+            return re_error("data","serial_wcovar self and ws lengths mismatch")? };  
+		let mut covsums = vec![0_f64; (d+1)*d/2];
+        let mut wsum = 0_f64; 
+ 		  for (p,w) in self.iter().zip(ws) { 
+            let mut covsub = 0_usize; // subscript into the flattened array cov
+            let zp = p.vsub(mid);     // zero mean vector
+            let wf:f64 = w.clone().into();
+            wsum += wf;
+            zp.iter().enumerate().for_each(|(i,thisc)| 
+                  // its products up to and including the diagonal 
+                  zp.iter().take(i+1).for_each(|otherc| { 
+                      covsums[covsub] += wf*thisc*otherc;
+                      covsub += 1;
+                  }) ) 
+        };
+        // now compute the means and return 
+        for c in covsums.iter_mut() { *c /= wsum }; 
+        Ok(TriangMat{ kind:2,data:covsums }) // kind 2 = symmetric, non transposed
+    }
+
     /// Symmetric covariance matrix. Becomes comediance when argument `mid`  
     /// is the geometric median instead of the centroid.
     /// The indexing is always in this order: (row,column) (left to right, top to bottom).
@@ -383,7 +436,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn covar(self, mid:&[U]) -> Result<TriangMat,RE> {
         let d = self[0].len(); // dimension of the vector(s)
         if d != mid.len() { 
-            return Err(RError::DataError("covar self and mid dimensions mismatch".to_owned())); }; 
+            return re_error("data","covar self and mid dimensions mismatch")? }; 
         let mut covsum = self
             .par_iter()
             .fold(
@@ -423,9 +476,9 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn wcovar(self, ws:&[U], m:&[f64]) -> Result<TriangMat,RE> {
         let n = self[0].len(); // dimension of the vector(s)
         if n != m.len() { 
-            return Err(RError::DataError("wcovar self and m dimensions mismatch".to_owned())); }; 
+            return re_error("data","wcovar self and m dimensions mismatch")? }; 
         if self.len() != ws.len() { 
-            return Err(RError::DataError("wcovar self and ws lengths mismatch".to_owned())); }; 
+            return re_error("data","wcovar self and ws lengths mismatch")? }; 
         let (mut covsum,wsum) = self
             .par_iter().zip(ws)
             .fold(
