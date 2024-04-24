@@ -149,7 +149,7 @@ fn ustats() -> Result<(), RE> {
 fn intstats() -> Result<(), RE> {
     let v = vec![1_i64, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     println!("\n{}", (&v).gr());
-    let v1: Vec<f64> = v.iter().map(|i| *i as f64).collect(); // downcast to f64 here
+    let v1: Vec<f64> = v.iter().map(|&f| f as f64).collect(); // downcast to f64 here
     println!("Linear transform:\n{}", v1.lintrans()?.gr());
     println!("Arithmetic\t{}", v1.ameanstd()?);
     println!("Median\t\t{}",v1.medmad()?);
@@ -348,7 +348,7 @@ fn vecvec() -> Result<(), RE> {
 
     println!(
         "\nMedoid, outlier and radii summary:\n{eccecc}\nRadii centroid {eccstd}\nRadii median   {eccmed}");
-    let radsindex = pts.radii(&median)?.hashsort_indexed(|x| *x);
+    let radsindex = pts.radii(&median)?.hashsort_indexed(|&x| x);
     println!(
         "Radii ratio:         {GR}{}{UN}",
         pts.radius(radsindex[0], &median)? / pts.radius(radsindex[radsindex.len() - 1], &median)?
@@ -364,7 +364,7 @@ fn vecvec() -> Result<(), RE> {
     println!("Outlier's radius:    {}", outlier.vdist(&median).gr());
     println!("Outlier to Medoid:   {}", outlier.vdist(medoid).gr());
 
-    let seccs = pts.radii(&median)?.sorth(|f| *f, true);
+    let seccs = pts.radii(&median)?.sorth(|&f| f, true);
     // println!("\nSorted eccs: {}\n", seccs));
     let lqcnt = seccs.binsearch(&(eccmed.centre - eccmed.spread));
     println!(

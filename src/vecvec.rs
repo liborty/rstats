@@ -549,4 +549,66 @@ where
             recsum = nextrecsum;
         }
     }
+
+    /// Symmetric covariance matrix. Becomes comediance when argument `mid`  
+    /// is the geometric median instead of the centroid.
+    /// The indexing is always in this order: (row,column) (left to right, top to bottom).
+    /// The items are flattened into a single vector in this order.
+    fn covar(self, mid:&[f64]) -> Result<TriangMat,RE> {
+        let d = self[0].len(); // dimension of the vector(s)
+        if d != mid.len() { 
+            return re_error("data","covar self and mid dimensions mismatch")? }; 
+        let mut covsum = self
+            .par_iter()
+            .fold(
+                || vec![0_f64; (d+1)*d/2],
+                | mut cov: Vec<f64>, p | {
+                let mut covsub = 0_usize; // subscript into the flattened array cov
+                let vm = p.vsub(mid);  // zero mean vector
+                vm.iter().enumerate().for_each(|(i,thisc)| 
+                    // its products up to and including the diagonal (itself)
+                    vm.iter().take(i+1).for_each(|vmi| { 
+                        cov[covsub] += thisc*vmi;
+                        covsub += 1;
+                        })); 
+                cov 
+                }
+            )
+            .reduce(
+                || vec![0_f64; (d+1)*d/2],
+                | mut covout: Vec<f64>, covin: Vec<f64> | {
+                covout.mutvadd(&covin);
+                covout
+                }
+            ); 
+        // now compute the means and return
+        let lf = self.len() as f64;
+        covsum.iter_mut().for_each(|c| *c /= lf); 
+        Ok(TriangMat{ kind:2,data:covsum }) // symmetric, non transposed
+    }
+
+    /// Symmetric covariance matrix. Becomes comediance when supplied argument `mid`  
+    /// is the geometric median instead of the centroid.
+    /// Indexing is always in this order: (row,column) (left to right, top to bottom).
+    fn serial_covar(self, mid:&[f64]) -> Result<TriangMat,RE> {
+        let d = self[0].len(); // dimension of the vector(s)
+        if d != mid.len() { 
+            return re_error("data","serial_covar self and mid dimensions mismatch")? }; 
+		let mut covsums = vec![0_f64; (d+1)*d/2];
+ 		for p in self { 
+            let mut covsub = 0_usize; // subscript into the flattened array cov
+            let zp = p.vsub(mid);     // zero mean/median vector
+            zp.iter().enumerate().for_each(|(i,thisc)| 
+                  // its products up to and including the diagonal 
+                  zp.iter().take(i+1).for_each(|otherc| { 
+                      covsums[covsub] += thisc*otherc;
+                      covsub += 1;
+                  }) )
+        };
+        // now compute the means and return
+        let lf = self.len() as f64;
+        for c in covsums.iter_mut() { *c /= lf }; 
+        Ok(TriangMat{ kind:2,data:covsums }) // kind 2 = symmetric, non transposed
+    }
+
 }

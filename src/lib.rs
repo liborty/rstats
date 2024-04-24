@@ -28,7 +28,7 @@ pub use medians::{MedError, Median, Medianf64};
 
 /// Convenience From quantification invocation
 pub fn fromop<T: Clone + Into<f64>>(f: &T) -> f64 {
-    (*f).clone().into()
+    f.clone().into()
 }
 
 /// tm_statistic in 1d: (value-centre)/dispersion
@@ -194,7 +194,7 @@ pub trait Vecg {
     /// Vector similarity S in the interval `[0,1]: S = (1+cos(theta))/2`
     fn vsim<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
     /// Median correlation similarity of vectors, range [0,1]
-    fn vcorrsim(self, v:Self) -> Result<f64, RE>;
+    fn vcorrsim(self, v: Self) -> Result<f64, RE>;
     /// Positive dotp [0,2|a||b|]
     fn pdotp<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> f64;
     /// We define vector dissimilarity D in the interval `[0,1]: D = 1-S = (1-cos(theta))/2`
@@ -224,13 +224,13 @@ pub trait Vecg {
     /// Spearman rho correlation.
     fn spearmancorr<U: PartialOrd + Clone + Into<f64>>(self, v: &[U]) -> f64;
     /// Change to gm that adding point self will cause
-    fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>,RE>;
+    fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>, RE>;
     /// Normalized magnitude of change to gm that adding point self will cause
-    fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64,RE>;
+    fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64, RE>;
     /// Contribution of removing point self
-    fn contribvec_oldpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>,RE>;
+    fn contribvec_oldpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>, RE>;
     /// Normalized contribution of removing point self (as negative scalar)
-    fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64,RE>;
+    fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64, RE>;
     /// Householder reflect
     fn house_reflect<U: Clone + PartialOrd + Into<f64>>(self, x: &[U]) -> Vec<f64>;
 }
@@ -278,7 +278,7 @@ pub trait Vecu8 {
 /// Operations on a whole set of multidimensional vectors.
 pub trait VecVec<T> {
     /// Linearly weighted approximate time series derivative at the last point (present time).
-    fn dvdt(self, centre: &[f64]) -> Result<Vec<f64>, RE>; 
+    fn dvdt(self, centre: &[f64]) -> Result<Vec<f64>, RE>;
     /// Maps a scalar valued closure onto all vectors in self
     fn scalar_fn(self, f: impl Fn(&[T]) -> Result<f64, RE>) -> Result<Vec<f64>, RE>;
     /// Maps vector valued closure onto all vectors in self and collects
@@ -315,7 +315,7 @@ pub trait VecVec<T> {
     fn distsums(self) -> Vec<f64>;
     /// Medoid distance, its index, outlier distance, its index
     fn medout(self, gm: &[f64]) -> Result<MinMax<f64>, RE>;
-     /// Radius of a point specified by its subscript.    
+    /// Radius of a point specified by its subscript.    
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE>;
     /// Arith mean and std (in Params struct), Median and mad, Medoid and Outlier (in MinMax struct)
     fn eccinfo(self, gm: &[f64]) -> Result<(Params, Params, MinMax<f64>), RE>
@@ -329,13 +329,13 @@ pub trait VecVec<T> {
     fn madgm(self, gm: &[f64]) -> Result<f64, RE>;
     /// stdgm mean of radii from gm: nd data spread estimator
     fn stdgm(self, gm: &[f64]) -> Result<f64, RE>;
-    /// Outer hull subscripts from their square radii and their sort index. 
-    fn outer_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>; 
+    /// Outer hull subscripts from their square radii and their sort index.
+    fn outer_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>;
     /// Inner hull subscripts from their square radii and their sort index.  
-    fn inner_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>; 
+    fn inner_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>;
     /// Measure of likelihood of zero median point **p** belonging to zero median data cloud `self`.
-    fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64,RE>;
-    /// The proportion of points outside of the normal plane through **p** 
+    fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64, RE>;
+    /// The proportion of points outside of the normal plane through **p**
     fn depth_ratio(self, descending_index: &[usize], p: &[f64]) -> f64;
     /// Collects indices of outer and inner hull points, from zero median data    
     fn hulls(self) -> (Vec<usize>, Vec<usize>);
@@ -347,6 +347,10 @@ pub trait VecVec<T> {
     fn par_gmedian(self, eps: f64) -> Vec<f64>;
     /// Like `gmedian` but returns also the sum of reciprocals of distances
     fn gmparts(self, eps: f64) -> (Vec<f64>, f64);
+    /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
+    fn covar(self, mid: &[f64]) -> Result<TriangMat, RE>;
+    /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
+    fn serial_covar(self, mid: &[f64]) -> Result<TriangMat, RE>;
 }
 
 /// Methods applicable to slice of vectors of generic end type, plus one other argument
@@ -371,9 +375,9 @@ pub trait VecVecg<T, U> {
     /// weighted 1.0-dotproduct of **v**, with all in self
     fn wdivs(self, ws: &[U], v: &[f64]) -> Result<(Vec<f64>, f64), RE>;
     /// median of weighted cos deviations from **v**
-    fn wdivsmed(self, ws: &[U], v: &[f64]) -> Result<f64,RE>;
+    fn wdivsmed(self, ws: &[U], v: &[f64]) -> Result<f64, RE>;
     /// weighted radii to all points in self
-    fn wradii(self, ws:&[U], gm: &[f64]) -> Result<(Vec<f64>,f64),RE>;
+    fn wradii(self, ws: &[U], gm: &[f64]) -> Result<(Vec<f64>, f64), RE>;
     /// wmadgm median of weighted radii from (weighted) gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64, RE>;
     /// Leftmultiply (column) vector v by (rows of) matrix self
@@ -393,7 +397,7 @@ pub trait VecVecg<T, U> {
     /// Weighted sums of points in each hemisphere
     fn wsigvec(self, idx: &[usize], ws: &[U]) -> Result<Vec<f64>, RE>;
     /// Weighted likelihood of zero median point **p** belonging to zero median data cloud `self`.
-    fn wdepth(self, descending_index: &[usize], ws:&[U], p: &[f64]) -> Result<f64,RE>;
+    fn wdepth(self, descending_index: &[usize], ws: &[U], p: &[f64]) -> Result<f64, RE>;
     /// Dependencies of vector m on each vector in self
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>, RE>;
     /// Sum of distances from arbitrary point (v) to all the points in self      
@@ -408,12 +412,8 @@ pub trait VecVecg<T, U> {
     fn par_wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
     /// Like `wgmedian` but returns also the sum of reciprocals.
     fn wgmparts(self, ws: &[U], eps: f64) -> Result<(Vec<f64>, f64), RE>;
-    /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
-    fn serial_covar(self, mid:&[U]) -> Result<TriangMat,RE>;
-    /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
-    fn covar(self, med: &[U]) -> Result<TriangMat, RE>;
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
-    fn serial_wcovar(self, ws: &[U], m: &[U]) -> Result<TriangMat, RE>;
+    fn wcovar(self, ws: &[U], mid: &[f64]) -> Result<TriangMat, RE>;
     /// Flattened lower triangular part of a covariance matrix for weighted f64 vectors.
-    fn wcovar(self, ws: &[U], m: &[f64]) -> Result<TriangMat, RE>;
+    fn serial_wcovar(self, ws: &[U], mid: &[f64]) -> Result<TriangMat, RE>;
 }

@@ -21,7 +21,7 @@ use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 and any of the following auxiliary functions:
 
 ```rust
-use Rstats::{noop,fromop,sumn,t_stat,unit_matrix,re_error};
+use Rstats::{asop,fromop,sumn,t_stat,unit_matrix,re_error};
 ```
 
 The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be (only in some details) a little ahead of the `crates.io` release versions.
@@ -148,13 +148,13 @@ The main constituent parts of Rstats are its traits. The different traits are de
 * `Vecu8`: some methods specialized for end-type `u8`,
 * `MutVecg`: some of the above methods, mutating self,
 * `VecVec`: methods operating on n vectors (rows of numbers),
-* `VecVecg`: methods for n vectors, plus another generic argument, e.g. a vector of weights.
+* `VecVecg`: methods for n vectors, plus another generic argument, typically a vector of n weights, expressing the relative significance of the vectors.
 
 The traits and their methods operate on arguments of their required categories. In classical statistical parlance, the main categories correspond to the number of 'random variables'.
 
 **`Vec<Vec<T>>`** type is used for rectangular matrices (could also have irregular rows).
   
-**`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices and wedge and geometric products. All instances of `TriangMat` store only `n*(n+1)/2` items in a single flat vector, instead of `n*n`, thus almost halving the memory requirements. Their transposed versions only set up a flag `kind >=3` that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving some processing as well. All this is put to a good use in our implementation of the matrix decomposition methods.
+**`struct TriangMat`** is used for symmetric / antisymmetric / transposed / triangular matrices and wedge and geometric products. All instances of `TriangMat` store only `n*(n+1)/2` items in a single flat vector, instead of `n*n`, thus almost halving the memory requirements. Their transposed versions only set up a flag `kind >=3` that is interpreted by software, instead of unnecessarily rewriting the whole matrix. Thus saving processing of all transposes (a common operation). All this is put to a good use in our implementation of the matrix decomposition methods.
 
 The vectors' end types (of the actual data) are mostly generic: usually some numeric type. `Copy` trait bounds on these generic input types have been relaxed to `Clone`, to allow cloning user's own end data types in any way desired. There is no difference for primitive  types.
 
@@ -193,7 +193,7 @@ if dif <= 0_f64 {
 pub type RE = RError<String>;
 ```
 
-Convenience function `re_error` is used to simplify constructing and returning these errors. Its message argument can be either a literal `&str`, or a `String`, e.g. constructed by `format!`. It returns a Result, thus it needs `?` operator to unwrap its `Err` variant.
+Convenience function `re_error` can be used to simplify constructing and returning these errors. Its message argument can be either literal `&str`, or `String` (e.g. constructed by `format!`). It returns a Result, thus it needs `?` operator to unwrap its `Err` variant.
 
 ```rust
 if dif <= 0_f64 {
@@ -211,40 +211,47 @@ holds the central tendency of `1d` data, e.g. some kind of mean or median, and i
 
 holds triangular matrices of all kinds, as described in Implementation section above. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
 
-* **Cholesky-Banachiewicz** matrix decomposition: `S = LL'` (where ' denotes the transpose). This decomposition is used by `mahalanobis`, `variances`, etc.
-* **Mahalanobis Distance**
-* **Householder UR** (M = QR) matrix decomposition
+* **Cholesky-Banachiewicz** matrix decomposition: `S = LL'` (where ' denotes the transpose). This decomposition is used by `mahalanobis`, `eigenvalues`, etc.
+* **Eigenvectors, eigenvalues, determinant**
+* **Mahalanobis Distance** for ML recognition tasks
+* **Householder UR** (M = QR) more general matrix decomposition
 
-Some methods implemented for `VecVecg` also produce `TriangMat` matrices, specifically the covariance/comedience calculations: `covar` and `wcovar`. Their results are positive definite, which makes the most efficient Cholesky-Banachiewicz decomposition applicable.
+Some methods, specifically the covariance/comedience calculations in `VecVec` and `VecVecg` return `TriangMat` matrices. These are positive definite, which makes the most efficient Cholesky-Banachiewicz decomposition applicable to them.
 
 ## Quantify Functions (Dependency Injection)
 
-Most methods in `medians` and some in `indxvec` crates, e.g. `hashort`, `find_any` and `find_all`, require explicit closure passed to them, usually to tell them how to quantify input data of any type T, into f64. Variety of different quantifying methods can then be dynamically employed.
+Most methods in `medians` and some in `indxvec` crates, e.g. `find_any` and `find_all`, require explicit closure passed to them, usually to tell them how to quantify input data of any type T into f64. Variety of different quantifying methods can then be dynamically employed.
 
-For example, in text analysis (`&str` type), it can be the word length, or the numerical value of its first few bytes, or the numerical value of its consonants, etc. Then we can sort them or find their means / medians / spreads under these different measures. We do not necessarily want to explicitly store all such quantifications, as data can be voluminous. Rather, we want to be able to compute any of them on custom demand.
+For example, in text analysis (`&str` end type), it can be the word length, or the numerical value of its first few letters, or the numerical value of its consonants, etc. Then we can sort them or find their means / medians / spreads under all these different measures. We do not necessarily want to explicitly store all such different quantifications values, as input data can be voluminous. It is preferable to be able to compute any of them on demand, using these closure arguments.
 
-When the data is already of the required end-type, just use the 'dummy' closure `|f| *f`
-
-### `asop`
-
-When T is a wide primitive type, such as i64, u64, usize, that can only be converted to f64 by explicit truncation, we can use (with some loss of accuracy):
+When data is already of the required end-type, use the 'dummy' closure:
 
 ```rust
-|f:&T| *f as f64
+|&f| f
+```
+
+When T is a primitive type, such as i64, u64, usize, that can be converted to f64, possibly with some loss of accuracy, use:
+
+```rust
+|&f| f as f64
 ```
 
 ### `fromop`
 
-When T is a narrow numeric type, or T is convertible by an existing `From` implementation, and `f64:From<T>, T:Clone` have been duly added everywhere as trait bounds, then we can pass in:
+When T is convertible by an existing custom `From` implementation (and `f64:From<T>, T:Clone` have been duly added everywhere as trait bounds), then simply pass in `fromop`, defined as:
 
 ```rust
-fromop
-|f:&T| (*f).clone().into()
+/// Convenience From quantification invocation
+pub fn fromop<T: Clone + Into<f64>>(f: &T) -> f64 {
+    f.clone().into()
+}|
 ```
 
-The last case previously required manual implementations written for the (global) `From` trait for each type and each different quantification method, whereby the different implementations of `From` would conflict with each other. Now the user can simply implement all custom quantifications within the closures. This generality is obtained at the price of a small inconvenience: using the above signature closures even in simple cases.
+The remaining general cases previously required new manual implementations to be written for the (global) `From` trait for each new type and for each different quantification method, and adding the trait bounds everywhere. Even then, the different implementations of `From` would conflict with each other. Now we can simply implement all the custom quantifications within the closures. This generality is obtained at the price of a small inconvenience: having to supply one of the above closures argument for the primitive types as well.
 
 ## Auxiliary Functions
+
+* `fromop`: see above.
 
 * `sumn`: the sum of the sequence `1..n = n*(n+1)/2`. It is also the size of a lower/upper triangular matrix.
 
@@ -272,7 +279,7 @@ Included in this trait are:
 * linear transformation to [0,1],
 * other measures and basic vector algebra operators
 
-Note that a fast implementation of 1d 'classic' medians is, as of version 1.1.0, provided in a separate crate `medians`.
+Note that fast implementations of 1d 'classic' medians are, as of version 1.1.0, provided in a separate crate `medians`.
 
 ## Trait Vecg
 
@@ -326,7 +333,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 2.0.12** - added `depth_ratio`.
+* **Version 2.1.0** - Changed the type of `mid` argument to covariance methods from U -> f64, making the normal expectation for the type of precise geometric medians explicit. Accordingly, moved `covar` and `serial_covar` from trait `VecVecg` to `VecVec`. This might potentially require changing some `use` declarations in your code.
+
+* **Version 2.0.12** - added `depth_ratio`
 
 * **Version 2.0.11** - removed not so useful `variances`. Tidied up error processing in `vecvecg.rs`. Added to it `serial_covar` and `serial_wcovar` for when heavy loading of all the cores may not be wanted.
 
