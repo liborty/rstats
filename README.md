@@ -21,7 +21,7 @@ use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 and any of the following auxiliary functions:
 
 ```rust
-use Rstats::{asop,fromop,sumn,t_stat,unit_matrix,re_error};
+use Rstats::{fromop,sumn,t_stat,unit_matrix,re_error};
 ```
 
 The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be (only in some details) a little ahead of the `crates.io` release versions.
