@@ -568,14 +568,14 @@ where
     fn house_reflector(self) -> Vec<f64> {
         let norm = self.vmag();
         if norm.is_normal() {
-            let mut u = self.smult::<f64>(1. / norm);
+            let mut u = self.smult(1. / norm);
             if u[0] < 0. {
                 u[0] -= 1.;
             } else {
                 u[0] += 1.;
             };
             let uzero = 1.0 / (u[0].abs().sqrt());
-            u.mutsmult::<f64>(uzero);
+            u.mutsmult(uzero);
             return u;
         };
         let mut u = vec![0.; self.len()];

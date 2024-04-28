@@ -156,7 +156,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         .reduce(
             || (vec![0_f64; self[0].len()], 0_f64),
             | mut pairsum: (Vec<f64>, f64), pairin: (Vec<f64>, f64)| {
-                pairsum.0.mutvadd::<f64>(&pairin.0);
+                pairsum.0.mutvadd(&pairin.0);
                 pairsum.1 += pairin.1;
                 pairsum
             }
@@ -170,7 +170,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     fn trend(self, eps:f64, v:Vec<Vec<U>>) -> Result<Vec<f64>,RE> {
         if self[0].len() != v[0].len() { return Err(RError::DataError("trend dimensions mismatch".to_owned())); };
         let pair = rayon::join(||v.gmedian(eps),||self.gmedian(eps));
-        Ok(pair.0.vsub::<f64>(&pair.1))
+        Ok(pair.0.vsub(&pair.1))
     }
 
     /// Translates the whole set by subtracting vector m.
@@ -331,7 +331,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
                 .reduce(
                     || (vec![0_f64; self[0].len()], 0_f64),
                     |mut pairsum: (Vec<f64>, f64), pairin: (Vec<f64>, f64)| {
-                        pairsum.0.mutvadd::<f64>(&pairin.0);
+                        pairsum.0.mutvadd(&pairin.0);
                         pairsum.1 += pairin.1;
                         pairsum
                     }
@@ -354,9 +354,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
         loop { // vector iteration till accuracy eps is exceeded  
             let mut nextg = vec![0_f64; self[0].len()];   
             let mut nextrecsum = 0f64;
-            for (x,w) in self.iter().zip(ws) { // for all points
-                // |x-g| done in-place for speed. Could have simply called x.vdist(g)
-                //let mag:f64 = g.vdist::<f64>(&x); 
+            for (x,w) in self.iter().zip(ws) { // for all points 
                 let mag = g.iter().zip(x).map(|(&gi,xi)|(xi.clone().into()-gi).powi(2)).sum::<f64>(); 
                 if mag.is_normal() { 
                     let rec = w.clone().into()/(mag.sqrt()); // reciprocal of distance (scalar)

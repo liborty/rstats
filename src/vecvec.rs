@@ -194,7 +194,7 @@ where
 
     /// acentroid = multidimensional arithmetic mean
     fn acentroid(self) -> Vec<f64> {
-        self.sumv().smult::<f64>(1. / (self.len() as f64))
+        self.sumv().smult(1. / (self.len() as f64))
     }
 
     /// multithreaded acentroid = multidimensional arithmetic mean
@@ -211,30 +211,30 @@ where
             .reduce(
                 || vec![0_f64; self[0].len()],
                 |mut finalsum: Vec<f64>, partsum: Vec<f64>| {
-                    finalsum.mutvadd::<f64>(&partsum);
+                    finalsum.mutvadd(&partsum);
                     finalsum
                 },
             );
-        sumvec.smult::<f64>(1. / (self.len() as f64))
+        sumvec.smult(1. / (self.len() as f64))
     }
 
     /// gcentroid = multidimensional geometric mean
     fn gcentroid(self) -> Result<Vec<f64>,RE> { 
         let logvs = self.iter().map(|v|-> Result<Vec<f64>,RE> {
-            Ok(v.vunit()?.smult::<f64>(v.vmag().ln())) })
+            Ok(v.vunit()?.smult(v.vmag().ln())) })
             .collect::<Result<Vec<Vec<f64>>,RE>>()?;
         let logcentroid = logvs.acentroid();
-        Ok(logcentroid.vunit()?.smult::<f64>(logcentroid.vmag().exp()))
+        Ok(logcentroid.vunit()?.smult(logcentroid.vmag().exp()))
     }
 
     /// hcentroid =  multidimensional harmonic mean
     fn hcentroid(self) -> Result<Vec<f64>,RE> {
         let mut centre = vec![0_f64; self[0].len()];
         for v in self {
-            centre.mutvadd::<f64>(&v.vinverse()?)
+            centre.mutvadd(&v.vinverse()?)
         }
         Ok(centre  
-            .vinverse()?.smult::<f64>(self.len() as f64)) 
+            .vinverse()?.smult(self.len() as f64)) 
     }
 
     /// For each member point, gives its sum of distances to all other points and their MinMax
@@ -263,7 +263,7 @@ where
         if i > self.len() {
             return re_error("DataError",here!("radius: invalid subscript"))?;
         }
-        Ok(self[i].vdist::<f64>(gm))
+        Ok(self[i].vdist(gm))
     }
 
     /// Arith mean and std (in Params struct), Median and MAD (in another Params struct), Medoid and Outlier (in MinMax struct)
@@ -494,7 +494,7 @@ where
                 .reduce(
                     || (vec![0_f64; self[0].len()], 0_f64),
                     |mut pairsum: (Vec<f64>, f64), pairin: (Vec<f64>, f64)| {
-                        pairsum.0.mutvadd::<f64>(&pairin.0);
+                        pairsum.0.mutvadd(&pairin.0);
                         pairsum.1 += pairin.1;
                         pairsum
                     },
@@ -516,10 +516,7 @@ where
             // vector iteration till accuracy eps is exceeded
             let mut nextg = vec![0_f64; self[0].len()];
             let mut nextrecsum = 0f64;
-            for x in self {
-                // for all points
-                // |x-g| done in-place for speed. Could have simply called x.vdist(g)
-                //let mag:f64 = g.vdist::<f64>(&x);
+            for x in self { 
                 let mag = g
                     .iter()
                     .zip(x)

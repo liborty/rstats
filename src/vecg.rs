@@ -13,7 +13,7 @@ where
     /// nd tm_statistic of self against centre and spread.     
     /// Unlike in 1d, is always positive.
     fn tm_statistic(self, centre: &[f64], spread: f64) -> Result<f64, RE> {
-        Ok(self.vdist::<f64>(centre) / spread)
+        Ok(self.vdist(centre) / spread)
     }
 
     /// Dot product of vector self with column c of matrix v
@@ -118,7 +118,7 @@ where
                 d
             })
             .collect::<Vec<f64>>();
-        dif.smult::<f64>(1_f64 / sumsq.sqrt())
+        dif.smult(1_f64 / sumsq.sqrt())
     }
 
     /// Vector addition
@@ -433,19 +433,19 @@ where
 
     /// Delta gm that adding point self will cause
     fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>, RE> {
-        let dv = self.vsub::<f64>(gm);
+        let dv = self.vsub(gm);
         let mag = dv.vmag();
         if !mag.is_normal() {
             return re_error("arith", "point being added is coincident with gm")?;
         };
         // adding new unit vector (to approximate zero vector) and rescaling
         let recip = 1f64 / mag;
-        Ok(dv.vunit()?.smult::<f64>(recip / (recips + recip)))
+        Ok(dv.vunit()?.smult(recip / (recips + recip)))
     }
 
     /// Normalized magnitude of change to gm that adding point self will cause
     fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64, RE> {
-        let mag = self.vdist::<f64>(gm);
+        let mag = self.vdist(gm);
         if !mag.is_normal() {
             return re_error("arith", here!("point being added is coincident with gm"))?;
         };
@@ -455,19 +455,19 @@ where
 
     /// Delta gm caused by removing an existing set point self
     fn contribvec_oldpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>, RE> {
-        let dv = self.vsub::<f64>(gm);
+        let dv = self.vsub(gm);
         let mag = dv.vmag();
         if !mag.is_normal() {
             return re_error("arith", here!("point being removed is coincident with gm"))?;
         };
         let recip = 1f64 / mag; // first had to test for division by zero
-        Ok(dv.vunit()?.smult::<f64>(recip / (recip - recips))) // scaling
+        Ok(dv.vunit()?.smult(recip / (recip - recips))) // scaling
     }
 
     /// Normalized Contribution that removing an existing set point p will make
     /// Is a negative number
     fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64, RE> {
-        let mag = self.vdist::<f64>(gm);
+        let mag = self.vdist(gm);
         if !mag.is_normal() {
             return re_error("arith", here!("point being removed is coincident with gm"))?;
         };
