@@ -252,6 +252,7 @@ fn triangmat() -> Result<(), RE> {
     // let transppt = pts.transpose();
     let cov = pts.covar(&pts.par_gmedian(EPS))?;
     println!("Comediance matrix:\n{cov}");
+    println!("Projected to subspace given by [0,2,4,6,9]:\n{}",cov.project(&[0,2,4,6,9]));
     let chol = cov.cholesky()?;
     println!("Cholesky L matrix:\n{chol}");
     println!("Eigenvalues by Cholesky decomposition:\n{}",

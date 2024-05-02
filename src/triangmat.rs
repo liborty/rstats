@@ -40,10 +40,6 @@ impl TriangMat {
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
-    /// Square matrix dimension (rows)
-    pub fn rows(&self) -> usize {
-        Self::rowcol(self.len()).0
-    }
     /// Squared euclidian vector magnitude (norm) of the data vector
     pub fn magsq(&self) -> f64 {
         self.data.vmagsq()
@@ -99,8 +95,7 @@ impl TriangMat {
         let mut fullcov = self.to_full(); 
         fullcov.iter_mut().for_each(|eigenvector| eigenvector.munit());
         fullcov
-    }
-  
+    }  
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
     /// (row,column) coordinates within a lower/upper triangular matrix.
     /// Enables memory efficient representation of triangular matrices as one flat vector.
@@ -109,6 +104,20 @@ impl TriangMat {
         let column = s - row * (row + 1) / 2; // subtracting the last triangular number (of whole rows)
         (row, column)
     }
+    /// Project symmetric/antisymmetric triangmat to a smaller one of the same kind,
+    /// into a subspace specified by an ascending index of dimensions.
+    /// Deletes all rows and columns of the missing dimensions. 
+    pub fn project(&self, index: &[usize]) -> Self {
+        let mut res = Vec::with_capacity(sumn(index.len()));
+        for &row_idx in index {
+            let row = self.row(row_idx);
+            for &column_idx in index {
+                if column_idx > row.len() { break; };
+                res.push(row[column_idx]);
+            };
+        };
+        TriangMat { kind:self.kind, data: res }   
+    }    
 
     /// Extract one row from TriangMat
     pub fn row(&self, r: usize) -> Vec<f64> {
@@ -290,7 +299,7 @@ impl TriangMat {
     {
         let u = self.to_full();
         let mut qm = m.iter().map(|mvec| mvec.tof64()).collect::<Vec<Vec<f64>>>();
-        for uvec in u.iter().take(self.rows()) {
+        for uvec in u.iter().take(self.dim()) {
             qm.iter_mut()
                 .for_each(|qvec| *qvec = uvec.house_reflect::<f64>(qvec))
         }
