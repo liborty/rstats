@@ -112,7 +112,7 @@ impl TriangMat {
         for &row_idx in index {
             let row = self.row(row_idx);
             for &column_idx in index {
-                if column_idx > row.len() { break; };
+                if column_idx >= row.len() { break; };
                 res.push(row[column_idx]);
             };
         };

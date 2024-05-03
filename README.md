@@ -333,7 +333,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 2.1.1** - Added function `project` to project a `TriangMat` to a lower dimensional space of selected dimensions. Removed `rows` which was a duplicate of `dim`.
+* **Version 2.1.2** - Added function `project` to project a `TriangMat` to a lower dimensional space of selected dimensions. Removed `rows` which was a duplicate of `dim`.
 
 * **Version 2.1.0** - Changed the type of `mid` argument to covariance methods from U -> f64, making the normal expectation for the type of precise geometric medians explicit. Accordingly, moved `covar` and `serial_covar` from trait `VecVecg` to `VecVec`. This might potentially require changing some `use` declarations in your code.
 
