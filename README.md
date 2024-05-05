@@ -131,7 +131,7 @@ is the member of the set with the greatest sum of distances to all other members
 is a scaled distance, whereby the scaling is derived from the axes of covariances / `comediances` of the data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances / `comediances` are decreased. Requires matrix decomposition.
 
 * `Cholesky-Banachiewicz matrix decomposition`  
-decomposes any positive definite matrix S (often covariance or comediance matrix) into a product of two triangular matrices: `S = LL'`. The eigenvalues and the determinant are easily obtained from the diagonal of L. The eigenvectors from S. We implemented it on `TriangMat` for maximum efficiency. It is used by `mahalanobis distance` and `variances`.
+decomposes any positive definite matrix S (often covariance or comediance matrix) into a product of two triangular matrices: `S = LL'`. The eigenvalues and the determinant are easily obtained from the diagonal of L. We implemented it on `TriangMat` for maximum efficiency. It is used mainly by `eigenvalues`, `eigenvectors`, `mahalanobis` and `pca_reduction`.
 
 * `PCA (Principal Components Analysis)`
 is typically used to reduce the dimensionality of data along some of the most significant directions of variation (eigenvectors).
