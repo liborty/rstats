@@ -270,6 +270,11 @@ fn triangmat() -> Result<(), RE> {
         mahamag,
         mahamag / dmag
     );
+    let (evecs,index) = chol.eigenvectors()?;
+    println!("Eigenvectors:\n{}Their sort index by eigenvalues:\n{}",
+        evecs.gr(),index.gr());
+    println!("Original data reduced to 3 dimensions:\n{}",
+        chol.pca_reduction(&pts,3)?.gr());
     Ok(())
 }
 

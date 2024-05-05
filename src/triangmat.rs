@@ -1,5 +1,5 @@
 use crate::{re_error, sumn, RError, Stats, TriangMat, Vecg, MutVecg, RE}; // MStats, MinMax, MutVecg, Stats, VecVec };
-pub use indxvec::{printing::*, Printing, Vecops};
+pub use indxvec::{printing::*, Printing, Indices, Vecops};
 
 /// Meanings of 'kind' field. Note that 'Upper Symmetric' would represent the same full matrix as
 /// 'Lower Symmetric', so it is not used (lower symmetric matrix is never transposed)
@@ -87,15 +87,49 @@ impl TriangMat {
     pub fn determinant(&self) -> f64 {
         self.diagonal().iter().map(|&x| x * x).product()
     }
-    /// Normalized full eigenvectors from triangular covariance matrix.
-    /// Can be used together with eigenvalues for Principal Components Analysis.  
-    /// Covariance matrix is symmetric, so
-    /// we use its rows as eigenvectors (no need to transpose it)
-    pub fn eigenvectors(&self) -> Vec<Vec<f64>> {
+    /// Normalized full rows from a triangular matrix.
+    /// When the matrix is symmetric, e.g. a covariance matrix, the result are its normalized eigenvectors
+    pub fn normalize(&self) -> Vec<Vec<f64>> {
         let mut fullcov = self.to_full(); 
         fullcov.iter_mut().for_each(|eigenvector| eigenvector.munit());
         fullcov
-    }  
+    }
+    /// Eigenvectors (normalized and indexed) of A=LL', given L (the lower triangular Cholesky decomposition).
+    /// The index gives the ordering by eigenvalues.
+    pub fn eigenvectors(&self) -> Result<(Vec<Vec<f64>>,Vec<usize>),RE> {
+        let n = self.dim();
+        let mut evectors = Vec::new();
+        let eigenvals = self.eigenvalues();
+        for (rownum,&eval) in eigenvals.iter().enumerate() { 
+            let mut padded_row = self.row(rownum);  
+            for _i in rownum+1..n { padded_row.push(0_f64); };
+            let mut eigenvec = self
+                .forward_substitute(&padded_row.smult(eval))?;
+            eigenvec.munit(); // normalize the eigenvector
+            evectors.push(eigenvec);
+        };
+        let index = eigenvals
+            .isort_indexed(0..n, |a, b| b.total_cmp(a));
+        Ok((evectors,index))
+    }
+    /// PCA dimensional reduction using cholesky lower triangular matrix L (self).
+    /// Projecting data using only `new_dims` number of eigenvectors,
+    /// corresponding to the largest eigenvalues.
+    pub fn pca_reduction(self, data: &[Vec<f64>], new_dims: usize) -> Result<Vec<Vec<f64>>,RE> {
+        if new_dims > data.len() { re_error("size","pca_reduction: new_dims exceeds L dimension")? };
+        let mut res = Vec::with_capacity(data.len());
+        let (evecs,mut index) = self.eigenvectors()?;
+        index.truncate(new_dims);
+        let pruned_evecs = index.unindex(&evecs, true); 
+        for dvec in data {
+            res.push( 
+                pruned_evecs
+                .iter().map(|ev| dvec.dotp(ev))
+            .collect::<Vec<f64>>())
+            };
+        Ok(res)   
+    }
+
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
     /// (row,column) coordinates within a lower/upper triangular matrix.
     /// Enables memory efficient representation of triangular matrices as one flat vector.
@@ -127,7 +161,7 @@ impl TriangMat {
 
     /// Unpacks flat TriangMat Vec to triangular Vec<Vec> form
     pub fn to_triangle(&self) -> Vec<Vec<f64>> {
-        let (n, _) = TriangMat::rowcol(self.data.len());
+        let n = self.dim();
         let mut res = Vec::with_capacity(n);
         for r in 0..n {
             res.push(self.row(r));
@@ -143,25 +177,28 @@ impl TriangMat {
         }
     }
 
-    /// Unpacks TriangMat to ordinary full matrix
+    /// Unpacks all kinds of TriangMat to equivalent full matrix form
     pub fn to_full(&self) -> Vec<Vec<f64>> {
         // full matrix dimension(s)
-        let (n, _) = TriangMat::rowcol(self.data.len());
+        let n = self.dim();
         let mut res = vec![vec!(0_f64; n); n];
         // function pointer for primitive filling actions, depending on the matrix kind
         let fill: fn(usize, usize, &mut Vec<Vec<f64>>, f64) = match self.kind % 3 {
+            // symmetric
             2 => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
                 res[row][col] = item;
                 if row != col {
                     res[col][row] = item;
                 };
             },
+            // antisymmetric
             1 => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
                 res[row][col] = item;
                 if row != col {
                     res[col][row] = -item;
                 };
             },
+            // plain
             _ => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
                 res[row][col] = item;
                 if row != col {
@@ -170,12 +207,13 @@ impl TriangMat {
             },
         };
         if self.kind > 2 {
-            // is transposed
+            // transpose
             for (i, &item) in self.data.iter().enumerate() {
                 let (row, col) = Self::rowcol(i);
                 fill(col, row, &mut res, item);
             }
         } else {
+            // do not transpose
             for (i, &item) in self.data.iter().enumerate() {
                 let (row, col) = Self::rowcol(i);
                 fill(row, col, &mut res, item);

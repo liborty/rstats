@@ -133,6 +133,9 @@ is a scaled distance, whereby the scaling is derived from the axes of covariance
 * `Cholesky-Banachiewicz matrix decomposition`  
 decomposes any positive definite matrix S (often covariance or comediance matrix) into a product of two triangular matrices: `S = LL'`. The eigenvalues and the determinant are easily obtained from the diagonal of L. The eigenvectors from S. We implemented it on `TriangMat` for maximum efficiency. It is used by `mahalanobis distance` and `variances`.
 
+* `PCA (Principal Components Analysis)`
+is typically used to reduce the dimensionality of data along some of the most significant directions of variation (eigenvectors).
+
 * `Householder's decomposition`  
 in cases where the precondition (positive definite matrix S) for the Cholesky-Banachiewicz decomposition is not satisfied, Householder's (UR) decomposition is often used as the next best method. It is implemented here on our efficient `struct TriangMat`.
 
@@ -333,6 +336,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.1.3** - Added `pca_reduction` to `struct TriangMat`. Changed `eigenvectors` to compute normalized eigenvectors of the original data rather than of its covariance matrix. That is now done by better named `normalize`, should you still need it. `Eigenvectors` is slower, as it needs to do forward substitution to find each one.
+
 * **Version 2.1.2** - Added function `project` to project a `TriangMat` to a lower dimensional space of selected dimensions. Removed `rows` which was a duplicate of `dim`.
 
 * **Version 2.1.0** - Changed the type of `mid` argument to covariance methods from U -> f64, making the normal expectation for the type of precise geometric medians explicit. Accordingly, moved `covar` and `serial_covar` from trait `VecVecg` to `VecVec`. This might potentially require changing some `use` declarations in your code.
@@ -341,7 +346,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 2.0.11** - removed not so useful `variances`. Tidied up error processing in `vecvecg.rs`. Added to it `serial_covar` and `serial_wcovar` for when heavy loading of all the cores may not be wanted.
 
-* **Version 2.0.10** - Added to struct TriangMat `eigenvectors` (enabling PCA).
+* **Version 2.0.10** - Added to struct TriangMat `eigenvectors` (to enable PCA).
 
 * **Version 2.0.9** - Pruned some rarely used methods, simplified `gmparts` and `gmerror`, updated dependencies.
 
