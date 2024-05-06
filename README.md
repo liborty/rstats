@@ -21,7 +21,14 @@ use Rstats::{Stats,Vecg,Vecu8,MutVecg,VecVec,VecVecg};
 and any of the following auxiliary functions:
 
 ```rust
-use Rstats::{fromop,sumn,t_stat,unit_matrix,re_error};
+use Rstats::{
+    fromop,sumn,tm_stat,unit_matrix,nodata_error,data_error,
+    arith_error,other_error };
+```
+or just simply use everything:
+
+```rust
+use Rstats::*;
 ```
 
 The latest (nightly) version is always available in the github repository [Rstats](https://github.com/liborty/Rstats). Sometimes it may be (only in some details) a little ahead of the `crates.io` release versions.
@@ -338,7 +345,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 2.1.4** - Tidied up some error processing.
 
-* **Version 2.1.3** - Added `pca_reduction` to `struct TriangMat`. Changed `eigenvectors` to compute normalized eigenvectors of the original data rather than of its covariance matrix. That is now done by better named `normalize` (should you still need it). `Eigenvectors` is somewhat slower, as it needs to solve forward substitution to find each vector.
+* **Version 2.1.3** - Added `pca_reduction` to `struct TriangMat`. Changed `eigenvectors` to compute normalized eigenvectors of the original data rather than of its covariance matrix. That is now done by better named `normalize` (should you still need it). `Eigenvectors` solves forward substitution to find each vector.
 
 * **Version 2.1.2** - Added function `project` to project a `TriangMat` to a lower dimensional space of selected dimensions. Removed `rows` which was a duplicate of `dim`.
 
@@ -348,7 +355,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 * **Version 2.0.11** - removed not so useful `variances`. Tidied up error processing in `vecvecg.rs`. Added to it `serial_covar` and `serial_wcovar` for when heavy loading of all the cores may not be wanted.
 
-* **Version 2.0.10** - Added to struct TriangMat `eigenvectors` (to enable PCA).
+* **Version 2.0.10** - Added `eigenvectors` to `struct TriangMat` (to enable PCA).
 
 * **Version 2.0.9** - Pruned some rarely used methods, simplified `gmparts` and `gmerror`, updated dependencies.
 
