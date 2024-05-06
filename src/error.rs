@@ -10,6 +10,8 @@ pub type RE = RError<String>;
 
 #[derive(Debug)]
 /// Custom RStats Error
+/// Parameter <T> is future proofing, so that any type of argument may be returned.
+/// Currently only messages of type <String> and <&str> are used
 pub enum RError<T>
 where
     T: Sized + Debug,
@@ -39,6 +41,44 @@ where
         }
     }
 }
+/// Convenience function for building RError::NoDataError(String)  
+/// from payload message, which can be either literal `&str` or `String`.
+/// `String` allows splicing in values of variables for debugging, using `format!`
+pub fn nodata_error<T>(msg: impl Into<String>) -> Result<T,RError<String>> {
+    Err(RError::NoDataError(msg.into()))
+} 
+/// Convenience function for building RError::DataError(String)  
+/// from payload message, which can be either literal `&str` or `String`.
+/// `String` allows splicing in values of variables for debugging, using `format!`
+pub fn data_error<T>(msg: impl Into<String>) -> Result<T,RError<String>> {
+    Err(RError::DataError(msg.into()))
+}
+/// Convenience function for building RError::ArithError(String)  
+/// from payload message, which can be either literal `&str` or `String`.
+/// `String` allows splicing in values of variables for debugging, using `format!`
+pub fn arith_error<T>(msg: impl Into<String>) -> Result<T,RError<String>> {
+    Err(RError::ArithError(msg.into()))
+} 
+/// Convenience function for building RError::ArithError(String)  
+/// from payload message, which can be either literal `&str` or `String`.
+/// `String` allows splicing in values of variables for debugging, using `format!`
+pub fn other_error<T>(msg: impl Into<String>) -> Result<T,RError<String>> {
+    Err(RError::OtherError(msg.into()))
+} 
+/*
+/// Convenience function for building RError<String>  
+/// from short name and payload message, which can be either literal `&str` or `String`.
+/// `String` allows splicing in values of variables for debugging, using `format!`
+pub fn re_error<T>(kind: &str, msg: impl Into<String>) -> Result<T,RError<String>> {
+    match kind {
+        "empty" => Err(RError::NoDataError(msg.into())), 
+        "size"  => Err(RError::DataError(msg.into())), 
+        "arith" => Err(RError::ArithError(msg.into())),
+        "other" => Err(RError::OtherError(msg.into())),
+        _ => Err(RError::OtherError("Wrong error kind given to re_error".into()))
+    } 
+}
+*/
 /// Automatically converting any RanError to RError::OtherError
 impl From<RanError<String>> for RError<String> {
     fn from(e: RanError<String>) -> Self {
@@ -64,17 +104,5 @@ impl From<AccessError> for RError<String> {
 impl From<std::io::Error> for RError<String> {
     fn from(e: std::io::Error) -> Self {
         RError::OtherError(format!("IOError: {e}"))
-    }
-}
-
-/// Convenience function for building RError<String>  
-/// from short name and payload message, which can be either &str or String
-pub fn re_error<T>(kind: &str, msg: impl Into<String>) -> Result<T,RError<String>> {
-    match kind {
-        "empty" => Err(RError::NoDataError(msg.into())), 
-        "size"  => Err(RError::DataError(msg.into())), 
-        "arith" => Err(RError::ArithError(msg.into())),
-        "other" => Err(RError::OtherError(msg.into())),
-        _ => Err(RError::OtherError("Wrong error kind given to re_error".into()))
     }
 }

@@ -1,7 +1,4 @@
-use crate::{
-    error::{re_error, RError, RE},
-    here, Stats, TriangMat, Vecg,
-};
+use crate::*;
 use core::{cmp::Ordering::*, convert::identity};
 use indxvec::{Indices, Vecops};
 use medians::Median;
@@ -51,10 +48,7 @@ where
     fn dotsig(self, sig: &[f64]) -> Result<f64, RE> {
         let dims = self.len();
         if 2 * dims != sig.len() {
-            return re_error(
-                "size",
-                "dotsig: sig vec must have double the dimensions of self",
-            )?;
+            return data_error("dotsig: sig vec must have double the dimensions of self");
         }
         let mut ressum = 0_f64;
         for (i, c) in self.iter().enumerate() {
@@ -174,8 +168,6 @@ where
 
     /// cityblock distance
     fn cityblockd<U: Clone + Into<f64>>(self, v: &[U]) -> f64
-    where
-        U: Into<f64>,
     {
         self.iter()
             .zip(v)
@@ -301,9 +293,7 @@ where
     fn jointpdf<U: Clone + Into<f64>>(self, v: &[U]) -> Result<Vec<f64>, RE> {
         let n = self.len();
         if v.len() != n {
-            return Err(RError::DataError(
-                "{jointpdf argument vectors must be of equal length!".to_owned(),
-            ));
+            return data_error("jointpdf argument vectors must be of equal length!");
         };
         let nf = n as f64;
         let mut res: Vec<f64> = Vec::new();
@@ -431,23 +421,23 @@ where
         xvec.ucorrelation(&yvec) // using Indices trait from idxvec
     }
 
-    /// Delta gm that adding point self will cause
+    /// Delta gm that adding a point will cause
     fn contribvec_newpt(self, gm: &[f64], recips: f64) -> Result<Vec<f64>, RE> {
         let dv = self.vsub(gm);
         let mag = dv.vmag();
         if !mag.is_normal() {
-            return re_error("arith", "point being added is coincident with gm")?;
+            return arith_error("contribvec_newpt: point being added is coincident with gm");
         };
         // adding new unit vector (to approximate zero vector) and rescaling
         let recip = 1f64 / mag;
         Ok(dv.vunit()?.smult(recip / (recips + recip)))
     }
 
-    /// Normalized magnitude of change to gm that adding point self will cause
+    /// Normalized magnitude of change to gm that adding a point will cause
     fn contrib_newpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64, RE> {
         let mag = self.vdist(gm);
         if !mag.is_normal() {
-            return re_error("arith", here!("point being added is coincident with gm"))?;
+            return arith_error("contrib_newpt: point being added is coincident with gm");
         };
         let recip = 1f64 / mag; // first had to test for division by zero
         Ok((nf + 1.0) / (recips + recip))
@@ -458,7 +448,7 @@ where
         let dv = self.vsub(gm);
         let mag = dv.vmag();
         if !mag.is_normal() {
-            return re_error("arith", here!("point being removed is coincident with gm"))?;
+            return arith_error("contribvec_oldpt: point being removed is coincident with gm");
         };
         let recip = 1f64 / mag; // first had to test for division by zero
         Ok(dv.vunit()?.smult(recip / (recip - recips))) // scaling
@@ -469,7 +459,7 @@ where
     fn contrib_oldpt(self, gm: &[f64], recips: f64, nf: f64) -> Result<f64, RE> {
         let mag = self.vdist(gm);
         if !mag.is_normal() {
-            return re_error("arith", here!("point being removed is coincident with gm"))?;
+            return arith_error("contrib_oldpt: point being removed is coincident with gm");
         };
         let recip = 1f64 / mag; // first had to test for division by zero
         Ok((nf - 1.0) / (recip - recips))

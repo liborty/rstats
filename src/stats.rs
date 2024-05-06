@@ -1,4 +1,4 @@
-use crate::{error::RError, re_error, sumn, fromop, Params, MutVecg, Stats, Vecg, RE};
+use crate::*; //{RError, nodata_error, sumn, fromop, Params, MutVecg, Stats, Vecg, RE};
 use indxvec::Vecops;
 use medians::{Medianf64,Median};
 use core::cmp::Ordering::*;
@@ -28,7 +28,7 @@ where
     /// Vector with reciprocal components
     fn vreciprocal(self) -> Result<Vec<f64>, RE> {
         if self.is_empty() {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("vreciprocal: empty self vec");
         };
         self.iter()
             .map(|component| -> Result<f64, RE> {
@@ -36,9 +36,7 @@ where
                 if c.is_normal() {
                     Ok(1.0 / c)
                 } else {
-                    Err(RError::ArithError(
-                        "no reciprocal for zero component".to_owned(),
-                    ))
+                    arith_error(format!("vreciprocal: bad component {c}"))
                 }
             })
             .collect::<Result<Vec<f64>, RE>>()
@@ -47,22 +45,20 @@ where
     /// Vector with inverse magnitude
     fn vinverse(self) -> Result<Vec<f64>, RE> {
         if self.is_empty() {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("vinverse: empty self vec");
         };
         let vmagsq = self.vmagsq();
         if vmagsq > 0.0 {
             Ok(self.iter().map(|x| x.clone().into() / vmagsq).collect())
         } else {
-            Err(RError::DataError(
-                "no inverse of zero vector magnitude".to_owned(),
-            ))
+            data_error("vinverse: can not invert zero vector")
         }
     }
 
     // Negated vector (all components swap sign)
     fn negv(self) -> Result<Vec<f64>, RE> {
         if self.is_empty() {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("negv: empty self vec");
         };
         Ok(self.iter().map(|x| (-x.clone().into())).collect())
     }
@@ -70,15 +66,13 @@ where
     /// Unit vector
     fn vunit(self) -> Result<Vec<f64>, RE> {
         if self.is_empty() {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("vunit: empty self vec");
         };
         let mag = self.vmag();
         if mag > 0.0 {
             Ok(self.iter().map(|x| x.clone().into() / mag).collect())
         } else {
-            Err(RError::DataError(
-                "vector of zero magnitude cannot be made into a unit vector".to_owned(),
-            ))
+            data_error("vunit: can not make zero vector into a unit vector")
         }
     }
 
@@ -86,7 +80,7 @@ where
     fn hmad(self) -> Result<f64, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("hmad: empty self");
         };
         let fself = self.iter().map(|x| x.clone().into()).collect::<Vec<f64>>();
         let recmedian = 1.0 / fself.medf_checked()?;
@@ -95,7 +89,7 @@ where
             .map(|x| -> Result<f64, RE> {
                 let fx: f64 = x.clone().into();
                 if !fx.is_normal() {
-                    return re_error("ArithError","attempt to divide by zero");
+                    return arith_error("hmad: attempt to divide by zero");
                 };
                 Ok((recmedian - 1.0 / fx).abs())
             })
@@ -116,7 +110,7 @@ where
         if n > 0 {
             Ok(self.iter().map(|x| x.clone().into()).sum::<f64>() / (n as f64))
         } else {
-            re_error("NoDataError","empty self vec")
+            nodata_error("amean: empty self vec")
         }
     }
 

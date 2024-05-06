@@ -196,11 +196,11 @@ if dif <= 0_f64 {
 pub type RE = RError<String>;
 ```
 
-Convenience function `re_error` can be used to simplify constructing and returning these errors. Its message argument can be either literal `&str`, or `String` (e.g. constructed by `format!`). It returns a Result, thus it needs `?` operator to unwrap its `Err` variant.
+Convenience functions `nodata_error, data_error, arith_error, other_error` are used to construct and return these errors. Their message argument can be either literal `&str`, or `String` (e.g. constructed by `format!`). They return `ReError<String>` already wrapped up as an `Err` variant of `Result`. cf.:
 
 ```rust
 if dif <= 0_f64 {
-    return re_error("arith","cholesky needs a positive definite matrix")?;
+    return arith_error("cholesky needs a positive definite matrix");
 };
 ```
 
@@ -258,11 +258,11 @@ The remaining general cases previously required new manual implementations to be
 
 * `sumn`: the sum of the sequence `1..n = n*(n+1)/2`. It is also the size of a lower/upper triangular matrix.
 
-* `t_stat`: of a value x: (x-centre)/spread. In one dimension.
+* `tm_stat`: (x-centre)/dispersion. Generalised t-statistic in one dimension.
 
 * `unit_matrix`: - generates full square unit matrix.
 
-* `re_error` - helps to construct custom RE errors (see Errors above).
+* `nodata_error, data_error, arith_error, other_error` - construct custom RE errors (see section Errors above).
 
 ## Trait Stats
 
@@ -336,7 +336,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 2.1.3** - Added `pca_reduction` to `struct TriangMat`. Changed `eigenvectors` to compute normalized eigenvectors of the original data rather than of its covariance matrix. That is now done by better named `normalize`, should you still need it. `Eigenvectors` is slower, as it needs to do forward substitution to find each one.
+* **Version 2.1.4** - Tidied up some error processing.
+
+* **Version 2.1.3** - Added `pca_reduction` to `struct TriangMat`. Changed `eigenvectors` to compute normalized eigenvectors of the original data rather than of its covariance matrix. That is now done by better named `normalize` (should you still need it). `Eigenvectors` is somewhat slower, as it needs to solve forward substitution to find each vector.
 
 * **Version 2.1.2** - Added function `project` to project a `TriangMat` to a lower dimensional space of selected dimensions. Removed `rows` which was a duplicate of `dim`.
 

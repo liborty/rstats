@@ -1,4 +1,4 @@
-use crate::{re_error, sumn, RError, Stats, TriangMat, Vecg, MutVecg, RE}; // MStats, MinMax, MutVecg, Stats, VecVec };
+use crate::*; // MStats, MinMax, MutVecg, Stats, VecVec };
 pub use indxvec::{printing::*, Printing, Indices, Vecops};
 
 /// Meanings of 'kind' field. Note that 'Upper Symmetric' would represent the same full matrix as
@@ -43,7 +43,7 @@ impl TriangMat {
     /// Squared euclidian vector magnitude (norm) of the data vector
     pub fn magsq(&self) -> f64 {
         self.data.vmagsq()
-    }
+    }    
     /// Sum of the elements:  
     /// when applied to the wedge product **a∧b**, returns det(**a,b**)
     pub fn sum(&self) -> f64 {
@@ -67,7 +67,7 @@ impl TriangMat {
             })
             .collect::<Vec<f64>>()
     }
-    /// New unit (symmetric) TriangMat matrix with total data size `n*(n+1)/2`
+    /// New unit (symmetric) TriangMat matrix (data size `n*(n+1)/2`)
     pub fn unit(n: usize) -> Self {
         let mut data = Vec::new();
         for i in 0..n {
@@ -94,9 +94,13 @@ impl TriangMat {
         fullcov.iter_mut().for_each(|eigenvector| eigenvector.munit());
         fullcov
     }
-    /// Eigenvectors (normalized and indexed) of A=LL', given L (the lower triangular Cholesky decomposition).
-    /// The index gives the ordering by eigenvalues.
+
+    /// Normalized eigenvectors of A, given L.
+    /// Where L is the lower triangular Cholesky decomposition of covariance/comediance matrix for A.
+    /// Index gives the descending order of eigenvalues.
+    /// Can be used to order eigenvectors by their relative significance (covariance in their direction).
     pub fn eigenvectors(&self) -> Result<(Vec<Vec<f64>>,Vec<usize>),RE> {
+        if self.is_empty() { return nodata_error("eigenvectors applied to empty L") };
         let n = self.dim();
         let mut evectors = Vec::new();
         let eigenvals = self.eigenvalues();
@@ -108,18 +112,23 @@ impl TriangMat {
             eigenvec.munit(); // normalize the eigenvector
             evectors.push(eigenvec);
         };
+        // descending sort index of eigenvalues
         let index = eigenvals
             .isort_indexed(0..n, |a, b| b.total_cmp(a));
         Ok((evectors,index))
     }
-    /// PCA dimensional reduction using cholesky lower triangular matrix L (self).
-    /// Projecting data using only `new_dims` number of eigenvectors,
+
+    /// PCA dimensional reduction using cholesky lower triangular matrix L (as self).
+    /// Projecting data using only `dimensions` number of eigenvectors,
     /// corresponding to the largest eigenvalues.
-    pub fn pca_reduction(self, data: &[Vec<f64>], new_dims: usize) -> Result<Vec<Vec<f64>>,RE> {
-        if new_dims > data.len() { re_error("size","pca_reduction: new_dims exceeds L dimension")? };
+    pub fn pca_reduction(self, data: &[Vec<f64>], dimensions: usize) -> Result<Vec<Vec<f64>>,RE> {
+        if data.is_empty() { return nodata_error("pca_reduction: empty data") };
+        let n = data[0].len();        
+        if dimensions > n { return data_error("pca_reduction: new dimensions exceed those of data") };
+        if self.dim() != n { return data_error("pca_reduction: L and data dimensions mismatch") };
         let mut res = Vec::with_capacity(data.len());
-        let (evecs,mut index) = self.eigenvectors()?;
-        index.truncate(new_dims);
+        let (evecs,mut index) = self.eigenvectors()?; 
+        index.truncate(dimensions);
         let pruned_evecs = index.unindex(&evecs, true); 
         for dvec in data {
             res.push( 
@@ -233,7 +242,7 @@ impl TriangMat {
         let sl = self.data.len();
         // input not long enough to compute anything
         if sl < 3 {
-            return re_error("empty", "cholesky needs at least 3x3 TriangMat: {self}")?;
+            return nodata_error("cholesky needs at least 3x3 TriangMat");
         };
         // n is the dimension of the implied square matrix.
         // Not needed as an extra argument. We compute it
@@ -241,7 +250,7 @@ impl TriangMat {
         let (n, c) = TriangMat::rowcol(sl);
         // input is not a triangular number, is of wrong size
         if c != 0 {
-            return re_error("size", "cholesky needs a triangular matrix")?;
+            return data_error("cholesky needs a triangular matrix");
         };
         let mut res = vec![0.0; sl]; // result L is of the same size as the input
         for i in 0..n {
@@ -259,7 +268,7 @@ impl TriangMat {
                     // dif <= 0 means that the input matrix is not positive definite,
                     // or is ill-conditioned, so we return ArithError
                     if dif <= 0_f64 {
-                        return re_error("arith", "cholesky matrix is not positive definite")?;
+                        return arith_error("cholesky matrix is not positive definite");
                     };
                     dif.sqrt()
                 }

@@ -1,4 +1,4 @@
-use crate::{here,sumn, re_error, RError, RE, Params, MinMax, MutVecg, Stats, TriangMat, VecVec, Vecg};
+use crate::*;
 use indxvec::Vecops;
 use medians::{MedError, Medianf64};
 use rayon::prelude::*;
@@ -14,9 +14,7 @@ where
     fn dvdt(self, centre: &[f64]) -> Result<Vec<f64>, RE> {
         let len = self.len();
         if len < 2 {
-            return Err(RError::NoDataError(format!(
-                "dfdt time series too short: {len}"
-            )));
+            return nodata_error(format!("dvdt time series is too short: {len}"));
         };
         let mut weight = 1_f64; 
         let mut sumwv:Vec<f64> = self[0].iter().map(|x| x.clone().into()).collect();
@@ -81,7 +79,7 @@ where
         let mut rres = Vec::with_capacity(sumn(min));
         for j in 0..min {
             let Some(slc) = r[j].get(j..d) 
-            else { return Err(RError::DataError("house_ur: failed to extract uvec slice".to_owned()));}; 
+            else { return data_error("house_ur: failed to extract uvec slice"); };
             let uvec = slc.house_reflector();
             for rlast in r.iter_mut().take(d).skip(j) {
                 let rvec = uvec.house_reflect::<f64>(&rlast.drain(j..d).collect::<Vec<f64>>());
@@ -115,18 +113,16 @@ where
         let d = self[0].len(); // their common dimensionality (length)
         for v in self.iter().skip(1) {
             if v.len() != d {
-                return Err(RError::DataError(
-                    "jointpdfn: all vectors must be of equal length!".to_owned(),
-                ));
+                return data_error("jointpdfn: all vectors must be of equal length!");
             };
         }
         let mut res: Vec<f64> = Vec::with_capacity(d);
         let mut tuples = self.transpose();
         let df = tuples.len() as f64; // for turning counts to probabilities
-                                      // lexical sort to group together occurrences of identical tuples
-        tuples.sort_unstable_by(|a, b| {
-            let Some(x) = a.partial_cmp(b) 
-            else { panic!("jointpdfn: comparison fail in f64 sort!"); }; x});
+        // lexical sort to group together occurrences of identical tuples
+        tuples.sort_unstable_by(
+            |a, b| a.partial_cmp(b)
+            .expect("jointpdfn: tuples comparison failed"));
         let mut count = 1_usize; // running count
         let mut lastindex = 0; // initial index of the last unique tuple
         tuples.iter().enumerate().skip(1).for_each(|(i, ti)| {
@@ -261,7 +257,7 @@ where
     /// Radius of a point specified by its subscript.    
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE> {
         if i > self.len() {
-            return re_error("DataError",here!("radius: invalid subscript"))?;
+            return data_error("radius: invalid subscript");
         }
         Ok(self[i].vdist(gm))
     }
@@ -293,7 +289,7 @@ where
     fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> { 
         let dims = self[0].len();
         if self.is_empty() {
-            return re_error("empty",here!("sigvec given no data"))?;
+            return nodata_error("sigvec given empty data");
         };
         let mut hemis = vec![0_f64; 2 * dims];
         for &i in idx {
@@ -312,14 +308,14 @@ where
     /// madgm median of distances from gm: stable nd data spread measure
     fn madgm(self, gm: &[f64]) -> Result<f64, RE> {
         if self.is_empty() { 
-            return re_error("NoDataError","madgm given zero length vec!")?; };     
+            return nodata_error("madgm given empty vec!"); };     
         Ok(self.radii(gm)?.medf_unchecked())
      }
 
     /// stdgm mean of distances from gm: nd data spread measure, aka nd standard deviation
     fn stdgm(self, gm: &[f64]) -> Result<f64,RE> { 
         if self.is_empty() { 
-            return re_error("NoDataError","stdgm given zero length vec!")?; };     
+            return nodata_error("stdgm given empty vec!")?; };     
         Ok( self.iter()
             .map(|s| s.vdist(gm)).sum::<f64>()/self.len() as f64 ) 
     }
@@ -554,7 +550,7 @@ where
     fn covar(self, mid:&[f64]) -> Result<TriangMat,RE> {
         let d = self[0].len(); // dimension of the vector(s)
         if d != mid.len() { 
-            return re_error("data","covar self and mid dimensions mismatch")? }; 
+            return data_error("covar self and mid dimensions mismatch"); }; 
         let mut covsum = self
             .par_iter()
             .fold(
@@ -590,7 +586,7 @@ where
     fn serial_covar(self, mid:&[f64]) -> Result<TriangMat,RE> {
         let d = self[0].len(); // dimension of the vector(s)
         if d != mid.len() { 
-            return re_error("data","serial_covar self and mid dimensions mismatch")? }; 
+            return data_error("serial_covar self and mid dimensions mismatch")?; }; 
 		let mut covsums = vec![0_f64; (d+1)*d/2];
  		for p in self { 
             let mut covsub = 0_usize; // subscript into the flattened array cov

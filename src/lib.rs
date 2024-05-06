@@ -19,7 +19,7 @@ pub mod vecvec;
 /// Multidimensional operations on sets of vectors, with additional inputs
 pub mod vecvecg;
 
-pub use crate::error::{re_error, RError, RE};
+pub use crate::error::*;
 // reexporting useful related methods
 pub use indxvec::{here, printing::*, MinMax, Printing};
 pub use medians::{MedError, Median, Medianf64};

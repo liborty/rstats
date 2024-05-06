@@ -1,9 +1,7 @@
 use indxvec::{printing::*, Indices, Printing, Vecops};
 use medians::{Median, Medianf64};
 use ran::*;
-use rstats::{
-    fromop, tm_stat, unit_matrix, re_error, RE, Stats, TriangMat, VecVec, VecVecg, Vecg, Vecu8
-};
+use rstats::*;
 use times::benchvvf64;
 
 pub const EPS: f64 = 1e-3;
@@ -43,7 +41,7 @@ fn u8() -> Result<(), RE> {
     set_seeds(77777);
     let pt = ranvv_u8(n,d)?;
     println!("Acentroid:\n{}", pt.acentroid().gr());
-    println!("G-median :\n{}", pt.gmedian(EPS).gr());
+    println!("Geometric median :\n{}", pt.gmedian(EPS).gr());
     let cov = pt.covar(&pt.acentroid())?;
     println!("Covariances:\n{cov}");
     let com = pt.covar(&pt.gmedian(EPS))?;
@@ -205,9 +203,9 @@ fn vecg() -> Result<(), RE> {
     println!("Joint Entropy:\t\t{}", v1.jointentropy(&v2)?.gr());
     println!("Dependence:\t\t{}", v1.dependence(&v2)?.gr());
     println!("Independence:\t\t{}", v1.independence(&v2)?.gr());
-    println!("Wedge product:\n{}",v1.wedge(&v2).gr());
+    println!("\nWedge product:\n{}",v1.wedge(&v2).gr());
     println!("Geometric product:\n{}",v1.geometric(&v2).gr());
-    println!("Sine: {} {} check: {}",v1.sine(&v2).gr(),v2.sine(&v1).gr(),(v1.varea(&v2)/v1.vmag()/v2.vmag()).gr());
+    println!("Sine v1v2: {}  v2v1: {} check: {}",v1.sine(&v2).gr(),v2.sine(&v1).gr(),(v1.varea(&v2)/v1.vmag()/v2.vmag()).gr());
     println!("Cosine:\t\t\t{}", v1.cosine(&v2).gr());
     println!("cos^2+sin^2 check:\t{}", (v1.cosine(&v2).powi(2)+v1.sine(&v2).powi(2)).gr());
     println!(
@@ -273,7 +271,7 @@ fn triangmat() -> Result<(), RE> {
     let (evecs,index) = chol.eigenvectors()?;
     println!("Eigenvectors:\n{}Their sort index by eigenvalues:\n{}",
         evecs.gr(),index.gr());
-    println!("Original data reduced to 3 dimensions:\n{}",
+    println!("Original data PCA reduced to 3 dimensions:\n{}",
         chol.pca_reduction(&pts,3)?.gr());
     Ok(())
 }
@@ -437,7 +435,7 @@ fn hulls() -> Result<(), RE> {
     let zeropts = pts.translate(&median)?;
     let (innerhull, outerhull) = zeropts.hulls();
     if innerhull.is_empty() || outerhull.is_empty() {
-        return re_error("arith","no hull points found")? };
+        return arith_error("no hull points found"); };
     let mad = zeropts.madgm(&median)?;
     println!("Madgm of zeropts: {}", mad.gr());
     println!(
