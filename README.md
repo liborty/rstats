@@ -25,6 +25,7 @@ use Rstats::{
     fromop,sumn,tm_stat,unit_matrix,nodata_error,data_error,
     arith_error,other_error };
 ```
+
 or just simply use everything:
 
 ```rust
