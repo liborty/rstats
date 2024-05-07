@@ -1,5 +1,5 @@
 use crate::*; // MStats, MinMax, MutVecg, Stats, VecVec };
-pub use indxvec::{printing::*, Printing, Indices, Vecops};
+pub use indxvec::{printing::*, Indices, Printing, Vecops};
 
 /// Meanings of 'kind' field. Note that 'Upper Symmetric' would represent the same full matrix as
 /// 'Lower Symmetric', so it is not used (lower symmetric matrix is never transposed)
@@ -43,7 +43,7 @@ impl TriangMat {
     /// Squared euclidian vector magnitude (norm) of the data vector
     pub fn magsq(&self) -> f64 {
         self.data.vmagsq()
-    }    
+    }
     /// Sum of the elements:  
     /// when applied to the wedge product **a∧b**, returns det(**a,b**)
     pub fn sum(&self) -> f64 {
@@ -90,53 +90,40 @@ impl TriangMat {
     /// Normalized full rows from a triangular matrix.
     /// When the matrix is symmetric, e.g. a covariance matrix, the result are its normalized eigenvectors
     pub fn normalize(&self) -> Vec<Vec<f64>> {
-        let mut fullcov = self.to_full(); 
-        fullcov.iter_mut().for_each(|eigenvector| eigenvector.munit());
+        let mut fullcov = self.to_full();
+        fullcov
+            .iter_mut()
+            .for_each(|eigenvector| eigenvector.munit());
         fullcov
     }
-
-    /// Normalized eigenvectors of A, given L.
-    /// Where L is the lower triangular Cholesky decomposition of covariance/comediance matrix for A.
-    /// Index gives the descending order of eigenvalues.
-    /// Can be used to order eigenvectors by their relative significance (covariance in their direction).
-    pub fn eigenvectors(&self) -> Result<(Vec<Vec<f64>>,Vec<usize>),RE> {
-        if self.is_empty() { return nodata_error("eigenvectors applied to empty L") };
-        let n = self.dim();
-        let mut evectors = Vec::new();
-        let eigenvals = self.eigenvalues();
-        for (rownum,&eval) in eigenvals.iter().enumerate() { 
-            let mut padded_row = self.row(rownum);  
-            for _i in rownum+1..n { padded_row.push(0_f64); };
-            let mut eigenvec = self
-                .forward_substitute(&padded_row.smult(eval))?;
-            eigenvec.munit(); // normalize the eigenvector
-            evectors.push(eigenvec);
+    /// Normalized eigenvectors of A=LL'.
+    /// Where L, supplied as self, is the lower triangular Cholesky decomposition 
+    /// of covariance/comediance matrix for A.
+    /// Returns `choose` number of eigenvectors corresponding to the largest eigenvalues.
+    pub fn eigenvectors(&self, choose: usize) -> Result<Vec<Vec<f64>>, RE> {
+        if self.is_empty() {
+            return nodata_error("eigenvectors: empty L");
         };
+        let n = self.dim();
+        if choose > n {
+            return data_error("eigenvectors: choose is more than the number of eigenvectors");
+        };
+        let mut eigenvectors = Vec::new();
+        let eigenvals = self.eigenvalues();
+        for (rownum, &eigenvalue) in eigenvals.iter().enumerate() {
+            let mut padded_row = self.row(rownum);
+            for _i in rownum+1..n {
+                padded_row.push(0_f64);
+            }
+            let mut eigenvec = self.forward_substitute(&padded_row.smult(eigenvalue))?;
+            eigenvec.munit(); // normalize the eigenvector
+            eigenvectors.push(eigenvec);
+        }
         // descending sort index of eigenvalues
-        let index = eigenvals
-            .isort_indexed(0..n, |a, b| b.total_cmp(a));
-        Ok((evectors,index))
-    }
-
-    /// PCA dimensional reduction using cholesky lower triangular matrix L (as self).
-    /// Projecting data using only `dimensions` number of eigenvectors,
-    /// corresponding to the largest eigenvalues.
-    pub fn pca_reduction(self, data: &[Vec<f64>], dimensions: usize) -> Result<Vec<Vec<f64>>,RE> {
-        if data.is_empty() { return nodata_error("pca_reduction: empty data") };
-        let n = data[0].len();        
-        if dimensions > n { return data_error("pca_reduction: new dimensions exceed those of data") };
-        if self.dim() != n { return data_error("pca_reduction: L and data dimensions mismatch") };
-        let mut res = Vec::with_capacity(data.len());
-        let (evecs,mut index) = self.eigenvectors()?; 
-        index.truncate(dimensions);
-        let pruned_evecs = index.unindex(&evecs, true); 
-        for dvec in data {
-            res.push( 
-                pruned_evecs
-                .iter().map(|ev| dvec.dotp(ev))
-            .collect::<Vec<f64>>())
-            };
-        Ok(res)   
+        let mut index = eigenvals.isort_indexed(0..n, |a, b| b.total_cmp(a));
+        index.truncate(choose); // keep only `choose` best
+        let pruned = index.unindex(&eigenvectors, true);
+        Ok(pruned)
     }
 
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
@@ -149,18 +136,23 @@ impl TriangMat {
     }
     /// Project symmetric/antisymmetric triangmat to a smaller one of the same kind,
     /// into a subspace specified by an ascending index of dimensions.
-    /// Deletes all rows and columns of the missing dimensions. 
+    /// Deletes all rows and columns of the missing dimensions.
     pub fn project(&self, index: &[usize]) -> Self {
         let mut res = Vec::with_capacity(sumn(index.len()));
         for &row_idx in index {
             let row = self.row(row_idx);
             for &column_idx in index {
-                if column_idx >= row.len() { break; };
+                if column_idx >= row.len() {
+                    break;
+                };
                 res.push(row[column_idx]);
-            };
-        };
-        TriangMat { kind:self.kind, data: res }   
-    }    
+            }
+        }
+        TriangMat {
+            kind: self.kind,
+            data: res,
+        }
+    }
 
     /// Extract one row from TriangMat
     pub fn row(&self, r: usize) -> Vec<f64> {
@@ -289,7 +281,7 @@ impl TriangMat {
     /// where `inv()` denotes matrix inverse, which is not explicitly computed.  
     /// Let  `x = inv(L)d` ( and therefore also  `x' = d'inv(L')` ).
     /// Substituting x into the above definition: `m(d) = sqrt(x'x) = |x|.  
-    /// We obtain x by setting Lx = d and solving by forward substitution. 
+    /// We obtain x by setting Lx = d and solving by forward substitution.
     /// All the calculations are done in the compact triangular form.
     pub fn mahalanobis<U>(&self, d: &[U]) -> Result<f64, RE>
     where

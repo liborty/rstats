@@ -351,6 +351,8 @@ pub trait VecVec<T> {
     fn covar(self, mid: &[f64]) -> Result<TriangMat, RE>;
     /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
     fn serial_covar(self, mid: &[f64]) -> Result<TriangMat, RE>;
+    /// Projects self onto a given basis, e.g. PCA dimensional reduction. 
+    fn projection(self, basis: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, RE>;
 }
 
 /// Methods applicable to slice of vectors of generic end type, plus one other argument
@@ -367,7 +369,7 @@ pub trait VecVecg<T, U> {
         self,
         v: &[U],
         f: impl Fn(&[T]) -> Result<Vec<f64>, RE>,
-    ) -> Result<(Vec<Vec<f64>>, f64), RE>;
+    ) -> Result<(Vec<Vec<f64>>, f64), RE>; 
     /// Individually weighted time series derivative of vectors
     fn wdvdt(self, ws: &[U], centre: &[f64]) -> Result<Vec<f64>, RE>;
     /// 1.0-dotproducts with **v**, in range [0,2]
@@ -380,7 +382,7 @@ pub trait VecVecg<T, U> {
     fn wradii(self, ws: &[U], gm: &[f64]) -> Result<(Vec<f64>, f64), RE>;
     /// wmadgm median of weighted radii from (weighted) gm: stable nd data spread estimator
     fn wmadgm(self, ws: &[U], wgm: &[f64]) -> Result<f64, RE>;
-    /// Leftmultiply (column) vector v by (rows of) matrix self
+    /// Leftmultiply (column) vector v by (rows of) matrix self: projects v to new basis self
     fn leftmultv(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// Rightmultiply (row) vector v by (columns of) matrix self
     fn rightmultv(self, v: &[U]) -> Result<Vec<f64>, RE>;

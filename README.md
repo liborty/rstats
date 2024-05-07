@@ -343,9 +343,11 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.1.5** - Added `projection` to trait `VecVecg` to project all self vectors to a new basis. This can be used e.g. for Principal Components Analysis data reduction, using some chosen eigenvectors as the new basis.
+
 * **Version 2.1.4** - Tidied up some error processing.
 
-* **Version 2.1.3** - Added `pca_reduction` to `struct TriangMat`. Changed `eigenvectors` to compute normalized eigenvectors of the original data rather than of its covariance matrix. That is now done by better named `normalize` (should you still need it). `Eigenvectors` solves forward substitution to find each vector.
+* **Version 2.1.3** - Changed `eigenvectors` to compute normalized eigenvectors of the original data rather than of its covariance matrix. That is now done by better named `normalize` (should you still need it). `Eigenvectors` solves forward substitution to find each vector.
 
 * **Version 2.1.2** - Added function `project` to project a `TriangMat` to a lower dimensional space of selected dimensions. Removed `rows` which was a duplicate of `dim`.
 

@@ -604,4 +604,29 @@ where
         Ok(TriangMat{ kind:2,data:covsums }) // kind 2 = symmetric, non transposed
     }
 
+    /// Projects self onto a given basis, e.g. PCA dimensional reduction  
+    /// The returned vectors will have lengths equal to the number of supplied basis vectors.
+    fn projection(self, basis: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, RE>
+    {
+        if self.is_empty() {
+            return nodata_error("projection: empty data");
+        };
+        let olddims = self[0].len();
+        if basis.len() > olddims { 
+            return data_error("projection: given too many basis vectors");
+        };
+        if olddims != basis[0].len() {
+            return data_error("projection: lengths of data vectors and basis vectors differ!");
+        };
+        let mut res = Vec::with_capacity(self.len()); 
+        for dvec in self {
+            res.push(
+                basis
+                    .iter()
+                    .map(|ev| dvec.dotp(ev))
+                    .collect::<Vec<f64>>(),
+            )
+        };
+        Ok(res)
+    }
 }

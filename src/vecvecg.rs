@@ -33,7 +33,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
             wsum += wf;            
             Ok(f(s)?.smult(wf))}).collect::<Result<Vec<Vec<f64>>,RE>>()?;
         Ok((resvecvec,wsum))
-    } 
+    }
 
     /// Individually time weighted time series derivative of vectors.
     /// Weighted arithmetic mean, minus the centre (geometric median). 
@@ -102,6 +102,7 @@ impl<T,U> VecVecg<T,U> for &[Vec<T>]
     }
 
     /// Rows of matrix self multiplying (column) vector v
+    /// Projects vector v onto the new basis given by self
     fn leftmultv(self,v: &[U]) -> Result<Vec<f64>,RE> {
         if self[0].len() != v.len() { 
             return data_error("leftmultv dimensions mismatch"); };

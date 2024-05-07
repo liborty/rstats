@@ -268,11 +268,10 @@ fn triangmat() -> Result<(), RE> {
         mahamag,
         mahamag / dmag
     );
-    let (evecs,index) = chol.eigenvectors()?;
-    println!("Eigenvectors:\n{}Their sort index by eigenvalues:\n{}",
-        evecs.gr(),index.gr());
-    println!("Original data PCA reduced to 3 dimensions:\n{}",
-        chol.pca_reduction(&pts,3)?.gr());
+    let evecs = chol.eigenvectors(3)?;
+    println!("Best three unit eigenvectors:\n{}",evecs.gr());
+    let newdat = pts.projection(&evecs)?; 
+    println!("Original data projected (PCA reduced) onto these eigenvectors:\n{}",newdat.gr());
     Ok(())
 }
 
