@@ -242,24 +242,30 @@ fn triangmat() -> Result<(), RE> {
     println!("\n{}", TriangMat::unit(7).gr());
     println!("\n{}", TriangMat::unit(7).to_full().gr());   
     println!("Diagonal: {}",TriangMat::unit(7).diagonal().gr());
-    let d = 10_usize;
-    let n = 90_usize;
+    // let cov = pts.covar(&pts.par_gmedian(EPS))?;
+    let cov = TriangMat{kind:2,
+        data:vec![2_f64,1.,3.,0.5,0.2,1.5,0.3,0.1,0.4,2.5]};
+    println!("Comediance matrix:\n{cov}");
+    println!("Projected to subspace given by [0,2,3]:\n{}",cov.project(&[0,2,3]));
+    let (evs,evecs) = cov.eigen()?;
+    println!("Eigenvalues by Householder decomposition:\n{}",evs.gr());
+    println!("Determinant (their product): {}",evs.iter().product::<f64>().gr()); 
+    println!("Eigenvectors by Householder decomposition:\n{}",evecs.gr());
+    let principals = cov.principals(2)?;
+    println!("Two Principal Components:\n{}",principals.gr());
+    let n = 10_usize;
+    let d = 4;
     println!("Testing on a random set of {n} points in {d} dimensional space"); 
     let pts = ranvv_f64_range(n,d, 0.0..=4.0)?;
-    // println!("\nTest data:\n{}",pts.gr());
-    // let transppt = pts.transpose();
-    let cov = pts.covar(&pts.par_gmedian(EPS))?;
-    println!("Comediance matrix:\n{cov}");
-    println!("Projected to subspace given by [0,2,4,6,9]:\n{}",cov.project(&[0,2,4,6,9]));
+    let newdat = pts.projection(&principals)?; 
+    println!("Random data projected (PCA reduced) onto these two eigenvectors:\n{}\n",newdat.gr());
     let chol = cov.cholesky()?;
-    println!("Cholesky L matrix:\n{chol}");
-    println!("Eigenvalues by Cholesky decomposition:\n{}",
-        chol.eigenvalues().gr());
-    println!("Determinant (their product): {}",chol.determinant().gr());  
-    let d = ranv_f64(d)?;
-    let dmag = d.vmag();
-    let mahamag = chol.mahalanobis(&d)?;
-    println!("Random test vector:\n{}", d.gr());
+    println!("Cholesky L matrix:\n{chol}"); 
+    let d = 4_usize;
+    let dv = ranv_f64(d)?;
+    let dmag = dv.vmag();
+    let mahamag = chol.mahalanobis(&dv)?;
+    println!("Random test vector:\n{}", dv.gr());
     println!(
         "Its Euclidian magnitude   {GR}{:>8.8}{UN}\
         \nIts Mahalanobis magnitude {GR}{:>8.8}{UN}\
@@ -268,10 +274,6 @@ fn triangmat() -> Result<(), RE> {
         mahamag,
         mahamag / dmag
     );
-    let evecs = chol.eigenvectors(3)?;
-    println!("Best three unit eigenvectors:\n{}",evecs.gr());
-    let newdat = pts.projection(&evecs)?; 
-    println!("Original data projected (PCA reduced) onto these eigenvectors:\n{}",newdat.gr());
     Ok(())
 }
 

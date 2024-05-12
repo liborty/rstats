@@ -57,7 +57,7 @@ where
             .collect()
     }
 
-    /// Normalize columns, so that they become unit row vectors
+    /// Normalize columns of a matrix, so that they become unit row vectors
     fn normalize(self) -> Result<Vec<Vec<f64>>, RE> {
         (0..self[0].len())
             .into_par_iter()
@@ -86,7 +86,7 @@ where
                 rlast.extend(rvec);
                 // drained, reflected with this uvec, and rebuilt, all remaining rows of r
             }
-            // these uvecs are columns, so they must saved column-wise
+            // these uvecs are columns, so they must be saved column-wise
             for (row, &usave) in uvec.iter().enumerate() {
                 ures[sumn(row + j) + j] = usave; // using triangular index
             }

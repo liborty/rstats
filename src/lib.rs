@@ -289,10 +289,12 @@ pub trait VecVec<T> {
     fn column(self, cnum: usize) -> Vec<f64>;
     /// Transpose slice of vecs matrix
     fn transpose(self) -> Vec<Vec<f64>>;
-    /// Normalize columns, so that they are all unit vectors
+    /// Normalize columns of a matrix and transpose them to rows
     fn normalize(self) -> Result<Vec<Vec<f64>>, RE>;
+    /// Projects self onto a given basis, e.g. PCA dimensional reduction. 
+    fn projection(self, basis: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, RE>;
     /// Householder's method returning matrices (U,R)
-    fn house_ur(self) -> Result<(TriangMat, TriangMat), RE>;
+    fn house_ur(self) -> Result<(TriangMat, TriangMat), RE>; 
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>, RE>;
     /// Joint entropy between a set of vectors of the same length
@@ -347,12 +349,10 @@ pub trait VecVec<T> {
     fn par_gmedian(self, eps: f64) -> Vec<f64>;
     /// Like `gmedian` but returns also the sum of reciprocals of distances
     fn gmparts(self, eps: f64) -> (Vec<f64>, f64);
-    /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
+    /// Lower triangular part of a (symmetric) covariance matrix of a Vec of f64 vectors.
     fn covar(self, mid: &[f64]) -> Result<TriangMat, RE>;
-    /// Flattened lower triangular part of a covariance matrix of a Vec of f64 vectors.
-    fn serial_covar(self, mid: &[f64]) -> Result<TriangMat, RE>;
-    /// Projects self onto a given basis, e.g. PCA dimensional reduction. 
-    fn projection(self, basis: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, RE>;
+    /// Lower triangular part of a (symmetric) covariance matrix of a Vec of f64 vectors.
+    fn serial_covar(self, mid: &[f64]) -> Result<TriangMat, RE>; 
 }
 
 /// Methods applicable to slice of vectors of generic end type, plus one other argument

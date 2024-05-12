@@ -344,11 +344,13 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 2.1.5** - Added `projection` to trait `VecVecg` to project all self vectors to a new basis. This can be used e.g. for Principal Components Analysis data reduction, using some chosen eigenvectors as the new basis.
+* **Version 2.1.6** - Added `eigen` and `principals` to TriangMat. `Eigen` computes eigenvalues and eigenvectors using Householder's UR decomposition. `Principals` uses these to order the eigenvectors by absolute values of eigenvalues and to choose the requested number of principal components.
+
+* **Version 2.1.5** - Added `projection` to trait `VecVecg` to project all self vectors to a new basis. This can be used e.g. for Principal Components Analysis data reduction, using some of the eigenvectors as the new basis.
 
 * **Version 2.1.4** - Tidied up some error processing.
 
-* **Version 2.1.3** - Changed `eigenvectors` to compute normalized eigenvectors of the original data rather than of its covariance matrix. That is now done by better named `normalize` (should you still need it). `Eigenvectors` solves forward substitution to find each vector.
+* **Version 2.1.3** - Added `normalize` (normalize columns of a matrix and transpose them to rows).
 
 * **Version 2.1.2** - Added function `project` to project a `TriangMat` to a lower dimensional space of selected dimensions. Removed `rows` which was a duplicate of `dim`.
 
@@ -357,8 +359,6 @@ Methods which take an additional generic vector argument, such as a vector of we
 * **Version 2.0.12** - added `depth_ratio`
 
 * **Version 2.0.11** - removed not so useful `variances`. Tidied up error processing in `vecvecg.rs`. Added to it `serial_covar` and `serial_wcovar` for when heavy loading of all the cores may not be wanted.
-
-* **Version 2.0.10** - Added `eigenvectors` to `struct TriangMat` (to enable PCA).
 
 * **Version 2.0.9** - Pruned some rarely used methods, simplified `gmparts` and `gmerror`, updated dependencies.
 

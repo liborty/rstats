@@ -79,28 +79,19 @@ impl TriangMat {
         }
         TriangMat { kind: 2, data }
     }
-    /// Eigenvalues from Cholesky L matrix
-    pub fn eigenvalues(&self) -> Vec<f64> {
-        self.diagonal().iter().map(|&x| x * x).collect::<Vec<f64>>()
+    
+    /// Eigenvalues and normalised eigenvectors of a symmetric (covariance matrix) C,
+    /// using Householder's decomposition C=UR.
+    pub fn eigen(&self) ->  Result<(Vec<f64>,Vec<Vec<f64>>), RE> {
+        let (u, r) = self.to_full().house_ur()?; 
+        Ok((
+            r.diagonal().iter().map(|&e| e.abs()).collect(),
+            u.house_uapply(&unit_matrix(r.dim())).normalize()?))
     }
-    /// Determinant from Cholesky L matrix
-    pub fn determinant(&self) -> f64 {
-        self.diagonal().iter().map(|&x| x * x).product()
-    }
-    /// Normalized full rows from a triangular matrix.
-    /// When the matrix is symmetric, e.g. a covariance matrix, the result are its normalized eigenvectors
-    pub fn normalize(&self) -> Vec<Vec<f64>> {
-        let mut fullcov = self.to_full();
-        fullcov
-            .iter_mut()
-            .for_each(|eigenvector| eigenvector.munit());
-        fullcov
-    }
-    /// Normalized eigenvectors of A=LL'.
-    /// Where L, supplied as self, is the lower triangular Cholesky decomposition 
-    /// of covariance/comediance matrix for A.
+    
+    /// Principal components of symmetric lower triangular matrix, such as covariance
     /// Returns `choose` number of eigenvectors corresponding to the largest eigenvalues.
-    pub fn eigenvectors(&self, choose: usize) -> Result<Vec<Vec<f64>>, RE> {
+    pub fn principals(&self, choose: usize) -> Result<Vec<Vec<f64>>, RE> {
         if self.is_empty() {
             return nodata_error("eigenvectors: empty L");
         };
@@ -108,21 +99,11 @@ impl TriangMat {
         if choose > n {
             return data_error("eigenvectors: choose is more than the number of eigenvectors");
         };
-        let mut eigenvectors = Vec::new();
-        let eigenvals = self.eigenvalues();
-        for (rownum, &eigenvalue) in eigenvals.iter().enumerate() {
-            let mut padded_row = self.row(rownum);
-            for _i in rownum+1..n {
-                padded_row.push(0_f64);
-            }
-            let mut eigenvec = self.forward_substitute(&padded_row.smult(eigenvalue))?;
-            eigenvec.munit(); // normalize the eigenvector
-            eigenvectors.push(eigenvec);
-        }
+        let (eigenvals,eigenvecs) = self.eigen()?; 
         // descending sort index of eigenvalues
         let mut index = eigenvals.isort_indexed(0..n, |a, b| b.total_cmp(a));
         index.truncate(choose); // keep only `choose` best
-        let pruned = index.unindex(&eigenvectors, true);
+        let pruned = index.unindex(&eigenvecs, true);
         Ok(pruned)
     }
 
