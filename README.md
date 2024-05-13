@@ -344,7 +344,7 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 2.1.6** - Added `eigen` and `principals` to TriangMat. `Eigen` computes eigenvalues and eigenvectors using Householder's UR decomposition. `Principals` uses these to order the eigenvectors by absolute values of eigenvalues and to choose the requested number of principal components.
+* **Version 2.1.7** - Removed suspect eigen values/vectors computations. Improved 'cholesky' test.
 
 * **Version 2.1.5** - Added `projection` to trait `VecVecg` to project all self vectors to a new basis. This can be used e.g. for Principal Components Analysis data reduction, using some of the eigenvectors as the new basis.
 

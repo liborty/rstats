@@ -246,21 +246,14 @@ fn triangmat() -> Result<(), RE> {
     let cov = TriangMat{kind:2,
         data:vec![2_f64,1.,3.,0.5,0.2,1.5,0.3,0.1,0.4,2.5]};
     println!("Comediance matrix:\n{cov}");
-    println!("Projected to subspace given by [0,2,3]:\n{}",cov.project(&[0,2,3]));
-    let (evs,evecs) = cov.eigen()?;
-    println!("Eigenvalues by Householder decomposition:\n{}",evs.gr());
-    println!("Determinant (their product): {}",evs.iter().product::<f64>().gr()); 
-    println!("Eigenvectors by Householder decomposition:\n{}",evecs.gr());
-    let principals = cov.principals(2)?;
-    println!("Two Principal Components:\n{}",principals.gr());
-    let n = 10_usize;
-    let d = 4;
-    println!("Testing on a random set of {n} points in {d} dimensional space"); 
-    let pts = ranvv_f64_range(n,d, 0.0..=4.0)?;
-    let newdat = pts.projection(&principals)?; 
-    println!("Random data projected (PCA reduced) onto these two eigenvectors:\n{}\n",newdat.gr());
-    let chol = cov.cholesky()?;
+    println!("Full Comediance matrix:\n{}",cov.to_full().gr());
+    let mut chol = cov.cholesky()?;
     println!("Cholesky L matrix:\n{chol}"); 
+    let full = chol.to_full();
+    chol.transpose();
+    let tfull = chol.to_full();
+    println!("Full L' matrix:\n{}",tfull.gr()); 
+    println!("Comediance reconstructed as LL':\n{}",full.matmult(&tfull)?.gr()); 
     let d = 4_usize;
     let dv = ranv_f64(d)?;
     let dmag = dv.vmag();
@@ -548,6 +541,7 @@ fn householder() -> Result<(), RE> {
         q.gr(),
         q.transpose().matmult(&q)?.gr()
     );
+    println!("normalized Q;\n{}",q.normalize()?.gr());
     println!(
         "Matrix a = QR recreated:\n{}",
         q.matmult(&r.to_full())?.gr()

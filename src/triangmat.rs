@@ -78,35 +78,7 @@ impl TriangMat {
             data.push(1_f64);
         }
         TriangMat { kind: 2, data }
-    }
-    
-    /// Eigenvalues and normalised eigenvectors of a symmetric (covariance matrix) C,
-    /// using Householder's decomposition C=UR.
-    pub fn eigen(&self) ->  Result<(Vec<f64>,Vec<Vec<f64>>), RE> {
-        let (u, r) = self.to_full().house_ur()?; 
-        Ok((
-            r.diagonal().iter().map(|&e| e.abs()).collect(),
-            u.house_uapply(&unit_matrix(r.dim())).normalize()?))
-    }
-    
-    /// Principal components of symmetric lower triangular matrix, such as covariance
-    /// Returns `choose` number of eigenvectors corresponding to the largest eigenvalues.
-    pub fn principals(&self, choose: usize) -> Result<Vec<Vec<f64>>, RE> {
-        if self.is_empty() {
-            return nodata_error("eigenvectors: empty L");
-        };
-        let n = self.dim();
-        if choose > n {
-            return data_error("eigenvectors: choose is more than the number of eigenvectors");
-        };
-        let (eigenvals,eigenvecs) = self.eigen()?; 
-        // descending sort index of eigenvalues
-        let mut index = eigenvals.isort_indexed(0..n, |a, b| b.total_cmp(a));
-        index.truncate(choose); // keep only `choose` best
-        let pruned = index.unindex(&eigenvecs, true);
-        Ok(pruned)
-    }
-
+    }    
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
     /// (row,column) coordinates within a lower/upper triangular matrix.
     /// Enables memory efficient representation of triangular matrices as one flat vector.
@@ -134,13 +106,11 @@ impl TriangMat {
             data: res,
         }
     }
-
     /// Extract one row from TriangMat
     pub fn row(&self, r: usize) -> Vec<f64> {
         let idx = sumn(r);
         self.data.get(idx..idx + r + 1).unwrap().to_vec()
     }
-
     /// Unpacks flat TriangMat Vec to triangular Vec<Vec> form
     pub fn to_triangle(&self) -> Vec<Vec<f64>> {
         let n = self.dim();
@@ -150,7 +120,6 @@ impl TriangMat {
         }
         res
     }
-
     /// TriangMat trivial implicit transposition
     pub fn transpose(&mut self) {
         if self.kind != 2 {
@@ -158,7 +127,6 @@ impl TriangMat {
             self.kind %= 6;
         }
     }
-
     /// Unpacks all kinds of TriangMat to equivalent full matrix form
     pub fn to_full(&self) -> Vec<Vec<f64>> {
         // full matrix dimension(s)
@@ -259,7 +227,7 @@ impl TriangMat {
     /// decomposition of covariance/comediance positive definite matrix: C = LL',
     /// where ' denotes transpose. Mahalanobis distance is defined as:    
     /// `m(d) = sqrt(d'inv(C)d) = sqrt(d'inv(LL')d) = sqrt(d'inv(L')inv(L)d)`,
-    /// where `inv()` denotes matrix inverse, which is not explicitly computed.  
+    /// where `inv()` denotes matrix inverse, which is never explicitly computed.  
     /// Let  `x = inv(L)d` ( and therefore also  `x' = d'inv(L')` ).
     /// Substituting x into the above definition: `m(d) = sqrt(x'x) = |x|.  
     /// We obtain x by setting Lx = d and solving by forward substitution.
