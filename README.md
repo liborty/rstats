@@ -141,9 +141,6 @@ is a scaled distance, whereby the scaling is derived from the axes of covariance
 * `Cholesky-Banachiewicz matrix decomposition`  
 decomposes any positive definite matrix S (often covariance or comediance matrix) into a product of two triangular matrices: `S = LL'`. The eigenvalues and the determinant are easily obtained from the diagonal of L. We implemented it on `TriangMat` for maximum efficiency. It is used mainly by `eigenvalues`, `eigenvectors`, `mahalanobis` and `pca_reduction`.
 
-* `PCA (Principal Components Analysis)`
-is typically used to reduce the dimensionality of data along some of the most significant directions of variation (eigenvectors).
-
 * `Householder's decomposition`  
 in cases where the precondition (positive definite matrix S) for the Cholesky-Banachiewicz decomposition is not satisfied, Householder's (UR) decomposition is often used as the next best method. It is implemented here on our efficient `struct TriangMat`.
 
@@ -344,7 +341,9 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
-* **Version 2.1.7** - Removed suspect eigen values/vectors computations. Improved 'cholesky' test.
+* **Version 2.1.8** - Improved `TriangMat::diagonal()`, restored `TriangMat::determinant()`, tidied up `triangmat` test.
+
+* **Version 2.1.7** - Removed suspect eigen values/vectors computations. Improved 'householder' test.
 
 * **Version 2.1.5** - Added `projection` to trait `VecVecg` to project all self vectors to a new basis. This can be used e.g. for Principal Components Analysis data reduction, using some of the eigenvectors as the new basis.
 

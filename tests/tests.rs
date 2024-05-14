@@ -241,19 +241,19 @@ fn trend() -> Result<(), RE> {
 fn triangmat() -> Result<(), RE> {
     println!("\n{}", TriangMat::unit(7).gr());
     println!("\n{}", TriangMat::unit(7).to_full().gr());   
-    println!("Diagonal: {}",TriangMat::unit(7).diagonal().gr());
     // let cov = pts.covar(&pts.par_gmedian(EPS))?;
     let cov = TriangMat{kind:2,
         data:vec![2_f64,1.,3.,0.5,0.2,1.5,0.3,0.1,0.4,2.5]};
-    println!("Comediance matrix:\n{cov}");
-    println!("Full Comediance matrix:\n{}",cov.to_full().gr());
+    println!("Symmetric positive definite matrix A:\n{cov}");
+    println!("Full form of A:\n{}",cov.to_full().gr());
     let mut chol = cov.cholesky()?;
-    println!("Cholesky L matrix:\n{chol}"); 
+    println!("Cholesky L matrix, such that A=LL':\n{chol}");
+    println!("Diagonal of L: {}",chol.diagonal().gr());
+    println!("Determinant det(A): {}",chol.determinant().gr());
     let full = chol.to_full();
     chol.transpose();
-    let tfull = chol.to_full();
-    println!("Full L' matrix:\n{}",tfull.gr()); 
-    println!("Comediance reconstructed as LL':\n{}",full.matmult(&tfull)?.gr()); 
+    let tfull = chol.to_full(); 
+    println!("A reconstructed as LL':\n{}",full.matmult(&tfull)?.gr()); 
     let d = 4_usize;
     let dv = ranv_f64(d)?;
     let dmag = dv.vmag();
@@ -261,11 +261,9 @@ fn triangmat() -> Result<(), RE> {
     println!("Random test vector:\n{}", dv.gr());
     println!(
         "Its Euclidian magnitude   {GR}{:>8.8}{UN}\
-        \nIts Mahalanobis magnitude {GR}{:>8.8}{UN}\
-        \nScale factor: {GR}{:>0.8}{UN}",
+        \nIts Mahalanobis magnitude {GR}{:>8.8}{UN}", 
         dmag,
-        mahamag,
-        mahamag / dmag
+        mahamag
     );
     Ok(())
 }
@@ -288,6 +286,34 @@ fn mat() -> Result<(), RE> {
     println!("\nM'M:\n{}", m.matmult(&t)?.gr());
     Ok(())
 }
+#[test]
+fn householder() -> Result<(), RE> {
+    let a = &[
+        vec![35., 1., 6., 26., 19., 24.],
+        vec![3., 32., 7., 21., 23., 25.],
+        vec![31., 9., 2., 22., 27., 20.],
+        vec![8., 28., 33., 17., 10., 15.],
+        vec![30., 5., 34., 12., 14., 16.],
+        vec![4., 36., 29., 13., 18., 11.],
+    ];
+    let atimesunit = a.matmult(&unit_matrix(a.len()))?;
+    println!("Matrix a:\n{}", atimesunit.gr());
+    let (u, r) = a.house_ur()?;
+    println!("house_ur u' {u}");
+    println!("house_ur r'  {r}");
+    let q = u.house_uapply(&unit_matrix(a.len().min(a[0].len())));
+    println!(
+        "Q matrix\n{}\nOthogonality of Q check (Q'*Q = I):\n{}",
+        q.gr(),
+        q.transpose().matmult(&q)?.gr()
+    );
+    println!("normalized Q;\n{}",q.normalize()?.gr());
+    println!(
+        "Matrix a = QR recreated:\n{}",
+        q.matmult(&r.to_full())?.gr()
+    );
+    Ok(())
+} 
 
 #[test]
 fn vecvec() -> Result<(), RE> {
@@ -516,35 +542,6 @@ fn hulls() -> Result<(), RE> {
     println!(
         "\nSigvec for all points: {} mod: {}",
         allptsig.gr(), allptsig.vmag().gr()
-    );
-    Ok(())
-}
-
-#[test]
-fn householder() -> Result<(), RE> {
-    let a = &[
-        vec![35., 1., 6., 26., 19., 24.],
-        vec![3., 32., 7., 21., 23., 25.],
-        vec![31., 9., 2., 22., 27., 20.],
-        vec![8., 28., 33., 17., 10., 15.],
-        vec![30., 5., 34., 12., 14., 16.],
-        vec![4., 36., 29., 13., 18., 11.],
-    ];
-    let atimesunit = a.matmult(&unit_matrix(a.len()))?;
-    println!("Matrix a:\n{}", atimesunit.gr());
-    let (u, r) = a.house_ur()?;
-    println!("house_ur u' {u}");
-    println!("house_ur r'  {r}");
-    let q = u.house_uapply(&unit_matrix(a.len().min(a[0].len())));
-    println!(
-        "Q matrix\n{}\nOthogonality of Q check (Q'*Q = I):\n{}",
-        q.gr(),
-        q.transpose().matmult(&q)?.gr()
-    );
-    println!("normalized Q;\n{}",q.normalize()?.gr());
-    println!(
-        "Matrix a = QR recreated:\n{}",
-        q.matmult(&r.to_full())?.gr()
     );
     Ok(())
 }

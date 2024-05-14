@@ -53,19 +53,28 @@ impl TriangMat {
     pub fn diagonal(&self) -> Vec<f64> {
         let mut next = 0_usize;
         let mut skip = 1;
-        self.data
-            .iter()
-            .enumerate()
-            .filter_map(|(i, &x)| {
-                if i == next {
-                    skip += 1;
-                    next = i + skip;
-                    Some(x)
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<f64>>()
+        let dat = &self.data; 
+        let mut diagonal = Vec::with_capacity(self.dim());
+        while next < dat.len() { 
+            diagonal.push(dat[next]);
+            skip += 1;
+            next += skip;
+        };
+        diagonal
+    }
+    /// Determinant of A = LL' is the square of the product of the diagonal elements
+    /// However, the diagonal elements squared are not the eigenvalues of A!
+    pub fn determinant(&self) -> f64 {
+        let mut next = 0_usize;
+        let mut skip = 1;
+        let mut product = 1_f64;
+        let dat = &self.data; 
+        while next < dat.len() {
+            product *= dat[next];
+            skip += 1;
+            next += skip;  
+        };
+        product*product
     }
     /// New unit (symmetric) TriangMat matrix (data size `n*(n+1)/2`)
     pub fn unit(n: usize) -> Self {
@@ -78,7 +87,7 @@ impl TriangMat {
             data.push(1_f64);
         }
         TriangMat { kind: 2, data }
-    }    
+    }
     /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
     /// (row,column) coordinates within a lower/upper triangular matrix.
     /// Enables memory efficient representation of triangular matrices as one flat vector.
