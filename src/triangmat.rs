@@ -62,7 +62,7 @@ impl TriangMat {
         };
         diagonal
     }
-    /// Determinant of A = LL' is the square of the product of the diagonal elements
+    /// Determinant of A = LL' is the square of the product of the diagonal elements.
     /// However, the diagonal elements squared are not the eigenvalues of A!
     pub fn determinant(&self) -> f64 {
         let mut next = 0_usize;
