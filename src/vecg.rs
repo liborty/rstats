@@ -33,13 +33,24 @@ where
         self.iter().map(|x| sf * x.clone().into()).collect()
     }
 
-    /// Scalar product.   
-    /// Must be of the same length - no error checking (for speed)
+    /// Scalar product (asymmetric)
+    /// Efficiently multiplies rows and columns
+    /// of triangular matrices, without having to 
+    /// fill them with zeroes and then multiply by them. 
+    /// Self, when shorter, acts as if zero filled at the end,
+    /// v, when shorter, acts as if zero filled at the beginning.
     fn dotp<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
-        self.iter()
-            .zip(v)
-            .map(|(xi, vi)| -> f64 { xi.clone().into() * vi.clone().into() })
-            .sum::<f64>()
+        if self.len() <= v.len() {
+            self.iter()
+                .zip(v)
+                .map(|(xi, vi)| { xi.clone().into() * vi.clone().into() })
+                .sum::<f64>()
+        } else {
+            self.iter().skip(self.len()-v.len())
+                .zip(v)  
+                .map(|(xi, vi)| { xi.clone().into() * vi.clone().into() })
+                .sum::<f64>()
+        }
     }
 
     /// Measure d of cloud density in (zero median) self direction:`0 <= d <= |self|`
@@ -167,8 +178,7 @@ where
     }
 
     /// cityblock distance
-    fn cityblockd<U: Clone + Into<f64>>(self, v: &[U]) -> f64
-    {
+    fn cityblockd<U: Clone + Into<f64>>(self, v: &[U]) -> f64 {
         self.iter()
             .zip(v)
             .map(|(xi, vi)| (xi.clone().into() - vi.clone().into()).abs())
@@ -211,7 +221,8 @@ where
         Ok((1.0
             + self.med_correlation(v, &mut |a, b| a.partial_cmp(b).unwrap_or(Equal), |a| {
                 identity(a.clone().into())
-            })?) / 2.0)
+            })?)
+            / 2.0)
     }
 
     /// Lower triangular covariance matrix for a single vector.

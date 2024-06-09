@@ -47,13 +47,12 @@ pub fn sumn(n: usize) -> usize {
 
 /// Generates full nxn unit (identity) matrix
 pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
-    let mut res: Vec<Vec<f64>> = Vec::with_capacity(n);
-    for i in 0..n {
-        let mut row = vec![0.; n];
-        row[i] = 1.0;
-        res.push(row);
-    }
-    res
+    (0..n).map(|i| basis_vec(i,n)).collect() 
+}
+
+/// Generates basis vector i of n dimensional space
+pub fn basis_vec(i: usize, n: usize) -> Vec<f64> {
+    (0..n).map(|d| if d==i { 1_f64 } else { 0_f64 }).collect() 
 }
 
 /// Holds measures of central tendency and spread.
@@ -85,13 +84,12 @@ impl std::fmt::Display for Params {
 /// The kind (field) of the TriangMat is encoded as 0..5. This enables
 /// trivial transpositions by: `(kind+3) % 6`.
 #[derive(Default, Clone)]
-pub struct TriangMat {
+pub struct TriangMat{
     /// Matrix kind encoding: 0=plain, 1=antisymmetric, 2=symmetric, +3=transposed
     pub kind: usize,
     /// Packed 1d vector of triangular matrix data of size `(n+1)*n/2`
-    pub data: Vec<f64>,
+    pub data: Vec<f64>
 }
-
 // Traits
 
 /// Statistical measures of a single variable (one generic vector of data) and

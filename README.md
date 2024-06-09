@@ -341,6 +341,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.1.9** - Added multiplications and more tests for `TriangMat`.
+
 * **Version 2.1.8** - Improved `TriangMat::diagonal()`, restored `TriangMat::determinant()`, tidied up `triangmat` test.
 
 * **Version 2.1.7** - Removed suspect eigen values/vectors computations. Improved 'householder' test.

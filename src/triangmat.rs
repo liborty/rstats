@@ -1,5 +1,5 @@
 use crate::*; // MStats, MinMax, MutVecg, Stats, VecVec };
-pub use indxvec::{printing::*, Indices, Printing, Vecops};
+pub use indxvec::{Indices, Printing, Vecops};
 
 /// Meanings of 'kind' field. Note that 'Upper Symmetric' would represent the same full matrix as
 /// 'Lower Symmetric', so it is not used (lower symmetric matrix is never transposed)
@@ -11,15 +11,24 @@ const KINDS: [&str; 5] = [
     "Upper antisymmetric",
 ];
 
+/// Translates single subscript to .data to a pair of  
+/// (row,column) coordinates within a lower/upper triangular matrix.
+/// Enables memory efficient representation of triangular matrices as one flat vector.
+fn rowcol(s: usize) -> (usize, usize) {
+        let row = ((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize; // cast truncates like .floor()
+        let column = s - row * (row + 1) / 2; // subtracting the last triangular number (of whole rows)
+        (row, column)
+}
+
 /// Display implementation for TriangMat
 impl std::fmt::Display for TriangMat {
     fn fmt<'a>(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let dim = Self::dim(self);
+        let n = Self::dim(self);  
         write!(
             f,
-            "{YL}{} ({dim}x{dim}) triangular matrix:\n{}",
+            "{} ({n}x{n}) triangular matrix\n{}",
             KINDS[self.kind],
-            self.to_triangle().gr()
+            (0..n).map(|r| self.row(r)).collect::<Vec<Vec<f64>>>().to_str()
         )
     }
 }
@@ -53,28 +62,19 @@ impl TriangMat {
     pub fn diagonal(&self) -> Vec<f64> {
         let mut next = 0_usize;
         let mut skip = 1;
-        let dat = &self.data; 
+        let dat = &self.data;
         let mut diagonal = Vec::with_capacity(self.dim());
-        while next < dat.len() { 
+        while next < dat.len() {
             diagonal.push(dat[next]);
             skip += 1;
             next += skip;
-        };
+        }
         diagonal
     }
-    /// Determinant of A = LL' is the square of the product of the diagonal elements.
-    /// However, the diagonal elements squared are not the eigenvalues of A!
+    /// Determinant of C = LL' is the square of the product of the diagonal elements of L
     pub fn determinant(&self) -> f64 {
-        let mut next = 0_usize;
-        let mut skip = 1;
-        let mut product = 1_f64;
-        let dat = &self.data; 
-        while next < dat.len() {
-            product *= dat[next];
-            skip += 1;
-            next += skip;  
-        };
-        product*product
+        let product = self.diagonal().iter().product::<f64>();
+        product * product
     }
     /// New unit (symmetric) TriangMat matrix (data size `n*(n+1)/2`)
     pub fn unit(n: usize) -> Self {
@@ -88,14 +88,7 @@ impl TriangMat {
         }
         TriangMat { kind: 2, data }
     }
-    /// Translates subscripts to a 1d vector, i.e. natural numbers, to a pair of
-    /// (row,column) coordinates within a lower/upper triangular matrix.
-    /// Enables memory efficient representation of triangular matrices as one flat vector.
-    pub fn rowcol(s: usize) -> (usize, usize) {
-        let row = ((((8 * s + 1) as f64).sqrt() - 1.) / 2.) as usize; // cast truncates like .floor()
-        let column = s - row * (row + 1) / 2; // subtracting the last triangular number (of whole rows)
-        (row, column)
-    }
+
     /// Project symmetric/antisymmetric triangmat to a smaller one of the same kind,
     /// into a subspace specified by an ascending index of dimensions.
     /// Deletes all rows and columns of the missing dimensions.
@@ -115,75 +108,209 @@ impl TriangMat {
             data: res,
         }
     }
-    /// Extract one row from TriangMat
+    /// Copy one raw data row from TriangMat
+    /// To interpret the kind (plain, symmetric, assymetric, transposed),
+    /// use `realrow,realcolumn,to_full`
     pub fn row(&self, r: usize) -> Vec<f64> {
         let idx = sumn(r);
-        self.data.get(idx..idx + r + 1).unwrap().to_vec()
-    }
-    /// Unpacks flat TriangMat Vec to triangular Vec<Vec> form
-    pub fn to_triangle(&self) -> Vec<Vec<f64>> {
-        let n = self.dim();
-        let mut res = Vec::with_capacity(n);
-        for r in 0..n {
-            res.push(self.row(r));
-        }
-        res
-    }
-    /// TriangMat trivial implicit transposition
+        let Some(slice) = self.data.get(idx..idx + r + 1) else {
+            eprintln!("row called with invalid {r}, returned empty Vec");
+            return Vec::new();
+        };
+        slice.to_vec()
+    }    
+    /// Trivial implicit transposition of a mutable TriangMat.
+    /// The untransposed matrix is gone.
+    /// To keep the original, use `clone_transpose` below
     pub fn transpose(&mut self) {
         if self.kind != 2 {
             self.kind += 3;
             self.kind %= 6;
         }
     }
-    /// Unpacks all kinds of TriangMat to equivalent full matrix form
-    pub fn to_full(&self) -> Vec<Vec<f64>> {
-        // full matrix dimension(s)
-        let n = self.dim();
-        let mut res = vec![vec!(0_f64; n); n];
-        // function pointer for primitive filling actions, depending on the matrix kind
-        let fill: fn(usize, usize, &mut Vec<Vec<f64>>, f64) = match self.kind % 3 {
-            // symmetric
-            2 => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
-                res[row][col] = item;
-                if row != col {
-                    res[col][row] = item;
-                };
-            },
-            // antisymmetric
-            1 => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
-                res[row][col] = item;
-                if row != col {
-                    res[col][row] = -item;
-                };
-            },
-            // plain
-            _ => |row: usize, col: usize, res: &mut Vec<Vec<f64>>, item: f64| {
-                res[row][col] = item;
-                if row != col {
-                    res[col][row] = 0_f64;
-                };
-            },
+    /// Implicit transposition of a cloned TriangMat. 
+    pub fn clone_transpose(&self) -> TriangMat { 
+        TriangMat { 
+            kind: if self.kind == 2 { self.kind } else { (self.kind + 3) % 6 }, 
+            data:self.data.clone()
+        } 
+    } 
+    /// One (short) row of a triangular matrix,  
+    /// assumed to be zero filled at the end.
+    /// When the matrix is transposed (kind>2),  
+    /// this will be a (short) column,
+    /// assumed to be zero filled upfront.
+    pub fn realrow(&self, r: usize) -> Vec<f64> {
+        let idx = sumn(r);
+        let Some(todiag) = self.data.get(idx..idx + r + 1) else {
+            eprintln!("fullrow called with invalid {r}, returned empty Vec");
+            return Vec::new();
         };
+        let mut rowvec = todiag.to_vec();
+        // continue down from the diagonal along its column
+        match self.kind % 3 {
+            // symmetric
+            2 => {
+                for row in r + 1..self.dim() {
+                    rowvec.push(self.data[sumn(row) + r]);
+                }
+            }
+            // antisymmetric
+            1 => {
+                for row in r + 1..self.dim() {
+                    rowvec.push(-self.data[sumn(row) + r]);
+                }
+            }
+            // neither = plain
+            _ => (), // rowvec.resize(self.dim(), 0_f64),
+        };
+        rowvec
+    }
+    /// One (short) column of a triangular matrix,
+    /// assumed to be zero filled upfront.
+    /// When the matrix is transposed (kind>2),  
+    /// this will be a (short) row,
+    /// assumed to be zero filled at the end.
+    pub fn realcolumn(&self, r: usize) -> Vec<f64> {
+        let idx = sumn(r);
+        // reflect the corresponding row up to diagonal
+        let mut columnvec = match self.kind % 3 {
+            // symmetric
+            2 => self
+                .data
+                .iter()
+                .skip(idx)
+                .take(r)
+                .copied()
+                .collect::<Vec<f64>>(),
+            // antisymmetric
+            1 => self
+                .data
+                .iter()
+                .skip(idx)
+                .take(r)
+                .map(|&dataitem| -dataitem)
+                .collect::<Vec<f64>>(),
+            // neither = plain, fill with zeroes
+            _ => Vec::with_capacity(self.dim()), // vec![0_f64; r]
+        };
+        // now add the column starting below the diagonal
+        for row in r..self.dim() {
+            columnvec.push(self.data[sumn(row) + r]);
+        }
+        columnvec
+    }
+    /// Unpacks all kinds of TriangMat to equivalent full matrix form
+    /// For multiplications, use `rmultv,lmultv,mult` instead, to save this unpacking.
+    pub fn to_full(&self) -> Vec<Vec<f64>> {
+        let n = self.dim();
         if self.kind > 2 {
             // transpose
-            for (i, &item) in self.data.iter().enumerate() {
-                let (row, col) = Self::rowcol(i);
-                fill(col, row, &mut res, item);
+            (0..self.dim())
+                .map(|rownum| {
+                    let mut column = vec![0_f64; rownum]; // fill zeroes
+                    column.append(&mut self.realcolumn(rownum));
+                    column
+                })
+                .collect::<Vec<Vec<f64>>>()
+        } else {
+            (0..self.dim())
+                .map(|rownum| {
+                    let mut shortrow = self.realrow(rownum);
+                    shortrow.resize(n, 0_f64); // fill zeroes
+                    shortrow
+                })
+                .collect::<Vec<Vec<f64>>>()
+        }
+    }
+    /// Postmultiply row vector v by triangular matrix `self`.
+    /// When a column of self is shorter, it is as if padded with zeroes upfront.
+    /// When v is shorter, it is as if padded with zeroes at the end.
+    pub fn rmultv<U>(&self, v: &[U]) -> Vec<f64>
+    where
+        U: Copy + PartialOrd + std::fmt::Display,
+        f64: From<U>,
+    {
+        if self.kind > 2 {
+            // transpose
+            (0..self.dim())
+                .map(|rownum| self.realrow(rownum).dotp(v))
+                .collect::<Vec<f64>>()
+        } else {
+            (0..self.dim())
+                .map(|rownum| v.dotp(&self.realcolumn(rownum)))
+                .collect::<Vec<f64>>()
+        }
+    }
+    /// Premultiply column vector v by triangular matrix `self`.
+    /// When a row of self is shorter, it is as if padded with zeroes at the end.
+    /// When v is shorter, it is as if padded with zeroes upfront.
+    /// The output is (assumed to be) a column.
+    pub fn lmultv<U>(&self, v: &[U]) -> Vec<f64>
+    where
+        U: Copy + PartialOrd + std::fmt::Display,
+        f64: From<U>,
+    {
+        if self.kind > 2 {
+            // transpose
+            (0..self.dim())
+                .map(|rownum| v.dotp(&self.realcolumn(rownum)))
+                .collect::<Vec<f64>>()
+        } else {
+            (0..self.dim())
+                .map(|rownum| self.realrow(rownum).dotp(v))
+                .collect::<Vec<f64>>()
+        }
+    }
+    /// One element of a product matrix, used by `mult`
+    /// given its precomputed (short) row/column vectors
+    /// self is used here only to test its `kind`
+    fn dotmult(&self, selfvec: &[f64], otvec: &[f64], otherkind: usize) -> f64 {
+        if self.kind > 2 {
+            if otherkind > 2 {
+                otvec.dotp(selfvec)
+            } else if selfvec.len() > otvec.len() {
+                selfvec.dotp(otvec)
+            } else {
+                otvec.dotp(selfvec)
+            }
+        } else if otherkind > 2 {
+            if selfvec.len() > otvec.len() {
+                otvec.dotp(selfvec)
+            } else {
+                selfvec.dotp(otvec)
             }
         } else {
-            // do not transpose
-            for (i, &item) in self.data.iter().enumerate() {
-                let (row, col) = Self::rowcol(i);
-                fill(row, col, &mut res, item);
-            }
-        };
-        res
+            selfvec.dotp(otvec)
+        }
     }
-
+    /// General multiplication of two triangular matrices (of any kind).
+    /// The triangular matrices are not expanded and
+    /// incomplete rows/columns are not even padded (very effient).
+    pub fn mult(&self, other: &Self) -> Vec<Vec<f64>> {
+        (0..self.dim())
+            .map(|rownum| {
+                let selfvec = if self.kind > 2 {
+                    self.realcolumn(rownum)
+                } else {
+                    self.realrow(rownum)
+                };
+                (0..other.dim())
+                    .map(|colnum| {
+                        let otvec = if other.kind > 2 {
+                            other.realrow(colnum)
+                        } else {
+                            other.realcolumn(colnum)
+                        };
+                        self.dotmult(&selfvec, &otvec, other.kind)
+                    })
+                    .collect::<Vec<f64>>()
+            })
+            .collect::<Vec<Vec<f64>>>()
+    }
     /// Efficient Cholesky-Banachiewicz matrix decomposition into `LL'`,
     /// where L is the returned lower triangular matrix and L' its upper triangular transpose.
-    /// Expects as input a symmetric positive definite matrix
+    /// Expects as input a positive definite matrix
     /// in TriangMat compact form, such as a covariance matrix produced by `covar`.
     /// The computations are all done on the compact form,
     /// making this implementation memory efficient for large (symmetric) matrices.
@@ -197,7 +324,7 @@ impl TriangMat {
         // n is the dimension of the implied square matrix.
         // Not needed as an extra argument. We compute it
         // by solving a quadratic equation in seqtosubs()
-        let (n, c) = TriangMat::rowcol(sl);
+        let (n, c) = rowcol(sl);
         // input is not a triangular number, is of wrong size
         if c != 0 {
             return data_error("cholesky needs a triangular matrix");
@@ -251,24 +378,20 @@ impl TriangMat {
 
     /// Solves for x the system of linear equations Lx = b,
     /// where L (self) is a lower triangular matrix.   
-    fn forward_substitute<U>(&self, b: &[U]) -> Result<Vec<f64>, RE>
+    pub fn forward_substitute<U>(&self, b: &[U]) -> Result<Vec<f64>, RE>
     where
         U: Copy + PartialOrd + std::fmt::Display,
-        f64: From<U>,
+        f64: From<U>
     {
-        let sl = self.data.len();
-        if sl < 3 {
+        if self.kind != 0 { return data_error("forward-substitute expects plain lower kind"); };
+        let data = &self.data;
+        if data.len() < 3 {
             return Err(RError::NoDataError(
                 "forward-substitute needs at least three items".to_owned(),
             ));
         };
-        // 2d matrix dimensions
-        let (n, c) = TriangMat::rowcol(sl);
-        if c != 0 {
-            return Err(RError::DataError(
-                "forward_substitute needs a triangular matrix".to_owned(),
-            ));
-        };
+        // 2d matrix dimension
+        let n = self.dim();
         // dimensions/lengths mismatch
         if n != b.len() {
             return Err(RError::DataError(
@@ -277,14 +400,15 @@ impl TriangMat {
         };
         let mut res: Vec<f64> = Vec::with_capacity(n); // result of the same size and shape as b
         res.push(f64::from(b[0]) / self.data[0]);
-        for (row, &bitem) in b.iter().enumerate().take(n).skip(1) {
-            let mut sumtodiag = 0_f64;
+        for (row, &b_component) in b.iter().enumerate().take(n).skip(1) {
             let rowoffset = sumn(row);
-            for (column, resc) in res.iter().enumerate().take(row) {
-                sumtodiag += self.data[rowoffset + column] * resc;
+            let mut sumtodiag = 0_f64;
+            for (column, res_component) in res.iter().enumerate() {
+                sumtodiag += self.data[rowoffset + column] * res_component;
             }
-            res.push((f64::from(bitem) - sumtodiag) / self.data[rowoffset + row]);
+            res.push((f64::from(b_component) - sumtodiag) / self.data[rowoffset + row]);
         }
+        // println!("Forward substitution: {}",res.gr());
         Ok(res)
     }
 
@@ -302,23 +426,4 @@ impl TriangMat {
         }
         qm
     }
-
-    /* Leftmultiply (column) vector v by upper triangular matrix self
-    fn utriangmultv<U>(self,v: &[U]) -> Result<Vec<f64>,RE>
-        where U: Copy+PartialOrd+std::fmt::Display, f64:From<U> {
-        let sl = self.data.len();
-        if sl < 1 { return Err(RError::NoDataError("utriangmultv needs at least one item"));};
-        // 2d matrix dimensions
-        let (n,c) = TriangMat::rowcol(sl);
-        if c != sl { return Err(RError::DataError("utriangmultv expects a triangular matrix"));};
-        if n != v.len() { return Err(RError::DataError("utriangmultv dimensions mismatch")); };
-        let mut res:Vec<f64> = vec![0_f64;n];
-        for row in 0..n {
-            for j in row..n {
-                res[row] += self.data[sumn(row)+j]*f64::from(v[j])
-            };
-        };
-        Ok(res)
-    }
-    */
 }

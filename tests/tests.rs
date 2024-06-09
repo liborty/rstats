@@ -238,33 +238,54 @@ fn trend() -> Result<(), RE> {
 }
 
 #[test]
-fn triangmat() -> Result<(), RE> {
+fn triangmat() -> Result<(), RE> { 
     println!("\n{}", TriangMat::unit(7).gr());
-    println!("\n{}", TriangMat::unit(7).to_full().gr());   
-    // let cov = pts.covar(&pts.par_gmedian(EPS))?;
+    println!("\n{}", unit_matrix(7).gr());
     let cov = TriangMat{kind:2,
         data:vec![2_f64,1.,3.,0.5,0.2,1.5,0.3,0.1,0.4,2.5]};
-    println!("Symmetric positive definite matrix A:\n{cov}");
+    println!("Symmetric positive definite matrix A\n{}",cov.gr());
     println!("Full form of A:\n{}",cov.to_full().gr());
     let mut chol = cov.cholesky()?;
-    println!("Cholesky L matrix, such that A=LL':\n{chol}");
+    println!("Cholesky L matrix, such that A=LL'\n{}",chol.gr());
     println!("Diagonal of L: {}",chol.diagonal().gr());
     println!("Determinant det(A): {}",chol.determinant().gr());
     let full = chol.to_full();
-    chol.transpose();
-    let tfull = chol.to_full(); 
-    println!("A reconstructed as LL':\n{}",full.matmult(&tfull)?.gr()); 
+    println!("Full L matrix\n{}",full.gr()); 
+    let tchol = &chol.clone_transpose();
+    println!("A reconstructed from full(L)full(L'):\n{}",full.matmult(&tchol.to_full())?.gr());
+    println!("A reconstructed by more efficient triangular multiplication LL'\n{}",chol.mult(tchol).gr());
     let d = 4_usize;
-    let dv = ranv_f64(d)?;
-    let dmag = dv.vmag();
-    let mahamag = chol.mahalanobis(&dv)?;
-    println!("Random test vector:\n{}", dv.gr());
+    let v = ranv_f64(d)?; 
+    println!("Random test vector:\n{}", v.gr());
+    let x =  chol.forward_substitute(&v)?;
+    println!("Forward solved Lx=v for x:\n{}",x.gr());
+    println!("Reconstructed v by Lx\n{}",chol.lmultv(&x).gr());
     println!(
         "Its Euclidian magnitude   {GR}{:>8.8}{UN}\
         \nIts Mahalanobis magnitude {GR}{:>8.8}{UN}", 
-        dmag,
-        mahamag
+        v.vmag(),
+        chol.mahalanobis(&v)?
     );
+    let a = &[
+        vec![35., 1., 6., 26., 19., 24.],
+        vec![3., 32., 7., 21., 23., 25.],
+        vec![31., 9., 32., 22., 27., 20.],
+        vec![8., 28., 33., 37., 10., 15.],
+        vec![30., 5., 34., 12., 44., 16.],
+        vec![4., 36., 29., 13., 18., 41.],
+    ];
+    println!("Positive definite matrix A:\n{}",a.gr());
+    let gm = a.gmedian(0.00001);
+    let cov = a.covar(&gm)?; 
+    println!("Comediance C of A:\n{GR}{cov}{UN} ");
+    println!("Row[2] of C\n{}",cov.realrow(2).gr());
+    chol = cov.cholesky()?;
+    println!("Cholesky of C:\n{GR}{chol}{UN} ");  
+    println!("Determinant of C: {}",chol.determinant().gr());
+    println!("Row[2] of Cholesky\n{}",chol.realrow(2).gr()); 
+    println!("Column[2] of Cholesky\n{}",chol.realcolumn(2).gr()); 
+    println!("C reconstructed by triangular multiplication LL'\n{}",
+    chol.mult(&TriangMat{kind:chol.kind+3,data:chol.data.clone()}).gr());
     Ok(())
 }
 
@@ -279,7 +300,7 @@ fn mat() -> Result<(), RE> {
     let t = m.transpose();
     println!("\nTransposed matrix M':\n{}", t.gr());
     let v = ranv_f64(d)?;
-    println!("\nVector V:\n{}", v.gr());
+    println!("\nVeátor V:\n{}", v.gr());
     println!("\nMV:\n{}", m.leftmultv(&v)?.gr());
     println!("\nVM':\n{}", t.rightmultv(&v)?.gr());
     println!("\nMM':\n{}", t.matmult(&m)?.gr());
