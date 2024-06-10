@@ -1,18 +1,22 @@
-use crate::*; //{RError, nodata_error, sumn, fromop, Params, MutVecg, Stats, Vecg, RE};
-use indxvec::Vecops;
-use medians::{Medianf64,Median};
+use crate::*;
 use core::cmp::Ordering::*;
+use indxvec::Vecops;
+use medians::{Median, Medianf64};
 
 impl<T> Stats for &[T]
 where
-   T: Clone + PartialOrd + Into<f64>
+    T: Clone + PartialOrd + Into<f64>,
 {
     /// Vector magnitude
     fn vmag(self) -> f64 {
         match self.len() {
             0 => 0_f64,
             1 => self[0].clone().into(),
-            _ => self.iter().map(|x| x.clone().into().powi(2)).sum::<f64>().sqrt(),
+            _ => self
+                .iter()
+                .map(|x| x.clone().into().powi(2))
+                .sum::<f64>()
+                .sqrt(),
         }
     }
 
@@ -36,7 +40,7 @@ where
                 if c.is_normal() {
                     Ok(1.0 / c)
                 } else {
-                    arith_error(format!("vreciprocal: bad component {c}"))
+                    arith_error("vreciprocal: bad component {c}")
                 }
             })
             .collect::<Result<Vec<f64>, RE>>()
@@ -58,9 +62,10 @@ where
     // Negated vector (all components swap sign)
     fn negv(self) -> Result<Vec<f64>, RE> {
         if self.is_empty() {
-            return nodata_error("negv: empty self vec");
-        };
-        Ok(self.iter().map(|x| (-x.clone().into())).collect())
+            nodata_error("negv: empty self vec")
+        } else {
+            Ok(self.iter().map(|x| (-x.clone().into())).collect())
+        }
     }
 
     /// Unit vector
@@ -116,9 +121,11 @@ where
 
     /// Median and Mad packed into in Params struct
     fn medmad(self) -> Result<Params, RE> {
-        let median = self.qmedian_by(&mut |a,b| a
-            .partial_cmp(b).unwrap_or(Equal), fromop)?;
-        Ok(Params{centre:median,spread:self.mad(median, fromop)})
+        let median = self.qmedian_by(&mut |a, b| a.partial_cmp(b).unwrap_or(Equal), fromop)?;
+        Ok(Params {
+            centre: median,
+            spread: self.mad(median, fromop),
+        })
     }
 
     /// Arithmetic mean and (population) standard deviation
@@ -133,7 +140,7 @@ where
     fn ameanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("ameanstd: empty self vec");
         };
         let nf = n as f64;
         let mut sx2 = 0_f64;
@@ -165,7 +172,7 @@ where
     fn awmean(self) -> Result<f64, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("awmean: empty self vec");
         };
         let mut iw = 0_f64; // descending linear weights
         Ok(self
@@ -192,7 +199,7 @@ where
     fn awmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("awmeanstd: empty self vec");
         };
         let mut sx2 = 0_f64;
         let mut w = 0_f64; // descending linear weights
@@ -224,13 +231,13 @@ where
     fn hmean(self) -> Result<f64, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("hmean: empty self vec");
         };
         let mut sum = 0_f64;
         for x in self {
             let fx: f64 = x.clone().into();
             if !fx.is_normal() {
-                return Err(RError::ArithError("attempt to divide by zero".to_owned()));
+                return arith_error("hmean: attempt to divide by zero");
             };
             sum += 1.0 / fx
         }
@@ -250,7 +257,7 @@ where
     fn hmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("hmeanstd: empty self vec");
         };
         let nf = n as f64;
         let mut sx2 = 0_f64;
@@ -258,7 +265,7 @@ where
         for x in self {
             let fx: f64 = x.clone().into();
             if !fx.is_normal() {
-                return Err(RError::ArithError("attempt to divide by zero".to_owned()));
+                return arith_error("hmeanstd: attempt to divide by zero");
             };
             let rx = 1_f64 / fx; // work with reciprocals
             sx2 += rx * rx;
@@ -282,14 +289,14 @@ where
     fn hwmean(self) -> Result<f64, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("hwmean: empty self vec");
         };
         let mut sum = 0_f64;
         let mut w = 0_f64;
         for x in self {
             let fx: f64 = x.clone().into();
             if !fx.is_normal() {
-                return Err(RError::ArithError("attempt to divide by zero".to_owned()));
+                return arith_error("hwmean: attempt to divide by zero");
             };
             w += 1_f64;
             sum += w / fx;
@@ -310,7 +317,7 @@ where
     fn hwmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("hwmeanstd: empty self vec");
         };
         let nf = sumn(n) as f64;
         let mut sx2 = 0_f64;
@@ -320,7 +327,7 @@ where
             w += 1_f64;
             let fx: f64 = x.clone().into();
             if !fx.is_normal() {
-                return Err(RError::ArithError("attempt to divide by zero".to_owned()));
+                return arith_error("hwmeanstd: attempt to divide by zero");
             };
             sx += w / fx; // work with reciprocals
             sx2 += w / (fx * fx);
@@ -346,15 +353,13 @@ where
     fn gmean(self) -> Result<f64, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("gmean: empty self vec");
         };
         let mut sum = 0_f64;
         for x in self {
             let fx: f64 = x.clone().into();
             if !fx.is_normal() {
-                return Err(RError::ArithError(
-                    "gmean attempt to take ln of zero".to_owned(),
-                ));
+                return arith_error("gmean: attempt to take ln of zero");
             };
             sum += fx.ln()
         }
@@ -375,16 +380,14 @@ where
     fn gmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("gmeanstd: empty self vec");
         };
         let mut sum = 0_f64;
         let mut sx2 = 0_f64;
         for x in self {
             let fx: f64 = x.clone().into();
             if !fx.is_normal() {
-                return Err(RError::ArithError(
-                    "gmeanstd attempt to take ln of zero".to_owned(),
-                ));
+                return arith_error("gmeanstd: attempt to take ln of zero");
             };
             let lx = fx.ln();
             sum += lx;
@@ -413,16 +416,14 @@ where
     fn gwmean(self) -> Result<f64, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("gwmean: empty self vec");
         };
         let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
         for x in self {
             let fx: f64 = x.clone().into();
             if !fx.is_normal() {
-                return Err(RError::ArithError(
-                    "gwmean attempt to take ln of zero".to_owned(),
-                ));
+                return arith_error("gwmean: attempt to take ln of zero");
             };
             w += 1_f64;
             sum += w * fx.ln();
@@ -442,7 +443,7 @@ where
     fn gwmeanstd(self) -> Result<Params, RE> {
         let n = self.len();
         if n == 0 {
-            return Err(RError::NoDataError("empty self vec".to_owned()));
+            return nodata_error("gwmeanstd: empty self vec");
         };
         let mut w = 0_f64; // ascending weights
         let mut sum = 0_f64;
@@ -450,9 +451,7 @@ where
         for x in self {
             let fx: f64 = x.clone().into();
             if !fx.is_normal() {
-                return Err(RError::ArithError(
-                    "gwmeanstd attempt to take ln of zero".to_owned(),
-                ));
+                return arith_error("gwmeanstd: attempt to take ln of zero");
             };
             let lnx = fx.ln();
             w += 1_f64;
@@ -505,9 +504,7 @@ where
         let (mut sx, mut sy, mut sxy, mut sx2, mut sy2) = (0_f64, 0_f64, 0_f64, 0_f64, 0_f64);
         let n = self.len();
         if n < 2 {
-            return Err(RError::NoDataError(
-                "autocorr needs a Vec of at least two items".to_owned(),
-            ));
+            return nodata_error("autocorr needs a Vec of at least two items");
         };
         let mut x: f64 = self[0].clone().into();
         self.iter().skip(1).for_each(|si| {
@@ -527,11 +524,9 @@ where
     fn lintrans(self) -> Result<Vec<f64>, RE> {
         let mm = self.minmax();
         let min = mm.min.into();
-        let range = mm.max.into() - min; 
+        let range = mm.max.into() - min;
         if range == 0_f64 {
-            return Err(RError::ArithError(
-                "lintrans self has zero range".to_owned(),
-            ));
+            return arith_error("lintrans: self has zero range");
         };
         Ok(self
             .iter()
@@ -545,13 +540,11 @@ where
     fn dfdt(self, centre: f64) -> Result<f64, RE> {
         let len = self.len();
         if len < 2 {
-            return Err(RError::NoDataError(format!(
-                "dfdt time series too short: {len}"
-            )));
+            return data_error("dfdt: time series too short: {len}");
         };
-        let mut weight = 0_f64; 
+        let mut weight = 0_f64;
         let mut sumwx = 0_f64;
-        for x in self.iter() { 
+        for x in self.iter() {
             weight += 1_f64;
             sumwx += weight * x.clone().into();
         }

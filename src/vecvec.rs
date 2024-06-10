@@ -555,13 +555,14 @@ where
             .par_iter()
             .fold(
                 || vec![0_f64; (d+1)*d/2],
-                | mut cov: Vec<f64>, p | {
+                | mut cov: Vec<f64>, selfp | {
                 let mut covsub = 0_usize; // subscript into the flattened array cov
-                let vm = p.vsub(mid);  // zero mean vector
-                vm.iter().enumerate().for_each(|(i,thisc)| 
+                let vm = selfp.vsub(mid);  // zero mean vector
+                vm.iter().enumerate().for_each(|(i,diag)| 
                     // its products up to and including the diagonal (itself)
+                    // the number of elements to take is always the subscript + 1!
                     vm.iter().take(i+1).for_each(|vmi| { 
-                        cov[covsub] += thisc*vmi;
+                        cov[covsub] += diag*vmi;
                         covsub += 1;
                         })); 
                 cov 
