@@ -89,25 +89,25 @@ impl TriangMat {
         TriangMat { kind: 2, data }
     }
 
-    /// Project symmetric/antisymmetric triangmat to a smaller one of the same kind,
-    /// into a subspace specified by an ascending index of dimensions.
-    /// Deletes all rows and columns of the missing dimensions.
+    /// Projects to a smaller TriangMat of the same kind,
+    /// in a subspace given by a subspace index. 
+    /// Deletes all the rows and columns of the other dimensions.
+    /// The kept ones retain their original order.
     pub fn project(&self, index: &[usize]) -> Self {
         let mut res = Vec::with_capacity(sumn(index.len()));
-        for &row_idx in index {
-            let row = self.row(row_idx);
-            for &column_idx in index {
-                if column_idx >= row.len() {
-                    break;
-                };
-                res.push(row[column_idx]);
-            }
-        }
+        for &rownum in index { 
+            let row = self.row(rownum);
+            for &colnum in index {
+                if colnum > rownum { break; };
+                res.push(row[colnum]);
+            };
+        }; 
         TriangMat {
             kind: self.kind,
             data: res,
         }
     }
+
     /// Copy one raw data row from TriangMat
     /// To interpret the kind (plain, symmetric, assymetric, transposed),
     /// use `realrow,realcolumn,to_full`

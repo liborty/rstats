@@ -299,7 +299,7 @@ datavec.somemethod::<f64>(arg)
 
 Methods implemented by this trait:
 
-* Vector additions, subtractions and products (scalar, kronecker, outer),
+* Vector additions, subtractions and products (scalar, Kronecker, outer),
 * Other relationships and measures of difference,
 * Pearson's, Spearman's and Kendall's correlations,
 * Joint pdf, joint entropy, statistical independence (based on mutual information).
@@ -340,6 +340,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own significance weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 2.1.10** - Added `project` of a `TriangMat` to a subspace given by a subspace index.
 
 * **Version 2.1.9** - Added multiplications and more tests for `TriangMat`.
 

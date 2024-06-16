@@ -246,14 +246,14 @@ fn triangmat() -> Result<(), RE> {
     println!("Symmetric positive definite matrix A\n{}",cov.gr());
     println!("Full form of A:\n{}",cov.to_full().gr());
     let mut chol = cov.cholesky()?;
-    println!("Cholesky L matrix, such that A=LL'\n{}",chol.gr());
+    println!("Cholesky L matrix, such that A=LL'\n{}",chol.gr());  
     println!("Diagonal of L: {}",chol.diagonal().gr());
     println!("Determinant det(A): {}",chol.determinant().gr());
     let full = chol.to_full();
     println!("Full L matrix\n{}",full.gr()); 
     let tchol = &chol.clone_transpose();
-    println!("A reconstructed from full(L)full(L'):\n{}",full.matmult(&tchol.to_full())?.gr());
-    println!("A reconstructed by more efficient triangular multiplication LL'\n{}",chol.mult(tchol).gr());
+    println!("A reconstructed from full(L)full(L')\n{}",full.matmult(&tchol.to_full())?.gr());
+    println!("A reconstructed by direct triangular multiplication LL'\n{}",chol.mult(tchol).gr());
     let d = 4_usize;
     let v = ranv_f64(d)?; 
     println!("Random test vector:\n{}", v.gr());
@@ -281,11 +281,13 @@ fn triangmat() -> Result<(), RE> {
     println!("Row[2] of C\n{}",cov.realrow(2).gr());
     chol = cov.cholesky()?;
     println!("Cholesky of C:\n{GR}{chol}{UN} ");  
+    let small_chol = chol.project(&[0,2,4,5]);
+    println!("Projected chol:\n{GR}{small_chol}{UN} ");    
     println!("Determinant of C: {}",chol.determinant().gr());
     println!("Row[2] of Cholesky\n{}",chol.realrow(2).gr()); 
     println!("Column[2] of Cholesky\n{}",chol.realcolumn(2).gr()); 
     println!("C reconstructed by triangular multiplication LL'\n{}",
-    chol.mult(&TriangMat{kind:chol.kind+3,data:chol.data.clone()}).gr());
+    chol.mult(&chol.clone_transpose()).gr());
     Ok(())
 }
 
