@@ -341,6 +341,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.1.11** - Some minor tidying up of code.
+
 * **Version 2.1.10** - Added `project` of a `TriangMat` to a subspace given by a subspace index.
 
 * **Version 2.1.9** - Added multiplications and more tests for `TriangMat`.

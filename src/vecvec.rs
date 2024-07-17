@@ -434,19 +434,20 @@ where
                     .map(|(vi, gi)| (vi.clone().into() - gi).powi(2))
                     .sum();
                 if mag > eps {
-                    let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
-                                                      // vsum increment by components
+                    // reciprocal of distance (scalar)
+                    let rec = 1.0_f64 / (mag.sqrt()); 
+                    // vsum increment by components
                     for (vi, gi) in p.iter().zip(&mut nextg) {
                         *gi += vi.clone().into() * rec
                     }
-                    nextrecsum += rec // add separately the reciprocals for final scaling
-                } // else simply ignore this point v, should its distance from g be <= eps
+                    // add the scaling reciprocal
+                    nextrecsum += rec 
+                } // ignore point p when |p-g| <= eps
             }
-            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
-            // eprintln!("recsum {}, nextrecsum {} diff {}",recsum,nextrecsum,nextrecsum-recsum);
+            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum); 
             if nextrecsum - recsum < eps {
                 return nextg;
-            }; // termination test
+            }; // termination
             g = nextg;
             recsum = nextrecsum;
         }
@@ -605,7 +606,7 @@ where
         Ok(TriangMat{ kind:2,data:covsums }) // kind 2 = symmetric, non transposed
     }
 
-    /// Projects self onto a given basis, e.g. PCA dimensional reduction  
+    /// Projects self onto a given basis, e.g. dimensional reduction  
     /// The returned vectors will have lengths equal to the number of supplied basis vectors.
     fn projection(self, basis: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, RE>
     {

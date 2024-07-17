@@ -310,11 +310,11 @@ impl TriangMat {
     }
     /// Efficient Cholesky-Banachiewicz matrix decomposition into `LL'`,
     /// where L is the returned lower triangular matrix and L' its upper triangular transpose.
-    /// Expects as input a positive definite matrix
-    /// in TriangMat compact form, such as a covariance matrix produced by `covar`.
-    /// The computations are all done on the compact form,
+    /// Takes a positive definite TriangMat matrix,
+    /// such as a covariance matrix produced by `covar`.
+    /// The computations are all done in the compact form,
     /// making this implementation memory efficient for large (symmetric) matrices.
-    /// Reports errors if the above conditions are not satisfied.
+    /// Reports errors if the input expectations are not satisfied.
     pub fn cholesky(&self) -> Result<Self, RE> {
         let sl = self.data.len();
         // input not long enough to compute anything
@@ -322,10 +322,9 @@ impl TriangMat {
             return nodata_error("cholesky needs at least 3x3 TriangMat");
         };
         // n is the dimension of the implied square matrix.
-        // Not needed as an extra argument. We compute it
-        // by solving a quadratic equation in seqtosubs()
+        // It is obtained by solving a quadratic equation in rowcol()
         let (n, c) = rowcol(sl);
-        // input is not a triangular number, is of wrong size
+        // if the input is not a triangular number, then it is of the wrong size
         if c != 0 {
             return data_error("cholesky needs a triangular matrix");
         };
@@ -386,27 +385,24 @@ impl TriangMat {
         if self.kind != 0 { return data_error("forward-substitute expects plain lower kind"); };
         let data = &self.data;
         if data.len() < 3 {
-            return Err(RError::NoDataError(
-                "forward-substitute needs at least three items".to_owned(),
-            ));
+            return nodata_error("forward-substitute needs at least three items");
         };
         // 2d matrix dimension
         let n = self.dim();
         // dimensions/lengths mismatch
         if n != b.len() {
-            return Err(RError::DataError(
-                "forward_substitute mismatch of self and b dimension".to_owned(),
-            ));
+            return data_error("forward_substitute mismatch of self and b dimension");
         };
-        let mut res: Vec<f64> = Vec::with_capacity(n); // result of the same size and shape as b
-        res.push(f64::from(b[0]) / self.data[0]);
+        let mut res: Vec<f64> = Vec::with_capacity(n); // result of the same size as b
+        if self.data[0].is_normal() { res.push( f64::from(b[0])/self.data[0] ) } 
+        else { return arith_error("forward-substitute given underconstrained system"); };
         for (row, &b_component) in b.iter().enumerate().take(n).skip(1) {
             let rowoffset = sumn(row);
-            let mut sumtodiag = 0_f64;
-            for (column, res_component) in res.iter().enumerate() {
-                sumtodiag += self.data[rowoffset + column] * res_component;
-            }
-            res.push((f64::from(b_component) - sumtodiag) / self.data[rowoffset + row]);
+            let sumtodiag = res.iter().enumerate().map(|(column, res_component)|
+                self.data[rowoffset + column] * res_component).sum::<f64>();            
+            if self.data[rowoffset + row].is_normal() { 
+                res.push((f64::from(b_component) - sumtodiag) / self.data[rowoffset + row]); }
+                else { return arith_error("forward-substitute given underconstrained system"); };            
         }
         // println!("Forward substitution: {}",res.gr());
         Ok(res)
