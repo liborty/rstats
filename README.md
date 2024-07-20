@@ -218,24 +218,27 @@ if dif <= 0_f64 {
 
 ### `struct Params`
 
-holds the central tendency of `1d` data, e.g. some kind of mean or median, and its spread measure, e.g. standard deviation or 'mad'.
+holds the central tendency of `1d` data, e.g. any kind of mean, or median, and any spread measure, e.g. standard deviation or 'mad'.
 
 ### `struct TriangMat`
 
-holds triangular matrices of all kinds, as described in Implementation section above. Beyond the usual conversion to full matrix form, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
+holds triangular matrices of all kinds, as described in Implementation section above. Beyond the expansion to their full matrix forms, a number of (the best) Linear Algebra methods are implemented directly on `TriangMat`, in module `triangmat.rs`, such as:
 
-* **Cholesky-Banachiewicz** matrix decomposition: `S = LL'` (where ' denotes the transpose). This decomposition is used by `mahalanobis`, `eigenvalues`, etc.
-* **Eigenvectors, eigenvalues, determinant**
-* **Mahalanobis Distance** for ML recognition tasks
-* **Householder UR** (M = QR) more general matrix decomposition
+* **Cholesky-Banachiewicz** matrix decomposition: `S = LL'` (where ' denotes the transpose). This decomposition is used by `mahalanobis`,  `determinant`, etc.
 
-Some methods, specifically the covariance/comedience calculations in `VecVec` and `VecVecg` return `TriangMat` matrices. These are positive definite, which makes the most efficient Cholesky-Banachiewicz decomposition applicable to them.
+* **Mahalanobis Distance** for ML recognition tasks.
+
+* Various operations on `TriangMat`s, including `mult`: matrix multiplication of two triangular or symmetric or antisymmetric matrices in this compact form, without their expansions to full matrices.
+
+Also, some methods, specifically the covariance/comedience calculations in `VecVec` and `VecVecg` return `TriangMat` matrices. These are positive definite, which makes the most efficient Cholesky-Banachiewicz decomposition applicable to them.
+
+Similarly, **Householder UR** (M = QR), which is a more general matrix decomposition, also returns `TriangMat`s.
 
 ## Quantify Functions (Dependency Injection)
 
 Most methods in `medians` and some in `indxvec` crates, e.g. `find_any` and `find_all`, require explicit closure passed to them, usually to tell them how to quantify input data of any type T into f64. Variety of different quantifying methods can then be dynamically employed.
 
-For example, in text analysis (`&str` end type), it can be the word length, or the numerical value of its first few letters, or the numerical value of its consonants, etc. Then we can sort them or find their means / medians / spreads under all these different measures. We do not necessarily want to explicitly store all such different quantifications values, as input data can be voluminous. It is preferable to be able to compute any of them on demand, using these closure arguments.
+For example, in text analysis (`&str` end type), it can be the word length, or the numerical value of its first few letters, or the numerical value of its consonants, etc. Then we can sort them or find their means / medians / spreads under all these different measures. We do not necessarily want to explicitly store all such different values, as input data can be voluminous. It is often preferable to be able to compute any of them on demand, using these closure arguments.
 
 When data is already of the required end-type, use the 'dummy' closure:
 
@@ -260,7 +263,7 @@ pub fn fromop<T: Clone + Into<f64>>(f: &T) -> f64 {
 }|
 ```
 
-The remaining general cases previously required new manual implementations to be written for the (global) `From` trait for each new type and for each different quantification method, and adding the trait bounds everywhere. Even then, the different implementations of `From` would conflict with each other. Now we can simply implement all the custom quantifications within the closures. This generality is obtained at the price of a small inconvenience: having to supply one of the above closures argument for the primitive types as well.
+The remaining general cases previously required new manual implementations to be written for the (global) `From` trait for each new type and for each different quantification method, plus adding its trait bounds everywhere. Even then, the different implementations of `From` would conflict with each other. Now we can simply implement all the custom quantifications within the closures. This generality is obtained at the price of a small inconvenience: having to supply one of the above closures argument for the primitive types as well.
 
 ## Auxiliary Functions
 
