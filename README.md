@@ -136,10 +136,15 @@ is the member of the set with the least sum of distances to all other members. E
 is the member of the set with the greatest sum of distances to all other members. Equivalently, it is the point furthest from the **gm** (has the maximum radius).
 
 * `Mahalanobis distance`  
-is a scaled distance, whereby the scaling is derived from the axes of covariances / `comediances` of the data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances / `comediances` are decreased. Requires matrix decomposition.
+is a scaled distance, whereby the scaling is derived from the axis of covariances / `comediances` of the data points cloud. Distances in the directions in which there are few points are increased and distances in the directions of significant covariances / `comediances` are decreased. Requires matrix decomposition. Mahalanobis distance is defined as: `m(d) = sqrt(d'inv(C)d) = sqrt(d'inv(LL')d) = sqrt(d'inv(L')inv(L)d)`, 
+where `inv()` denotes matrix inverse, which is never explicitly computed and ' denotes transposition.  
+Let  `x = inv(L)d` ( and therefore also  `x' = d'inv(L')` ).  
+Substituting x into the above definition: `m(d) = sqrt(x'x) = |x|.    
+We obtain x by setting Lx = d and solving by forward substitution.  
+All these calculations are done in the compact triangular form.
 
 * `Cholesky-Banachiewicz matrix decomposition`  
-decomposes any positive definite matrix S (often covariance or comediance matrix) into a product of two triangular matrices: `S = LL'`. The eigenvalues and the determinant are easily obtained from the diagonal of L. We implemented it on `TriangMat` for maximum efficiency. It is used mainly by `eigenvalues`, `eigenvectors`, `mahalanobis` and `pca_reduction`.
+decomposes any positive definite matrix S (often covariance or comediance matrix) into a product of lower triangular matrix L and its transpose L': `S = LL'`. The determinant of S can be obtained from the diagonal of L. We implemented the decomposition on `TriangMat` for maximum efficiency. It is used mainly by `mahalanobis`.
 
 * `Householder's decomposition`  
 in cases where the precondition (positive definite matrix S) for the Cholesky-Banachiewicz decomposition is not satisfied, Householder's (UR) decomposition is often used as the next best method. It is implemented here on our efficient `struct TriangMat`.
@@ -340,6 +345,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own significance weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 2.2.12** - Some corrections of Readme.md.
 
 * **Version 2.1.11** - Some minor tidying up of code.
 
