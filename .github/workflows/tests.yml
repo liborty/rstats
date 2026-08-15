@@ -7,7 +7,7 @@ jobs:
     name: Rstats 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@stable    
     - run: cargo test --release -- --nocapture --color always --test-threads=1  
     - run: cargo test --release geometric_medians -- --nocapture

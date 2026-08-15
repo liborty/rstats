@@ -1,8 +1,8 @@
 [package]
 name = "rstats"
-version = "2.1.12"
+version = "2.1.13"
 authors = ["Libor Spacek"]
-edition = "2021"
+edition = "2024"
 description = "Statistics, Information Measures, Data Analysis, Linear Algebra, Clifford Algebra, Machine Learning, Geometric Median, Matrix Decompositions, Mahalanobis Distance, Hulls, Multithreading.."
 readme = "README.md"
 homepage = "https://github.com/liborty/rstats"
@@ -11,7 +11,7 @@ license = "Apache-2.0"
 keywords = ["machine-learning","statistics","linear-algebra","geometric-median","data-analysis"]
 categories = ["science","mathematics","algorithms","visualization","rust-patterns"]
 include = [
-    "src/*.rs", 
+    "src/*.rs",
     "Cargo.toml",
     "README.md",
     "LICENSE"

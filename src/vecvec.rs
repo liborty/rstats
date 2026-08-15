@@ -7,42 +7,44 @@ impl<T> VecVec<T> for &[Vec<T>]
 where
     T: Clone + PartialOrd + Sync + Into<f64>,
     Vec<Vec<T>>: IntoParallelIterator,
-    Vec<T>: IntoParallelIterator{
-
+    Vec<T>: IntoParallelIterator,
+{
     /// Linearly weighted approximate time series derivative at the last point (present time).
-    /// Weighted average (backwards half filter), minus the median. 
+    /// Weighted average (backwards half filter), minus the median.
     fn dvdt(self, centre: &[f64]) -> Result<Vec<f64>, RE> {
         let len = self.len();
         if len < 2 {
             return nodata_error(format!("dvdt time series is too short: {len}"));
         };
-        let mut weight = 1_f64; 
-        let mut sumwv:Vec<f64> = self[0].iter().map(|x| x.clone().into()).collect();
-        for v in self.iter().skip(1) { 
+        let mut weight = 1_f64;
+        let mut sumwv: Vec<f64> = self[0].iter().map(|x| x.clone().into()).collect();
+        for v in self.iter().skip(1) {
             weight += 1_f64;
             sumwv.mutvadd(&v.smult(weight));
-        };
-        Ok(sumwv.smult(1.0/(sumn(len) as f64)).vsub(centre))
+        }
+        Ok(sumwv.smult(1.0 / (sumn(len) as f64)).vsub(centre))
     }
 
     /// Maps scalar valued closure onto all vectors in self and collects
-    fn scalar_fn(self,f: impl Fn(&[T]) -> Result<f64,RE>) -> Result<Vec<f64>,RE> {
-        self.iter().map(|s|-> Result<f64,RE> {
-            f(s) }).collect::<Result<Vec<f64>,RE>>()
+    fn scalar_fn(self, f: impl Fn(&[T]) -> Result<f64, RE>) -> Result<Vec<f64>, RE> {
+        self.iter()
+            .map(|s| -> Result<f64, RE> { f(s) })
+            .collect::<Result<Vec<f64>, RE>>()
     }
 
     /// Maps vector valued closure onto all vectors in self and collects
-    fn vector_fn(self,f: impl Fn(&[T]) -> Result<Vec<f64>,RE>) -> Result<Vec<Vec<f64>>,RE> {
-        self.iter().map(|s|-> Result<Vec<f64>,RE> {
-            f(s) }).collect::<Result<Vec<Vec<f64>>,RE>>()
-    } 
+    fn vector_fn(self, f: impl Fn(&[T]) -> Result<Vec<f64>, RE>) -> Result<Vec<Vec<f64>>, RE> {
+        self.iter()
+            .map(|s| -> Result<Vec<f64>, RE> { f(s) })
+            .collect::<Result<Vec<Vec<f64>>, RE>>()
+    }
 
     /// Exact radii magnitudes to all member points from the Geometric Median.
     /// More accurate and usually faster as well than the approximate `eccentricities` above,
     /// especially when there are many points.
     fn radii(self, gm: &[f64]) -> Result<Vec<f64>, RE> {
-        self.scalar_fn(|s| Ok(gm.vdist(s)))  
-    }   
+        self.scalar_fn(|s| Ok(gm.vdist(s)))
+    }
 
     /// Selects a column by number
     fn column(self, cnum: usize) -> Vec<f64> {
@@ -70,7 +72,7 @@ where
     /// R is the upper triangular decomposition factor.
     /// Here both U and R are returned for convenience in their transposed lower triangular forms.
     /// Transposed input self for convenience, so that original columns get accessed easily as rows.
-    fn house_ur(self) -> Result<(TriangMat, TriangMat),RE> {
+    fn house_ur(self) -> Result<(TriangMat, TriangMat), RE> {
         let n = self.len();
         let d = self[0].len();
         let min = if d <= n { d } else { n }; // minimal dimension
@@ -78,8 +80,9 @@ where
         let mut ures = vec![0.; sumn(min)];
         let mut rres = Vec::with_capacity(sumn(min));
         for j in 0..min {
-            let Some(slc) = r[j].get(j..d) 
-            else { return data_error("house_ur: failed to extract uvec slice"); };
+            let Some(slc) = r[j].get(j..d) else {
+                return data_error("house_ur: failed to extract uvec slice");
+            };
             let uvec = slc.house_reflector();
             for rlast in r.iter_mut().take(d).skip(j) {
                 let rvec = uvec.house_reflect::<f64>(&rlast.drain(j..d).collect::<Vec<f64>>());
@@ -120,9 +123,10 @@ where
         let mut tuples = self.transpose();
         let df = tuples.len() as f64; // for turning counts to probabilities
         // lexical sort to group together occurrences of identical tuples
-        tuples.sort_unstable_by(
-            |a, b| a.partial_cmp(b)
-            .expect("jointpdfn: tuples comparison failed"));
+        tuples.sort_unstable_by(|a, b| {
+            a.partial_cmp(b)
+                .expect("jointpdfn: tuples comparison failed")
+        });
         let mut count = 1_usize; // running count
         let mut lastindex = 0; // initial index of the last unique tuple
         tuples.iter().enumerate().skip(1).for_each(|(i, ti)| {
@@ -160,9 +164,9 @@ where
     /// Flattened lower triangular part of a symmetric matrix for vectors in self.
     /// The upper triangular part can be trivially generated for all j>i by: c(j,i) = c(i,j).
     /// Applies closure f to compute a scalar binary relation between all pairs of vector
-    /// components of self.   
+    /// components of self.
     /// The closure typically invokes one of the methods from Vecg trait (in vecg.rs),
-    /// such as dependencies.  
+    /// such as dependencies.
     /// Example call: `pts.transpose().crossfeatures(|v1,v2| v1.mediancorrf64(v2)?)?`
     /// computes median correlations between all column vectors (features) in pts.
     fn crossfeatures(self, f: fn(&[T], &[T]) -> f64) -> Result<TriangMat, RE> {
@@ -171,7 +175,7 @@ where
             data: (0..self.len())
                 .into_par_iter()
                 .flat_map(|i| {
-                    (0..i+1)
+                    (0..i + 1)
                         .map(|j| f(&self[i], &self[j]))
                         .collect::<Vec<f64>>()
                 })
@@ -215,29 +219,29 @@ where
     }
 
     /// gcentroid = multidimensional geometric mean
-    fn gcentroid(self) -> Result<Vec<f64>,RE> { 
-        let logvs = self.iter().map(|v|-> Result<Vec<f64>,RE> {
-            Ok(v.vunit()?.smult(v.vmag().ln())) })
-            .collect::<Result<Vec<Vec<f64>>,RE>>()?;
+    fn gcentroid(self) -> Result<Vec<f64>, RE> {
+        let logvs = self
+            .iter()
+            .map(|v| -> Result<Vec<f64>, RE> { Ok(v.vunit()?.smult(v.vmag().ln())) })
+            .collect::<Result<Vec<Vec<f64>>, RE>>()?;
         let logcentroid = logvs.acentroid();
         Ok(logcentroid.vunit()?.smult(logcentroid.vmag().exp()))
     }
 
     /// hcentroid =  multidimensional harmonic mean
-    fn hcentroid(self) -> Result<Vec<f64>,RE> {
+    fn hcentroid(self) -> Result<Vec<f64>, RE> {
         let mut centre = vec![0_f64; self[0].len()];
         for v in self {
             centre.mutvadd(&v.vinverse()?)
         }
-        Ok(centre  
-            .vinverse()?.smult(self.len() as f64)) 
+        Ok(centre.vinverse()?.smult(self.len() as f64))
     }
 
     /// For each member point, gives its sum of distances to all other points and their MinMax
     fn distsums(self) -> Vec<f64> {
         let n = self.len();
         let mut dists = vec![0_f64; n]; // distances accumulator for all points
-                                        // examine all unique pairings (lower triangular part of symmetric flat matrix)
+        // examine all unique pairings (lower triangular part of symmetric flat matrix)
         self.iter().enumerate().for_each(|(i, thisp)| {
             self.iter().take(i).enumerate().for_each(|(j, thatp)| {
                 let d = thisp.vdist(thatp); // calculate each distance relation just once
@@ -250,11 +254,11 @@ where
 
     /// Points nearest and furthest from the geometric median.
     /// Returns struct MinMax{min,minindex,max,maxindex}
-    fn medout(self, gm: &[f64]) -> Result<MinMax<f64>,RE> {
+    fn medout(self, gm: &[f64]) -> Result<MinMax<f64>, RE> {
         Ok(self.scalar_fn(|s| Ok(gm.vdist(s)))?.minmax())
     }
 
-    /// Radius of a point specified by its subscript.    
+    /// Radius of a point specified by its subscript.
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE> {
         if i > self.len() {
             return data_error("radius: invalid subscript");
@@ -264,7 +268,7 @@ where
 
     /// Arith mean and std (in Params struct), Median and MAD (in another Params struct), Medoid and Outlier (in MinMax struct)
     /// of scalar radii of points in self.
-    /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).  
+    /// These are new robust measures of a cloud of multidimensional points (or multivariate sample).
     fn eccinfo(self, gm: &[f64]) -> Result<(Params, Params, MinMax<f64>), RE>
     where
         Vec<f64>: FromIterator<f64>,
@@ -272,12 +276,19 @@ where
         let rads: Vec<f64> = self.radii(gm)?;
         let radsmed = rads.medf_unchecked();
         let radsmad = rads.madf(radsmed);
-        Ok((rads.ameanstd()?, Params{centre:radsmed,spread:radsmad}, rads.minmax()))
+        Ok((
+            rads.ameanstd()?,
+            Params {
+                centre: radsmed,
+                spread: radsmad,
+            },
+            rads.minmax(),
+        ))
     }
 
     /// Quasi median, recommended only for comparison purposes
     fn quasimedian(self) -> Result<Vec<f64>, RE> {
-        Ok((0..self[0].len()) 
+        Ok((0..self[0].len())
             .map(|colnum| self.column(colnum).medf_checked())
             .collect::<Result<Vec<f64>, MedError<String>>>()?)
     }
@@ -286,7 +297,7 @@ where
     /// Adds only points that are specified in idx.
     /// Self should be zero median vectors, previously obtained by `self.translate(&gm)`.
     /// The result is normalized to unit vector.
-    fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> { 
+    fn sigvec(self, idx: &[usize]) -> Result<Vec<f64>, RE> {
         let dims = self[0].len();
         if self.is_empty() {
             return nodata_error("sigvec given empty data");
@@ -300,24 +311,25 @@ where
                     continue;
                 };
                 hemis[j] += cf;
-                };
-            }; 
+            }
+        }
         hemis.vunit()
     }
 
     /// madgm median of distances from gm: stable nd data spread measure
     fn madgm(self, gm: &[f64]) -> Result<f64, RE> {
-        if self.is_empty() { 
-            return nodata_error("madgm given empty vec!"); };     
+        if self.is_empty() {
+            return nodata_error("madgm given empty vec!");
+        };
         Ok(self.radii(gm)?.medf_unchecked())
-     }
+    }
 
     /// stdgm mean of distances from gm: nd data spread measure, aka nd standard deviation
-    fn stdgm(self, gm: &[f64]) -> Result<f64,RE> { 
-        if self.is_empty() { 
-            return nodata_error("stdgm given empty vec!")?; };     
-        Ok( self.iter()
-            .map(|s| s.vdist(gm)).sum::<f64>()/self.len() as f64 ) 
+    fn stdgm(self, gm: &[f64]) -> Result<f64, RE> {
+        if self.is_empty() {
+            return nodata_error("stdgm given empty vec!")?;
+        };
+        Ok(self.iter().map(|s| s.vdist(gm)).sum::<f64>() / self.len() as f64)
     }
 
     /// Outer hull subscripts from their square radii and their sort index
@@ -328,12 +340,14 @@ where
         'ploop: for i in (0..len).rev() {
             let ipoint = &self[sindex[i]];
             // against jpoints with greater radius
-            for j in (i+1..len).rev() {  
-                // this jpoint lies outside the normal plane to ipoint => reject ipoint  
-                if self[sindex[j]].dotp(ipoint) > sqrads[sindex[i]] { continue 'ploop; };
-            };
-            hullindex.push(sindex[i]);  // passed
-        };      
+            for j in (i + 1..len).rev() {
+                // this jpoint lies outside the normal plane to ipoint => reject ipoint
+                if self[sindex[j]].dotp(ipoint) > sqrads[sindex[i]] {
+                    continue 'ploop;
+                };
+            }
+            hullindex.push(sindex[i]); // passed
+        }
         hullindex
     }
 
@@ -342,72 +356,84 @@ where
         let mut hullindex: Vec<usize> = Vec::new();
         let len = sindex.len();
         // test ipoints in ascending sqrads order
-        'ploop: for i in 0..len {  
+        'ploop: for i in 0..len {
             let ipoint = &self[sindex[i]];
             // against jpoints with smaller radius
-            for j in 0..i { 
-                // this jpoint lies inside ipoint => reject ipoint  
-                if self[sindex[j]].dotp(ipoint) > sqrads[sindex[j]] { continue 'ploop; };
-            };
-            hullindex.push(sindex[i]);  // ipoint passed
-        };      
+            for j in 0..i {
+                // this jpoint lies inside ipoint => reject ipoint
+                if self[sindex[j]].dotp(ipoint) > sqrads[sindex[j]] {
+                    continue 'ploop;
+                };
+            }
+            hullindex.push(sindex[i]); // ipoint passed
+        }
         hullindex
     }
 
     /// Likelihood of zero median point **p** belonging to zero median data cloud `self`,
-    /// based on the points outside of the normal plane through **p**. 
-    /// Returns the sum of unit vectors of its outside points, projected onto unit **p**. 
+    /// based on the points outside of the normal plane through **p**.
+    /// Returns the sum of unit vectors of its outside points, projected onto unit **p**.
     /// Index should be in the descending order of magnitudes of self points (for efficiency).
-    fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64,RE> {
+    fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64, RE> {
         let psq = p.vmagsq();
-        let mut sumvec = vec![0_f64;p.len()]; 
+        let mut sumvec = vec![0_f64; p.len()];
         for &i in descending_index {
             let s = &self[i];
             let ssq = s.vmagsq();
-            if ssq <= psq { break; }; // no more outside points
-            if s.dotp(p) > psq { sumvec.mutvadd(&s.smult(1.0/(ssq.sqrt()))) };
-        };
+            if ssq <= psq {
+                break;
+            }; // no more outside points
+            if s.dotp(p) > psq {
+                sumvec.mutvadd(&s.smult(1.0 / (ssq.sqrt())))
+            };
+        }
         Ok(sumvec.dotp(&p.vunit()?))
     }
 
     /// Likelihood of zero median point **p** belonging to zero median data cloud `self`,
-    /// based on the proportion of points outside of the normal plane through **p**. 
+    /// based on the proportion of points outside of the normal plane through **p**.
     /// Index should be in the descending order of magnitudes of self points (for efficiency).
     fn depth_ratio(self, descending_index: &[usize], p: &[f64]) -> f64 {
         let psq = p.vmagsq();
-        let mut num = 0_f64; 
+        let mut num = 0_f64;
         for &i in descending_index {
             let s = &self[i];
             let ssq = s.vmagsq();
-            if ssq <= psq { break; }; // no more outside points
-            if s.dotp(p) > psq { num += 1.0; };
-        };
-        num/(self.len() as f64)
+            if ssq <= psq {
+                break;
+            }; // no more outside points
+            if s.dotp(p) > psq {
+                num += 1.0;
+            };
+        }
+        num / (self.len() as f64)
     }
- 
+
     /// Collects indices of inner hull and outer hull, from zero median points in self.
-    /// We put a plane trough data point A, normal to its zero median vector **a**.     
-    /// B is an inner hull point, when it lies inside all other points' normal planes.  
+    /// We put a plane trough data point A, normal to its zero median vector **a**.
+    /// B is an inner hull point, when it lies inside all other points' normal planes.
     /// C is an outer hull point, when there is no other point outside its own normal plane.
-    /// B can belong to both hulls, as when all the points lie on a hyper-sphere around **gm**.   
-    /// The testing is done in increasing (decreasing) radius order.  
+    /// B can belong to both hulls, as when all the points lie on a hyper-sphere around **gm**.
+    /// The testing is done in increasing (decreasing) radius order.
     /// B lies outside the normal plane of **a**, when its projection onto unit **a** exceeds
-    /// `|a|: |b|cos(θ) > |a| => a*b > |a|^2`,  
+    /// `|a|: |b|cos(θ) > |a| => a*b > |a|^2`,
     /// such B immediately fails as a candidate for the inner hull.
-    /// Using square magnitudes, `|a|^2` saves taking square roots and dividing the dot product by |a|.  
+    /// Using square magnitudes, `|a|^2` saves taking square roots and dividing the dot product by |a|.
     /// Similarly for the outer hull, where A and B simply swap roles.
     fn hulls(self) -> (Vec<usize>, Vec<usize>) {
         let sqradii = self.iter().map(|s| s.vmagsq()).collect::<Vec<f64>>();
-        let sindex = sqradii.mergesort_indexed();  
-        let innerindex = self.inner_hull(&sqradii,&sindex); 
-        let outerindex = self.outer_hull(&sqradii,&sindex); 
+        let sindex = sqradii.mergesort_indexed();
+        let innerindex = self.inner_hull(&sqradii, &sindex);
+        let outerindex = self.outer_hull(&sqradii, &sindex);
         (innerindex, outerindex)
     }
 
     /// Geometric median's residual error
     fn gmerror(self, g: &[f64]) -> Result<f64, RE> {
         let mut unitvecssum = vec![0_f64; self[0].len()];
-        for v in self { unitvecssum.mutvadd(&v.vsub(g).vunit()?); };
+        for v in self {
+            unitvecssum.mutvadd(&v.vsub(g).vunit()?);
+        }
         Ok(unitvecssum.vmag())
     }
 
@@ -415,10 +441,10 @@ where
     /// It has (provably) only vector iterative solutions.
     /// Search methods are slow and difficult in highly dimensional space.
     /// Weiszfeld's fixed point iteration formula has known problems with sometimes failing to converge.
-    /// Especially, when the points are dense in the close proximity of the gm, or gm coincides with one of them.  
+    /// Especially, when the points are dense in the close proximity of the gm, or gm coincides with one of them.
     /// However, these problems are fixed in my new algorithm here.
-    /// The sum of reciprocals is strictly increasing and so is used here as
-    /// easy to evaluate termination condition.
+    /// The sum of reciprocals is strictly increasing and so is used here
+    /// as an easy to evaluate termination condition.
     fn gmedian(self, eps: f64) -> Vec<f64> {
         let mut g = self.acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
         let mut recsum = 0f64;
@@ -435,16 +461,19 @@ where
                     .sum();
                 if mag > eps {
                     // reciprocal of distance (scalar)
-                    let rec = 1.0_f64 / (mag.sqrt()); 
+                    let rec = 1.0_f64 / (mag.sqrt());
                     // vsum increment by components
                     for (vi, gi) in p.iter().zip(&mut nextg) {
                         *gi += vi.clone().into() * rec
                     }
                     // add the scaling reciprocal
-                    nextrecsum += rec 
+                    nextrecsum += rec
                 } // ignore point p when |p-g| <= eps
             }
-            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum); 
+            if nextrecsum < f64::MIN_POSITIVE {
+                return g;
+            }; // termination data items are all identical - acentroid is already gm
+            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
             if nextrecsum - recsum < eps {
                 return nextg;
             }; // termination
@@ -453,14 +482,14 @@ where
         }
     }
 
-    /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.  
-    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.  
-    /// It has (provably) only vector iterative solutions.    
-    /// Search methods are slow and difficult in hyper space.    
-    /// Weiszfeld's fixed point iteration formula has known problems and sometimes fails to converge.  
-    /// Specifically, when the points are dense in the close proximity of the gm, or gm coincides with one of them.    
-    /// However, these problems are solved in my new algorithm here.     
-    /// The sum of reciprocals is strictly increasing and so is used to easily evaluate the termination condition.  
+    /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.
+    /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
+    /// It has (provably) only vector iterative solutions.
+    /// Search methods are slow and difficult in hyper space.
+    /// Weiszfeld's fixed point iteration formula has known problems and sometimes fails to converge.
+    /// Specifically, when the points are dense in the close proximity of the gm, or gm coincides with one of them.
+    /// However, these problems are solved in my new algorithm here.
+    /// The sum of reciprocals is strictly increasing and so is used to easily evaluate the termination condition.
     fn par_gmedian(self, eps: f64) -> Vec<f64> {
         let mut g = self.par_acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
         let mut recsum = 0_f64;
@@ -496,6 +525,9 @@ where
                         pairsum
                     },
                 );
+            if nextrecsum < f64::MIN_POSITIVE {
+                return g;
+            }; // termination data items are all identical - acentroid is already gm
             nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
             if nextrecsum - recsum < eps {
                 return nextg;
@@ -513,7 +545,7 @@ where
             // vector iteration till accuracy eps is exceeded
             let mut nextg = vec![0_f64; self[0].len()];
             let mut nextrecsum = 0f64;
-            for x in self { 
+            for x in self {
                 let mag = g
                     .iter()
                     .zip(x)
@@ -521,7 +553,7 @@ where
                     .sum::<f64>();
                 if mag.is_normal() {
                     let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
-                                                      // vsum increments by components
+                    // vsum increments by components
                     nextg
                         .iter_mut()
                         .zip(x)
@@ -529,12 +561,15 @@ where
                     nextrecsum += rec // add separately the reciprocals for final scaling
                 } // else simply ignore this point should its distance from g be zero
             }
+            if nextrecsum < f64::MIN_POSITIVE {
+                return (g, 0f64);
+            }; // termination data items are all identical - acentroid is already gm
             if nextrecsum - recsum < eps {
                 return (
                     nextg
                         .iter()
                         .map(|&gi| gi / nextrecsum)
-                        .collect::<Vec<f64>>(), 
+                        .collect::<Vec<f64>>(),
                     nextrecsum,
                 );
             }; // termination
@@ -544,91 +579,95 @@ where
         }
     }
 
-    /// Symmetric covariance matrix. Becomes comediance when argument `mid`  
+    /// Symmetric covariance matrix. Becomes comediance when argument `mid`
     /// is the geometric median instead of the centroid.
     /// The indexing is always in this order: (row,column) (left to right, top to bottom).
     /// The items are flattened into a single vector in this order.
-    fn covar(self, mid:&[f64]) -> Result<TriangMat,RE> {
+    fn covar(self, mid: &[f64]) -> Result<TriangMat, RE> {
         let d = self[0].len(); // dimension of the vector(s)
-        if d != mid.len() { 
-            return data_error("covar self and mid dimensions mismatch"); }; 
+        if d != mid.len() {
+            return data_error("covar self and mid dimensions mismatch");
+        };
         let mut covsum = self
             .par_iter()
             .fold(
-                || vec![0_f64; (d+1)*d/2],
-                | mut cov: Vec<f64>, selfp | {
-                let mut covsub = 0_usize; // subscript into the flattened array cov
-                let vm = selfp.vsub(mid);  // zero mean vector
-                vm.iter().enumerate().for_each(|(i,diag)| 
+                || vec![0_f64; (d + 1) * d / 2],
+                |mut cov: Vec<f64>, selfp| {
+                    let mut covsub = 0_usize; // subscript into the flattened array cov
+                    let vm = selfp.vsub(mid); // zero mean vector
+                    vm.iter().enumerate().for_each(|(i,diag)|
                     // its products up to and including the diagonal (itself)
                     // the number of elements to take is always the subscript + 1!
-                    vm.iter().take(i+1).for_each(|vmi| { 
+                    vm.iter().take(i+1).for_each(|vmi| {
                         cov[covsub] += diag*vmi;
                         covsub += 1;
-                        })); 
-                cov 
-                }
+                        }));
+                    cov
+                },
             )
             .reduce(
-                || vec![0_f64; (d+1)*d/2],
-                | mut covout: Vec<f64>, covin: Vec<f64> | {
-                covout.mutvadd(&covin);
-                covout
-                }
-            ); 
+                || vec![0_f64; (d + 1) * d / 2],
+                |mut covout: Vec<f64>, covin: Vec<f64>| {
+                    covout.mutvadd(&covin);
+                    covout
+                },
+            );
         // now compute the means and return
         let lf = self.len() as f64;
-        covsum.iter_mut().for_each(|c| *c /= lf); 
-        Ok(TriangMat{ kind:2,data:covsum }) // symmetric, non transposed
+        covsum.iter_mut().for_each(|c| *c /= lf);
+        Ok(TriangMat {
+            kind: 2,
+            data: covsum,
+        }) // symmetric, non transposed
     }
 
-    /// Symmetric covariance matrix. Becomes comediance when supplied argument `mid`  
+    /// Symmetric covariance matrix. Becomes comediance when supplied argument `mid`
     /// is the geometric median instead of the centroid.
     /// Indexing is always in this order: (row,column) (left to right, top to bottom).
-    fn serial_covar(self, mid:&[f64]) -> Result<TriangMat,RE> {
+    fn serial_covar(self, mid: &[f64]) -> Result<TriangMat, RE> {
         let d = self[0].len(); // dimension of the vector(s)
-        if d != mid.len() { 
-            return data_error("serial_covar self and mid dimensions mismatch")?; }; 
-		let mut covsums = vec![0_f64; (d+1)*d/2];
- 		for p in self { 
+        if d != mid.len() {
+            return data_error("serial_covar self and mid dimensions mismatch")?;
+        };
+        let mut covsums = vec![0_f64; (d + 1) * d / 2];
+        for p in self {
             let mut covsub = 0_usize; // subscript into the flattened array cov
-            let zp = p.vsub(mid);     // zero mean/median vector
-            zp.iter().enumerate().for_each(|(i,thisc)| 
-                  // its products up to and including the diagonal 
-                  zp.iter().take(i+1).for_each(|otherc| { 
+            let zp = p.vsub(mid); // zero mean/median vector
+            zp.iter().enumerate().for_each(|(i,thisc)|
+                  // its products up to and including the diagonal
+                  zp.iter().take(i+1).for_each(|otherc| {
                       covsums[covsub] += thisc*otherc;
                       covsub += 1;
-                  }) )
-        };
+                  }))
+        }
         // now compute the means and return
         let lf = self.len() as f64;
-        for c in covsums.iter_mut() { *c /= lf }; 
-        Ok(TriangMat{ kind:2,data:covsums }) // kind 2 = symmetric, non transposed
+        for c in covsums.iter_mut() {
+            *c /= lf
+        }
+        Ok(TriangMat {
+            kind: 2,
+            data: covsums,
+        }) // kind 2 = symmetric, non transposed
     }
 
-    /// Projects self onto a given basis, e.g. dimensional reduction  
+    /// Projects self onto a given basis, e.g. dimensional reduction
     /// The returned vectors will have lengths equal to the number of supplied basis vectors.
-    fn projection(self, basis: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, RE>
-    {
+    fn projection(self, basis: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, RE> {
         if self.is_empty() {
             return nodata_error("projection: empty data");
         };
         let olddims = self[0].len();
-        if basis.len() > olddims { 
+        if basis.len() > olddims {
             return data_error("projection: given too many basis vectors");
         };
         if olddims != basis[0].len() {
             return data_error("projection: lengths of data vectors and basis vectors differ!");
         };
-        let mut res = Vec::with_capacity(self.len()); 
+        let mut res = Vec::with_capacity(self.len());
         for dvec in self {
-            res.push(
-                basis
-                    .iter()
-                    .map(|ev| dvec.dotp(ev))
-                    .collect::<Vec<f64>>(),
-            )
-        };
+            res.push(basis.iter().map(|ev| dvec.dotp(ev)).collect::<Vec<f64>>())
+        }
         Ok(res)
     }
 }
