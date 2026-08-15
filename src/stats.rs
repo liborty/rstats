@@ -64,7 +64,7 @@ where
         if self.is_empty() {
             nodata_error("negv: empty self vec")
         } else {
-            Ok(self.iter().map(|x| (-x.clone().into())).collect())
+            Ok(self.iter().map(|x| -x.clone().into()).collect())
         }
     }
 
@@ -159,8 +159,8 @@ where
         })
     }
 
-    /// Linearly weighted arithmetic mean of an f64 slice.     
-    /// Linearly ascending weights from 1 to n.    
+    /// Linearly weighted arithmetic mean of an f64 slice.
+    /// Linearly ascending weights from 1 to n.
     /// Time dependent data should be in the order of time increasing.
     /// Then the most recent gets the most weight.
     /// # Example
@@ -185,8 +185,8 @@ where
             / (sumn(n) as f64))
     }
 
-    /// Linearly weighted arithmetic mean and standard deviation of an f64 slice.    
-    /// Linearly ascending weights from 1 to n.    
+    /// Linearly weighted arithmetic mean and standard deviation of an f64 slice.
+    /// Linearly ascending weights from 1 to n.
     /// Time dependent data should be in the order of time increasing.
     /// # Example
     /// ```
@@ -277,8 +277,8 @@ where
             spread: ((sx2 / nf - recipmean.powi(2)) / (recipmean.powi(4)) / nf).sqrt(),
         })
     }
-    /// Linearly weighted harmonic mean of an f64 slice.    
-    /// Linearly ascending weights from 1 to n.    
+    /// Linearly weighted harmonic mean of an f64 slice.
+    /// Linearly ascending weights from 1 to n.
     /// Time dependent data should be ordered by increasing time.
     /// # Example
     /// ```
@@ -339,10 +339,10 @@ where
         })
     }
 
-    /// Geometric mean of an i64 slice.  
+    /// Geometric mean of an i64 slice.
     /// The geometric mean is just an exponential of an arithmetic mean
-    /// of log data (natural logarithms of the data items).  
-    /// The geometric mean is less sensitive to outliers near maximal value.  
+    /// of log data (natural logarithms of the data items).
+    /// The geometric mean is less sensitive to outliers near maximal value.
     /// Zero valued data is not allowed!
     /// # Example
     /// ```
@@ -366,8 +366,8 @@ where
         Ok((sum / (n as f64)).exp())
     }
 
-    /// Geometric mean and std ratio of an f64 slice.  
-    /// Zero valued data is not allowed.  
+    /// Geometric mean and std ratio of an f64 slice.
+    /// Zero valued data is not allowed.
     /// Std of ln data becomes a ratio after conversion back.
     /// # Example
     /// ```
@@ -400,12 +400,12 @@ where
         })
     }
 
-    /// Linearly weighted geometric mean of an i64 slice.  
-    /// Ascending weights from 1 down to n.    
-    /// Time dependent data should be in time increasing order.  
+    /// Linearly weighted geometric mean of an i64 slice.
+    /// Ascending weights from 1 down to n.
+    /// Time dependent data should be in time increasing order.
     /// The geometric mean is an exponential of an arithmetic mean
-    /// of log data (natural logarithms of the data items).  
-    /// The geometric mean is less sensitive to outliers near maximal value.  
+    /// of log data (natural logarithms of the data items).
+    /// The geometric mean is less sensitive to outliers near maximal value.
     /// Zero valued data is not allowed!
     /// # Example
     /// ```
