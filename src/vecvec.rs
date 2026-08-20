@@ -449,26 +449,27 @@ where
     fn bettergm(self, g: &mut [f64]) -> f64 {
         // vector iteration till accuracy eps is exceeded
         let mut recsum = 0_f64;
-
         for p in self {
             // |p-g| done in-place for speed. Could have simply called p.vdist(g)
             let mag: f64 = p //.vdist(g);
                 .iter()
-                .zip(&*g)
+                .zip(&mut *g)
                 .map(|(vi, gi)| (vi.clone().into() - *gi).powi(2))
                 .sum();
-            if mag < f64::MIN_POSITIVE {
-                continue; // reject this p as it is identical with g
+            if mag > 0_f64 {
+                // reciprocal of distance (scalar)
+                let rec = 1.0_f64 / mag.sqrt();
+                // increment g by components
+                for (pi, gi) in p.iter().zip(&mut *g) {
+                    *gi += pi.clone().into() * rec
+                }
+                // add the scaling reciprocal
+                recsum += rec;
             };
-            // reciprocal of distance (scalar)
-            let rec = 1.0_f64 / (mag.sqrt());
-            // increment g by components
-            for (vi, gi) in p.iter().zip(&mut *g) {
-                *gi += vi.clone().into() * rec
-            }
-            // add the scaling reciprocal
-            recsum += rec
         }
+        if recsum > 0_f64 {
+            g.iter_mut().for_each(|gi| *gi /= recsum);
+        };
         recsum
     }
 
@@ -482,39 +483,14 @@ where
     /// as an easy to evaluate termination condition.
     fn gmedian(self, eps: f64) -> Vec<f64> {
         let mut g = self.acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
-        let mut recsum = 0f64;
-        loop {
+        let mut recsum = 0_f64;
+        let mut nextrecsum = self.bettergm(&mut g);
+        while nextrecsum - recsum >= eps {
             // vector iteration till accuracy eps is exceeded
-            let mut nextg = vec![0_f64; self[0].len()];
-            let mut nextrecsum = 0_f64;
-            for p in self {
-                // |p-g| done in-place for speed. Could have simply called p.vdist(g)
-                let mag: f64 = p
-                    .iter()
-                    .zip(&g)
-                    .map(|(vi, gi)| (vi.clone().into() - gi).powi(2))
-                    .sum();
-                if mag > eps {
-                    // reciprocal of distance (scalar)
-                    let rec = 1.0_f64 / (mag.sqrt());
-                    // vsum increment by components
-                    for (vi, gi) in p.iter().zip(&mut nextg) {
-                        *gi += vi.clone().into() * rec
-                    }
-                    // add the scaling reciprocal
-                    nextrecsum += rec
-                } // ignore point p when |p-g| <= eps
-            }
-            if nextrecsum < f64::MIN_POSITIVE {
-                return g;
-            }; // termination data items are all identical - acentroid is already gm
-            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
-            if nextrecsum - recsum < eps {
-                return nextg;
-            }; // termination
-            g = nextg;
             recsum = nextrecsum;
-        }
+            nextrecsum = self.bettergm(&mut g);
+        } // termination
+        g
     }
 
     /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.
