@@ -462,7 +462,7 @@ where
                 // increment g by components
                 for (pi, gi) in p.iter().zip(&mut *g) {
                     *gi += pi.clone().into() * rec
-                }
+                };
                 // add the scaling reciprocal
                 recsum += rec;
             };
