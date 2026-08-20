@@ -71,7 +71,8 @@ where
     /// U are the reflector generators for use by house_uapply(m).
     /// R is the upper triangular decomposition factor.
     /// Here both U and R are returned for convenience in their transposed lower triangular forms.
-    /// Transposed input self for convenience, so that original columns get accessed easily as rows.
+    /// Input self should be transposed previously, so that its original
+    /// columns can be efficiently traversed as row vectors.
     fn house_ur(self) -> Result<(TriangMat, TriangMat), RE> {
         let n = self.len();
         let d = self[0].len();
@@ -324,7 +325,7 @@ where
         Ok(self.radii(gm)?.medf_unchecked())
     }
 
-    /// stdgm mean of distances from gm: nd data spread measure, aka nd standard deviation
+    /// stdgm mean of distances from gm: nd data spread measure, generalized standard deviation
     fn stdgm(self, gm: &[f64]) -> Result<f64, RE> {
         if self.is_empty() {
             return nodata_error("stdgm given empty vec!")?;
@@ -437,6 +438,40 @@ where
         Ok(unitvecssum.vmag())
     }
 
+    /// Sum of reciprocal distances (for testing)
+    fn sumofreciprocals(self, g: &[f64]) -> f64 {
+        self.iter().map(|p| 1_f64 / g.vdist(p)).sum()
+    }
+
+    /// Given a set of points and their approximate median,
+    /// finds better median and the sum of its reciprocal distances.
+    /// This is the core step of iterative geometric median computation.
+    fn bettergm(self, g: &mut [f64]) -> f64 {
+        // vector iteration till accuracy eps is exceeded
+        let mut recsum = 0_f64;
+
+        for p in self {
+            // |p-g| done in-place for speed. Could have simply called p.vdist(g)
+            let mag: f64 = p //.vdist(g);
+                .iter()
+                .zip(&*g)
+                .map(|(vi, gi)| (vi.clone().into() - *gi).powi(2))
+                .sum();
+            if mag < f64::MIN_POSITIVE {
+                continue; // reject this p as it is identical with g
+            };
+            // reciprocal of distance (scalar)
+            let rec = 1.0_f64 / (mag.sqrt());
+            // increment g by components
+            for (vi, gi) in p.iter().zip(&mut *g) {
+                *gi += vi.clone().into() * rec
+            }
+            // add the scaling reciprocal
+            recsum += rec
+        }
+        recsum
+    }
+
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
     /// It has (provably) only vector iterative solutions.
     /// Search methods are slow and difficult in highly dimensional space.
@@ -532,48 +567,6 @@ where
             if nextrecsum - recsum < eps {
                 return nextg;
             }; // termination test
-            g = nextg;
-            recsum = nextrecsum;
-        }
-    }
-
-    /// Like `gmedian` but returns also the sum of reciprocals.
-    fn gmparts(self, eps: f64) -> (Vec<f64>, f64) {
-        let mut g = self.acentroid(); // start iterating from the Centre
-        let mut recsum = 0f64;
-        loop {
-            // vector iteration till accuracy eps is exceeded
-            let mut nextg = vec![0_f64; self[0].len()];
-            let mut nextrecsum = 0f64;
-            for x in self {
-                let mag = g
-                    .iter()
-                    .zip(x)
-                    .map(|(&gi, xi)| (xi.clone().into() - gi).powi(2))
-                    .sum::<f64>();
-                if mag.is_normal() {
-                    let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
-                    // vsum increments by components
-                    nextg
-                        .iter_mut()
-                        .zip(x)
-                        .for_each(|(vi, xi)| *vi += xi.clone().into() * rec);
-                    nextrecsum += rec // add separately the reciprocals for final scaling
-                } // else simply ignore this point should its distance from g be zero
-            }
-            if nextrecsum < f64::MIN_POSITIVE {
-                return (g, 0f64);
-            }; // termination data items are all identical - acentroid is already gm
-            if nextrecsum - recsum < eps {
-                return (
-                    nextg
-                        .iter()
-                        .map(|&gi| gi / nextrecsum)
-                        .collect::<Vec<f64>>(),
-                    nextrecsum,
-                );
-            }; // termination
-            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
             g = nextg;
             recsum = nextrecsum;
         }

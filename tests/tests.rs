@@ -378,7 +378,7 @@ fn vecvec() -> Result<(), RE> {
     println!("First data vector:\n{}", pts[0].gr());
     println!("Joint entropy: {}", pts.jointentropyn()?.gr());
     println!("Dependence:    {}", pts.dependencen()?.gr());
-    let (median, recipsum) = pts.gmparts(EPS);
+    let median = pts.gmedian(EPS);
     println!("Approximate dv/dt:\n{}", pts.dvdt(&median)?.gr());
     let outcomes = ranv_u8(n)?;
     println!("\nRandom testing outcomes:\n{}", outcomes.gr());
@@ -478,6 +478,7 @@ fn vecvec() -> Result<(), RE> {
 
     let nf = n as f64;
 
+    let recipsum = pts.sumofreciprocals(&median);
     println!(
         "\nContribution of adding acentroid:    {}",
         acentroid.contrib_newpt(&median, recipsum, nf)?.gr()

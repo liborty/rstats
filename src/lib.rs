@@ -21,7 +21,7 @@ pub mod vecvecg;
 
 pub use crate::error::*;
 // reexporting useful related methods
-pub use indxvec::{here, printing::*, MinMax, Printing};
+pub use indxvec::{MinMax, Printing, here, printing::*};
 pub use medians::{MedError, Median, Medianf64};
 
 // Auxiliary Functions
@@ -47,12 +47,12 @@ pub fn sumn(n: usize) -> usize {
 
 /// Generates full nxn unit (identity) matrix
 pub fn unit_matrix(n: usize) -> Vec<Vec<f64>> {
-    (0..n).map(|i| basis_vec(i,n)).collect() 
+    (0..n).map(|i| basis_vec(i, n)).collect()
 }
 
 /// Generates basis vector i of n dimensional space
 pub fn basis_vec(i: usize, n: usize) -> Vec<f64> {
-    (0..n).map(|d| if d==i { 1_f64 } else { 0_f64 }).collect() 
+    (0..n).map(|d| if d == i { 1_f64 } else { 0_f64 }).collect()
 }
 
 /// Holds measures of central tendency and spread.
@@ -74,21 +74,21 @@ impl std::fmt::Display for Params {
     }
 }
 
-/// Compact Triangular Matrix.  
+/// Compact Triangular Matrix.
 /// TriangMat stores and manipulates triangular matrices.
 /// It also compactly represents square symmetric and antisymmetric matrices.
 /// TriangMat is typically produced by some matrix calculations,
-/// so the end-type for its data is f64.  
-/// The actual length of its data is `triangmat.len() = n*(n+1)/2`.  
-/// The dimension of the implied nxn matrix is `n = triangmat.dim()`.  
+/// so the end-type for its data is f64.
+/// The actual length of its data is `triangmat.len() = n*(n+1)/2`.
+/// The dimension of the implied nxn matrix is `n = triangmat.dim()`.
 /// The kind (field) of the TriangMat is encoded as 0..5. This enables
 /// trivial transpositions by: `(kind+3) % 6`.
 #[derive(Default, Clone)]
-pub struct TriangMat{
+pub struct TriangMat {
     /// Matrix kind encoding: 0=plain, 1=antisymmetric, 2=symmetric, +3=transposed
     pub kind: usize,
     /// Packed 1d vector of triangular matrix data of size `(n+1)*n/2`
-    pub data: Vec<f64>
+    pub data: Vec<f64>,
 }
 // Traits
 
@@ -215,7 +215,7 @@ pub trait Vecg {
     fn dependence<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> Result<f64, RE>;
     /// Statistical pairwise independence in the range `[0,1]` based on joint entropy
     fn independence<U: Clone + PartialOrd + Into<f64>>(self, v: &[U]) -> Result<f64, RE>;
-    /// Pearson's correlation.  
+    /// Pearson's correlation.
     fn correlation<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
     /// Kendall Tau-B correlation.
     fn kendalcorr<U: Clone + Into<f64>>(self, v: &[U]) -> f64;
@@ -289,10 +289,10 @@ pub trait VecVec<T> {
     fn transpose(self) -> Vec<Vec<f64>>;
     /// Normalize columns of a matrix and transpose them to rows
     fn normalize(self) -> Result<Vec<Vec<f64>>, RE>;
-    /// Projects self onto a given basis, e.g. PCA dimensional reduction. 
+    /// Projects self onto a given basis, e.g. PCA dimensional reduction.
     fn projection(self, basis: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, RE>;
     /// Householder's method returning matrices (U,R)
-    fn house_ur(self) -> Result<(TriangMat, TriangMat), RE>; 
+    fn house_ur(self) -> Result<(TriangMat, TriangMat), RE>;
     /// Joint probability density function of n matched slices of the same length
     fn jointpdfn(self) -> Result<Vec<f64>, RE>;
     /// Joint entropy between a set of vectors of the same length
@@ -315,7 +315,7 @@ pub trait VecVec<T> {
     fn distsums(self) -> Vec<f64>;
     /// Medoid distance, its index, outlier distance, its index
     fn medout(self, gm: &[f64]) -> Result<MinMax<f64>, RE>;
-    /// Radius of a point specified by its subscript.    
+    /// Radius of a point specified by its subscript.
     fn radius(self, i: usize, gm: &[f64]) -> Result<f64, RE>;
     /// Arith mean and std (in Params struct), Median and mad, Medoid and Outlier (in MinMax struct)
     fn eccinfo(self, gm: &[f64]) -> Result<(Params, Params, MinMax<f64>), RE>
@@ -331,26 +331,30 @@ pub trait VecVec<T> {
     fn stdgm(self, gm: &[f64]) -> Result<f64, RE>;
     /// Outer hull subscripts from their square radii and their sort index.
     fn outer_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>;
-    /// Inner hull subscripts from their square radii and their sort index.  
+    /// Inner hull subscripts from their square radii and their sort index.
     fn inner_hull(self, sqrads: &[f64], sindex: &[usize]) -> Vec<usize>;
     /// Measure of likelihood of zero median point **p** belonging to zero median data cloud `self`.
     fn depth(self, descending_index: &[usize], p: &[f64]) -> Result<f64, RE>;
     /// The proportion of points outside of the normal plane through **p**
     fn depth_ratio(self, descending_index: &[usize], p: &[f64]) -> f64;
-    /// Collects indices of outer and inner hull points, from zero median data    
+    /// Collects indices of outer and inner hull points, from zero median data
     fn hulls(self) -> (Vec<usize>, Vec<usize>);
     /// Geometric median's residual error
     fn gmerror(self, g: &[f64]) -> Result<f64, RE>;
-    /// New algorithm for geometric median, to accuracy eps    
+    /// Sum of reciprocal distances (for testing)
+    fn sumofreciprocals(self, g: &[f64]) -> f64;
+    /// Next better median and the sum of its reciprocal distances
+    fn bettergm(self, g: &mut [f64]) -> f64;
+    /// New algorithm for geometric median, to accuracy eps
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.
     fn par_gmedian(self, eps: f64) -> Vec<f64>;
-    /// Like `gmedian` but returns also the sum of reciprocals of distances
-    fn gmparts(self, eps: f64) -> (Vec<f64>, f64);
+    // /// Like `gmedian` but returns also the sum of reciprocals of distances
+    // fn gmparts(self, eps: f64) -> (Vec<f64>, f64);
     /// Lower triangular part of a (symmetric) covariance matrix of a Vec of f64 vectors.
     fn covar(self, mid: &[f64]) -> Result<TriangMat, RE>;
     /// Lower triangular part of a (symmetric) covariance matrix of a Vec of f64 vectors.
-    fn serial_covar(self, mid: &[f64]) -> Result<TriangMat, RE>; 
+    fn serial_covar(self, mid: &[f64]) -> Result<TriangMat, RE>;
 }
 
 /// Methods applicable to slice of vectors of generic end type, plus one other argument
@@ -367,7 +371,7 @@ pub trait VecVecg<T, U> {
         self,
         v: &[U],
         f: impl Fn(&[T]) -> Result<Vec<f64>, RE>,
-    ) -> Result<(Vec<Vec<f64>>, f64), RE>; 
+    ) -> Result<(Vec<Vec<f64>>, f64), RE>;
     /// Individually weighted time series derivative of vectors
     fn wdvdt(self, ws: &[U], centre: &[f64]) -> Result<Vec<f64>, RE>;
     /// 1.0-dotproducts with **v**, in range [0,2]
@@ -400,15 +404,15 @@ pub trait VecVecg<T, U> {
     fn wdepth(self, descending_index: &[usize], ws: &[U], p: &[f64]) -> Result<f64, RE>;
     /// Dependencies of vector m on each vector in self
     fn dependencies(self, m: &[U]) -> Result<Vec<f64>, RE>;
-    /// Sum of distances from arbitrary point (v) to all the points in self      
+    /// Sum of distances from arbitrary point (v) to all the points in self
     fn distsum(self, v: &[U]) -> Result<f64, RE>;
-    /// Individual distances from any point v (typically not in self) to all the points in self.    
+    /// Individual distances from any point v (typically not in self) to all the points in self.
     fn dists(self, v: &[U]) -> Result<Vec<f64>, RE>;
     /// Weighted sorted weighted radii magnitudes, normalised
     fn wsortedrads(self, ws: &[U], gm: &[f64]) -> Result<Vec<f64>, RE>;
     /// The weighted geometric median to accuracy eps
     fn wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
-    /// Parallel (multithreaded) implementation of the weighted Geometric Median.  
+    /// Parallel (multithreaded) implementation of the weighted Geometric Median.
     fn par_wgmedian(self, ws: &[U], eps: f64) -> Result<Vec<f64>, RE>;
     /// Like `wgmedian` but returns also the sum of reciprocals.
     fn wgmparts(self, ws: &[U], eps: f64) -> Result<(Vec<f64>, f64), RE>;

@@ -349,6 +349,8 @@ Methods which take an additional generic vector argument, such as a vector of we
 
 ## Appendix: Recent Releases
 
+* **Version 2.1.14** - Nightly - some simplifications of gmedian associated code
+
 * **Version 2.1.13** - Added explicit test for pathological data input to gmedian(s), cargowhere all the points are identical.
 
 * **Version 2.1.12** - Some corrections of Readme.md.
