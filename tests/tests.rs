@@ -369,6 +369,18 @@ fn householder() -> Result<(), RE> {
 }
 
 #[test]
+fn gmed() -> Result<(), RE> {
+    let d = 10_usize;
+    let n = 120_usize;
+    println!("Testing on a random set of {n} points in {d} dimensional space");
+    let pts = ranvv_u8(n, d)?;
+    println!("First data point:\n{}", pts[0].gr());
+    let median = pts.gmedian(EPS);
+    println!("\nGmedian vector:\n{}", median.gr());
+    Ok(())
+}
+
+#[test]
 fn vecvec() -> Result<(), RE> {
     let d = 10_usize;
     let n = 120_usize;

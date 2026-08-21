@@ -446,31 +446,34 @@ where
     /// Given a set of points and their approximate median,
     /// finds better median and the sum of its reciprocal distances.
     /// This is the core step of iterative geometric median computation.
-    fn bettergm(self, g: &mut [f64]) -> f64 {
+    fn bettergm(self, g: &[f64]) -> (f64, Vec<f64>) {
         // vector iteration till accuracy eps is exceeded
         let mut recsum = 0_f64;
+        let mut nextg = vec![0_f64; self[0].len()];
         for p in self {
             // |p-g| done in-place for speed. Could have simply called p.vdist(g)
             let mag: f64 = p //.vdist(g);
                 .iter()
-                .zip(&mut *g)
-                .map(|(vi, gi)| (vi.clone().into() - *gi).powi(2))
+                .zip(g)
+                .map(|(vi, gi)| -> f64 { (vi.clone().into() - *gi).powi(2) })
                 .sum();
             if mag > 0_f64 {
                 // reciprocal of distance (scalar)
-                let rec = 1.0_f64 / mag.sqrt();
-                // increment g by components
-                for (pi, gi) in p.iter().zip(&mut *g) {
-                    *gi += pi.clone().into() * rec
-                };
+                let rec = 1.0_f64 / (mag.sqrt());
+                //nextg by components
+                for (vi, gi) in p.iter().zip(&mut nextg) {
+                    *gi += vi.clone().into() * rec
+                }
                 // add the scaling reciprocal
                 recsum += rec;
             };
         }
         if recsum > 0_f64 {
-            g.iter_mut().for_each(|gi| *gi /= recsum);
+            for gi in &mut nextg {
+                *gi /= recsum
+            }
         };
-        recsum
+        (recsum, nextg)
     }
 
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
@@ -484,13 +487,14 @@ where
     fn gmedian(self, eps: f64) -> Vec<f64> {
         let mut g = self.acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
         let mut recsum = 0_f64;
-        let mut nextrecsum = self.bettergm(&mut g);
-        while nextrecsum - recsum >= eps {
+        let (mut nextrecsum, mut nextg) = self.bettergm(&g);
+        while (nextrecsum - recsum).abs() >= eps {
             // vector iteration till accuracy eps is exceeded
             recsum = nextrecsum;
-            nextrecsum = self.bettergm(&mut g);
+            g = nextg;
+            (nextrecsum, nextg) = self.bettergm(&g);
         } // termination
-        g
+        nextg
     }
 
     /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.

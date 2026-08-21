@@ -344,7 +344,7 @@ pub trait VecVec<T> {
     /// Sum of reciprocal distances (for testing)
     fn sumofreciprocals(self, g: &[f64]) -> f64;
     /// Next better median and the sum of its reciprocal distances
-    fn bettergm(self, g: &mut [f64]) -> f64;
+    fn bettergm(self, g: &[f64]) -> (f64, Vec<f64>);
     /// New algorithm for geometric median, to accuracy eps
     fn gmedian(self, eps: f64) -> Vec<f64>;
     /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.
