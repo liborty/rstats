@@ -332,7 +332,7 @@ fn mat() -> Result<(), RE> {
     let t = m.transpose();
     println!("\nTransposed matrix M':\n{}", t.gr());
     let v = ranv_f64(d)?;
-    println!("\nVeátor V:\n{}", v.gr());
+    println!("\nVector V:\n{}", v.gr());
     println!("\nMV:\n{}", m.leftmultv(&v)?.gr());
     println!("\nVM':\n{}", t.rightmultv(&v)?.gr());
     println!("\nMM':\n{}", t.matmult(&m)?.gr());
