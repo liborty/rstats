@@ -1,6 +1,6 @@
 [package]
 name = "rstats"
-version = "2.1.14"
+version = "2.1.15"
 authors = ["Libor Spacek"]
 edition = "2024"
 description = "Statistics, Information Measures, Data Analysis, Linear Algebra, Clifford Algebra, Machine Learning, Geometric Median, Matrix Decompositions, Mahalanobis Distance, Hulls, Multithreading.."
@@ -12,6 +12,7 @@ keywords = ["machine-learning","statistics","linear-algebra","geometric-median",
 categories = ["science","mathematics","algorithms","visualization","rust-patterns"]
 include = [
     "src/*.rs",
+    "tests/tests.rs",
     "Cargo.toml",
     "README.md",
     "LICENSE"

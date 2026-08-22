@@ -333,7 +333,7 @@ Some vector algebra as above that can be more efficient when the end type happen
 ## Trait VecVec
 
 Relationships between n vectors in d dimensions.
-This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` where the main original contribution of this library lies. True geometric median (gm) is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhoods of existing set points. Its variant, `par_gmedian`, employs multithreading for faster execution and gives otherwise  the same result.
+This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` where the main original contribution of this library lies. True geometric median (gm) is found by fast and stable iteration, using improved Weiszfeld's algorithm `gmedian`. This algorithm solves Weiszfeld's convergence and stability problems in the neighbourhoods of existing set points. Its variant, `par_gmedian`, employs multithreading for faster execution and gives otherwise the same result.
 
 * centroid, medoid, outliers, gm
 * sums of distances, radius of a point (as its distance from gm)
@@ -348,6 +348,8 @@ This (hyper-dimensional) data domain is denoted here as (`nd`). It is in `nd` wh
 Methods which take an additional generic vector argument, such as a vector of weights for computing weighted geometric medians (where each point has its own significance weight). Matrices multiplications.
 
 ## Appendix: Recent Releases
+
+* **Version 2.1.15** - Faster par_amean() and par_gmedian(). Now using chunks of points to minimise parallelism overheads.
 
 * **Version 2.1.14** - Simplifications of gmedian code.
 

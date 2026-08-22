@@ -345,12 +345,12 @@ pub trait VecVec<T> {
     fn sumofreciprocals(self, g: &[f64]) -> f64;
     /// Next better median and the sum of its reciprocal distances
     fn bettergm(self, g: &[f64]) -> (f64, Vec<f64>);
+    /// Next better median and the sum of its reciprocal distances
+    fn par_bettergm(self, g: &[f64]) -> (f64, Vec<f64>);
     /// New algorithm for geometric median, to accuracy eps
     fn gmedian(self, eps: f64) -> Vec<f64>;
-    /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.
+    /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find
     fn par_gmedian(self, eps: f64) -> Vec<f64>;
-    // /// Like `gmedian` but returns also the sum of reciprocals of distances
-    // fn gmparts(self, eps: f64) -> (Vec<f64>, f64);
     /// Lower triangular part of a (symmetric) covariance matrix of a Vec of f64 vectors.
     fn covar(self, mid: &[f64]) -> Result<TriangMat, RE>;
     /// Lower triangular part of a (symmetric) covariance matrix of a Vec of f64 vectors.

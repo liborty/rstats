@@ -658,10 +658,10 @@ fn geometric_medians() -> Result<(), RE> {
     set_seeds(7777777777_u64); // intialise random numbers generator
     // Rnum specifies the type of the random numbers required
     println!("\n{YL}Timing Comparisons (in nanoseconds):   {UN}");
-    benchvvf64(100, 1000..1500, 200, 10, &NAMES, &CLOSURESU8);
-    const ITERATIONS: usize = 10;
-    let n = 100_usize;
-    let d = 1000_usize;
+    benchvvf64(1001, 4000..5001, 1000, 5, &NAMES, &CLOSURESU8);
+    const ITERATIONS: usize = 5;
+    let n = 4000_usize;
+    let d = 1001_usize;
     set_seeds(7777777);
     println!("\n{RD}Total errors for {ITERATIONS} repeats of {n} points in {d} dimensions:{UN}\n");
     let mut sumg = 0_f64;

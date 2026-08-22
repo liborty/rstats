@@ -3,6 +3,8 @@ use indxvec::Vecops;
 use medians::{MedError, Medianf64};
 use rayon::prelude::*;
 
+const CHUNKSLN: usize = 100;
+
 impl<T> VecVec<T> for &[Vec<T>]
 where
     T: Clone + PartialOrd + Sync + Into<f64>,
@@ -201,11 +203,13 @@ where
     /// multithreaded acentroid = multidimensional arithmetic mean
     fn par_acentroid(self) -> Vec<f64> {
         let sumvec = self
-            .par_iter()
+            .par_chunks(CHUNKSLN)
             .fold(
                 || vec![0_f64; self[0].len()],
-                |mut vecsum: Vec<f64>, p| {
-                    vecsum.mutvadd(p);
+                |mut vecsum: Vec<f64>, s| {
+                    for p in s {
+                        vecsum.mutvadd(p);
+                    }
                     vecsum
                 },
             )
@@ -482,8 +486,7 @@ where
     /// Weiszfeld's fixed point iteration formula has known problems with sometimes failing to converge.
     /// Especially, when the points are dense in the close proximity of the gm, or gm coincides with one of them.
     /// However, these problems are fixed in my new algorithm here.
-    /// The sum of reciprocals is strictly increasing and so is used here
-    /// as an easy to evaluate termination condition.
+    /// The sum of reciprocals is increasing and convergent, so is used as a termination condition.
     fn gmedian(self, eps: f64) -> Vec<f64> {
         let mut g = self.acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
         let mut recsum = 0_f64;
@@ -497,6 +500,54 @@ where
         nextg
     }
 
+    #[doc = r"Given a set of points and their approximate median,
+finds better median and the sum of its reciprocal distances.
+This is the core step of iterative geometric median computation."]
+    fn par_bettergm(self, g: &[f64]) -> (f64, Vec<f64>) {
+        // vector iteration till accuracy eps is exceeded
+        let (mut nextg, recsum) = self
+            .par_chunks(CHUNKSLN)
+            .fold(
+                || (vec![0_f64; self[0].len()], 0_f64),
+                |mut pair: (Vec<f64>, f64), s: &[Vec<T>]| {
+                    for p in s {
+                        // |p-g| done in-place for speed. Could have simply called p.vdist(g)
+                        let mag: f64 = p //.vdist(g);
+                            .iter()
+                            .zip(g)
+                            .map(|(vi, gi)| -> f64 { (vi.clone().into() - *gi).powi(2) })
+                            .sum();
+                        if mag > 0_f64 {
+                            // reciprocal of distance (scalar)
+                            let rec = 1.0_f64 / (mag.sqrt());
+                            //nextg by components
+                            for (vi, gi) in p.iter().zip(&mut pair.0) {
+                                *gi += vi.clone().into() * rec
+                            }
+                            // add the scaling reciprocal
+                            pair.1 += rec;
+                        }
+                    }
+                    pair
+                },
+            )
+            // must run reduce on the partial sums produced by fold
+            .reduce(
+                || (vec![0_f64; self[0].len()], 0_f64),
+                |mut pairsum: (Vec<f64>, f64), pairin: (Vec<f64>, f64)| {
+                    pairsum.0.mutvadd(&pairin.0);
+                    pairsum.1 += pairin.1;
+                    pairsum
+                },
+            );
+        if recsum > 0_f64 {
+            for gi in &mut nextg {
+                *gi /= recsum
+            }
+        };
+        (recsum, nextg)
+    }
+
     /// Parallel (multithreaded) implementation of Geometric Median. Possibly the fastest you will find.
     /// Geometric Median (gm) is the point that minimises the sum of distances to a given set of points.
     /// It has (provably) only vector iterative solutions.
@@ -504,52 +555,22 @@ where
     /// Weiszfeld's fixed point iteration formula has known problems and sometimes fails to converge.
     /// Specifically, when the points are dense in the close proximity of the gm, or gm coincides with one of them.
     /// However, these problems are solved in my new algorithm here.
-    /// The sum of reciprocals is strictly increasing and so is used to easily evaluate the termination condition.
+    /// The sum of reciprocals is increasing and convergent, so is used as a termination condition.
     fn par_gmedian(self, eps: f64) -> Vec<f64> {
+        // avoid parallelism overheads for low numbers of points
+        if self.len() < 1000 {
+            return self.gmedian(eps);
+        };
         let mut g = self.par_acentroid(); // start iterating from the mean  or vec![0_f64; self[0].len()];
         let mut recsum = 0_f64;
-        loop {
+        let (mut nextrecsum, mut nextg) = self.par_bettergm(&g);
+        while (nextrecsum - recsum).abs() >= eps {
             // vector iteration till accuracy eps is exceeded
-            let (mut nextg, nextrecsum) = self
-                .par_iter()
-                .fold(
-                    || (vec![0_f64; self[0].len()], 0_f64),
-                    |mut pair: (Vec<f64>, f64), p: &Vec<T>| {
-                        // |p-g| done in-place for speed. Could have simply called p.vdist(g)
-                        let mag: f64 = p
-                            .iter()
-                            .zip(&g)
-                            .map(|(vi, gi)| (vi.clone().into() - gi).powi(2))
-                            .sum();
-                        if mag > eps {
-                            let rec = 1.0_f64 / (mag.sqrt()); // reciprocal of distance (scalar)
-                            for (vi, gi) in p.iter().zip(&mut pair.0) {
-                                *gi += vi.clone().into() * rec
-                            }
-                            pair.1 += rec; // add separately the reciprocals for the final scaling
-                        } // else simply ignore this point should its distance from g be zero
-                        pair
-                    },
-                )
-                // must run reduce on the partial sums produced by fold
-                .reduce(
-                    || (vec![0_f64; self[0].len()], 0_f64),
-                    |mut pairsum: (Vec<f64>, f64), pairin: (Vec<f64>, f64)| {
-                        pairsum.0.mutvadd(&pairin.0);
-                        pairsum.1 += pairin.1;
-                        pairsum
-                    },
-                );
-            if nextrecsum < f64::MIN_POSITIVE {
-                return g;
-            }; // termination data items are all identical - acentroid is already gm
-            nextg.iter_mut().for_each(|gi| *gi /= nextrecsum);
-            if nextrecsum - recsum < eps {
-                return nextg;
-            }; // termination test
-            g = nextg;
             recsum = nextrecsum;
-        }
+            g = nextg;
+            (nextrecsum, nextg) = self.par_bettergm(&g);
+        } // termination
+        nextg
     }
 
     /// Symmetric covariance matrix. Becomes comediance when argument `mid`
